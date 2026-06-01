@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/cypress": "^0.1.6",
+    "baseline-browser-mapping": "^2.10.29"
+  },
+  "dependencies": {
+    "lightningcss": "^1.32.0"
+  }
+}

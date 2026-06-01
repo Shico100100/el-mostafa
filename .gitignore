@@ -1,0 +1,45 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Uploaded files
+uploads/
+
+# Data dirs
+.data/
+
+# dependencies (coverage at root level)
+node_modules/
+
+# Backups / archives
+backups/
+*.7z
+*.zip
+*.gz
+*.rar
+
+# Generated lint reports
+lint_check.txt
+lint_report*.json
+
+# Startup logs
+startup.log
+
+# OS packages
+python-installer.exe
+*.exe

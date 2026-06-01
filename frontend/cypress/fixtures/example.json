@@ -1,0 +1,16 @@
+{
+  "accessory": {
+    "name": "Test Accessory",
+    "unit": "piece",
+    "reorder_point": 10,
+    "weight_per_piece": 0.5,
+    "notes": "Test notes"
+  },
+  "customer": {
+    "name": "Test Customer",
+    "phone": "01234567890"
+  },
+  "product": {
+    "name": "Test Product"
+  }
+}
