@@ -254,12 +254,6 @@ export default function ProductsPage() {
                             إضافة منتج
                         </button>
                         <button
-                            onClick={() => setShowBulkPriceModal(true)}
-                            className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 px-4 py-3 rounded-xl border border-purple-500/20 transition flex items-center gap-2"
-                        >
-                            💲 تحديث أسعار جماعي
-                        </button>
-                        <button
                             onClick={() => document.getElementById('import-file')?.click()}
                             className="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 px-4 py-3 rounded-xl border border-emerald-500/20 transition flex items-center gap-2"
                         >

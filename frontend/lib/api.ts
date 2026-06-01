@@ -449,8 +449,9 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/qc/pending');
     },
 
-    async getQCRecent() {
-        return this.fetchWithAuth('/v1/manufacturing/qc/recent');
+    async getQCRecent(limit?: number) {
+        const qs = limit ? `?limit=${limit}` : '';
+        return this.fetchWithAuth(`/v1/manufacturing/qc/recent${qs}`);
     },
 
     async getSalesReport(data: { startDate: string; endDate: string }) {
