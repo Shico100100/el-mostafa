@@ -42,6 +42,7 @@ import { SearchModule } from './search/search.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HealthModule } from './health/health.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -120,6 +121,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     PayrollModule,
     AuditModule,
     SearchModule,
+    HealthModule,
   ],
   providers: [
     {
