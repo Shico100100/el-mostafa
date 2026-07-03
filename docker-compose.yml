@@ -1,6 +1,13 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: erp-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: erp-postgres
