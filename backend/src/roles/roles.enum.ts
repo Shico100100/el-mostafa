@@ -5,4 +5,5 @@ export enum RoleEnum {
   'accountant' = 4,
   'storekeeper' = 5,
   'worker' = 6,
+  'viewer' = 7,
 }
