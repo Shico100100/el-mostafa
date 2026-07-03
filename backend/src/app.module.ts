@@ -43,6 +43,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
+import { CommonModule } from './common/common.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -122,6 +123,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     AuditModule,
     SearchModule,
     HealthModule,
+    CommonModule,
   ],
   providers: [
     {
