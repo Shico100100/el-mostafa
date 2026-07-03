@@ -20,13 +20,11 @@ import { RoleEnum } from '../roles/roles.enum';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Public()
   @Get()
   findAll() {
     return this.notificationsService.findAll();
   }
 
-  @Public()
   @Get('unread-count')
   async getUnreadCount() {
     const count = await this.notificationsService.getUnreadCount();

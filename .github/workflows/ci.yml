@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: ['*']
   pull_request:
     branches: [main]
 
@@ -28,6 +30,8 @@ jobs:
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
+      DATABASE_TYPE: postgres
+      DATABASE_SYNCHRONIZE: 'true'
       AUTH_JWT_SECRET: ci-test-secret
       AUTH_JWT_TOKEN_EXPIRES_IN: 15m
 
@@ -62,7 +66,7 @@ jobs:
         working-directory: backend
 
       - name: Run frontend TypeScript check
-        run: npx next build
+        run: npx tsc --noEmit
         working-directory: frontend
 
       - name: Run backend tests
@@ -106,6 +110,7 @@ jobs:
       AUTH_JWT_SECRET: ci-test-secret
       AUTH_JWT_TOKEN_EXPIRES_IN: 15m
       REDIS_HOST: localhost
+      DATABASE_TYPE: postgres
 
     steps:
       - uses: actions/checkout@v4
@@ -133,11 +138,16 @@ jobs:
         working-directory: backend
         run: npm run build
 
+      - name: Install wait-on
+        run: npm install -g wait-on
+
       - name: Start backend
         working-directory: backend
         run: |
           node dist/main &
-          sleep 5
+
+      - name: Wait for backend
+        run: wait-on http://localhost:3001/api/v1/health -t 30000
 
       - name: Run E2E tests
         working-directory: frontend
