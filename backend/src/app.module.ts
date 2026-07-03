@@ -40,6 +40,8 @@ import { AccountingModule } from './accounting/accounting.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { AuditModule } from './audit/audit.module';
 import { SearchModule } from './search/search.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { SentryModule } from './sentry/sentry.module';
 import { SentryInterceptor } from './sentry/sentry.interceptor';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -132,6 +134,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     CommonModule,
     CacheModule,
     SentryModule,
+    MetricsModule,
   ],
   providers: [
     {
@@ -141,6 +144,10 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
     {
       provide: APP_GUARD,
