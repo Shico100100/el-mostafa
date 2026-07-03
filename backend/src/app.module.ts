@@ -41,6 +41,7 @@ import { PayrollModule } from './payroll/payroll.module';
 import { AuditModule } from './audit/audit.module';
 import { SearchModule } from './search/search.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { DocumentsModule } from './documents/documents.module';
 import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { SentryModule } from './sentry/sentry.module';
 import { SentryInterceptor } from './sentry/sentry.interceptor';
@@ -135,6 +136,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     CacheModule,
     SentryModule,
     MetricsModule,
+    DocumentsModule,
   ],
   providers: [
     {
