@@ -30,6 +30,11 @@ export async function seedDemoData(dataSource: DataSource) {
     await insertIgnore(queryRunner, 'role', [
       { id: 1, name: 'admin' },
       { id: 2, name: 'user' },
+      { id: 3, name: 'manager' },
+      { id: 4, name: 'accountant' },
+      { id: 5, name: 'storekeeper' },
+      { id: 6, name: 'worker' },
+      { id: 7, name: 'viewer' },
     ]);
     logger.log('Roles seeded');
 
@@ -38,6 +43,23 @@ export async function seedDemoData(dataSource: DataSource) {
       { id: 2, name: 'inactive' },
     ]);
     logger.log('Statuses seeded');
+
+    await insertIgnore(queryRunner, 'currencies', [
+      { id: 1, code: 'MAD', name: 'درهم مغربي', decimalPlaces: 2 },
+      { id: 2, code: 'USD', name: 'دولار أمريكي', decimalPlaces: 2 },
+      { id: 3, code: 'EUR', name: 'يورو', decimalPlaces: 2 },
+    ]);
+    logger.log('Currencies seeded');
+
+    await insertIgnore(queryRunner, 'exchange_rates', [
+      { id: 1, fromCurrency: 'USD', toCurrency: 'MAD', rate: 9.85 },
+      { id: 2, fromCurrency: 'EUR', toCurrency: 'MAD', rate: 10.72 },
+      { id: 3, fromCurrency: 'USD', toCurrency: 'EUR', rate: 0.92 },
+      { id: 4, fromCurrency: 'EUR', toCurrency: 'USD', rate: 1.09 },
+      { id: 5, fromCurrency: 'MAD', toCurrency: 'USD', rate: 0.10 },
+      { id: 6, fromCurrency: 'MAD', toCurrency: 'EUR', rate: 0.093 },
+    ]);
+    logger.log('Exchange rates seeded');
 
     const hash = await bcrypt.hash('admin123', await bcrypt.genSalt());
     await insertIgnore(queryRunner, 'user', [
