@@ -16,6 +16,9 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from '../auth/public.decorator';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { RoleEnum } from '../roles/roles.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -32,7 +35,8 @@ import {
 
 @ApiTags('Inventory')
 @Controller('inventory')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.viewer)
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}
 

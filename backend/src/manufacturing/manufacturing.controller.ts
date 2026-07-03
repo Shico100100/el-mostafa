@@ -25,6 +25,9 @@ import { ManufacturingService } from './manufacturing.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { sheetToJson } from '../utils/excel-export';
 import { Public } from '../auth/public.decorator';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { RoleEnum } from '../roles/roles.enum';
 import {
   CreateMachineDto,
   CreateMoldDto,
@@ -47,7 +50,8 @@ import { MovementType } from '../inventory/entities/stock-movement.entity';
 
 @ApiTags('Manufacturing')
 @Controller('manufacturing')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.viewer)
 export class ManufacturingController {
   private readonly logger = new Logger(ManufacturingController.name);
 
@@ -391,6 +395,7 @@ export class ManufacturingController {
     );
   }
 
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.worker)
   @Post('production')
   @ApiOperation({ summary: 'Create a production record' })
   @ApiResponse({ status: 201, description: 'Production record created' })
@@ -409,6 +414,7 @@ export class ManufacturingController {
     }
   }
 
+  @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.worker)
   @Post('production/range')
   @ApiOperation({ summary: 'Create range production records' })
   @ApiResponse({ status: 201, description: 'Range production created' })

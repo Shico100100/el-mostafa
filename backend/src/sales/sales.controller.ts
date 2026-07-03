@@ -14,6 +14,9 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { SalesService } from './sales.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { RoleEnum } from '../roles/roles.enum';
 import {
   CreateQuoteDto,
   CreateOrderDto,
@@ -25,7 +28,8 @@ import { QuoteStatus } from './entities/quote.entity';
 
 @ApiTags('Sales')
 @Controller('sales')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.admin, RoleEnum.manager)
 export class SalesController {
   constructor(private salesService: SalesService) {}
 

@@ -1,10 +1,16 @@
-import { Controller, Get, Post, Delete, Param, UploadedFile, UseInterceptors, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, UploadedFile, UseInterceptors, Body, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { DocumentsService } from './documents.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { RoleEnum } from '../roles/roles.enum';
 import * as path from 'path';
 
 @Controller('documents')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.admin, RoleEnum.manager)
 export class DocumentsController {
   constructor(private readonly service: DocumentsService) {}
 
