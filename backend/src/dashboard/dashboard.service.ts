@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { CacheService } from '../cache/cache.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { SalesOrder } from '../sales/entities/sales-order.entity';
 import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
 import { Account } from '../accounting/entities/account.entity';
@@ -28,6 +29,7 @@ export class DashboardService {
     @InjectRepository(SalesOrderItem)
     private salesItemRepo: Repository<SalesOrderItem>,
     private cache: CacheService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async getStats() {
@@ -53,6 +55,7 @@ export class DashboardService {
       salesTrend,
       latestSales,
       latestPurchases,
+      unreadNotifications,
     ] = await Promise.all([
       // 1. Total Sales (This Month)
       this.salesRepo
@@ -172,6 +175,9 @@ export class DashboardService {
         .orderBy('order.created_at', 'DESC')
         .take(5)
         .getMany(),
+
+      // 13. Unread Notifications Count
+      this.notificationsService.getUnreadCount(),
     ]);
 
     const totalSales = Number(salesResult?.total) || 0;
@@ -201,6 +207,7 @@ export class DashboardService {
       })),
       latestSales,
       latestPurchases,
+      unreadNotifications,
     };
     await this.cache.set(cacheKey, result, 60);
     return result;

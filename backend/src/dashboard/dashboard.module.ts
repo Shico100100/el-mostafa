@@ -10,6 +10,7 @@ import { Machine } from '../manufacturing/entities/machine.entity';
 
 import { Attendance } from '../manufacturing/entities/attendance.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
       Attendance,
       SalesOrderItem,
     ]),
+    NotificationsModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

@@ -54,6 +54,10 @@ export class NotificationsService {
     });
   }
 
+  async getUnreadCount(): Promise<number> {
+    return this.notificationRepo.count({ where: { isRead: false } });
+  }
+
   async markAsRead(id: number) {
     return this.notificationRepo.update(id, { isRead: true });
   }
