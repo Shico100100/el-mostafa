@@ -9,9 +9,11 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PurchasesService } from './purchases.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@ApiTags('Purchases')
 @Controller('purchases')
 @UseGuards(JwtAuthGuard)
 export class PurchasesController {
@@ -21,6 +23,11 @@ export class PurchasesController {
   @Get('suppliers')
   getAllSuppliers() {
     return this.purchasesService.getAllSuppliers();
+  }
+
+  @Get('suppliers/aging')
+  getSupplierAging() {
+    return this.purchasesService.getSupplierAging();
   }
 
   @Get('suppliers/:id')
@@ -148,7 +155,9 @@ export class PurchasesController {
 
   @Get('fx-rates')
   getFxRates(@Query('currency_id') currencyId?: string) {
-    return this.purchasesService.getFxRates(currencyId ? +currencyId : undefined);
+    return this.purchasesService.getFxRates(
+      currencyId ? +currencyId : undefined,
+    );
   }
 
   @Post('fx-rates')
@@ -234,5 +243,19 @@ export class PurchasesController {
   @Get('reorder-suggestions/:containerId')
   getReorderSuggestions(@Param('containerId') containerId: string) {
     return this.purchasesService.getReorderSuggestions(+containerId);
+  }
+
+  @Get('products/latest-prices/batch')
+  getLatestPurchasePrices(@Query('ids') ids: string) {
+    const productIds = ids
+      .split(',')
+      .map((id) => Number(id.trim()))
+      .filter((id) => !isNaN(id));
+    return this.purchasesService.getLatestPurchasePrices(productIds);
+  }
+
+  @Get('products/:id/latest-price')
+  getLatestPurchasePrice(@Param('id') id: string) {
+    return this.purchasesService.getLatestPurchasePrice(+id);
   }
 }

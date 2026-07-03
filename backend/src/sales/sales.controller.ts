@@ -10,10 +10,20 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { SalesService } from './sales.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  CreateQuoteDto,
+  CreateOrderDto,
+  CreateCustomerDto,
+  CreateCustomerPaymentDto,
+  CreateSalesReturnDto,
+} from './dto';
+import { QuoteStatus } from './entities/quote.entity';
 
+@ApiTags('Sales')
 @Controller('sales')
 @UseGuards(JwtAuthGuard)
 export class SalesController {
@@ -25,13 +35,18 @@ export class SalesController {
     return this.salesService.getAllCustomers();
   }
 
+  @Get('customers/aging')
+  getCustomerAging() {
+    return this.salesService.getCustomerAging();
+  }
+
   @Get('customers/:id')
   getCustomer(@Param('id') id: string) {
     return this.salesService.getCustomer(+id);
   }
 
   @Post('customers/:id/payments')
-  addPayment(@Param('id') id: string, @Body() data: any) {
+  addPayment(@Param('id') id: string, @Body() data: CreateCustomerPaymentDto) {
     return this.salesService.addPayment({ ...data, customer_id: +id });
   }
 
@@ -46,12 +61,12 @@ export class SalesController {
   }
 
   @Post('customers')
-  createCustomer(@Body() data: any) {
+  createCustomer(@Body() data: CreateCustomerDto) {
     return this.salesService.createCustomer(data);
   }
 
   @Put('customers/:id')
-  updateCustomer(@Param('id') id: string, @Body() data: any) {
+  updateCustomer(@Param('id') id: string, @Body() data: CreateCustomerDto) {
     return this.salesService.updateCustomer(+id, data);
   }
 
@@ -72,13 +87,18 @@ export class SalesController {
   }
 
   @Post('orders')
-  createOrder(@Body() data: any) {
+  createOrder(@Body() data: CreateOrderDto) {
     return this.salesService.createOrder(data);
   }
 
   @Get('orders/:id/items')
   getOrderItems(@Param('id') id: string) {
     return this.salesService.getOrderItems(+id);
+  }
+
+  @Delete('orders/:id')
+  deleteOrder(@Param('id') id: string) {
+    return this.salesService.deleteOrder(+id);
   }
 
   // Quotes
@@ -93,13 +113,13 @@ export class SalesController {
   }
 
   @Post('quotes')
-  createQuote(@Body() data: any) {
+  createQuote(@Body() data: CreateQuoteDto) {
     return this.salesService.createQuote(data);
   }
 
   @Put('quotes/:id/status')
-  updateQuoteStatus(@Param('id') id: string, @Body('status') status: any) {
-    return this.salesService.updateQuoteStatus(+id, status);
+  updateQuoteStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.salesService.updateQuoteStatus(+id, status as QuoteStatus);
   }
 
   @Post('quotes/:id/convert')
@@ -124,7 +144,7 @@ export class SalesController {
   }
 
   @Post('returns')
-  createReturn(@Body() data: any) {
+  createReturn(@Body() data: CreateSalesReturnDto) {
     return this.salesService.createReturn(data);
   }
 
@@ -132,14 +152,22 @@ export class SalesController {
   @Get('export/orders')
   async exportOrders(@Res() res: Response) {
     const buffer = await this.salesService.exportOrdersToExcel();
-    res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': 'attachment; filename=sales-orders.xlsx' });
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename=sales-orders.xlsx',
+    });
     res.send(buffer);
   }
 
   @Get('export/customers')
   async exportCustomers(@Res() res: Response) {
     const buffer = await this.salesService.exportCustomersToExcel();
-    res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': 'attachment; filename=customers.xlsx' });
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename=customers.xlsx',
+    });
     res.send(buffer);
   }
 }

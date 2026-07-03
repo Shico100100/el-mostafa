@@ -6,18 +6,27 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { useContainer } from 'class-validator';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
+import { AllExceptionsFilter } from './utils/exception-filter';
+import { RouteAliasesMiddleware } from './route-aliases.middleware';
+import { setupSwagger } from './swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    cors: true,
+  const frontendDomain = process.env.FRONTEND_DOMAIN;
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: {
+      origin: frontendDomain ? frontendDomain.split(',') : ['http://localhost:3000'],
+      credentials: true,
+    },
     logger: ['error', 'warn'],
   });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 
@@ -39,24 +48,10 @@ async function bootstrap() {
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.use(new RouteAliasesMiddleware().use);
 
-  const options = new DocumentBuilder()
-    .setTitle('API')
-    .setDescription('API docs')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addGlobalParameters({
-      in: 'header',
-      required: false,
-      name: process.env.APP_HEADER_LANGUAGE || 'x-custom-lang',
-      schema: {
-        example: 'en',
-      },
-    })
-    .build();
-
-  const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  setupSwagger(app);
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
