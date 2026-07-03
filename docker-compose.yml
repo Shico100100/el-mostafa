@@ -1,71 +1,42 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: elmostafa-db
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
+    container_name: erp-postgres
     environment:
+      POSTGRES_DB: elmostafa
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: elmostafa_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
-    container_name: elmostafa-api
-    restart: unless-stopped
+    build: ./backend
+    container_name: erp-backend
     ports:
       - "3001:3001"
     environment:
-      NODE_ENV: production
-      APP_PORT: 3001
-      APP_NAME: "ELMostafa API"
-      API_PREFIX: api
-      FRONTEND_DOMAIN: http://localhost:3000
-      BACKEND_DOMAIN: http://localhost:3001
-      DATABASE_TYPE: postgres
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
-      DATABASE_USERNAME: postgres
+      DATABASE_NAME: elmostafa
+      DATABASE_USER: postgres
       DATABASE_PASSWORD: postgres
-      DATABASE_NAME: elmostafa_db
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      FRONTEND_DOMAIN: http://localhost:3000
       DATABASE_SYNCHRONIZE: "false"
-      DATABASE_SSL_ENABLED: "false"
-      FILE_DRIVER: local
-      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-change-me-in-production}
-      AUTH_JWT_TOKEN_EXPIRES_IN: 1d
-      AUTH_REFRESH_SECRET: ${AUTH_REFRESH_SECRET:-change-me-too}
-      AUTH_REFRESH_TOKEN_EXPIRES_IN: 7d
     depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - backend_uploads:/usr/src/app/uploads
+      - postgres
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: elmostafa-web
-    restart: unless-stopped
+    build: ./frontend
+    container_name: erp-frontend
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://backend:3001
-      NEXT_TELEMETRY_DISABLED: 1
-    depends_on:
-      - backend
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
 
 volumes:
   postgres_data:
-  backend_uploads:

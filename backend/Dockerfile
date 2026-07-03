@@ -1,22 +1,15 @@
-FROM node:22.21.1-alpine
-
-RUN apk add --no-cache bash
-RUN npm i -g @nestjs/cli typescript ts-node
-
-COPY package*.json /tmp/app/
-RUN cd /tmp/app && npm install
-
-COPY . /usr/src/app
-RUN cp -a /tmp/app/node_modules /usr/src/app
-COPY ./wait-for-it.sh /opt/wait-for-it.sh
-RUN chmod +x /opt/wait-for-it.sh
-COPY ./startup.relational.dev.sh /opt/startup.relational.dev.sh
-RUN chmod +x /opt/startup.relational.dev.sh
-RUN sed -i 's/\r//g' /opt/wait-for-it.sh
-RUN sed -i 's/\r//g' /opt/startup.relational.dev.sh
-
-WORKDIR /usr/src/app
-RUN if [ ! -f .env ]; then cp env-example-relational .env; fi
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
 RUN npm run build
 
-CMD ["/opt/startup.relational.dev.sh"]
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+ENV NODE_ENV=production
+EXPOSE 3001
+CMD ["node", "dist/main"]
