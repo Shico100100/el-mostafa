@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { Home, AlertTriangle, Save, Thermometer, Wrench, Zap, FileText } from 'lucide-react';
 
 interface Machine {
     id: number;
@@ -96,12 +97,12 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                         onClick={() => router.push('/manufacturing/kiosk')}
                         className="w-16 h-16 bg-slate-800 rounded-2xl text-3xl flex items-center justify-center border border-white/20 hover:bg-slate-700 transition"
                     >
-                        🏠
+                        <Home />
                     </button>
                     <div>
                         <h1 className="text-4xl font-black text-white">{machine.name}</h1>
                         <p className="text-xl text-emerald-400 mt-1">
-                            {mold ? `القالب الحالي: ${mold.name}` : '⚠️ لا يوجد قالب محدد'}
+                            {mold ? `القالب الحالي: ${mold.name}` : <span className="flex items-center gap-1"><AlertTriangle /> لا يوجد قالب محدد</span>}
                         </p>
                     </div>
                 </div>
@@ -168,7 +169,7 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                             }
                         `}
                     >
-                        💾 تسجيل الإنتاج
+                        <Save /> تسجيل الإنتاج
                     </button>
                 </div>
 
@@ -195,7 +196,7 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
 
                     {/* Quick Issues */}
                     <div className="bg-slate-900/50 rounded-3xl border border-white/10 p-8">
-                        <h3 className="text-2xl font-bold mb-6 border-b border-white/10 pb-4 text-rose-400">⚠️ تنبيه عطل</h3>
+                        <h3 className="text-2xl font-bold mb-6 border-b border-white/10 pb-4 text-rose-400 flex items-center gap-2"><AlertTriangle /> تنبيه عطل</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={async () => {
@@ -204,12 +205,12 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'HIGH_TEMP', date: new Date().toISOString(), description: 'حرارة عالية', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                        alert('✅ تم تسجيل بلاغ حرارة عالية');
-                                    } catch { alert('❌ فشل تسجيل البلاغ'); }
+                                         alert('تم تسجيل بلاغ حرارة عالية');
+                                     } catch { alert('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-2xl text-rose-400 font-bold transition"
                             >
-                                🌡️ حرارة عالية
+                                <Thermometer /> حرارة عالية
                             </button>
                             <button
                                 onClick={async () => {
@@ -218,12 +219,12 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'MECHANICAL', date: new Date().toISOString(), description: 'عطل ميكانيكي', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                        alert('✅ تم تسجيل بلاغ عطل ميكانيكي');
-                                    } catch { alert('❌ فشل تسجيل البلاغ'); }
+                                         alert('تم تسجيل بلاغ عطل ميكانيكي');
+                                     } catch { alert('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-2xl text-amber-400 font-bold transition"
                             >
-                                🔧 عطل ميكانيكي
+                                <Wrench /> عطل ميكانيكي
                             </button>
                             <button
                                 onClick={async () => {
@@ -232,12 +233,12 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'ELECTRICAL', date: new Date().toISOString(), description: 'مشكلة كهرباء', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                        alert('✅ تم تسجيل بلاغ مشكلة كهرباء');
-                                    } catch { alert('❌ فشل تسجيل البلاغ'); }
+                                         alert('تم تسجيل بلاغ مشكلة كهرباء');
+                                     } catch { alert('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-2xl text-orange-400 font-bold transition"
                             >
-                                ⚡ مشكلة كهرباء
+                                <Zap /> مشكلة كهرباء
                             </button>
                             <button
                                 onClick={async () => {
@@ -248,12 +249,12 @@ export default function MachineKioskPage({ params }: { params: Promise<{ machine
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'OTHER', date: new Date().toISOString(), description: desc, cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                        alert('✅ تم تسجيل البلاغ');
-                                    } catch { alert('❌ فشل تسجيل البلاغ'); }
+                                         alert('تم تسجيل البلاغ');
+                                     } catch { alert('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-2xl text-white font-bold transition"
                             >
-                                📝 عطل آخر
+                                <FileText /> عطل آخر
                             </button>
                         </div>
                     </div>

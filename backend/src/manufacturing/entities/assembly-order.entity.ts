@@ -17,7 +17,7 @@ export class AssemblyOrder {
   @Column({ type: 'date' })
   date: Date;
 
-  @Column()
+  @Column({ type: 'int' })
   bom_id: number;
 
   @ManyToOne(() => BOM)

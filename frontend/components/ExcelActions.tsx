@@ -1,5 +1,6 @@
 'use client';
 
+import { Upload, Download } from 'lucide-react';
 import { useState, useRef } from 'react';
 
 interface ExcelActionsProps {
@@ -32,9 +33,12 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            try {
+                a.click();
+            } finally {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
         } catch (error) {
             console.error('Export failed:', error);
             alert('فشل التصدير. يرجى المحاولة مرة أخرى.');
@@ -83,11 +87,13 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
 
             const result = await response.json();
 
-            if (result.errors > 0) {
-                alert(`تم استيراد ${result.success} بنجاح. فشل ${result.errors}. \nراجع الكونسول للتفاصيل.`);
+            const success = result.success ?? 0;
+            const errors = result.errors ?? 0;
+            if (errors > 0) {
+                alert(`تم استيراد ${success} بنجاح. فشل ${errors}. \nراجع الكونسول للتفاصيل.`);
                 console.warn('Failed rows:', result.failedRows);
             } else {
-                alert(`تم الاستيراد بنجاح! (${result.success} صنف)`);
+                alert(`تم الاستيراد بنجاح! (${success} صنف)`);
             }
 
             onImportSuccess();
@@ -105,7 +111,7 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
                 onClick={handleExport}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition"
             >
-                <span>📤</span> تصدير Excel
+                <Upload className="w-4 h-4 inline" /> تصدير Excel
             </button>
 
             <input
@@ -120,7 +126,7 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
                 disabled={importing}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition disabled:opacity-50"
             >
-                <span>📥</span> {importing ? 'جاري الاستيراد...' : 'استيراد Excel'}
+                <Download className="w-4 h-4 inline" /> {importing ? 'جاري الاستيراد...' : 'استيراد Excel'}
             </button>
         </div>
     );

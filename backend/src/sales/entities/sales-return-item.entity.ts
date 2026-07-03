@@ -13,14 +13,14 @@ export class SalesReturnItem {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   return_id: number;
 
   @ManyToOne(() => SalesReturn, (ret) => ret.items)
   @JoinColumn({ name: 'return_id' })
   return: SalesReturn;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)

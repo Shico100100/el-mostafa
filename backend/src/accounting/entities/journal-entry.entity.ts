@@ -22,7 +22,7 @@ export class JournalEntry {
   @Column({ nullable: true })
   reference: string;
 
-  @Column()
+  @Column({ type: 'int' })
   account_id: number;
 
   @ManyToOne(() => Account, (account) => account.entries)

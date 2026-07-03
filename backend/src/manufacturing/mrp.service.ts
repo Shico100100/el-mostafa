@@ -41,7 +41,7 @@ export class MRPService {
     // Helper: explode BOM demand into raw material requirements
     const addDemand = async (productId: number, quantity: number) => {
       const bom = await this.bomRepo.findOne({
-        where: { product_id: productId },
+        where: { product: { id: productId } },
         relations: ['items', 'items.product'],
       });
       if (bom) {
@@ -74,7 +74,10 @@ export class MRPService {
       relations: ['product'],
     });
     for (const mo of mos) {
-      await addDemand(mo.product_id, Number(mo.quantity_required) - Number(mo.quantity_produced));
+      await addDemand(
+        mo.product_id,
+        Number(mo.quantity_required) - Number(mo.quantity_produced),
+      );
     }
 
     // 3. Get Current Stock for these products
@@ -140,7 +143,7 @@ export class MRPService {
 
     for (const item of items) {
       const bom = await this.bomRepo.findOne({
-        where: { product_id: item.productId },
+        where: { product: { id: item.productId } },
         relations: ['items', 'items.product'],
       });
 

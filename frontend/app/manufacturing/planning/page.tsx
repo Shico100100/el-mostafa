@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import GlassPanel from '@/components/ui/GlassPanel';
+import { ArrowRight, CalendarDays, Target } from 'lucide-react';
 
 interface ScheduleItem {
     id: number;
@@ -23,7 +24,7 @@ export default function PlanningPage() {
 
     const loadData = useCallback(async () => {
         try {
-            const data = await api.fetchWithAuth('/v1/manufacturing/schedules');
+            const data = await api.getProductionSchedules();
             setSchedules(data || []);
         } catch (err) {
             console.error(err);
@@ -58,14 +59,14 @@ export default function PlanningPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.push('/manufacturing')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl">⬅️</button>
-                        <h1 className="text-2xl font-bold text-white">🗓️ تخطيط الإنتاج</h1>
+                        <button onClick={() => router.push('/manufacturing')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl"><ArrowRight /></button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><CalendarDays /> تخطيط الإنتاج</h1>
                     </div>
                     <button
                         onClick={() => router.push('/manufacturing/schedule')}
-                        className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30 hover:bg-blue-500/30 transition"
+                        className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30 hover:bg-blue-500/30 transition flex items-center gap-2"
                     >
-                        🎯 جدولة الإنتاج
+                        <Target /> جدولة الإنتاج
                     </button>
                 </div>
             </header>

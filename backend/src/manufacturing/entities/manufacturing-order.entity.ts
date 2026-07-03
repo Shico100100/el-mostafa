@@ -33,7 +33,7 @@ export class ManufacturingOrder {
   @Column({ nullable: true })
   sales_order_item_id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)

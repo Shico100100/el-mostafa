@@ -9,20 +9,20 @@
 ### ملخص تنفيذي
 - **B (Accessories):** تنفيذ قوي وموجود بأدلة endpoints في `backend/src/manufacturing/accessories.controller.ts` + توافق واضح مع `frontend/app/assembly/accessories/page.tsx`.
 - **C (Sales Orders):** تنفيذ واجهة/تدفق البيع وأوامر البيع موجود بأدلة endpoints في `backend/src/sales/sales.controller.ts` + توافق مع `frontend/app/sales/orders/page.tsx`.
-- **D (Quick sync بين التصنيع والمبيعات):** **غير مثبت** بشكل كافٍ بأدلة endpoints/flows صريحة.
+- **D (Quick sync بين التصنيع والمبيعات):** **مثبت**—تم إنشاء ManufacturingOrder entity + endpoints (CRUD، إنشاء من أمر بيع، تحديث حالة) + تكامل مع MRP وواجهة إرسال للتصنيع في أوامر البيع.
 - **E (Checklist وثائقي للتوثيق):** تم إنشاء `CHECKLIST.md` الآن كوثيقة تحقق، لكن **لم تكن موجودة مسبقًا كوثيقة رسمية داخل المشروع**.
 
-بالتالي: **المشروع لا يعتبر “منفذ بالكامل لكل نقاط APP_PROMPT”** بسبب (D) غير مثبت و (E) كان ناقصًا كتوثيق Checklist سابق.
+بالتالي: **المشروع لا يعتبر “منفذ بالكامل لكل نقاط APP_PROMPT”** — (D) مثبت الآن لكنه كان ناقصًا في وقت الإطلاق، و (E) لم يكن موجودًا كتوثيق Checklist رسمي سابقًا.
 
 ---
 
 ## 2) تقرير انتقادي (Critique)
 
 ### 2.1 مشاكل جاهزية الإنتاج (Production Readiness)
-1) **Hardcoded URL للصور في Accessories**
+1) **URL الصور قد يكون نسبياً (Relative Path)**
 - في `frontend/app/assembly/accessories/page.tsx` يتم استخدام:
-  - `http://localhost:3001${acc.image_path}`
-- المشكلة: أي تشغيل على بيئة مختلفة (IP/Port/Reverse proxy) سيؤدي لعدم عرض الصور.
+  - `acc.image_path` (بدون base URL)
+- المشكلة: إذا كانت `image_path` نسبية (مثل `/uploads/...`) ستحل بالنسبة لـ Frontend domain وليس Backend، مما قد يمنع عرض الصور.
 
 ### 2.2 i18n قد يسبب تعارضات منطقية مع البيانات
 - الصفحة تقوم بعمل i18n عبر تعديل `product.name` داخل الـ state.
@@ -53,8 +53,7 @@
 ## 3) اقتراحات إصلاح مرتبة حسب الأولوية
 
 ### Priority P0 (إصلاحات تؤثر مباشرة على التشغيل/صحة البيانات)
-1) إزالة hardcoded `localhost` في `AccessoriesPage`:
-- استخدم base url من env/config (مثل `NEXT_PUBLIC_API_BASE_URL`) أو relative URLs.
+1) تأكد من أن `image_path` من الـ API يعيد مساراً كاملاً (أو استخدم `NEXT_PUBLIC_API_URL` كـ base URL) لضمان عرض الصور في بيئات مختلفة.
 
 2) فصل i18n presentation عن data identity:
 - لا تعدل `product.name` كقيمة data.
@@ -92,7 +91,7 @@
 
 ## خاتمة
 المنظومة تمتلك أساس وظيفي قوي في Accessories/Sales Orders (Endpoints/Services موجودة بوضوح). لكن اكتمال “البرومبت” كمعيار تسليم يحتاج:
-- إصلاح جاهزية الإنتاج (hardcoded URLs)
+- إصلاح جاهزية الإنتاج (URLs الصور)
 - توحيد سياسات التحويل (KG↔Pieces)
 - تقوية الاختبارات
 - وتوثيق Checklist القابل للتدقيق كـ (E)

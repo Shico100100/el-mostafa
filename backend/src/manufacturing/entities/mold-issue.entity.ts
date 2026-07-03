@@ -19,7 +19,7 @@ export class MoldIssue {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   mold_id: number;
 
   @ManyToOne(() => Mold)

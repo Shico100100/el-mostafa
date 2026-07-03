@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ArrowLeft, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -33,8 +34,8 @@ export default function PackagingPage() {
 
     const packagingProducts = products.filter(p =>
         packagingKeywords.some(kw => p.name.includes(kw)) ||
-        p.category?.name.includes('تغليف') ||
-        p.category?.name.includes('تعبئة')
+        p.category?.name?.includes('تغليف') ||
+        p.category?.name?.includes('تعبئة')
     );
 
     const displayProducts = packagingProducts.length > 0 ? packagingProducts : products;
@@ -44,8 +45,8 @@ export default function PackagingPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.push('/assembly')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl">⬅️</button>
-                        <h1 className="text-2xl font-bold text-white">📦 التعبئة والتغليف</h1>
+                        <button onClick={() => router.push('/assembly')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl"><ArrowLeft className="w-5 h-5" /></button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Package className="w-6 h-6" /> التعبئة والتغليف</h1>
                     </div>
                 </div>
             </header>
@@ -105,13 +106,13 @@ export default function PackagingPage() {
 
                         <div className="mt-8 text-center">
                             <button
-                                onClick={() => router.push('/inventory/products')}
+                                onClick={() => router.push('/inventory2/products')}
                                 className="px-6 py-3 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30 hover:bg-blue-500/30 transition mx-2"
                             >
                                 إدارة المخزون الكامل
                             </button>
                             <button
-                                onClick={() => router.push('/inventory/categories')}
+                                onClick={() => router.push('/inventory2/products')}
                                 className="px-6 py-3 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-500/30 hover:bg-purple-500/30 transition mx-2"
                             >
                                 تصنيفات المخزون

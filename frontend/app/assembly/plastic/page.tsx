@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ArrowLeft, Droplets } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import GlassPanel from '@/components/ui/GlassPanel';
@@ -14,7 +15,8 @@ export default function PlasticPage() {
         api.getProducts('FINISHED')
             .then((data: unknown) => {
                 const items = (data as { products?: Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }> } | Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }>);
-                setProducts(Array.isArray(items) ? items : items.products || []);
+                const arr = Array.isArray(items) ? items : (items?.products || []);
+                setProducts(arr);
             })
             .catch(() => setProducts([]))
             .finally(() => setLoading(false));
@@ -25,8 +27,8 @@ export default function PlasticPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.push('/assembly')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl">⬅️</button>
-                        <h1 className="text-2xl font-bold text-white">🪣 بلاستيك</h1>
+                        <button onClick={() => router.push('/assembly')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl"><ArrowLeft className="w-5 h-5" /></button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Droplets className="w-6 h-6" /> بلاستيك</h1>
                     </div>
                 </div>
             </header>
@@ -37,7 +39,7 @@ export default function PlasticPage() {
                     ) : products.length === 0 ? (
                         <div className="text-center text-gray-400 py-12">
                             <p>لا توجد منتجات بلاستيكية مضافة</p>
-                            <button onClick={() => router.push('/inventory/products')} className="mt-4 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30">
+                            <button onClick={() => router.push('/inventory2/products')} className="mt-4 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30">
                                 إدارة المنتجات
                             </button>
                         </div>

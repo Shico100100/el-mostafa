@@ -25,7 +25,7 @@ export class MachineMaintenance {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   machine_id: number;
 
   @ManyToOne(() => Machine)

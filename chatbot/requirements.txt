@@ -1,0 +1,26 @@
+# Lightweight Chatbot — Strict RAM < 50MB
+# Install: pip install -r requirements.txt
+# Then: python -m spacy download ar_core_web_sm
+
+fastapi>=0.110,<1.0
+python-multipart>=0.0.9,<1.0
+uvicorn[standard]>=0.29,<1.0
+spacy>=3.7,<4.0
+psycopg2-binary>=2.9,<3.0
+apscheduler>=3.10,<4.0
+pydantic>=2.5,<3.0
+python-dotenv>=1.0,<2.0
+openpyxl>=3.1,<4.0
+reportlab>=4.1,<5.0
+pandas>=2.2,<3.0
+
+# Document parsing — PDF, DOCX (chatbot/data/)
+pypdf>=6,<7
+python-docx>=1.1,<2
+
+# Speech-to-Text — offline faster-whisper tiny multilingual (~75 MB RAM)
+faster-whisper>=1.2,<2.0
+soundfile>=0.14,<1.0
+
+# Text-to-Speech — offline pyttsx3 (Windows SAPI5)
+pyttsx3>=2.90,<3.0

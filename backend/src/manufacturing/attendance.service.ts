@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Attendance } from './entities/attendance.entity';
@@ -13,7 +13,15 @@ export class AttendanceService {
     private userRepo: Repository<User>,
   ) {}
 
-  async getAttendance(date?: string, startDate?: string, endDate?: string) {
+  async getAttendance(
+    date?: string,
+    startDate?: string,
+    endDate?: string,
+    page = 1,
+    limit = 50,
+  ) {
+    const take = Math.min(Math.max(limit, 1), 200);
+    const skip = (Math.max(page, 1) - 1) * take;
     const where: any = {};
     if (date) {
       where.date = date;
@@ -21,11 +29,20 @@ export class AttendanceService {
       where.date = Between(startDate, endDate);
     }
 
-    return this.attendanceRepo.find({
+    const [items, total] = await this.attendanceRepo.findAndCount({
       where,
       relations: ['user'],
       order: { date: 'DESC', user: { firstName: 'ASC' } },
+      skip,
+      take,
     });
+    return {
+      items,
+      total,
+      page,
+      limit: take,
+      totalPages: Math.ceil(total / take),
+    };
   }
 
   async createAttendance(data: Partial<Attendance>) {
@@ -35,7 +52,12 @@ export class AttendanceService {
 
   async updateAttendance(id: number, data: Partial<Attendance>) {
     await this.attendanceRepo.update(id, data);
-    return this.attendanceRepo.findOne({ where: { id }, relations: ['user'] });
+    const updated = await this.attendanceRepo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    if (!updated) throw new NotFoundException('سجل الحضور غير موجود');
+    return updated;
   }
 
   async deleteAttendance(id: number) {

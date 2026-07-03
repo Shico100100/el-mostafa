@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { AssemblyService } from './assembly.service';
+import { RecordProductionDto } from './dto';
 
 @Controller('assembly')
 export class AssemblyController {
@@ -17,15 +18,7 @@ export class AssemblyController {
   }
 
   @Post('record')
-  async recordProduction(
-    @Body()
-    body: {
-      productId: number;
-      quantity: number;
-      date?: string;
-      notes?: string;
-    },
-  ) {
+  async recordProduction(@Body() body: RecordProductionDto) {
     return this.assemblyService.recordProduction({
       productId: body.productId,
       quantity: body.quantity,

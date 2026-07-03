@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
-import { ProductionBatch, BatchStatus } from './entities/production-batch.entity';
+import { Repository, LessThanOrEqual, DataSource } from 'typeorm';
+import {
+  ProductionBatch,
+  BatchStatus,
+} from './entities/production-batch.entity';
 import { BatchComponent } from './entities/batch-component.entity';
 import { DailyProduction } from './entities/daily-production.entity';
 
@@ -14,6 +21,7 @@ export class TraceabilityService {
     private readonly componentRepo: Repository<BatchComponent>,
     @InjectRepository(DailyProduction)
     private readonly productionRepo: Repository<DailyProduction>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(status?: BatchStatus): Promise<ProductionBatch[]> {
@@ -29,9 +37,13 @@ export class TraceabilityService {
   async findOne(id: number): Promise<ProductionBatch> {
     const batch = await this.batchRepo.findOne({
       where: { id },
-      relations: ['product', 'components', 'components.raw_material', 'components.accessory'],
+      relations: [
+        'product',
+        'components',
+        'components.product',
+      ],
     });
-    if (!batch) throw new NotFoundException('Batch not found');
+    if (!batch) throw new NotFoundException('الدفعة غير موجودة');
     return batch;
   }
 
@@ -46,7 +58,9 @@ export class TraceabilityService {
       .where('b.batch_number LIKE :prefix', { prefix: `${prefix}%` })
       .orderBy('b.batch_number', 'DESC')
       .getOne();
-    const seq = last ? String(Number(last.batch_number.split('-').pop()) + 1).padStart(4, '0') : '0001';
+    const seq = last
+      ? String(Number(last.batch_number.split('-').pop()) + 1).padStart(4, '0')
+      : '0001';
     return `${prefix}${seq}`;
   }
 
@@ -60,8 +74,7 @@ export class TraceabilityService {
     production_id?: number;
     created_by?: number;
     components?: {
-      raw_material_id?: number;
-      accessory_id?: number;
+      product_id?: number;
       supplier_batch_number?: string;
       quantity_used: number;
       unit?: string;
@@ -69,43 +82,51 @@ export class TraceabilityService {
     }[];
   }): Promise<ProductionBatch> {
     const batch_number = await this.generateBatchNumber();
-    let production: DailyProduction | null = null;
     if (dto.production_id) {
-      production = await this.productionRepo.findOne({ where: { id: dto.production_id } });
-      if (!production) throw new BadRequestException('Production record not found');
+      const production = await this.productionRepo.findOne({
+        where: { id: dto.production_id },
+      });
+      if (!production) throw new BadRequestException('سجل الإنتاج غير موجود');
     }
-    const batch = this.batchRepo.create({
-      batch_number,
-      product_id: dto.product_id,
-      production_date: new Date(dto.production_date),
-      expiry_date: dto.expiry_date ? new Date(dto.expiry_date) : undefined,
-      quantity: dto.quantity,
-      unit: dto.unit || 'piece',
-      notes: dto.notes,
-      production_id: dto.production_id,
-      created_by: dto.created_by,
-      status: BatchStatus.PENDING,
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const batchRepo = manager.getRepository(ProductionBatch);
+      const componentRepo = manager.getRepository(BatchComponent);
+      const batch = batchRepo.create({
+        batch_number,
+        product_id: dto.product_id,
+        production_date: new Date(dto.production_date),
+        expiry_date: dto.expiry_date ? new Date(dto.expiry_date) : undefined,
+        quantity: dto.quantity,
+        unit: dto.unit || 'piece',
+        notes: dto.notes,
+        production_id: dto.production_id,
+        created_by: dto.created_by,
+        status: BatchStatus.PENDING,
+      });
+      const saved = await batchRepo.save(batch);
+      if (dto.components?.length) {
+        const components = dto.components.map((c) =>
+          componentRepo.create({
+            batch_id: saved.id,
+            product_id: c.product_id,
+            supplier_batch_number: c.supplier_batch_number,
+            quantity_used: c.quantity_used,
+            unit: c.unit || 'piece',
+            cost_per_unit: c.cost_per_unit || 0,
+            total_cost: (c.cost_per_unit || 0) * c.quantity_used,
+          }),
+        );
+        await componentRepo.save(components);
+      }
+      return saved;
     });
-    const saved = await this.batchRepo.save(batch);
-    if (dto.components?.length) {
-      const components = dto.components.map((c) =>
-        this.componentRepo.create({
-          batch_id: saved.id,
-          raw_material_id: c.raw_material_id,
-          accessory_id: c.accessory_id,
-          supplier_batch_number: c.supplier_batch_number,
-          quantity_used: c.quantity_used,
-          unit: c.unit || 'piece',
-          cost_per_unit: c.cost_per_unit || 0,
-          total_cost: (c.cost_per_unit || 0) * c.quantity_used,
-        }),
-      );
-      await this.componentRepo.save(components);
-    }
     return this.findOne(saved.id);
   }
 
-  async updateStatus(id: number, status: BatchStatus): Promise<ProductionBatch> {
+  async updateStatus(
+    id: number,
+    status: BatchStatus,
+  ): Promise<ProductionBatch> {
     const batch = await this.findOne(id);
     batch.status = status;
     return this.batchRepo.save(batch);
@@ -114,7 +135,10 @@ export class TraceabilityService {
   async recall(id: number, reason?: string): Promise<ProductionBatch> {
     const batch = await this.findOne(id);
     batch.status = BatchStatus.RECALLED;
-    if (reason) batch.notes = batch.notes ? `${batch.notes}\nRecall: ${reason}` : `Recall: ${reason}`;
+    if (reason)
+      batch.notes = batch.notes
+        ? `${batch.notes}\nRecall: ${reason}`
+        : `Recall: ${reason}`;
     return this.batchRepo.save(batch);
   }
 

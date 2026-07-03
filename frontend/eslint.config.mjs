@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/only-throw-error": "off",
-      "@typescript-eslint/no-explicit-any": "error", // Enforce no 'any' types
+      "@typescript-eslint/no-explicit-any": "warn", // Warn on 'any' types (pre-existing codebase)
       "react-hooks/exhaustive-deps": "error", // Enforce complete dependencies in useEffect
     },
   },

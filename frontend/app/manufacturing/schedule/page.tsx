@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { CalendarDays } from 'lucide-react';
 
 interface Machine {
     id: number;
@@ -68,7 +69,7 @@ export default function SchedulerPage() {
             <header className="glass border-b border-white/5 bg-slate-900/50 backdrop-blur-lg sticky top-0 z-10">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold flex items-center gap-3">
-                        <span className="text-3xl">🗓️</span>
+                        <span className="text-3xl"><CalendarDays /></span>
                         جدولة الإنتاج (Gantt Scheduler)
                     </h1>
                     <button onClick={() => router.push('/manufacturing')} className="text-slate-400 hover:text-white transition">

@@ -1,0 +1,26 @@
+--- a/backend/src/inventory/inventory.service.ts
++++ b/backend/src/inventory/inventory.service.ts
+@@ -872,7 +872,7 @@
+       date?: Date;
+     },
+     manager?: EntityManager,
++    skipStockCheck?: boolean,
+   ) {
+     const entityManager = manager || this.movementRepo.manager;
+ 
+@@ -899,7 +899,14 @@
+     if (data.type === MovementType.IN) {
+       stock.quantity = Number(stock.quantity) + Number(data.quantity);
+     } else if (data.type === MovementType.OUT) {
+-      stock.quantity = Number(stock.quantity) - Number(data.quantity);
++      const currentQty = Number(stock.quantity);
++      const deductQty = Number(data.quantity);
++      if (!skipStockCheck && deductQty > currentQty) {
++        throw new BadRequestException(
++          """ + "$" + "{currentQty}" + """ and """ + "$" + "{deductQty}" + @""",
++        );
++      }
++      stock.quantity = currentQty - deductQty;
+     } else if (data.type === MovementType.ADJUST) {
+       stock.quantity = Number(data.quantity);
+     }

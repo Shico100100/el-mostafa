@@ -30,6 +30,7 @@ export class MailService {
         i18n.t('confirm-email.text3'),
       ]);
     }
+    emailConfirmTitle ??= 'Confirm Email';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -82,6 +83,7 @@ export class MailService {
         i18n.t('reset-password.text4'),
       ]);
     }
+    resetPasswordTitle ??= 'Reset Password';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -134,6 +136,7 @@ export class MailService {
         i18n.t('confirm-new-email.text3'),
       ]);
     }
+    emailConfirmTitle ??= 'Confirm Email';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {

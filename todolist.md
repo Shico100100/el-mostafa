@@ -19,3 +19,23 @@
 
 ## المرحلة 5: تحسين Backend
 - [ ] إضافة endpoint "overview" — اختياري، ليس ضرورياً حالياً.
+
+---
+
+## Build & Lint Status (2026-06-01)
+- [x] Next.js upgraded 16.0.6 → 16.2.6 (latest stable)
+- [x] Frontend ESLint: 0 errors, 0 warnings
+- [x] Frontend `npm run build`: ✅ — 53 pages generated
+- [x] Backend ESLint: no issues
+- [x] Backend `npm run build`: ✅ via `nest build`
+- [x] Backend tests: 11 suites, 25 tests — **all passing**
+- [x] Fixed `RawMaterialRepository` missing provider in `purchases.service.spec.ts`
+- [x] Fixed 4x S3 `credentials` — AWS SDK upgraded, `@ts-expect-error` removed, build clean
+- [x] Backend `npm audit fix --force`: **55 → 3** vulns remaining (2 moderate, 1 high)
+- [ ] Frontend `npm audit fix --force` would need to downgrade Next.js — skip
+
+## Known Issues
+- Backend: 3 unfixable vulns — `uuid` via `exceljs` (moderate), `xlsx` via SheetJS (high, no fix)
+- Frontend: 8 unfixable vulns — `postcss` via Next.js, `serialize-javascript` via `next-pwa`, `xlsx` (no fix)
+- Backend: `@nestjs/cli` pinned to 11.0.10 (reinstalled, `nest build` now works)
+- AWS SDK upgraded 3.864.0 → 3.1057.0 — `credentials` typing fixed in newer version

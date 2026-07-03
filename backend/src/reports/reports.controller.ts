@@ -1,9 +1,7 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
@@ -60,5 +58,14 @@ export class ReportsController {
     @Query('endDate') endDate: string,
   ) {
     return this.reportsService.getShipmentProfitability(startDate, endDate);
+  }
+
+  @Get('cash-flow-projection')
+  async getCashFlowProjection(
+    @Query('days') days?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.reportsService.getCashFlowProjection(days, startDate, endDate);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import appleSigninAuth from 'apple-signin-auth';
 import { ConfigService } from '@nestjs/config';
 import { SocialInterface } from '../social/interfaces/social.interface';
@@ -15,6 +15,8 @@ export class AuthAppleService {
     const data = await appleSigninAuth.verifyIdToken(loginDto.idToken, {
       audience: this.configService.get('apple.appAudience', { infer: true }),
     });
+
+    if (!data) throw new BadRequestException('فشل التحقق من هوية Apple');
 
     return {
       id: data.sub,

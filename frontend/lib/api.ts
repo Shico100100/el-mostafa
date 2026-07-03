@@ -1,4 +1,33 @@
 import type { ApiErrorPayload } from '@/types/api';
+import type { AgingItem, CashFlowData } from '@/lib/dashboard/types';
+import type {
+  CreateUserDto,
+  UpdateUserDto,
+  CreateJournalEntryDto,
+  CreateSalesOrderDto,
+  CreatePurchaseOrderDto,
+  SaveSalaryPaymentDto,
+  CreateCustomerPaymentDto,
+  CreateSupplierPaymentDto,
+  CreateProductionScheduleDto,
+  CreateQCInspectionDto,
+  CreateSalesReturnDto,
+  CreatePurchaseReturnDto,
+  CreateDailyProductionDto,
+  AddRawMaterialStockDto,
+  CreateManufacturingStockMovementDto,
+  CreateAttendanceDto,
+  CalculatePayrollDto,
+  UpdateEmployeeProfileDto,
+  CreateRangeProductionDto,
+  CreateBOMDto,
+  CreateCurrencyDto,
+  AddFxRateDto,
+  UpdateLandedCostDto,
+  CreateContainerDto,
+  CreatePackingListDto,
+  CreateNotificationDto,
+} from './dto';
 
 const API_URL = '/api';
 
@@ -35,36 +64,80 @@ export const api = {
         return this.fetchWithAuth('/v1/auth/me');
     },
 
+    _refreshPromise: null as Promise<boolean> | null,
+
+    async _refreshToken(): Promise<boolean> {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) return false;
+
+        try {
+            const response = await fetch(`${API_URL}/v1/auth/refresh`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${refreshToken}` },
+            });
+            if (!response.ok) return false;
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            if (data.refreshToken) {
+                localStorage.setItem('refreshToken', data.refreshToken);
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    async tryRefreshToken(): Promise<boolean> {
+        if (this._refreshPromise) return this._refreshPromise;
+        this._refreshPromise = this._refreshToken();
+        const result = await this._refreshPromise;
+        this._refreshPromise = null;
+        return result;
+    },
+
+    clearAuth() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+    },
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async fetchWithAuth<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const normalizedEndpoint = endpoint.startsWith('/v1/') ? endpoint : `/v1${endpoint}`;
-        const token = localStorage.getItem('token');
-        const isFormData = options.body instanceof FormData;
 
-        const headers: Record<string, string> = {
-            ...(token && { Authorization: `Bearer ${token}` }),
+        const makeRequest = async (): Promise<Response> => {
+            const token = localStorage.getItem('token');
+            const isFormData = options.body instanceof FormData;
+            const headers: Record<string, string> = {
+                ...(token && { Authorization: `Bearer ${token}` }),
+            };
+            const method = (options.method || 'GET').toUpperCase();
+            const hasBody = !['GET', 'HEAD', 'DELETE'].includes(method);
+            if (!isFormData && hasBody) {
+                headers['Content-Type'] = 'application/json';
+            }
+            if (options.headers) {
+                Object.assign(headers, options.headers);
+            }
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            try {
+                return await fetch(`${API_URL}${normalizedEndpoint}`, { ...options, headers, signal: controller.signal });
+            } finally {
+                clearTimeout(timeoutId);
+            }
         };
 
-        const method = (options.method || 'GET').toUpperCase();
-        const hasBody = !['GET', 'HEAD', 'DELETE'].includes(method);
-
-        if (!isFormData && hasBody) {
-            headers['Content-Type'] = 'application/json';
-        }
-
-        if (options.headers) {
-            Object.assign(headers, options.headers);
-        }
-
-        const response = await fetch(`${API_URL}${normalizedEndpoint}`, {
-            ...options,
-            headers,
-        });
+        let response = await makeRequest();
 
         if (response.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-            throw new Error('Unauthorized');
+            const refreshed = await this.tryRefreshToken();
+            if (refreshed) {
+                response = await makeRequest();
+            } else {
+                this.clearAuth();
+                window.location.href = '/login';
+                throw new Error('Unauthorized');
+            }
         }
 
 
@@ -72,6 +145,7 @@ export const api = {
         let data: unknown = {};
         try {
             data = text ? JSON.parse(text) : {};
+            if (data === null) data = {};
         } catch {
 
             if (!response.ok) {
@@ -120,29 +194,29 @@ export const api = {
     },
 
     async getRecentSales() {
-        return this.fetchWithAuth('/v1/sales/recent');
+        return this.fetchWithAuth('/v1/sales/orders');
     },
 
     async getInventoryStatus() {
-        return this.fetchWithAuth('/v1/inventory/status');
+        return this.fetchWithAuth('/v1/inventory/stock');
     },
 
     async getProductionStats() {
-        return this.fetchWithAuth('/v1/production/stats');
+        return this.fetchWithAuth('/v1/manufacturing/stats');
     },
 
     async getUsers() {
         return this.fetchWithAuth('/v1/users');
     },
 
-    async createUser(userData: Record<string, unknown>) {
+    async createUser(userData: CreateUserDto) {
         return this.fetchWithAuth('/v1/users', {
             method: 'POST',
             body: JSON.stringify(userData),
         });
     },
 
-    async updateUser(id: number, userData: Record<string, unknown>) {
+    async updateUser(id: number, userData: UpdateUserDto) {
         return this.fetchWithAuth(`/v1/users/${id}`, {
             method: 'PATCH',
             body: JSON.stringify(userData),
@@ -159,33 +233,49 @@ export const api = {
     },
 
     async getAccountingJournals() {
-        return this.fetchWithAuth('/v1/accounting/journals');
+        return this.fetchWithAuth('/v1/accounting/journal');
     },
 
-    async createAccountingJournal(data: Record<string, unknown>) {
-        return this.fetchWithAuth('/v1/accounting/journals', {
+    async createAccountingJournal(data: CreateJournalEntryDto) {
+        return this.fetchWithAuth('/v1/accounting/journal', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
     async getInventoryMovements() {
-        return this.fetchWithAuth('/v1/inventory/movements');
+        return this.fetchWithAuth('/v1/inventory/stock/movements');
     },
 
     async getSuppliers() {
         return this.fetchWithAuth('/v1/purchases/suppliers');
     },
 
+    async getSupplierAging(): Promise<AgingItem[]> {
+        return this.fetchWithAuth('/v1/purchases/suppliers/aging');
+    },
+
+    async getLatestPurchasePrice(productId: number): Promise<{ price: number; date: string | null }> {
+        return this.fetchWithAuth(`/v1/purchases/products/${productId}/latest-price`);
+    },
+
+    async getLatestPurchasePrices(productIds: number[]): Promise<Record<number, { price: number; date: string | null }>> {
+        return this.fetchWithAuth(`/v1/purchases/products/latest-prices/batch?ids=${productIds.join(',')}`);
+    },
+
     async getCustomers() {
         return this.fetchWithAuth('/v1/sales/customers');
+    },
+
+    async getCustomerAging(): Promise<AgingItem[]> {
+        return this.fetchWithAuth('/v1/sales/customers/aging');
     },
 
     async getSalesOrders() {
         return this.fetchWithAuth('/v1/sales/orders');
     },
 
-    async createSalesOrder(data: Record<string, unknown>) {
+    async createSalesOrder(data: CreateSalesOrderDto) {
         return this.fetchWithAuth('/v1/sales/orders', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -196,7 +286,7 @@ export const api = {
         return this.fetchWithAuth('/v1/purchases/orders');
     },
 
-    async createPurchaseOrder(data: Record<string, unknown>) {
+    async createPurchaseOrder(data: CreatePurchaseOrderDto) {
         return this.fetchWithAuth('/v1/purchases/orders', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -214,14 +304,14 @@ export const api = {
     },
 
     async getPayrollEmployees() {
-        return this.fetchWithAuth('/v1/payroll/employees');
+        return this.fetchWithAuth('/v1/payroll/profiles');
     },
 
     async getPayrollPayments() {
         return this.fetchWithAuth('/v1/payroll/payments');
     },
 
-    async savePayrollPayment(data: Record<string, unknown>) {
+    async savePayrollPayment(data: SaveSalaryPaymentDto) {
         return this.fetchWithAuth('/v1/payroll/payments', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -236,14 +326,14 @@ export const api = {
         return this.fetchWithAuth(`/v1/purchases/suppliers/${supplierId}/statement`);
     },
 
-    async addCustomerPayment(customerId: number, data: Record<string, unknown>) {
+    async addCustomerPayment(customerId: number, data: CreateCustomerPaymentDto) {
         return this.fetchWithAuth(`/v1/sales/customers/${customerId}/payments`, {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async addSupplierPayment(supplierId: number, data: Record<string, unknown>) {
+    async addSupplierPayment(supplierId: number, data: CreateSupplierPaymentDto) {
         return this.fetchWithAuth(`/v1/purchases/suppliers/${supplierId}/payments`, {
             method: 'POST',
             body: JSON.stringify(data),
@@ -251,19 +341,19 @@ export const api = {
     },
 
     async getProductionSchedules() {
-        return this.fetchWithAuth('/v1/manufacturing/production-schedules');
+        return this.fetchWithAuth('/v1/manufacturing/planning');
     },
 
-    async createProductionSchedule(data: Record<string, unknown>) {
-        return this.fetchWithAuth('/v1/manufacturing/production-schedules', {
+    async createProductionSchedule(data: CreateProductionScheduleDto) {
+        return this.fetchWithAuth('/v1/manufacturing/planning', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updateProductionSchedule(id: number, data: Record<string, unknown>) {
-        return this.fetchWithAuth(`/v1/manufacturing/production-schedules/${id}`, {
-            method: 'PATCH',
+    async updateProductionSchedule(id: number, data: CreateProductionScheduleDto) {
+        return this.fetchWithAuth(`/v1/manufacturing/planning/${id}`, {
+            method: 'PUT',
             body: JSON.stringify(data),
         });
     },
@@ -277,14 +367,14 @@ export const api = {
     },
 
     async getProductionPlanning() {
-        return this.fetchWithAuth('/v1/manufacturing/production-plans');
+        return this.fetchWithAuth('/v1/manufacturing/planning');
     },
 
     async getQCInspections() {
         return this.fetchWithAuth('/v1/manufacturing/qc/recent');
     },
 
-    async createQCInspection(data: Record<string, unknown>) {
+    async createQCInspection(data: CreateQCInspectionDto) {
         return this.fetchWithAuth('/v1/manufacturing/qc', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -295,7 +385,7 @@ export const api = {
         return this.fetchWithAuth('/v1/sales/returns');
     },
 
-    async createSalesReturn(data: Record<string, unknown>) {
+    async createSalesReturn(data: CreateSalesReturnDto) {
         return this.fetchWithAuth('/v1/sales/returns', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -306,7 +396,7 @@ export const api = {
         return this.fetchWithAuth('/v1/purchases/returns');
     },
 
-    async createPurchaseReturn(data: Record<string, unknown>) {
+    async createPurchaseReturn(data: CreatePurchaseReturnDto) {
         return this.fetchWithAuth('/v1/purchases/returns', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -317,14 +407,14 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/production');
     },
 
-    async createProduction(data: Record<string, unknown>) {
+    async createProduction(data: CreateDailyProductionDto) {
         return this.fetchWithAuth('/v1/manufacturing/production', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updateProduction(id: number, data: Record<string, unknown>) {
+    async updateProduction(id: number, data: Partial<CreateDailyProductionDto>) {
         return this.fetchWithAuth(`/v1/manufacturing/production/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -348,14 +438,14 @@ export const api = {
     },
 
     async getRawMaterialConsumption() {
-        return this.fetchWithAuth('/v1/manufacturing/raw-materials/consumption');
+        return this.fetchWithAuth('/v1/manufacturing/raw-materials/consumption/history');
     },
 
     async getRawMaterialEntryLog() {
-        return this.fetchWithAuth('/v1/manufacturing/raw-materials/entry-log');
+        return this.fetchWithAuth('/v1/manufacturing/raw-materials');
     },
 
-    async addRawMaterialStock(rawMaterialId: number, data: Record<string, unknown>) {
+    async addRawMaterialStock(rawMaterialId: number, data: AddRawMaterialStockDto) {
         return this.fetchWithAuth(`/v1/manufacturing/raw-materials/${rawMaterialId}/purchase`, {
             method: 'POST',
             body: JSON.stringify(data),
@@ -366,14 +456,14 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/stock-movements');
     },
 
-    async updateStockMovement(id: number, data: Record<string, unknown>) {
+    async updateStockMovement(id: number, data: Partial<CreateManufacturingStockMovementDto>) {
         return this.fetchWithAuth(`/v1/manufacturing/stock-movements/${id}`, {
             method: 'PATCH',
             body: JSON.stringify(data),
         });
     },
 
-    async createStockMovement(data: Record<string, unknown>) {
+    async createStockMovement(data: CreateManufacturingStockMovementDto) {
         return this.fetchWithAuth('/v1/manufacturing/stock-movements', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -394,7 +484,7 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/attendance/workers');
     },
 
-    async saveAttendance(data: Record<string, unknown>) {
+    async saveAttendance(data: CreateAttendanceDto) {
         return this.fetchWithAuth('/v1/manufacturing/attendance', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -419,20 +509,25 @@ export const api = {
         return this.fetchWithAuth('/v1/reports/stock');
     },
 
-    async getPayrollProfiles() {
-        return this.fetchWithAuth('/v1/payroll/profiles');
-    },
-
-    async calculatePayroll(data: Record<string, unknown>) {
-        return this.fetchWithAuth('/v1/payroll/calculate', {
+    async adjustStock(data: { product_id: number; warehouse_id: number; new_quantity: number; notes?: string }) {
+        return this.fetchWithAuth('/v1/inventory/stock/adjust', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updatePayrollProfile(id: number, data: Record<string, unknown>) {
+    async getPayrollProfiles() {
+        return this.fetchWithAuth('/v1/payroll/profiles');
+    },
+
+    async calculatePayroll(data: CalculatePayrollDto) {
+        const qs = data.month ? `?month=${data.month}` : '';
+        return this.fetchWithAuth(`/v1/payroll/calculate${qs}`);
+    },
+
+    async updatePayrollProfile(id: number, data: UpdateEmployeeProfileDto) {
         return this.fetchWithAuth(`/v1/payroll/profiles/${id}`, {
-            method: 'PATCH',
+            method: 'POST',
             body: JSON.stringify(data),
         });
     },
@@ -469,16 +564,21 @@ export const api = {
         return this.fetchWithAuth(`/v1/reports/sales-by-category?${qs}`);
     },
 
+    async getCashFlowProjection(days?: number): Promise<CashFlowData> {
+        const qs = days ? `?days=${days}` : '';
+        return this.fetchWithAuth(`/v1/reports/cash-flow-projection${qs}`);
+    },
+
     async createBackup() {
-        return this.fetchWithAuth('/v1/backup', {
+        return this.fetchWithAuth('/v1/system/backup', {
             method: 'POST',
         });
     },
 
     async restoreBackup(file: File) {
         const formData = new FormData();
-        formData.append('backup', file);
-        return this.fetchWithAuth('/v1/backup/restore', {
+        formData.append('file', file);
+        return this.fetchWithAuth('/v1/system/restore', {
             method: 'POST',
             body: formData,
         });
@@ -491,7 +591,7 @@ export const api = {
     },
 
     async syncMolds() {
-        return this.fetchWithAuth('/v1/manufacturing/molds/sync', {
+        return this.fetchWithAuth('/v1/manufacturing/sync-molds', {
             method: 'POST',
         });
     },
@@ -509,6 +609,55 @@ export const api = {
     async recalculateRawMaterialStock(id: number) {
         return this.fetchWithAuth(`/v1/manufacturing/raw-materials/${id}/recalculate`, {
             method: 'POST',
+        });
+    },
+
+    async createRangeProduction(data: CreateRangeProductionDto) {
+        return this.fetchWithAuth('/v1/manufacturing/production/range', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async getRangeSessions(page = 1, limit = 20) {
+        return this.fetchWithAuth(`/v1/manufacturing/production/sessions?page=${page}&limit=${limit}`);
+    },
+
+    async getRangeSession(id: number) {
+        return this.fetchWithAuth(`/v1/manufacturing/production/sessions/${id}`);
+    },
+
+    async deleteRangeSession(id: number) {
+        return this.fetchWithAuth(`/v1/manufacturing/production/sessions/${id}`, {
+            method: 'DELETE',
+        });
+    },
+
+    async getProductionRecordHistory(productionId: number) {
+        return this.fetchWithAuth(`/v1/manufacturing/production/${productionId}/history`);
+    },
+
+    async exportProductionHistory() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/v1/manufacturing/export/production-history`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Export failed');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `production-history-${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+
+    async importProductionHistory(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.fetchWithAuth('/v1/manufacturing/import/production-history', {
+            method: 'POST',
+            body: formData,
         });
     },
 
@@ -535,7 +684,7 @@ export const api = {
     },
 
     async deleteProductionSchedule(id: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/production-schedules/${id}`, {
+        return this.fetchWithAuth(`/v1/manufacturing/planning/${id}`, {
             method: 'DELETE',
         });
     },
@@ -553,14 +702,14 @@ export const api = {
         return this.fetchWithAuth(`/v1/manufacturing/boms/${id}`);
     },
 
-    async createBOM(data: Record<string, unknown>) {
+    async createBOM(data: CreateBOMDto) {
         return this.fetchWithAuth('/v1/manufacturing/boms', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updateBOM(id: number, data: Record<string, unknown>) {
+    async updateBOM(id: number, data: CreateBOMDto) {
         return this.fetchWithAuth(`/v1/manufacturing/boms/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -569,6 +718,12 @@ export const api = {
 
     async explodeBOM(id: number, quantity: number) {
         return this.fetchWithAuth(`/v1/manufacturing/boms/${id}/explode?quantity=${quantity}`);
+    },
+
+    async deleteBOM(id: number) {
+      return this.fetchWithAuth(`/v1/manufacturing/boms/${id}`, {
+        method: 'DELETE',
+      });
     },
 
     async getBOMCost(id: number, quantity?: number) {
@@ -585,14 +740,14 @@ export const api = {
         return this.fetchWithAuth('/v1/purchases/currencies/all');
     },
 
-    async createCurrency(data: Record<string, unknown>) {
+    async createCurrency(data: CreateCurrencyDto) {
         return this.fetchWithAuth('/v1/purchases/currencies', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updateCurrency(id: number, data: Record<string, unknown>) {
+    async updateCurrency(id: number, data: CreateCurrencyDto) {
         return this.fetchWithAuth(`/v1/purchases/currencies/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -611,7 +766,7 @@ export const api = {
         return this.fetchWithAuth(`/v1/purchases/fx-rates${q}`);
     },
 
-    async addFxRate(data: Record<string, unknown>) {
+    async addFxRate(data: AddFxRateDto) {
         return this.fetchWithAuth('/v1/purchases/fx-rates', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -627,7 +782,7 @@ export const api = {
         return this.fetchWithAuth(`/v1/purchases/orders/${orderId}/landed-cost`);
     },
 
-    async updateLandedCost(orderId: number, data: Record<string, unknown>) {
+    async updateLandedCost(orderId: number, data: UpdateLandedCostDto) {
         return this.fetchWithAuth(`/v1/purchases/orders/${orderId}/landed-cost`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -639,14 +794,14 @@ export const api = {
         return this.fetchWithAuth('/v1/purchases/containers');
     },
 
-    async createContainer(data: Record<string, unknown>) {
+    async createContainer(data: CreateContainerDto) {
         return this.fetchWithAuth('/v1/purchases/containers', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async updateContainer(id: number, data: Record<string, unknown>) {
+    async updateContainer(id: number, data: CreateContainerDto) {
         return this.fetchWithAuth(`/v1/purchases/containers/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -668,14 +823,14 @@ export const api = {
         return this.fetchWithAuth(`/v1/purchases/orders/${orderId}/packing-list`);
     },
 
-    async savePackingList(orderId: number, data: Record<string, unknown>) {
+    async savePackingList(orderId: number, data: CreatePackingListDto) {
         return this.fetchWithAuth(`/v1/purchases/orders/${orderId}/packing-list`, {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
 
-    async createNotification(data: Record<string, unknown>) {
+    async createNotification(data: CreateNotificationDto) {
         return this.fetchWithAuth('/v1/notifications', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -796,7 +951,7 @@ export const api = {
         notes?: string;
         production_id?: number;
         components?: {
-            raw_material_id?: number;
+            product_id?: number;
             accessory_id?: number;
             supplier_batch_number?: string;
             quantity_used: number;
@@ -826,6 +981,25 @@ export const api = {
 
     async getExpiringBatches(days: number) {
         return this.fetchWithAuth(`/v1/manufacturing/traceability/expiring?days=${days}`);
+    },
+
+    // Production Feasibility
+    async analyzeProductionFeasibility(items: { productId: number; quantity: number }[]) {
+        return this.fetchWithAuth('/v1/manufacturing/feasibility/analyze', {
+            method: 'POST',
+            body: JSON.stringify({ items }),
+        });
+    },
+
+    async saveFeasibilityReport(data: { items: { productId: number; quantity: number }[]; report: unknown }) {
+        return this.fetchWithAuth('/v1/manufacturing/feasibility/save', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    async getProductionHistory(productId: number) {
+        return this.fetchWithAuth(`/v1/manufacturing/feasibility/production-history/${productId}`);
     },
 
     async getAssemblyOrders() {

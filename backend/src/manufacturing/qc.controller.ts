@@ -9,7 +9,9 @@ import {
 } from '@nestjs/common';
 import { QCService } from './qc.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Public } from '../auth/public.decorator';
 import { RolesGuard } from '../roles/roles.guard';
+import { CreateQCInspectionDto } from './dto';
 
 @Controller('manufacturing/qc')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,7 +34,7 @@ export class QCController {
   }
 
   @Post()
-  create(@Body() data: any, @Request() req) {
+  create(@Body() data: CreateQCInspectionDto, @Request() req: any) {
     // Automatically set the inspector_id from the logged in user
     return this.qcService.createInspection({
       ...data,

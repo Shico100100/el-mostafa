@@ -1,8 +1,10 @@
 'use client';
 
+import { ArrowRight, Bell, BellOff } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface Notification {
     id: number;
@@ -50,16 +52,16 @@ export default function NotificationsPage() {
             if (notification.actionType === 'delete_movement') {
                 const movementId = actionData.movementId;
                 await api.fetchWithAuth(`/v1/inventory/stock/movements/${movementId}`, { method: 'DELETE' });
-                alert('تم حذف الحركة بنجاح');
+                toast.success('تم حذف الحركة بنجاح');
             } else if (notification.actionType === 'delete_order') {
                 const orderId = actionData.orderId;
                 await api.fetchWithAuth(`/v1/purchases/orders/${orderId}`, { method: 'DELETE' });
-                alert('تم حذف أمر الشراء بنجاح');
+                toast.success('تم حذف أمر الشراء بنجاح');
             }
             await api.markNotificationAsRead(notification.id);
             loadNotifications();
         } catch {
-            alert('حدث خطأ أثناء التنفيذ');
+            toast.error('حدث خطأ أثناء التنفيذ');
         }
     };
 
@@ -74,8 +76,8 @@ export default function NotificationsPage() {
             <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full text-white transition">➡️</button>
-                        <h1 className="text-2xl font-bold text-white">🔔 مركز التنبيهات</h1>
+                        <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full text-white transition"><ArrowRight className="w-5 h-5" /></button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Bell className="w-6 h-6" /> مركز التنبيهات</h1>
                     </div>
                 </div>
             </header>
@@ -129,7 +131,7 @@ export default function NotificationsPage() {
                     ))}
                     {filteredNotifications.length === 0 && (
                         <div className="text-center py-20 text-slate-500">
-                            <div className="text-6xl mb-4">🔕</div>
+                            <div className="text-6xl mb-4"><BellOff className="w-16 h-16 mx-auto text-gray-500" /></div>
                             لا توجد تنبيهات
                         </div>
                     )}

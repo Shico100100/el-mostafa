@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import {
   ManufacturingOrder,
   ManufacturingOrderStatus,
@@ -20,30 +20,34 @@ export class ManufacturingOrderService {
     private orderItemRepo: Repository<SalesOrderItem>,
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
+    private dataSource: DataSource,
   ) {}
 
   // Create manufacturing orders for all FINISHED/SEMI items in a sales order
   async createFromSalesOrder(salesOrderId: number) {
     const items = await this.orderItemRepo.find({
-      where: { order_id: salesOrderId },
+      where: { order: { id: salesOrderId } },
       relations: ['product'],
     });
 
-    const created: ManufacturingOrder[] = [];
-    for (const item of items) {
-      if (item.product.type === 'RAW') continue; // Skip raw materials
+    return this.dataSource.transaction(async (manager) => {
+      const moRepo = manager.getRepository(ManufacturingOrder);
+      const created: ManufacturingOrder[] = [];
+      for (const item of items) {
+        if (item.product?.type === 'RAW') continue;
 
-      const mo = this.moRepo.create({
-        sales_order_id: salesOrderId,
-        sales_order_item_id: item.id,
-        product_id: item.product_id,
-        quantity_required: Number(item.quantity),
-        quantity_produced: 0,
-        status: ManufacturingOrderStatus.PENDING,
-      });
-      created.push(await this.moRepo.save(mo));
-    }
-    return created;
+        const mo = moRepo.create({
+          sales_order_id: salesOrderId,
+          sales_order_item_id: item.id,
+          product_id: item.product_id,
+          quantity_required: Number(item.quantity) || 0,
+          quantity_produced: 0,
+          status: ManufacturingOrderStatus.PENDING,
+        });
+        created.push(await moRepo.save(mo));
+      }
+      return created;
+    });
   }
 
   // Get all manufacturing orders with optional filters
@@ -78,13 +82,17 @@ export class ManufacturingOrderService {
 
   // Update produced quantity
   async updateProduced(id: number, quantity: number) {
-    const mo = await this.moRepo.findOne({ where: { id } });
-    if (!mo) throw new Error('Manufacturing order not found');
-    mo.quantity_produced = Number(mo.quantity_produced) + quantity;
-    if (mo.quantity_produced >= mo.quantity_required) {
-      mo.status = ManufacturingOrderStatus.COMPLETED;
-      mo.completed_at = new Date();
-    }
-    return this.moRepo.save(mo);
+    return this.dataSource.transaction(async (manager) => {
+      const mo = await manager.findOne(ManufacturingOrder, {
+        where: { id },
+      });
+      if (!mo) throw new NotFoundException('أمر التصنيع غير موجود');
+      mo.quantity_produced = Number(mo.quantity_produced) + quantity;
+      if (mo.quantity_produced >= mo.quantity_required) {
+        mo.status = ManufacturingOrderStatus.COMPLETED;
+        mo.completed_at = new Date();
+      }
+      return manager.save(ManufacturingOrder, mo);
+    });
   }
 }

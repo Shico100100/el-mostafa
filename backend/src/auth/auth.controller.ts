@@ -11,6 +11,7 @@ import {
   Delete,
   SerializeOptions,
 } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
@@ -25,6 +26,8 @@ import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { AuthIdLoginDto } from './dto/auth-id-login.dto';
+import { JwtPayloadType } from './strategies/types/jwt-payload.type';
+import { JwtRefreshPayloadType } from './strategies/types/jwt-refresh-payload.type';
 
 @ApiTags('Auth')
 @Controller({
@@ -109,8 +112,8 @@ export class AuthController {
     type: User,
   })
   @HttpCode(HttpStatus.OK)
-  public me(@Request() request): Promise<NullableType<User>> {
-    return this.service.me(request.user);
+  public me(@Request() request: ExpressRequest): Promise<NullableType<User>> {
+    return this.service.me(request.user as JwtPayloadType);
   }
 
   @ApiBearerAuth()
@@ -123,10 +126,13 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  public refresh(@Request() request): Promise<RefreshResponseDto> {
+  public refresh(
+    @Request() request: ExpressRequest,
+  ): Promise<RefreshResponseDto> {
+    const user = request.user as JwtRefreshPayloadType;
     return this.service.refreshToken({
-      sessionId: request.user.sessionId,
-      hash: request.user.hash,
+      sessionId: user.sessionId,
+      hash: user.hash,
     });
   }
 
@@ -134,9 +140,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Request() request): Promise<void> {
+  public async logout(@Request() request: ExpressRequest): Promise<void> {
     await this.service.logout({
-      sessionId: request.user.sessionId,
+      sessionId: (request.user as JwtRefreshPayloadType).sessionId,
     });
   }
 
@@ -151,17 +157,17 @@ export class AuthController {
     type: User,
   })
   public update(
-    @Request() request,
+    @Request() request: ExpressRequest,
     @Body() userDto: AuthUpdateDto,
   ): Promise<NullableType<User>> {
-    return this.service.update(request.user, userDto);
+    return this.service.update(request.user as JwtPayloadType, userDto);
   }
 
   @ApiBearerAuth()
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(@Request() request): Promise<void> {
-    return this.service.softDelete(request.user);
+  public async delete(@Request() request: ExpressRequest): Promise<void> {
+    return this.service.softDelete(request.user as unknown as User);
   }
 }

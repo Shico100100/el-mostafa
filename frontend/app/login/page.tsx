@@ -30,8 +30,11 @@ export default function LoginPage() {
         try {
             const result = await api.loginByEmail(email, password);
 
-            if (result.token) {
+            if (result?.token) {
                 localStorage.setItem('token', result.token);
+                if (result.refreshToken) {
+                    localStorage.setItem('refreshToken', result.refreshToken);
+                }
                 router.push('/dashboard');
             } else {
                 setError('كلمة المرور غير صحيحة');

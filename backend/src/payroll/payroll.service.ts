@@ -28,7 +28,7 @@ export class PayrollService {
 
   async updateProfile(userId: number, data: Partial<EmployeeProfile>) {
     let profile = await this.profileRepo.findOne({
-      where: { user_id: userId },
+      where: { user: { id: userId } },
     });
     if (profile) {
       await this.profileRepo.update(profile.id, data);
@@ -37,17 +37,16 @@ export class PayrollService {
       await this.profileRepo.save(profile);
     }
     return this.profileRepo.findOne({
-      where: { user_id: userId },
+      where: { user: { id: userId } },
       relations: ['user'],
     });
   }
 
   async calculateMonthlyPayroll(month: string) {
     // month format: YYYY-MM
+    const [year, mon] = month.split('-').map(Number);
     const startDate = `${month}-01`;
-    const nextMonth = new Date(month);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    const endDate = nextMonth.toISOString().split('T')[0];
+    const endDate = new Date(year, mon, 0).toISOString().split('T')[0];
 
     const users = await this.userRepo.find();
     const profiles = await this.profileRepo.find();
@@ -97,7 +96,7 @@ export class PayrollService {
 
   async savePayment(data: Partial<SalaryPayment>) {
     const existing = await this.paymentRepo.findOne({
-      where: { user_id: data.user_id, month: data.month },
+      where: { user: { id: data.user_id }, month: data.month },
     });
 
     if (existing) {

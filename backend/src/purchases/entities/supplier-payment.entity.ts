@@ -13,7 +13,7 @@ export class SupplierPayment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   supplier_id: number;
 
   @ManyToOne(() => Supplier, { onDelete: 'CASCADE' })

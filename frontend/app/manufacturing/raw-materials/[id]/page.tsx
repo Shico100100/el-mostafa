@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '../../../../lib/api';
+import { FileText, BarChart3, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 
 interface RawMaterial {
     id: number;
@@ -106,11 +107,11 @@ export default function RawMaterialDetailsPage() {
     }, [filterData]);
 
     const handleDeleteMovement = async (movId: number) => {
-        if (!confirm('هل أنت متأكد من حذف هذا السجل؟ 🗑️\nسيتم عكس تأثيره على المخزون!')) return;
+        if (!confirm('هل أنت متأكد من حذف هذا السجل؟\nسيتم عكس تأثيره على المخزون!')) return;
 
         try {
             await api.deleteStockMovement(movId);
-            alert('تم الحذف بنجاح ✅');
+            alert('تم الحذف بنجاح');
             fetchData();
         } catch (error) {
             console.error('Error deleting movement:', error);
@@ -143,7 +144,7 @@ export default function RawMaterialDetailsPage() {
             setShowEditDialog(false);
             setEditingMovement(null);
             fetchData();
-            alert('تم تحديث السجل بنجاح ✅');
+            alert('تم تحديث السجل بنجاح');
         } catch (error) {
             console.error('Error updating movement:', error);
             alert('حدث خطأ أثناء التحديث');
@@ -164,8 +165,8 @@ export default function RawMaterialDetailsPage() {
             } else {
                 // For OUT movements, use createStockMovement
                 await api.createStockMovement({
-                    rawMaterialId: +id,
-                    type: addForm.type,
+                    productId: +id,
+                    type: addForm.type as 'IN' | 'OUT',
                     quantity: parseFloat(addForm.quantity),
                     price: parseFloat(addForm.price) || 0,
                     date: addForm.date,
@@ -183,7 +184,7 @@ export default function RawMaterialDetailsPage() {
                 notes: ''
             });
             fetchData();
-            alert('تم إضافة الحركة بنجاح ✅');
+            alert('تم إضافة الحركة بنجاح');
         } catch (error) {
             console.error('Error adding movement:', error);
             alert('حدث خطأ أثناء الإضافة');
@@ -198,7 +199,7 @@ export default function RawMaterialDetailsPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <span className="text-3xl">📄</span>
+                        <span className="text-3xl"><FileText /></span>
                         تفاصيل: {rawMaterial.product.name}
                     </h1>
                     <button
@@ -222,10 +223,10 @@ export default function RawMaterialDetailsPage() {
                                 </p>
                                 <button
                                     onClick={async () => {
-                                        if (!confirm('هل تريد إعادة حساب المخزون بناءً على سجل الحركات؟ 🔄\nسيتم تعديل الرقم الحالي ليطابق مجموع العمليات المسجلة.')) return;
+                                        if (!confirm('هل تريد إعادة حساب المخزون بناءً على سجل الحركات؟\nسيتم تعديل الرقم الحالي ليطابق مجموع العمليات المسجلة.')) return;
                                         try {
                                             const data = await api.recalculateRawMaterialStock(+id);
-                                            alert(`تم التحديث بنجاح ✅\nالرصيد المحسوب: ${data.calculated_stock}`);
+                                            alert(`تم التحديث بنجاح\nالرصيد المحسوب: ${data.calculated_stock}`);
                                             fetchData();
                                         } catch (err) {
                                             console.error(err);
@@ -235,7 +236,7 @@ export default function RawMaterialDetailsPage() {
                                     className="opacity-0 group-hover:opacity-100 transition p-1 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 rounded text-xs"
                                     title="إعادة احتساب الرصيد من السجل"
                                 >
-                                    🔄 تصحيح
+                                    <RefreshCw /> تصحيح
                                 </button>
                             </div>
                         </div>
@@ -265,7 +266,7 @@ export default function RawMaterialDetailsPage() {
                 {/* Movements Log */}
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
                     <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <h3 className="text-xl font-bold text-white">📊 سجل الحركة اليومي</h3>
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2"><BarChart3 /> سجل الحركة اليومي</h3>
                         <div className="flex items-center gap-2">
                             <div className="flex bg-white/5 rounded-lg p-1 gap-1 overflow-x-auto">
                                 {[
@@ -293,7 +294,7 @@ export default function RawMaterialDetailsPage() {
                                 onClick={() => setShowAddDialog(true)}
                                 className="px-3 py-1.5 bg-green-600/80 text-white rounded-md text-sm hover:bg-green-700"
                             >
-                                ➕ إضافة حركة
+                                <Plus /> إضافة حركة
                             </button>
                         </div>
                     </div>
@@ -339,13 +340,13 @@ export default function RawMaterialDetailsPage() {
                                                     onClick={() => handleEditMovement(mov)}
                                                     className="p-1 px-3 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 rounded text-sm transition"
                                                 >
-                                                    ✏️
+                                                    <Pencil />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteMovement(mov.id)}
                                                     className="p-1 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded text-sm transition"
                                                 >
-                                                    🗑️
+                                                    <Trash2 />
                                                 </button>
                                             </td>
                                         </tr>
@@ -360,7 +361,7 @@ export default function RawMaterialDetailsPage() {
                 {showEditDialog && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                         <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-white/20">
-                            <h2 className="text-xl font-bold text-white mb-6">✏️ تعديل السجل</h2>
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Pencil /> تعديل السجل</h2>
                             <form onSubmit={handleSaveEdit} className="space-y-4">
                                 <div>
                                     <label className="block text-gray-300 text-sm font-semibold mb-2">التاريخ</label>
@@ -430,7 +431,7 @@ export default function RawMaterialDetailsPage() {
                 {showAddDialog && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                         <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-white/20">
-                            <h2 className="text-xl font-bold text-white mb-6">➕ إضافة حركة</h2>
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Plus /> إضافة حركة</h2>
                             <form onSubmit={handleAddMovement} className="space-y-4">
                                 <div>
                                     <label className="block text-gray-300 text-sm font-semibold mb-2">النوع</label>

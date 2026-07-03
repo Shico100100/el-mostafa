@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Customer } from './customer.entity';
+import { QuoteItem } from './quote-item.entity';
 
 export enum QuoteStatus {
   DRAFT = 'DRAFT',
@@ -22,7 +24,7 @@ export class Quote {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   customer_id: number;
 
   @ManyToOne(() => Customer)
@@ -47,4 +49,7 @@ export class Quote {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => QuoteItem, (item) => item.quote)
+  items: QuoteItem[];
 }

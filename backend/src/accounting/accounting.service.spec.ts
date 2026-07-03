@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { AccountingService } from './accounting.service';
 import { Account, AccountType } from './entities/account.entity';
 import { JournalEntry } from './entities/journal-entry.entity';
@@ -30,6 +30,21 @@ describe('AccountingService', () => {
             find: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            transaction: jest.fn((cb) => {
+              const mockManager = {
+                getRepository: jest.fn().mockImplementation((entity) => {
+                  if (entity === Account) return accountRepo;
+                  if (entity === JournalEntry) return journalRepo;
+                  return {};
+                }),
+              };
+              return cb(mockManager);
+            }),
           },
         },
       ],

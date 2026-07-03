@@ -27,7 +27,7 @@ export class ProductionBatch {
   @Column({ unique: true })
   batch_number: string;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)

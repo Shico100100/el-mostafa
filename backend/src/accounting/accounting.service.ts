@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Account, AccountType } from './entities/account.entity';
 import { JournalEntry } from './entities/journal-entry.entity';
+import { AccountCrudService } from './accounts/account-crud.service';
 
 @Injectable()
 export class AccountingService {
@@ -11,94 +12,26 @@ export class AccountingService {
     private accountRepo: Repository<Account>,
     @InjectRepository(JournalEntry)
     private journalRepo: Repository<JournalEntry>,
+    private accountCrudService: AccountCrudService,
+    private dataSource: DataSource,
   ) {}
 
-  async onModuleInit() {
-    await this.ensureSystemAccounts();
-  }
+  // ---- Account Delegation ----
 
-  async ensureSystemAccounts() {
-    const systemAccounts = [
-      {
-        code: '1101',
-        name: 'المخزون',
-        type: AccountType.ASSET,
-        description: 'مخزون المواد الخام والمنتجات',
-      },
-      {
-        code: '1102',
-        name: 'العملاء',
-        type: AccountType.ASSET,
-        description: 'حسابات العملاء المدينين',
-      },
-      {
-        code: '1103',
-        name: 'الخزينة',
-        type: AccountType.ASSET,
-        description: 'النقدية بالصندوق',
-      },
-      {
-        code: '2101',
-        name: 'الموردين',
-        type: AccountType.LIABILITY,
-        description: 'حسابات الموردين الدائنين',
-      },
-      {
-        code: '3101',
-        name: 'رأس المال',
-        type: AccountType.EQUITY,
-        description: 'رأس مال الشركة',
-      },
-      {
-        code: '4101',
-        name: 'المبيعات',
-        type: AccountType.REVENUE,
-        description: 'إيرادات مبيعات المنتجات',
-      },
-      {
-        code: '5101',
-        name: 'تكلفة المبيعات',
-        type: AccountType.EXPENSE,
-        description: 'تكلفة البضاعة المباعة',
-      },
-      {
-        code: '5102',
-        name: 'مصاريف التصنيع',
-        type: AccountType.EXPENSE,
-        description: 'تكاليف الكهرباء والعمالة والأعباء',
-      },
-    ];
-
-    for (const acc of systemAccounts) {
-      const exists = await this.accountRepo.findOne({
-        where: { code: acc.code },
-      });
-      if (!exists) {
-        await this.accountRepo.save(this.accountRepo.create(acc));
-      }
-    }
-  }
-
-  async getAccountByCode(code: string) {
-    return this.accountRepo.findOne({ where: { code } });
-  }
-
-  // Accounts
   async getAccounts() {
-    return this.accountRepo.find({ order: { code: 'ASC' } });
+    return this.accountCrudService.getAccounts();
   }
 
   async createAccount(data: Partial<Account>) {
-    const account = this.accountRepo.create(data);
-    return this.accountRepo.save(account);
+    return this.accountCrudService.createAccount(data);
   }
 
   async updateAccount(id: number, data: Partial<Account>) {
-    await this.accountRepo.update(id, data);
-    return this.accountRepo.findOne({ where: { id } });
+    return this.accountCrudService.updateAccount(id, data);
   }
 
-  // Journal Entries
+  // ---- Journal Entries ----
+
   async getJournalEntries() {
     return this.journalRepo.find({
       relations: ['account'],
@@ -112,7 +45,6 @@ export class AccountingService {
     reference?: string;
     entries: { account_id: number; debit: number; credit: number }[];
   }) {
-    // Verify total debit equals total credit
     const totalDebit = data.entries.reduce(
       (sum, entry) => sum + Number(entry.debit),
       0,
@@ -123,50 +55,53 @@ export class AccountingService {
     );
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      throw new Error(
+      throw new BadRequestException(
         `Unbalanced entry: Debit (${totalDebit}) != Credit (${totalCredit})`,
       );
     }
 
-    const savedEntries: JournalEntry[] = [];
-    for (const entry of data.entries) {
-      const journalEntry = this.journalRepo.create({
-        date: data.date,
-        description: data.description,
-        reference: data.reference,
-        account_id: entry.account_id,
-        debit: entry.debit,
-        credit: entry.credit,
-      });
-      savedEntries.push(await this.journalRepo.save(journalEntry));
+    return this.dataSource.transaction(async (manager) => {
+      const journalRepo = manager.getRepository(JournalEntry);
+      const accountRepo = manager.getRepository(Account);
 
-      // Update Account Balance
-      const account = await this.accountRepo.findOne({
-        where: { id: entry.account_id },
-      });
-      if (account) {
-        // Asset/Expense: Debit increases, Credit decreases
-        // Liability/Equity/Revenue: Credit increases, Debit decreases
-        const isDebitNormal = [AccountType.ASSET, AccountType.EXPENSE].includes(
-          account.type,
-        );
+      const savedEntries: JournalEntry[] = [];
+      for (const entry of data.entries) {
+        const journalEntry = journalRepo.create({
+          date: data.date,
+          description: data.description,
+          reference: data.reference,
+          account_id: entry.account_id,
+          debit: entry.debit,
+          credit: entry.credit,
+        });
+        savedEntries.push(await journalRepo.save(journalEntry));
 
-        if (isDebitNormal) {
-          account.balance =
-            Number(account.balance) +
-            Number(entry.debit) -
-            Number(entry.credit);
-        } else {
-          account.balance =
-            Number(account.balance) +
-            Number(entry.credit) -
-            Number(entry.debit);
+        const account = await accountRepo.findOne({
+          where: { id: entry.account_id },
+        });
+        if (account) {
+          const isDebitNormal = [
+            AccountType.ASSET,
+            AccountType.EXPENSE,
+          ].includes(account.type);
+
+          if (isDebitNormal) {
+            account.balance =
+              Number(account.balance) +
+              Number(entry.debit) -
+              Number(entry.credit);
+          } else {
+            account.balance =
+              Number(account.balance) +
+              Number(entry.credit) -
+              Number(entry.debit);
+          }
+          await accountRepo.save(account);
         }
-        await this.accountRepo.save(account);
       }
-    }
 
-    return savedEntries;
+      return savedEntries;
+    });
   }
 
   async getTrialBalance() {
@@ -184,14 +119,15 @@ export class AccountingService {
     amount: number;
     reference: string;
     description: string;
-    partnerId?: number; // Customer/Supplier ID if needed
+    partnerId?: number;
   }) {
     let entries: { account_id: number; debit: number; credit: number }[] = [];
 
     switch (params.type) {
       case 'SALE':
-        const receivableAcc = await this.getAccountByCode('1102');
-        const salesAcc = await this.getAccountByCode('4101');
+        const receivableAcc =
+          await this.accountCrudService.getAccountByCode('1102');
+        const salesAcc = await this.accountCrudService.getAccountByCode('4101');
         if (receivableAcc && salesAcc) {
           entries = [
             { account_id: receivableAcc.id, debit: params.amount, credit: 0 },
@@ -201,8 +137,10 @@ export class AccountingService {
         break;
 
       case 'PURCHASE':
-        const inventoryAcc = await this.getAccountByCode('1101');
-        const payableAcc = await this.getAccountByCode('2101');
+        const inventoryAcc =
+          await this.accountCrudService.getAccountByCode('1101');
+        const payableAcc =
+          await this.accountCrudService.getAccountByCode('2101');
         if (inventoryAcc && payableAcc) {
           entries = [
             { account_id: inventoryAcc.id, debit: params.amount, credit: 0 },
@@ -212,8 +150,9 @@ export class AccountingService {
         break;
 
       case 'PRODUCTION':
-        const stockAcc = await this.getAccountByCode('1101');
-        const manufacturingAcc = await this.getAccountByCode('5101'); // COGS or Manufacturing Expense
+        const stockAcc = await this.accountCrudService.getAccountByCode('1101');
+        const manufacturingAcc =
+          await this.accountCrudService.getAccountByCode('5102');
         if (stockAcc && manufacturingAcc) {
           entries = [
             { account_id: stockAcc.id, debit: params.amount, credit: 0 },
@@ -227,20 +166,18 @@ export class AccountingService {
         break;
 
       case 'PAYMENT':
-        const cashAcc = await this.getAccountByCode('1103'); // Cash/Treasury
-        const partnerAcc = await this.getAccountByCode(
+        const cashAcc = await this.accountCrudService.getAccountByCode('1103');
+        const partnerAcc = await this.accountCrudService.getAccountByCode(
           params.partnerId ? '1102' : '2101',
-        ); // 1102 for Customer, 2101 for Supplier
+        );
 
         if (cashAcc && partnerAcc) {
           if (params.partnerId) {
-            // Customer Payment (Inflow)
             entries = [
               { account_id: cashAcc.id, debit: params.amount, credit: 0 },
               { account_id: partnerAcc.id, debit: 0, credit: params.amount },
             ];
           } else {
-            // Supplier Payment (Outflow)
             entries = [
               { account_id: partnerAcc.id, debit: params.amount, credit: 0 },
               { account_id: cashAcc.id, debit: 0, credit: params.amount },
@@ -250,13 +187,17 @@ export class AccountingService {
         break;
     }
 
-    if (entries.length > 0) {
-      return this.createJournalEntry({
-        date: new Date(),
-        description: params.description,
-        reference: params.reference,
-        entries,
-      });
+    if (entries.length === 0) {
+      throw new BadRequestException(
+        `تعذر ترجيع القيد المحاسبي: لم يتم العثور على حسابات النظام للنوع ${params.type}`,
+      );
     }
+
+    return this.createJournalEntry({
+      date: new Date(),
+      description: params.description,
+      reference: params.reference,
+      entries,
+    });
   }
 }

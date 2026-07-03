@@ -13,6 +13,7 @@ import {
 import { PlanningService } from './planning.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ScheduleStatus } from './entities/production-schedule.entity';
+import { CreateProductionScheduleDto } from './dto';
 
 @Controller('manufacturing/planning')
 @UseGuards(JwtAuthGuard)
@@ -23,17 +24,27 @@ export class PlanningController {
   getSchedules(
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.planningService.getAllSchedules({ fromDate, toDate });
+    return this.planningService.getAllSchedules({
+      fromDate,
+      toDate,
+      page: page ? +page : 1,
+      limit: limit ? +limit : 50,
+    });
   }
 
   @Post()
-  createSchedule(@Body() data: any) {
+  createSchedule(@Body() data: CreateProductionScheduleDto) {
     return this.planningService.createSchedule(data);
   }
 
   @Put(':id')
-  updateSchedule(@Param('id') id: string, @Body() data: any) {
+  updateSchedule(
+    @Param('id') id: string,
+    @Body() data: CreateProductionScheduleDto,
+  ) {
     return this.planningService.updateSchedule(+id, data);
   }
 

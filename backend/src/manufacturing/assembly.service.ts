@@ -29,16 +29,16 @@ export class AssemblyService {
 
   async getProductionRecipe(productId: number, quantity: number) {
     if (quantity <= 0)
-      throw new BadRequestException('Quantity must be positive');
+      throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
 
     const product = await this.productRepo.findOne({
       where: { id: productId },
     });
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('المنتج غير موجود');
 
     // Find BOM
     const bom = await this.bomRepo.findOne({
-      where: { product_id: productId },
+      where: { product: { id: productId } },
       relations: ['items', 'items.product'],
     });
 
@@ -93,79 +93,84 @@ export class AssemblyService {
     notes?: string;
   }) {
     if (data.quantity <= 0)
-      throw new BadRequestException('Quantity must be positive');
+      throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
 
     return await this.dataSource.transaction(async (manager) => {
-      const recipe = await this.getProductionRecipe(
-        data.productId,
-        data.quantity,
-      );
+      const product = await manager.findOne(Product, {
+        where: { id: data.productId },
+      });
 
-      if (recipe.hasBom) {
-        // Validate Stock
-        const missing = recipe.items.find((i) => i.status === 'MISSING');
-        if (missing) {
-          throw new BadRequestException(
-            `Insufficient stock for component: ${missing.name}. Required: ${missing.required}, Available: ${missing.available}`,
-          );
-        }
+      if (!product) {
+        throw new NotFoundException('المنتج غير موجود');
+      }
 
-        // Deduct Components
-        for (const item of recipe.items) {
-          // Find suitable stock record (FIFO or specific warehouse)
-          // For logic simplicity, deducting from first available warehouse or warehouse 1.
-          // Assuming Warehouse 1 is default/Main.
-          let stock = await manager.findOne(Stock, {
-            where: { product_id: item.productId, warehouse_id: 1 },
+      const bom = await manager.findOne(BOM, {
+        where: { product: { id: data.productId } },
+        relations: ['items', 'items.product'],
+      });
+
+      const productName = product.name;
+
+      if (bom) {
+        for (const item of bom.items) {
+          const requiredQty = Number(item.quantity) * Number(data.quantity);
+          const compProductId = item.product.id;
+
+          const stocks = await manager.find(Stock, {
+            where: { product_id: compProductId },
+            order: { warehouse_id: 'ASC' },
           });
 
-          if (!stock) {
-            // Should verify if total available was correct but specific warehouse is empty?
-            // Logic above checked sum. Here we might fail if spread across warehouses.
-            // Simple fix: find ANY stock record with qty > 0
-            stock = await manager.findOne(Stock, {
-              where: { product_id: item.productId },
-            }); // simplified
-          }
+          const totalStock = stocks.reduce(
+            (sum, s) => sum + Number(s.quantity),
+            0,
+          );
 
-          if (!stock) {
-            // Theoretically unreachable if check passed, unless concurrent update
+          if (totalStock < requiredQty) {
             throw new BadRequestException(
-              `Stock for ${item.name} not available in standard warehouse`,
+              `المكون ${item.product.name} غير كافٍ. المطلوب: ${requiredQty}, المتاح: ${totalStock}`,
             );
           }
 
-          // Decrement
-          await manager.decrement(
-            Stock,
-            { product_id: stock.product_id, warehouse_id: stock.warehouse_id },
-            'quantity',
-            item.required,
-          );
+          let remaining = requiredQty;
+          for (const stock of stocks) {
+            const toDeduct = Math.min(remaining, Number(stock.quantity));
+            if (toDeduct > 0) {
+              await manager.decrement(
+                Stock,
+                {
+                  product_id: stock.product_id,
+                  warehouse_id: stock.warehouse_id,
+                },
+                'quantity',
+                toDeduct,
+              );
 
-          // Log OUT Movement
-          await manager.save(StockMovement, {
-            product_id: item.productId,
-            warehouse_id: stock.warehouse_id,
-            type: MovementType.OUT,
-            quantity: item.required,
-            reference_type: 'PRODUCTION_CONSUMPTION',
-            reference_id: data.productId, // Reference parent product
-            date: data.date || new Date(),
-            notes: `Used in production of ${data.quantity} ${recipe.product}`,
-          });
+              await manager.save(StockMovement, {
+                product_id: compProductId,
+                warehouse_id: stock.warehouse_id,
+                type: MovementType.OUT,
+                quantity: toDeduct,
+                reference_type: 'PRODUCTION_CONSUMPTION',
+                reference_id: data.productId,
+                date: data.date || new Date(),
+                notes: `Used in production of ${data.quantity} ${productName}`,
+              });
+
+              remaining -= toDeduct;
+            }
+          }
         }
       }
 
-      // ADD Finished Product
-      // Warehouse 1 default
       let productStock = await manager.findOne(Stock, {
-        where: { product_id: data.productId, warehouse_id: 1 },
+        where: { product_id: data.productId },
       });
+      const whId = productStock?.warehouse_id || product?.warehouse_id || 1;
       if (!productStock) {
         productStock = manager.create(Stock, {
           product_id: data.productId,
-          warehouse_id: 1, // Default
+          warehouse_id: whId,
           quantity: 0,
         });
         await manager.save(productStock);
@@ -181,14 +186,13 @@ export class AssemblyService {
         data.quantity,
       );
 
-      // Log IN Movement
       const productionLog = await manager.save(StockMovement, {
         product_id: data.productId,
-        warehouse_id: 1,
+        warehouse_id: productStock.warehouse_id,
         type: MovementType.IN,
         quantity: data.quantity,
         reference_type: 'PRODUCTION_OUTPUT',
-        reference_id: data.productId, // Self ref? or Create a Production Log entity ID if exists
+        reference_id: data.productId,
         date: data.date || new Date(),
         notes: data.notes || 'Production Output',
       });

@@ -51,6 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
 import { CacheModule } from './cache/cache.module';
+import { CurrencyModule } from './currency/currency.module';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 
 // <database-block>
@@ -137,6 +138,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     SentryModule,
     MetricsModule,
     DocumentsModule,
+    CurrencyModule,
   ],
   providers: [
     {

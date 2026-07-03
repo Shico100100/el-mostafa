@@ -10,11 +10,11 @@ export const sortAlphabetically = <T>(
 ): T[] => {
     return [...array].sort((a, b) => {
         const valA = typeof fieldOrGetter === 'function'
-            ? String(fieldOrGetter(a) || '')
-            : String(a[fieldOrGetter] || '');
+            ? String(fieldOrGetter(a) ?? '')
+            : String(a[fieldOrGetter] ?? '');
         const valB = typeof fieldOrGetter === 'function'
-            ? String(fieldOrGetter(b) || '')
-            : String(b[fieldOrGetter] || '');
+            ? String(fieldOrGetter(b) ?? '')
+            : String(b[fieldOrGetter] ?? '');
         return valA.localeCompare(valB, 'ar', { sensitivity: 'base' });
     });
 };

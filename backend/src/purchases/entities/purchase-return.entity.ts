@@ -17,14 +17,14 @@ export class PurchaseReturn {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   supplier_id: number;
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int' })
   order_id: number;
 
   @ManyToOne(() => PurchaseOrder)

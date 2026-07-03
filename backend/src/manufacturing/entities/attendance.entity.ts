@@ -20,7 +20,7 @@ export class Attendance {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   user_id: number;
 
   @ManyToOne(() => User)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { Bell } from 'lucide-react';
+import { Bell, ShoppingCart, AlertTriangle, Wrench, DollarSign, Factory, Megaphone } from 'lucide-react';
 
 interface Notification {
     id: number;
@@ -21,8 +21,9 @@ export function NotificationCenter() {
     const loadNotifications = useCallback(async () => {
         try {
             const data = await api.fetchWithAuth('/v1/notifications');
-            setNotifications(data.slice(0, 10)); // Show last 10
-            setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
+            const list = Array.isArray(data) ? data : [];
+            setNotifications(list.slice(0, 10));
+            setUnreadCount(list.filter((n: Notification) => !n.isRead).length);
         } catch (error) {
             console.error('Error loading notifications:', error);
         }
@@ -60,12 +61,12 @@ export function NotificationCenter() {
 
     const getNotificationIcon = (actionType: string) => {
         switch (actionType) {
-            case 'new_order': return '🛒';
-            case 'low_stock': return '⚠️';
-            case 'maintenance': return '🔧';
-            case 'payment': return '💰';
-            case 'production': return '🏭';
-            default: return '📢';
+            case 'new_order': return <ShoppingCart className="w-6 h-6" />;
+            case 'low_stock': return <AlertTriangle className="w-6 h-6" />;
+            case 'maintenance': return <Wrench className="w-6 h-6" />;
+            case 'payment': return <DollarSign className="w-6 h-6" />;
+            case 'production': return <Factory className="w-6 h-6" />;
+            default: return <Megaphone className="w-6 h-6" />;
         }
     };
 

@@ -32,21 +32,21 @@ export class ProductionSchedule {
   @Column({ type: 'enum', enum: Shift })
   shift: Shift;
 
-  @Column()
+  @Column({ type: 'int' })
   machine_id: number;
 
   @ManyToOne(() => Machine)
   @JoinColumn({ name: 'machine_id' })
   machine: Machine;
 
-  @Column()
+  @Column({ type: 'int' })
   mold_id: number;
 
   @ManyToOne(() => Mold)
   @JoinColumn({ name: 'mold_id' })
   mold: Mold;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)

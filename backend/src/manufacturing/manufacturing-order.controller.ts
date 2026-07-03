@@ -41,10 +41,7 @@ export class ManufacturingOrderController {
   }
 
   @Put(':id/produced')
-  updateProduced(
-    @Param('id') id: string,
-    @Body('quantity') quantity: number,
-  ) {
+  updateProduced(@Param('id') id: string, @Body('quantity') quantity: number) {
     return this.moService.updateProduced(+id, quantity);
   }
 }

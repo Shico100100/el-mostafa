@@ -3,38 +3,39 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import { Machine } from './machine.entity';
 import { Mold } from './mold.entity';
-import { RawMaterial } from './raw-material.entity';
+import { Product } from '../../inventory/entities/product.entity';
 
 @Entity('daily_production')
 export class DailyProduction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  machine_id: number;
-
   @ManyToOne(() => Machine)
   @JoinColumn({ name: 'machine_id' })
   machine: Machine;
 
-  @Column()
-  mold_id: number;
+  @Column({ type: 'int' })
+  machine_id: number;
 
   @ManyToOne(() => Mold)
   @JoinColumn({ name: 'mold_id' })
   mold: Mold;
 
-  @Column()
-  raw_material_id: number;
+  @Column({ type: 'int' })
+  mold_id: number;
 
-  @ManyToOne(() => RawMaterial)
-  @JoinColumn({ name: 'raw_material_id' })
-  raw_material: RawMaterial;
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
+
+  @Column({ type: 'int' })
+  product_id: number;
 
   @Column({ type: 'date' })
   date: Date;
@@ -61,14 +62,20 @@ export class DailyProduction {
   hours_worked: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
-  overhead_cost: number; // Cost per piece (raw material + fixed costs)
+  overhead_cost: number;
 
   @Column({ type: 'text', nullable: true })
   notes: string;
 
-  @Column({ default: 'PENDING' }) // PENDING, QC_PASS, QC_FAIL
+  @Column({ default: 'PENDING' })
   status: string;
+
+  @Column({ nullable: true })
+  session_id: number;
 
   @CreateDateColumn()
   created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

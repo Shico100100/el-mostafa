@@ -1,17 +1,17 @@
 import type { NextConfig } from 'next';
-import nextPwa from 'next-pwa';
 
-const withPWA = nextPwa({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-});
-
-const nextConfig: NextConfig = withPWA({
+const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
-  turbopack: { root: 'D:/MostafaSaid/ELMostafa' },
+  turbopack: {
+    root: process.cwd(),
+  },
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
+  allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS
+    ? process.env.ALLOWED_DEV_ORIGINS.split(',')
+    : ['localhost'],
   async rewrites() {
     return [
       {
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = withPWA({
       },
     ];
   },
-});
+};
 
 export default nextConfig;
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import GlassPanel from '@/components/ui/GlassPanel';
+import { ArrowRight, BarChart3, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface MrpItem {
     id: number;
@@ -33,8 +34,8 @@ export default function MrpPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.push('/manufacturing')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl">⬅️</button>
-                        <h1 className="text-2xl font-bold text-white">📊 تخطيط الاحتياجات (MRP)</h1>
+                        <button onClick={() => router.push('/manufacturing')} className="p-2 hover:bg-white/10 rounded-full text-white transition text-xl"><ArrowRight /></button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><BarChart3 /> تخطيط الاحتياجات (MRP)</h1>
                     </div>
                 </div>
             </header>
@@ -50,15 +51,15 @@ export default function MrpPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl">
                                 <div className="text-blue-300 text-sm">إجمالي المواد المطلوبة</div>
-                                <div className="text-3xl font-bold text-white">{data.summary.totalItems}</div>
+                                <div className="text-3xl font-bold text-white">{data.summary?.totalItems ?? 0}</div>
                             </div>
                             <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl">
                                 <div className="text-red-300 text-sm">مواد عجز</div>
-                                <div className="text-3xl font-bold text-white">{data.summary.shortageCount}</div>
+                                <div className="text-3xl font-bold text-white">{data.summary?.shortageCount ?? 0}</div>
                             </div>
                             <div className="bg-green-500/10 border border-green-500/20 p-6 rounded-2xl">
                                 <div className="text-green-300 text-sm">مواد متوفرة</div>
-                                <div className="text-3xl font-bold text-white">{data.summary.totalItems - data.summary.shortageCount}</div>
+                                <div className="text-3xl font-bold text-white">{(data.summary?.totalItems ?? 0) - (data.summary?.shortageCount ?? 0)}</div>
                             </div>
                         </div>
 
@@ -78,7 +79,7 @@ export default function MrpPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data.report.map((item) => (
+                                        {(data.report ?? []).map((item) => (
                                             <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition">
                                                 <td className="px-4 py-3 text-white font-medium">{item.name}</td>
                                                 <td className="px-4 py-3 text-center text-gray-400">{item.unit}</td>
@@ -90,7 +91,7 @@ export default function MrpPage() {
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${item.status === 'OK' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                                                        {item.status === 'OK' ? '✅ متوفر' : '⚠️ عجز'}
+                                                        {item.status === 'OK' ? <span className="flex items-center gap-1"><CheckCircle /> متوفر</span> : <span className="flex items-center gap-1"><AlertTriangle /> عجز</span>}
                                                     </span>
                                                 </td>
                                             </tr>

@@ -28,13 +28,8 @@ export default function KioskLandingPage() {
     }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
         loadMachines();
-    }, [router, loadMachines]);
+    }, [loadMachines]);
 
     if (loading) {
         return (
@@ -68,8 +63,8 @@ export default function KioskLandingPage() {
                             }
                         `}
                     >
-                        <div className="text-6xl mb-6 transform group-hover:-translate-y-2 transition duration-300">
-                            {machine.status === 'RUNNING' ? '🟢' : machine.status === 'MAINTENANCE' ? '🔧' : '⚪'}
+                        <div className="text-6xl mb-6 transform group-hover:-translate-y-2 transition duration-300 flex items-center justify-center">
+                            {machine.status === 'RUNNING' ? <div className="w-12 h-12 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/50" /> : machine.status === 'MAINTENANCE' ? <div className="w-12 h-12 bg-amber-500 rounded-full shadow-lg shadow-amber-500/50" /> : <div className="w-12 h-12 bg-gray-400 rounded-full" />}
                         </div>
                         <h2 className="text-3xl font-bold mb-2">{machine.name}</h2>
                         <span className={`

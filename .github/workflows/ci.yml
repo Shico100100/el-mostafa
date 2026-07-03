@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  backend:
+  ci:
     runs-on: ubuntu-latest
 
     services:
@@ -16,54 +16,65 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: elmostafa_db
+          POSTGRES_DB: elmostafa_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready -U postgres
-          --health-interval 5s
+          --health-cmd pg_isready
+          --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    defaults:
-      run:
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: elmostafa_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: npm ci
         working-directory: backend
 
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-
-      - run: npm ci
-
-      - run: npm run lint
-
-      - run: npm test
-
-      - run: npm run build
-
-  frontend:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
+      - name: Install frontend dependencies
+        run: npm ci
         working-directory: frontend
 
-    steps:
-      - uses: actions/checkout@v5
+      - name: Run backend lint
+        run: npm run lint
+        working-directory: backend
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - name: Run frontend lint
+        run: npm run lint
+        working-directory: frontend
 
-      - run: npm ci
+      - name: Run backend TypeScript check
+        run: npm run typecheck
+        working-directory: backend
 
-      - run: npm run lint
+      - name: Run frontend TypeScript check
+        run: npm run typecheck
+        working-directory: frontend
 
-      - run: npm run build
+      - name: Run backend tests
+        run: npm test
+        working-directory: backend
+
+      - name: Run frontend tests
+        run: npm run test
+        working-directory: frontend
+
+      - name: Run backend build
+        run: npm run build
+        working-directory: backend
+
+      - name: Run frontend build
+        run: npm run build
+        working-directory: frontend

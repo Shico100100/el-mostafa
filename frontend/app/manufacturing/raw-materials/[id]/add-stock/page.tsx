@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
+import { Plus, Save } from 'lucide-react';
 
 interface RawMaterialDetail {
     id: number;
@@ -73,7 +74,7 @@ export default function AddRawMaterialStockPage() {
                 }),
             });
 
-            alert('تم إضافة الرصيد بنجاح! ✅');
+            alert('تم إضافة الرصيد بنجاح!');
             router.push('/manufacturing/raw-materials');
 
         } catch (error: unknown) {
@@ -91,7 +92,7 @@ export default function AddRawMaterialStockPage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <span className="text-3xl">➕</span>
+                        <span className="text-3xl"><Plus /></span>
                         إضافة رصيد: {rawMaterial.product.name}
                     </h1>
                     <button
@@ -187,7 +188,7 @@ export default function AddRawMaterialStockPage() {
                             type="submit"
                             className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-[1.02]"
                         >
-                            💾 حفظ وإضافة للرصيد
+                            <Save /> حفظ وإضافة للرصيد
                         </button>
                     </form>
                 </div>

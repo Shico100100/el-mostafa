@@ -1,9 +1,30 @@
 {
-  "devDependencies": {
-    "@types/cypress": "^0.1.6",
-    "baseline-browser-mapping": "^2.10.29"
+  "name": "elmostafa-erp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ELMostafa Factory ERP System - Full-featured plastic manufacturing ERP",
+  "scripts": {
+    "backend:install": "cd backend && npm install",
+    "frontend:install": "cd frontend && npm install",
+    "install": "npm run backend:install && npm run frontend:install",
+    "backend:dev": "cd backend && npm run start:dev",
+    "frontend:dev": "cd frontend && npm run dev",
+    "backend:build": "cd backend && npm run build",
+    "frontend:build": "cd frontend && npm run build",
+    "backend:lint": "cd backend && npx eslint src/**/*.ts",
+    "frontend:lint": "cd frontend && npx eslint .",
+    "backend:test": "cd backend && npx jest",
+    "backend:typecheck": "cd backend && npx tsc --noEmit",
+    "lint-staged": "lint-staged",
+    "prepare": "husky"
   },
-  "dependencies": {
-    "lightningcss": "^1.32.0"
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
   }
 }

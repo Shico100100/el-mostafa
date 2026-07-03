@@ -13,7 +13,7 @@ export class CustomerPayment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   customer_id: number;
 
   @ManyToOne(() => Customer)

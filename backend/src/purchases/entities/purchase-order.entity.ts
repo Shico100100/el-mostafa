@@ -23,7 +23,7 @@ export class PurchaseOrder {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   supplier_id: number;
 
   @Column({ nullable: true })

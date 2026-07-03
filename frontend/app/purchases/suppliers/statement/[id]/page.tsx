@@ -1,5 +1,6 @@
 'use client';
 
+import { Printer } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useParams } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
@@ -32,8 +33,14 @@ export default function SupplierStatementPage() {
             setSupplier(supp);
 
             if (supp) {
-                const trans = await api.fetchWithAuth(`/purchases/suppliers/${id}/transactions`);
-                setTransactions(trans);
+                const trans = await api.fetchWithAuth(`/purchases/suppliers/${id}/statement`);
+                setTransactions((trans || []).map((t: any) => ({
+                  id: t.ref || t.id,
+                  type: t.type === 'ORDER' ? 'INVOICE' : t.type,
+                  amount: Number(t.debit || t.credit),
+                  date: t.date,
+                  description: t.description || '',
+                })));
             }
         } catch (error) {
             console.error('Error loading data', error);
@@ -139,7 +146,7 @@ export default function SupplierStatementPage() {
                     onClick={() => window.print()}
                     className="bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-700 font-bold flex items-center gap-2"
                 >
-                    <span>🖨️</span> طباعة
+                    <Printer className="w-5 h-5" /> طباعة
                 </button>
             </div>
         </div>

@@ -14,7 +14,7 @@ export class EmployeeProfile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   user_id: number;
 
   @OneToOne(() => User)

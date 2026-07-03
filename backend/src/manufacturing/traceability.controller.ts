@@ -56,8 +56,7 @@ export class TraceabilityController {
       production_id?: number;
       created_by?: number;
       components?: {
-        raw_material_id?: number;
-        accessory_id?: number;
+        product_id?: number;
         supplier_batch_number?: string;
         quantity_used: number;
         unit?: string;

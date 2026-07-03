@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { SystemService } from './system.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,10 +21,40 @@ import * as fs from 'fs';
 
 const execPromise = util.promisify(exec);
 
+function getPgDumpPath(): string {
+  const candidates = [
+    'pg_dump',
+    '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump"',
+    '"C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump"',
+    '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump"',
+    '/usr/bin/pg_dump',
+  ];
+  // On Windows, check common install paths
+  if (process.platform === 'win32') {
+    for (const pgDir of ['18', '17', '16', '15', '14']) {
+      const p = `C:\\Program Files\\PostgreSQL\\${pgDir}\\bin\\pg_dump.exe`;
+      if (fs.existsSync(p)) return `"${p}"`;
+    }
+  }
+  return 'pg_dump';
+}
+
+function getPsqlPath(): string {
+  if (process.platform === 'win32') {
+    for (const pgDir of ['18', '17', '16', '15', '14']) {
+      const p = `C:\\Program Files\\PostgreSQL\\${pgDir}\\bin\\psql.exe`;
+      if (fs.existsSync(p)) return `"${p}"`;
+    }
+  }
+  return 'psql';
+}
+
 @Controller('system')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.admin)
 export class SystemController {
+  private readonly logger = new Logger(SystemController.name);
+
   constructor(private readonly systemService: SystemService) {}
 
   @Post('backup')
@@ -52,7 +83,8 @@ export class SystemController {
       // Use environment variable for password
       const env = { ...process.env, PGPASSWORD: pgPassword };
 
-      const dumpCommand = `pg_dump -U ${pgUser} -h ${pgHost} -p ${pgPort} ${dbName} > "${backupFile}"`;
+      const pgDump = getPgDumpPath();
+      const dumpCommand = `${pgDump} -U ${pgUser} -h ${pgHost} -p ${pgPort} ${dbName} > "${backupFile}"`;
 
       const { stdout, stderr } = await execPromise(dumpCommand, {
         cwd: process.cwd() + '/..',
@@ -61,14 +93,14 @@ export class SystemController {
       });
 
       if (stderr) {
-        console.warn('Backup command stderr:', stderr);
+        this.logger.warn('Backup command stderr:', stderr);
       }
 
-      console.log('Backup command stdout:', stdout);
+      this.logger.log('Backup command stdout:', stdout);
       return { message: 'Backup created successfully', details: stdout };
     } catch (error) {
-      console.error('Backup failed:', error);
-      const err = error as any;
+      this.logger.error('Backup failed:', error);
+      const err = error as Error;
       const message =
         typeof err?.message === 'string' ? err.message : String(err);
       throw new InternalServerErrorException(`Backup failed: ${message}`);
@@ -78,6 +110,11 @@ export class SystemController {
   @Post('reset')
   async resetSystem() {
     return this.systemService.resetSystem();
+  }
+
+  @Post('seed')
+  async seedDemoData() {
+    return this.systemService.seedDemoData();
   }
 
   @Post('restore')
@@ -112,23 +149,30 @@ export class SystemController {
       const dbName = process.env.DATABASE_NAME || 'elmostafa_db';
       const env = { ...process.env, PGPASSWORD: pgPassword };
 
+      const psql = getPsqlPath();
+
+      // Terminate connections before dropping
+      const termCmd = `${psql} -U ${pgUser} -h ${pgHost} -p ${pgPort} -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbName}' AND pid <> pg_backend_pid();"`;
+      await execPromise(termCmd, { env }).catch(() => {});
+
       // Drop existing database
-      const dropCmd = `psql -U ${pgUser} -h ${pgHost} -p ${pgPort} -d postgres -c "DROP DATABASE IF EXISTS \\"${dbName}\\";"`;
+      const dropCmd = `${psql} -U ${pgUser} -h ${pgHost} -p ${pgPort} -d postgres -c "DROP DATABASE IF EXISTS \\"${dbName}\\";"`;
+      await execPromise(dropCmd, { env });
       await execPromise(dropCmd, { env });
 
       // Create new database
-      const createCmd = `psql -U ${pgUser} -h ${pgHost} -p ${pgPort} -d postgres -c "CREATE DATABASE \\"${dbName}\\";"`;
+      const createCmd = `${psql} -U ${pgUser} -h ${pgHost} -p ${pgPort} -d postgres -c "CREATE DATABASE \\"${dbName}\\";"`;
       await execPromise(createCmd, { env });
 
       // Restore from backup file
-      const restoreCmd = `psql -U ${pgUser} -h ${pgHost} -p ${pgPort} -d ${dbName} -f "${tempPath}"`;
+      const restoreCmd = `${psql} -U ${pgUser} -h ${pgHost} -p ${pgPort} -d ${dbName} -f "${tempPath}"`;
       const { stdout, stderr } = await execPromise(restoreCmd, { env });
 
       if (stderr) {
-        console.warn('Restore command stderr:', stderr);
+        this.logger.warn('Restore command stderr:', stderr);
       }
 
-      console.log('Restore command stdout:', stdout);
+      this.logger.log('Restore command stdout:', stdout);
 
       // Clean up the temp file
       if (fs.existsSync(tempPath)) {
@@ -137,13 +181,13 @@ export class SystemController {
 
       return { message: 'Restoration completed successfully', details: stdout };
     } catch (error) {
-      console.error('Restoration failed:', error);
+      this.logger.error('Restoration failed:', error);
       // Clean up the temp file even on error
       if (fs.existsSync(tempPath)) {
         fs.unlinkSync(tempPath);
       }
 
-      const err = error as any;
+      const err = error as Error;
       const message =
         typeof err?.message === 'string' ? err.message : String(err);
       throw new InternalServerErrorException(`Restoration failed: ${message}`);

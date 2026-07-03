@@ -4,6 +4,9 @@ import "./globals.css";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { CommandPalette } from "@/components/CommandPalette";
 import { BackButtonProvider } from "@/components/BackButton";
+import { AuthProvider } from "@/components/AuthProvider";
+import ChatbotWidget from "@/components/ChatbotWidget";
+import GlobalSidebar from "@/components/GlobalSidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +52,12 @@ export default function RootLayout({
       >
         <ToastProvider />
         <CommandPalette />
-        <BackButtonProvider>{children}</BackButtonProvider>
+        <AuthProvider>
+          <BackButtonProvider>
+            <GlobalSidebar>{children}</GlobalSidebar>
+            <ChatbotWidget />
+          </BackButtonProvider>
+        </AuthProvider>
       </body>
     </html>
   );

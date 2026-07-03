@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { RawMaterial } from './raw-material.entity';
+import { Product } from '../../inventory/entities/product.entity';
 import { AssemblyOrder } from './assembly-order.entity';
 import { DailyProduction } from './daily-production.entity';
 
@@ -15,15 +15,15 @@ export class RawMaterialConsumption {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  raw_material_id: number;
+  @Column({ type: 'int' })
+  product_id: number;
 
   @Column({ nullable: true })
   batch_number: string;
 
-  @ManyToOne(() => RawMaterial, (rm) => rm.consumptions)
-  @JoinColumn({ name: 'raw_material_id' })
-  raw_material: RawMaterial;
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
   @Column({ type: 'decimal', precision: 10, scale: 4 })
   quantity: number;
@@ -43,10 +43,10 @@ export class RawMaterialConsumption {
   production: DailyProduction;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  cost_per_unit: number; // Cost at time of consumption
+  cost_per_unit: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  total_cost: number; // quantity * cost_per_unit
+  total_cost: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   consumed_at: Date;

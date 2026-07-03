@@ -1,4 +1,7 @@
-async function deepResolvePromises(input, seen = new WeakSet()) {
+async function deepResolvePromises(
+  input: unknown,
+  seen = new WeakSet<object>(),
+): Promise<unknown> {
   if (input instanceof Promise) {
     return await input;
   }
@@ -17,17 +20,20 @@ async function deepResolvePromises(input, seen = new WeakSet()) {
   seen.add(input);
 
   if (Array.isArray(input)) {
-    const resolvedArray = await Promise.all(
-      input.map((item) => deepResolvePromises(item, seen)),
+    const resolvedArray: unknown[] = await Promise.all(
+      (input as unknown[]).map((item) => deepResolvePromises(item, seen)),
     );
     return resolvedArray;
   }
 
-  const keys = Object.keys(input);
-  const resolvedObject = {};
+  const keys = Object.keys(input as Record<string, unknown>);
+  const resolvedObject: Record<string, unknown> = {};
 
   for (const key of keys) {
-    resolvedObject[key] = await deepResolvePromises(input[key], seen);
+    resolvedObject[key] = await deepResolvePromises(
+      (input as Record<string, unknown>)[key],
+      seen,
+    );
   }
 
   return resolvedObject;

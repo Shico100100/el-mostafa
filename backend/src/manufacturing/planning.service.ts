@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -13,7 +13,19 @@ export class PlanningService {
     private scheduleRepo: Repository<ProductionSchedule>,
   ) {}
 
-  async getAllSchedules(options: { fromDate?: string; toDate?: string } = {}) {
+  async getAllSchedules(
+    options: {
+      fromDate?: string;
+      toDate?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+  ) {
+    const page = options.page || 1;
+    const limit = options.limit || 50;
+    const take = Math.min(Math.max(limit, 1), 200);
+    const skip = (Math.max(page, 1) - 1) * take;
+
     const query = this.scheduleRepo
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.machine', 'machine')
@@ -31,7 +43,18 @@ export class PlanningService {
       query.andWhere('s.planned_date <= :toDate', { toDate: options.toDate });
     }
 
-    return query.getMany();
+    const [items, total] = await query
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      limit: take,
+      totalPages: Math.ceil(total / take),
+    };
   }
 
   async createSchedule(data: Partial<ProductionSchedule>) {
@@ -41,10 +64,12 @@ export class PlanningService {
 
   async updateSchedule(id: number, data: Partial<ProductionSchedule>) {
     await this.scheduleRepo.update(id, data);
-    return this.scheduleRepo.findOne({
+    const updated = await this.scheduleRepo.findOne({
       where: { id },
       relations: ['machine', 'mold', 'product'],
     });
+    if (!updated) throw new NotFoundException('الجدول غير موجود');
+    return updated;
   }
 
   async deleteSchedule(id: number) {
@@ -53,6 +78,8 @@ export class PlanningService {
 
   async updateStatus(id: number, status: ScheduleStatus) {
     await this.scheduleRepo.update(id, { status });
-    return this.scheduleRepo.findOne({ where: { id } });
+    const updated = await this.scheduleRepo.findOne({ where: { id } });
+    if (!updated) throw new NotFoundException('الجدول غير موجود');
+    return updated;
   }
 }

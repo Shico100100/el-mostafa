@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { Wrench } from 'lucide-react';
 
 interface Maintenance {
     id: number;
@@ -44,13 +45,8 @@ export default function MachineMaintenancePage() {
     }, [params.id]);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
         loadData();
-    }, [router, loadData]);
+    }, [loadData]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -90,7 +86,7 @@ export default function MachineMaintenancePage() {
             <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">🛠️ سجل الصيانة</h1>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Wrench /> سجل الصيانة</h1>
                         <p className="text-gray-400 text-sm mt-1">الماكينة: {machine?.name}</p>
                     </div>
                     <button

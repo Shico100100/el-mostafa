@@ -17,7 +17,13 @@ import { Container } from './entities/container.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { RawMaterial } from '../manufacturing/entities/raw-material.entity';
+import { SupplierService } from './suppliers/supplier.service';
+import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
+import { PaymentService } from './supplier-payments/payment.service';
+import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
+import { CurrencyService } from './currencies/currency.service';
+import { ContainerService } from './containers/container.service';
+import { PackingListService } from './packing-lists/packing-list.service';
 
 @Module({
   imports: [
@@ -34,12 +40,21 @@ import { RawMaterial } from '../manufacturing/entities/raw-material.entity';
       PackingList,
       Product,
       Stock,
-      RawMaterial,
+
     ]),
     InventoryModule,
     AccountingModule,
   ],
-  providers: [PurchasesService],
+  providers: [
+    PurchasesService,
+    SupplierService,
+    PurchaseOrderService,
+    PaymentService,
+    PurchaseReturnService,
+    CurrencyService,
+    ContainerService,
+    PackingListService,
+  ],
   controllers: [PurchasesController],
   exports: [PurchasesService, TypeOrmModule],
 })

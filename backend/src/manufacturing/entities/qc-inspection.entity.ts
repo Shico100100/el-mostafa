@@ -15,21 +15,21 @@ export class QCInspection {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   production_id: number;
 
   @ManyToOne(() => DailyProduction)
   @JoinColumn({ name: 'production_id' })
   production: DailyProduction;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int' })
   inspector_id: number;
 
   @ManyToOne(() => User)

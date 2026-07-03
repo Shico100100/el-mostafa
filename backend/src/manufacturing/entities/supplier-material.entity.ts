@@ -8,32 +8,32 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Supplier } from '../../purchases/entities/supplier.entity';
-import { RawMaterial } from './raw-material.entity';
+import { Product } from '../../inventory/entities/product.entity';
 
 @Entity('supplier_materials')
 export class SupplierMaterial {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   supplier_id: number;
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
 
-  @Column()
-  raw_material_id: number;
+  @Column({ type: 'int' })
+  product_id: number;
 
-  @ManyToOne(() => RawMaterial, (rm) => rm.supplier_materials)
-  @JoinColumn({ name: 'raw_material_id' })
-  raw_material: RawMaterial;
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
   @Column({ type: 'int', default: 0 })
-  lead_time_days: number; // Delivery time in days
+  lead_time_days: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   min_order_quantity: number;

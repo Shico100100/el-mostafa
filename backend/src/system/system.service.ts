@@ -4,6 +4,7 @@ import { User } from '../users/user.entity';
 import { Category } from '../inventory/entities/category.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { Account, AccountType } from '../accounting/entities/account.entity';
+import { seedDemoData as seedDemoDataFn } from './seed-data';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -19,12 +20,19 @@ export class SystemService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Truncate all tables
-      // We get all entity metadatas and truncate them
+      // 1. Truncate all tables (inside transaction for rollback safety)
+      const existingTables: { table_name: string }[] =
+        await queryRunner.manager.query(
+          `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`,
+        );
+      const existingSet = new Set(existingTables.map((r) => r.table_name));
       const entities = this.dataSource.entityMetadatas;
       for (const entity of entities) {
-        const repository = this.dataSource.getRepository(entity.name);
-        await repository.query(
+        if (!existingSet.has(entity.tableName)) {
+          this.logger.warn(`Skipping table "${entity.tableName}" — does not exist`);
+          continue;
+        }
+        await queryRunner.manager.query(
           `TRUNCATE TABLE "${entity.tableName}" RESTART IDENTITY CASCADE;`,
         );
       }
@@ -32,12 +40,13 @@ export class SystemService {
 
       // 2. Re-seed default data
 
+      // Seed roles first (required by user FK constraint)
+      const roleRepo = queryRunner.manager.getRepository('RoleEntity');
+      const adminRole = roleRepo.create({ id: 1, name: 'admin' });
+      await roleRepo.save(adminRole);
+
       // Seed Admin User
       const userRepo = queryRunner.manager.getRepository(User);
-      const roleRepo = queryRunner.manager.getRepository('RoleEntity');
-
-      // Get or create admin role (role ID 1 is admin based on roles.enum.ts)
-      const adminRole = await roleRepo.findOne({ where: { id: 1 } });
 
       const salt = await bcrypt.genSalt();
       const password = await bcrypt.hash('admin123', salt);
@@ -103,5 +112,9 @@ export class SystemService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async seedDemoData() {
+    return seedDemoDataFn(this.dataSource);
   }
 }

@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { QCInspection } from './entities/qc-inspection.entity';
 import { DailyProduction } from './entities/daily-production.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { StockMovement } from '../inventory/entities/stock-movement.entity';
+import {
+  StockMovement,
+  MovementType,
+} from '../inventory/entities/stock-movement.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 
@@ -23,6 +26,7 @@ export class QCService {
     private productRepo: Repository<Product>,
     @InjectRepository(Warehouse)
     private warehouseRepo: Repository<Warehouse>,
+    private dataSource: DataSource,
   ) {}
 
   private async getPlasticWarehouseId(): Promise<number> {
@@ -40,7 +44,7 @@ export class QCService {
   async getPendingInspections() {
     return this.productionRepo.find({
       where: { status: 'PENDING' },
-      relations: ['machine', 'mold', 'raw_material'],
+      relations: ['machine', 'mold', 'product'],
       order: { date: 'DESC', id: 'DESC' },
     });
   }
@@ -67,55 +71,61 @@ export class QCService {
       relations: ['mold'],
     });
 
-    if (!production) throw new Error('Production record not found');
+    if (!production) throw new NotFoundException('سجل الإنتاج غير موجود');
 
-    // 1. Create QC record
-    const inspection = this.qcRepo.create({
-      production_id,
-      product_id: production.mold?.product_id,
-      status,
-      defects_count,
-      notes,
-      inspector_id,
-    });
+    const plasticWhId = await this.getPlasticWarehouseId();
 
-    const savedInspection = await this.qcRepo.save(inspection);
+    return this.dataSource.transaction(async (manager) => {
+      const qcRepo = manager.getRepository(QCInspection);
+      const productionRepo = manager.getRepository(DailyProduction);
+      const stockRepo = manager.getRepository(Stock);
+      const stockMovementRepo = manager.getRepository(StockMovement);
+      const productRepo = manager.getRepository(Product);
 
-    // 2. Update production status
-    production.status = status === 'PASS' ? 'QC_PASS' : 'QC_FAIL';
-    await this.productionRepo.save(production);
-
-    // 3. Handle stock adjustment if FAIL
-    if (status === 'FAIL') {
-      const productName = `بلاستيك ${production.mold.name}`;
-      const product = await this.productRepo.findOne({
-        where: { name: productName, type: 'SEMI_FINISHED' },
+      const inspection = qcRepo.create({
+        production_id,
+        product_id: production.mold?.product_id,
+        status,
+        defects_count,
+        notes,
+        inspector_id,
       });
+      const savedInspection = await qcRepo.save(inspection);
 
-      if (product) {
-        const stock = await this.stockRepo.findOne({
-          where: { product_id: product.id },
+      production.status = status === 'PASS' ? 'QC_PASS' : 'QC_FAIL';
+      await productionRepo.save(production);
+
+      if (status === 'FAIL') {
+        const productName = `بلاستيك ${production.mold?.name || 'Unknown'}`;
+        const product = await productRepo.findOne({
+          where: { name: productName, type: 'SEMI_FINISHED' },
         });
-        if (stock) {
-          const qtyToDeduct = Number(production.pieces_produced);
-          stock.quantity = Number(stock.quantity) - qtyToDeduct;
-          await this.stockRepo.save(stock);
 
-          await this.stockMovementRepo.save({
-            product_id: product.id,
-            warehouse_id: stock.warehouse_id || (await this.getPlasticWarehouseId()),
-            type: 'OUT' as any,
-            quantity: qtyToDeduct,
-            reference_type: 'QC_REJECTION',
-            reference_id: savedInspection.id,
-            date: new Date(),
-            notes: `Rejected by QC #${savedInspection.id}. Production #${production.id}`,
+        if (product) {
+          const stock = await stockRepo.findOne({
+            where: { product_id: product.id },
           });
+          if (stock) {
+            const qtyToDeduct = Number(production.pieces_produced);
+            stock.quantity = Number(stock.quantity) - qtyToDeduct;
+            await stockRepo.save(stock);
+
+            await stockMovementRepo.save({
+              product_id: product.id,
+              warehouse_id: stock.warehouse_id || plasticWhId,
+              type: MovementType.OUT,
+              quantity: qtyToDeduct,
+              reference_type: 'QC_REJECTION',
+              reference_id: savedInspection.id,
+              date: new Date(),
+              notes: `Rejected by QC #${savedInspection.id}. Production #${production.id}`,
+            });
+          }
         }
       }
-    }
 
-    return savedInspection;
+      return savedInspection;
+    });
   }
 
   async getStats() {

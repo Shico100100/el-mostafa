@@ -1,0 +1,205 @@
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of D:\MostafaSaid\ELMostafa\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * D:\MostafaSaid\ELMostafa\frontend\package-lock.json
+
+⚠ Slow filesystem detected. The benchmark took 7285ms. If D:\MostafaSaid\ELMostafa\frontend/.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+Error: Can't resolve 'tailwindcss' in 'D:\MostafaSaid\ELMostafa'
+    [2m[at finishWithoutResolve (D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:942:18)][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1034:14][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1111:5][0m
+    [2m[at eval (eval at create (D:\MostafaSaid\ELMostafa\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1111:5][0m
+    [2m[at eval (eval at create (D:\MostafaSaid\ELMostafa\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:27:1)][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js:94:43][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1111:5][0m
+    [2m[at eval (eval at create (D:\MostafaSaid\ELMostafa\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)][0m
+    [2m[at D:\MostafaSaid\ELMostafa\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1111:5][0m {
+  details: "resolve 'tailwindcss' in 'D:\\MostafaSaid\\ELMostafa'\n" +
+    '  Parsed request is a module\n' +
+    '  using description file: D:\\MostafaSaid\\ELMostafa\\package.json (relative path: .)\n' +
+    '    resolve as module\n' +
+    '      looking for modules in D:\\MostafaSaid\\ELMostafa\\node_modules\n' +
+    '        single file module\n' +
+    '          using description file: D:\\MostafaSaid\\ELMostafa\\package.json (relative path: ./node_modules/tailwindcss)\n' +
+    '            no extension\n' +
+    "              D:\\MostafaSaid\\ELMostafa\\node_modules\\tailwindcss doesn't exist\n" +
+    '            .css\n' +
+    "              D:\\MostafaSaid\\ELMostafa\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "        D:\\MostafaSaid\\ELMostafa\\node_modules\\tailwindcss doesn't exist\n" +
+    "      D:\\MostafaSaid\\node_modules doesn't exist or is not a directory\n" +
+    "      D:\\node_modules doesn't exist or is not a directory"
+}
+
+<--- Last few GCs --->
+
+[22396:0000020D21E77000]     2822 ms: Scavenge 6.1 (7.8) -> 5.5 (10.6) MB, pooled: 0 MB, 153.98 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+<--- Last few GCs --->
+
+
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+
+[17496:00000196DE1A8000]     3252 ms: Scavenge (interleaved) 5.5 (7.8) -> 5.4 (9.8) MB, pooled: 0 MB, 163.47 / 0.00 ms  (average mu = 0.845, current mu = 0.845) allocation failure; 
+----- Native stack trace -----
+#
+
+
+# Fatal error in , line 0
+FATAL ERROR: Zone Allocation failed - process out of memory
+ 1: 00007FF653E0403F 
+----- Native stack trace -----
+ 2: 00007FF654A4FAA7 
+# Out of memory: HashMap::Initialize
+
+ 3: 00007FF6543C9986 
+#
+ 1: 00007FF653E0403F 
+ 4: 00007FF653FC2041 
+#
+ 2: 00007FF654A4FAA7 
+ 5: 00007FF654490137 
+#
+ 3: 00007FF6543C9986 
+ 6: 00007FF65448FD74 
+#FailureMessage Object: 000000CDDD1FB220
+ 4: 00007FF655A271AD 
+ 7: 00007FF6544761C2 
+----- Native stack trace -----
+ 5: 00007FF655591881 
+ 8: 00007FF654476A0A 
+
+ 6: 00007FF655590F37 
+ 9: 00007FF654477497 
+ 1: 00007FF653D56F4D 
+ 7: 00007FF65544D187 
+10: 00007FF65447D946 
+ 2: 00007FF6551BE05F 
+ 8: 00007FF655443AA1 
+11: 00007FF65447B3E2 
+ 3: 00007FF654A4DB46 
+ 9: 00007FF655442E33 
+12: 00007FF65447D80B 
+ 4: 00007FF654A4D232 
+10: 00007FF6549C376F 
+13: 00007FF65447BBD0 
+ 5: 00007FF654A4D060 
+11: 00007FF6549887FD 
+14: 00007FF65447DA92 
+ 6: 00007FF6544D434F 
+12: 00007FF6549884F5 
+15: 00007FF65447DA92 
+ 7: 00007FF6544F4F76 
+13: 00007FF655230C5F 
+16: 00007FF65447B3E2 
+ 8: 00007FF65450B66B 
+14: 00007FF653D52E0E 
+17: 00007FF65447D80B 
+ 9: 00007FF65450A83E 
+15: 00007FF654AA4A36 
+10: 00007FF65450A4F9 
+18: 00007FF65447BBD0 
+16: 00007FF655D05A73 
+19: 00007FF65447DA92 
+11: 00007FF654512CC0 
+17: 00007FFEBD6BE8D7 
+20: 00007FF65447DA92 
+12: 00007FF654509F66 
+18: 00007FFEBE78C3FC 
+21: 00007FF65447B3E2 
+13: 00007FF65450B66B 
+22: 00007FF65447D80B 
+14: 00007FF65450A83E 
+23: 00007FF65447BBD0 
+15: 00007FF65450A4F9 
+24: 00007FF65447DA92 
+16: 00007FF654512CC0 
+25: 00007FF65447DA92 
+17: 00007FF654509F66 
+26: 00007FF65447B3E2 
+18: 00007FF65450B66B 
+27: 00007FF65447D2C8 
+19: 00007FF65450A83E 
+
+28: 00007FF65447BB4F 
+20: 00007FF65451C712 
+<--- Last few GCs --->
+29: 00007FF654476994 
+
+
+21: 00007FF6544FC1E5 
+[24756:000002460EEC6000]     2662 ms: Scavenge 6.1 (7.3) -> 5.5 (10.1) MB, pooled: 0 MB, 4.41 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+30: 00007FF65447DA92 
+<--- Last few GCs --->
+<--- Last few GCs --->
+22: 00007FF654504DEB 
+
+31: 00007FF65447DA92 
+
+[24164:0000023728C5F000]     3163 ms: Scavenge 6.1 (7.3) -> 5.5 (10.1) MB, pooled: 0 MB, 2.62 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+23: 00007FF6545042EA 
+FATAL ERROR: Zone Allocation failed - process out of memory
+32: 00007FF65447B3E2 
+[29884:0000019F47AAB000]    13746 ms: Scavenge 6.9 (8.8) -> 6.9 (10.1) MB, pooled: 2 MB, 2.31 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+24: 00007FF6544F79E7 
+----- Native stack trace -----
+33: 00007FF65447D2C8 
+[29884:0000019F47AAB000]    14408 ms: Mark-Compact (reduce) 6.9 (10.1) -> 6.5 (8.1) MB, pooled: 0 MB, 659.80 / 0.00 ms  (average mu = 0.954, current mu = 0.954) last resort; GC in old space requested
+25: 00007FF6544F6BB4 
+FATAL ERROR: Zone Allocation failed - process out of memory
+
+34: 00007FF65447BB4F 
+
+26: 00007FF6544F5EA2 
+----- Native stack trace -----
+ 1: 00007FF653E0403F 
+35: 00007FF65447DA92 
+FATAL ERROR: Committing semi space failed. Allocation failed - JavaScript heap out of memory
+27: 00007FF6544F5B4A 
+
+thread 'tokio-runtime-worker' (10416) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-1.43.0\src\io\blocking.rs:76:46:
+OS can't spawn worker thread: The paging file is too small for this operation to complete. (os error 1455)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+ 2: 00007FF654A4FAA7 
+36: 00007FF65447DA92 
+----- Native stack trace -----
+28: 00007FF6544F1179 
+ 1: 00007FF653E0403F 
+ 3: 00007FF6543C9986 
+37: 00007FF65447B3E2 
+
+29: 00007FF6549CD4EF 
+ 2: 00007FF654A4FAA7 
+ 4: 00007FF654A4D2BA 
+38: 00007FF65447D2C8 
+ 1: 00007FF653E0403F node::OnFatalError+1343
+30: 00007FF6549D02F1 
+ 3: 00007FF6543C9986 
+ 5: 00007FF654A4D060 
+39: 00007FF65447BB4F 
+ 4: 00007FF6544F7DA9 
+31: 00007FF654A58F63 
+ 2: 00007FF654A4FAA7 v8::Function::NewInstance+423
+ 6: 00007FF6544D434F 
+40: 00007FF65447DA92 
+ 3: 00007FF6548504D7 v8::base::AddressSpaceReservation::AddressSpaceReservation+322071
+32: 00007FF653E21563 
+ 5: 00007FF65450FAE3 
+ 7: 00007FF6544F4F76 
+41: 00007FF65447DA92 
+ 4: 00007FF6547E8EFB v8::Platform::SystemClockTimeMillis+490523
+33: 00007FF653E1FD0E 
+ 6: 00007FF65450B66B 
+ 8: 00007FF65450B66B 
+42: 00007FF65447B3E2 
+ 5: 00007FF65481126A v8::base::AddressSpaceReservation::AddressSpaceReservation+63402
+34: 000002421FDCF64D 
+ 7: 00007FF65450A83E 
+
+thread 'tokio-runtime-worker' (10416) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-1.43.0\src\io\blocking.rs:76:46:
+OS can't spawn worker thread: The paging file is too small for this operation to complete. (os error 1455)

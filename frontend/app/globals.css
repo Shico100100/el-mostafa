@@ -65,3 +65,12 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100vh;
 }
+
+select {
+  color-scheme: dark;
+}
+
+select option {
+  color: #cbd5e1;
+  background: #1e293b;
+}

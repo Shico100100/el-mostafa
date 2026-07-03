@@ -24,7 +24,7 @@ export class Mold {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product, { nullable: true })
@@ -42,15 +42,13 @@ export class Mold {
     enum: MoldStatus,
     default: MoldStatus.GOOD,
   })
-  @Column({
-    type: 'enum',
-    enum: MoldStatus,
-    default: MoldStatus.GOOD,
-  })
   status: MoldStatus;
 
   @Column({ type: 'int', default: 0 })
   current_shots: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  price: number; // Mold purchase price
 
   @Column({ type: 'int', default: 1000000 }) // Default 1M shots
   max_shots: number;

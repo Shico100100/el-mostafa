@@ -8,18 +8,26 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { PurchaseOrder } from './purchase-order.entity';
+import { Container } from './container.entity';
 
 @Entity('packing_lists')
 export class PackingList {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   order_id: number;
 
   @ManyToOne(() => PurchaseOrder, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: PurchaseOrder;
+
+  @Column({ type: 'int' })
+  container_id: number;
+
+  @ManyToOne(() => Container, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'container_id' })
+  container: Container;
 
   // Carton dimensions in cm
   @Column({ type: 'decimal', precision: 8, scale: 2 })

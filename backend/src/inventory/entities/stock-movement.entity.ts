@@ -19,19 +19,19 @@ export class StockMovement {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  product_id: number;
-
-  @Column()
-  warehouse_id: number;
-
   @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
+  @Column({ type: 'int' })
+  product_id: number;
+
   @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
+
+  @Column({ type: 'int' })
+  warehouse_id: number;
 
   @Column({
     type: 'enum',

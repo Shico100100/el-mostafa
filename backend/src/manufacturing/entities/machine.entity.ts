@@ -49,6 +49,12 @@ export class Machine {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   power_consumption: number; // kWh
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  price: number; // Machine purchase price
+
+  @Column({ type: 'int', default: 5 })
+  useful_life_years: number; // Years to depreciate over
+
   @Column({ nullable: true, type: 'text' })
   notes: string;
 

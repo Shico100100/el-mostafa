@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Supplier } from './entities/supplier.entity';
@@ -7,406 +7,178 @@ import { PurchaseOrderItem } from './entities/purchase-order-item.entity';
 import { SupplierPayment } from './entities/supplier-payment.entity';
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
-import { Currency } from './entities/currency.entity';
-import { FxRate } from './entities/fx-rate.entity';
 import { Container } from './entities/container.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { RawMaterial } from '../manufacturing/entities/raw-material.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
+import { SupplierService } from './suppliers/supplier.service';
+import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
+import { PaymentService } from './supplier-payments/payment.service';
+import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
+import { CurrencyService } from './currencies/currency.service';
+import { ContainerService } from './containers/container.service';
+import { PackingListService } from './packing-lists/packing-list.service';
 
 @Injectable()
 export class PurchasesService {
   constructor(
+    private supplierService: SupplierService,
+    private purchaseOrderService: PurchaseOrderService,
+    private paymentService: PaymentService,
+    private purchaseReturnService: PurchaseReturnService,
+    private currencyService: CurrencyService,
+    private containerService: ContainerService,
+    private packingListService: PackingListService,
     @InjectRepository(Supplier)
     private supplierRepo: Repository<Supplier>,
     @InjectRepository(PurchaseOrder)
     private orderRepo: Repository<PurchaseOrder>,
-    @InjectRepository(PurchaseOrderItem)
-    private orderItemRepo: Repository<PurchaseOrderItem>,
     @InjectRepository(SupplierPayment)
     private paymentRepo: Repository<SupplierPayment>,
     @InjectRepository(PurchaseReturn)
     private returnRepo: Repository<PurchaseReturn>,
-    @InjectRepository(PurchaseReturnItem)
-    private returnItemRepo: Repository<PurchaseReturnItem>,
-    @InjectRepository(Currency)
-    private currencyRepo: Repository<Currency>,
-    @InjectRepository(FxRate)
-    private fxRateRepo: Repository<FxRate>,
     @InjectRepository(Container)
     private containerRepo: Repository<Container>,
     @InjectRepository(PackingList)
     private packingListRepo: Repository<PackingList>,
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
-    @InjectRepository(Stock)
-    private stockRepo: Repository<Stock>,
-    @InjectRepository(RawMaterial)
-    private rawMaterialRepo: Repository<RawMaterial>,
+
     private inventoryService: InventoryService,
     private accountingService: AccountingService,
     private dataSource: DataSource,
   ) {}
 
-  // Suppliers
+  // ---- Supplier Delegation ----
+
   async getAllSuppliers() {
-    return this.supplierRepo.find();
+    return this.supplierService.getAllSuppliers();
   }
 
   async getSupplier(id: number) {
-    return this.supplierRepo.findOne({ where: { id } });
+    return this.supplierService.getSupplier(id);
   }
 
   async createSupplier(data: Partial<Supplier>) {
-    const supplier = this.supplierRepo.create(data);
-    return this.supplierRepo.save(supplier);
+    return this.supplierService.createSupplier(data);
   }
 
   async updateSupplier(id: number, data: Partial<Supplier>) {
-    await this.supplierRepo.update(id, data);
-    return this.supplierRepo.findOne({ where: { id } });
+    return this.supplierService.updateSupplier(id, data);
   }
 
   async deleteSupplier(id: number) {
-    return this.supplierRepo.delete(id);
+    return this.supplierService.deleteSupplier(id);
   }
 
-  // Purchase Orders
-  async getAllOrders(
-    options: {
-      page?: number;
-      limit?: number;
-      search?: string;
-      fromDate?: string;
-      toDate?: string;
-    } = {},
-  ) {
-    const { page = 1, limit = 10, search, fromDate, toDate } = options;
-    const query = this.orderRepo
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.supplier', 'supplier')
-      .orderBy('order.created_at', 'DESC');
+  // ---- Supplier Aging / Balance / Statement (cross-repo) ----
 
-    if (search) {
-      query.andWhere(
-        '(supplier.name LIKE :search OR order.invoice_number LIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    if (fromDate) {
-      query.andWhere('order.order_date >= :fromDate', { fromDate });
-    }
-
-    if (toDate) {
-      query.andWhere('order.order_date <= :toDate', { toDate });
-    }
-
-    const [items, total] = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
-
-    return {
-      items,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async getOrder(id: number) {
-    return this.orderRepo.findOne({
-      where: { id },
-      relations: ['supplier'],
+  async getSupplierAging() {
+    const suppliers = await this.supplierRepo.find({
+      order: { name: 'ASC' },
     });
-  }
 
-  async createOrder(data: {
-    supplier_id: number;
-    total_amount: number;
-    notes?: string;
-    order_date?: string;
-    invoice_number?: string;
-    items: any[];
-  }) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const allOrders = await this.orderRepo.find({
+      order: { supplier_id: 'ASC', order_date: 'ASC' },
+    });
 
-    try {
-      const order = queryRunner.manager.create(PurchaseOrder, {
-        supplier_id: data.supplier_id,
-        total_amount: data.total_amount,
-        notes: data.notes,
-        invoice_number: data.invoice_number,
-        order_date: data.order_date ? new Date(data.order_date) : new Date(),
-      });
-      const savedOrder = await queryRunner.manager.save(PurchaseOrder, order);
+    const allPayments = await this.paymentRepo.find({
+      order: { supplier_id: 'ASC', payment_date: 'ASC' },
+    });
 
-      for (const item of data.items) {
-        const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
-          order_id: savedOrder.id,
-          product_id: item.product_id,
-          quantity: item.quantity,
-          price: item.price,
-          total: item.total,
-        });
-        await queryRunner.manager.save(PurchaseOrderItem, orderItem);
+    const allReturns = await this.returnRepo.find({
+      order: { supplier_id: 'ASC', return_date: 'ASC' },
+    });
 
-        // Add stock movement (IN) to the main warehouse (warehouse_id = 1)
-        await this.inventoryService.addStockMovement(
-          {
-            product_id: item.product_id,
-            warehouse_id: 1, // Main warehouse
-            type: 'IN' as any,
-            quantity: item.quantity,
-            notes: `شراء - أمر رقم ${savedOrder.id}`,
-            date: savedOrder.order_date,
-          },
-          queryRunner.manager,
+    const ordersBySup = new Map<number, typeof allOrders>();
+    const paymentsBySup = new Map<number, typeof allPayments>();
+    const returnsBySup = new Map<number, typeof allReturns>();
+
+    for (const o of allOrders) {
+      if (!ordersBySup.has(o.supplier_id)) ordersBySup.set(o.supplier_id, []);
+      ordersBySup.get(o.supplier_id)!.push(o);
+    }
+    for (const p of allPayments) {
+      if (!paymentsBySup.has(p.supplier_id))
+        paymentsBySup.set(p.supplier_id, []);
+      paymentsBySup.get(p.supplier_id)!.push(p);
+    }
+    for (const r of allReturns) {
+      if (!returnsBySup.has(r.supplier_id)) returnsBySup.set(r.supplier_id, []);
+      returnsBySup.get(r.supplier_id)!.push(r);
+    }
+
+    const now = new Date();
+    return suppliers.map((supplier) => {
+      const orders = ordersBySup.get(supplier.id) || [];
+      const payments = paymentsBySup.get(supplier.id) || [];
+      const returns = returnsBySup.get(supplier.id) || [];
+
+      const fifoQueue = orders.map((o) => ({
+        date: o.order_date || o.created_at,
+        remaining: Number(o.total_amount),
+      }));
+
+      const credits = [
+        ...payments.map((p) => ({
+          date: p.payment_date,
+          amount: Number(p.amount),
+        })),
+        ...returns.map((r) => ({
+          date: r.return_date,
+          amount: Number(r.total_amount),
+        })),
+      ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      let idx = 0;
+      for (const credit of credits) {
+        let remaining = credit.amount;
+        while (remaining > 0 && idx < fifoQueue.length) {
+          const order = fifoQueue[idx];
+          const toApply = Math.min(remaining, order.remaining);
+          order.remaining -= toApply;
+          remaining -= toApply;
+          if (order.remaining <= 0) idx++;
+        }
+      }
+
+      const buckets = {
+        current: 0,
+        days1_30: 0,
+        days31_60: 0,
+        days61_90: 0,
+        over90: 0,
+      };
+      let total = 0;
+
+      for (const order of fifoQueue) {
+        if (order.remaining <= 0) continue;
+        total += order.remaining;
+
+        const days = Math.floor(
+          (now.getTime() - new Date(order.date).getTime()) /
+            (1000 * 60 * 60 * 24),
         );
 
-        // Update raw material last_purchase_price if the product is RAW
-        const poProduct = await queryRunner.manager.findOne(Product, {
-          where: { id: item.product_id },
-        });
-        if (poProduct?.type === 'RAW') {
-          const rawMat = await queryRunner.manager.findOne(RawMaterial, {
-            where: { product_id: item.product_id },
-          });
-          if (rawMat) {
-            await queryRunner.manager.update(RawMaterial, rawMat.id, {
-              last_purchase_price: item.price,
-              last_purchase_date: savedOrder.order_date,
-            });
-            await queryRunner.manager.update(Product, item.product_id, {
-              cost_price: item.price,
-            });
-          }
-        }
+        if (days <= 30) buckets.current += order.remaining;
+        else if (days <= 60) buckets.days1_30 += order.remaining;
+        else if (days <= 90) buckets.days31_60 += order.remaining;
+        else if (days <= 120) buckets.days61_90 += order.remaining;
+        else buckets.over90 += order.remaining;
       }
 
-      await this.accountingService.postAutomaticEntry({
-        type: 'PURCHASE',
-        amount: data.total_amount,
-        reference: `PUR-${savedOrder.id}`,
-        description: `شراء - فاتورة رقم ${savedOrder.invoice_number || savedOrder.id}`,
-      });
-
-      await queryRunner.commitTransaction();
-      return savedOrder;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async getOrderItems(orderId: number) {
-    return this.orderItemRepo.find({
-      where: { order_id: orderId },
-      relations: ['product'],
-    });
-  }
-
-  async updateOrder(
-    id: number,
-    data: {
-      supplier_id?: number;
-      total_amount?: number;
-      notes?: string;
-      order_date?: string;
-      invoice_number?: string;
-      items?: any[];
-    },
-  ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Update order main fields
-      const updateData: any = {};
-      if (data.supplier_id !== undefined)
-        updateData.supplier_id = data.supplier_id;
-      if (data.total_amount !== undefined)
-        updateData.total_amount = data.total_amount;
-      if (data.notes !== undefined) updateData.notes = data.notes;
-      if (data.invoice_number !== undefined)
-        updateData.invoice_number = data.invoice_number;
-      if (data.order_date !== undefined)
-        updateData.order_date = new Date(data.order_date);
-
-      if (Object.keys(updateData).length > 0) {
-        await queryRunner.manager.update(PurchaseOrder, id, updateData);
-      }
-
-      // If items are provided, update items and stock
-      if (data.items) {
-        // Get old items to reverse stock movements
-        const oldItems = await queryRunner.manager.find(PurchaseOrderItem, {
-          where: { order_id: id },
-        });
-
-        // Reverse old stock movements
-        for (const oldItem of oldItems) {
-          await this.inventoryService.addStockMovement(
-            {
-              product_id: oldItem.product_id,
-              warehouse_id: 1,
-              type: 'OUT' as any,
-              quantity: oldItem.quantity,
-              notes: `تعديل أمر شراء - عكس أمر رقم ${id}`,
-            },
-            queryRunner.manager,
-          );
-        }
-
-        // Delete existing items
-        await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
-
-        // Create new items and add stock movements
-        for (const item of data.items) {
-          const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
-            order_id: id,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            total: item.total,
-          });
-          await queryRunner.manager.save(PurchaseOrderItem, orderItem);
-
-          // Add new stock movement
-          await this.inventoryService.addStockMovement(
-            {
-              product_id: item.product_id,
-              warehouse_id: 1,
-              type: 'IN' as any,
-              quantity: item.quantity,
-              notes: `تعديل أمر شراء - أمر رقم ${id}`,
-            },
-            queryRunner.manager,
-          );
-
-          // Update raw material last_purchase_price if the product is RAW
-          const poProduct = await queryRunner.manager.findOne(Product, {
-            where: { id: item.product_id },
-          });
-          if (poProduct?.type === 'RAW') {
-            const rawMat = await queryRunner.manager.findOne(RawMaterial, {
-              where: { product_id: item.product_id },
-            });
-            if (rawMat) {
-              await queryRunner.manager.update(RawMaterial, rawMat.id, {
-                last_purchase_price: item.price,
-                last_purchase_date: data.order_date ? new Date(data.order_date) : new Date(),
-              });
-              await queryRunner.manager.update(Product, item.product_id, {
-                cost_price: item.price,
-              });
-            }
-          }
-        }
-      }
-
-      await queryRunner.commitTransaction();
-
-      return this.orderRepo.findOne({
-        where: { id },
-        relations: ['supplier'],
-      });
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async deleteOrder(id: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Get order items to reverse stock
-      const items = await queryRunner.manager.find(PurchaseOrderItem, {
-        where: { order_id: id },
-      });
-
-      // Reverse stock movements
-      for (const item of items) {
-        await this.inventoryService.addStockMovement(
-          {
-            product_id: item.product_id,
-            warehouse_id: 1,
-            type: 'OUT' as any,
-            quantity: item.quantity,
-            notes: `حذف أمر شراء - عكس أمر رقم ${id}`,
-          },
-          queryRunner.manager,
-        );
-      }
-
-      // Delete items (CASCADE should handle this but manual delete is safer given transaction context)
-      await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
-
-      // Delete order
-      await queryRunner.manager.delete(PurchaseOrder, id);
-
-      await queryRunner.commitTransaction();
-      return { success: true };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  // Supplier Payments
-  async addPayment(data: {
-    supplier_id: number;
-    amount: number;
-    payment_date: string;
-    notes?: string;
-  }) {
-    const payment = this.paymentRepo.create({
-      ...data,
-      payment_date: new Date(data.payment_date),
-    });
-    const savedPayment = await this.paymentRepo.save(payment);
-
-    // Post to Accounting
-    const supplier = await this.supplierRepo.findOne({
-      where: { id: data.supplier_id },
-    });
-    await this.accountingService.postAutomaticEntry({
-      type: 'PAYMENT',
-      amount: data.amount,
-      reference: `PAY-SUPP-${savedPayment.id}`,
-      description: `دفع لمورد: ${supplier?.name || data.supplier_id}`,
-      // partnerId is undefined for suppliers in my postAutomaticEntry logic
-    });
-
-    return savedPayment;
-  }
-
-  async getSupplierPayments(supplierId: number) {
-    return this.paymentRepo.find({
-      where: { supplier_id: supplierId },
-      order: { payment_date: 'DESC' },
+      return {
+        id: supplier.id,
+        name: supplier.name,
+        total,
+        ...buckets,
+      };
     });
   }
 
   async getSupplierBalance(supplierId: number) {
-    // Get total purchases
     const purchases = await this.orderRepo.find({
       where: { supplier_id: supplierId },
     });
@@ -415,7 +187,6 @@ export class PurchasesService {
       0,
     );
 
-    // Get total returns
     const returns = await this.returnRepo.find({
       where: { supplier_id: supplierId },
     });
@@ -424,7 +195,6 @@ export class PurchasesService {
       0,
     );
 
-    // Get total payments
     const payments = await this.paymentRepo.find({
       where: { supplier_id: supplierId },
     });
@@ -486,17 +256,296 @@ export class PurchasesService {
     });
   }
 
-  // Purchase Returns
+  // ---- Order Delegation ----
+
+  async getAllOrders(
+    options: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      fromDate?: string;
+      toDate?: string;
+    } = {},
+  ) {
+    return this.purchaseOrderService.getAllOrders(options);
+  }
+
+  async getOrder(id: number) {
+    return this.purchaseOrderService.getOrder(id);
+  }
+
+  async getOrderItems(orderId: number) {
+    return this.purchaseOrderService.getOrderItems(orderId);
+  }
+
+  async calculateLandedCost(orderId: number) {
+    return this.purchaseOrderService.calculateLandedCost(orderId);
+  }
+
+  async updateLandedCost(
+    orderId: number,
+    data: {
+      freight_cost?: number;
+      customs_percent?: number;
+      commission_percent?: number;
+      total_weight_kg?: number;
+    },
+  ) {
+    return this.purchaseOrderService.updateLandedCost(orderId, data);
+  }
+
+  // ---- Complex Order Transactions (DataSource) ----
+
+  async createOrder(data: {
+    supplier_id: number;
+    total_amount: number;
+    notes?: string;
+    order_date?: string;
+    invoice_number?: string;
+    items: any[];
+  }) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const order = queryRunner.manager.create(PurchaseOrder, {
+        supplier_id: data.supplier_id,
+        total_amount: data.total_amount,
+        notes: data.notes,
+        invoice_number: data.invoice_number,
+        order_date: data.order_date ? new Date(data.order_date) : new Date(),
+      });
+      const savedOrder = await queryRunner.manager.save(PurchaseOrder, order);
+
+      for (const item of data.items) {
+        const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
+          order_id: savedOrder.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total,
+        });
+        await queryRunner.manager.save(PurchaseOrderItem, orderItem);
+
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: item.product_id,
+            warehouse_id: 1,
+            type: 'IN' as any,
+            quantity: item.quantity,
+            notes: `شراء - أمر رقم ${savedOrder.id}`,
+            date: savedOrder.order_date,
+          },
+          queryRunner.manager,
+        );
+
+        const poProduct = await queryRunner.manager.findOne(Product, {
+          where: { id: item.product_id },
+        });
+        if (poProduct?.type === 'RAW') {
+          await queryRunner.manager.update(Product, item.product_id, {
+            last_purchase_price: item.price,
+            last_purchase_date: savedOrder.order_date,
+            cost_price: item.price,
+          });
+        }
+      }
+
+      await this.accountingService.postAutomaticEntry({
+        type: 'PURCHASE',
+        amount: data.total_amount,
+        reference: `PUR-${savedOrder.id}`,
+        description: `شراء - فاتورة رقم ${savedOrder.invoice_number || savedOrder.id}`,
+      });
+
+      await queryRunner.commitTransaction();
+      return savedOrder;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateOrder(
+    id: number,
+    data: {
+      supplier_id?: number;
+      total_amount?: number;
+      notes?: string;
+      order_date?: string;
+      invoice_number?: string;
+      items?: any[];
+    },
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const updateData: any = {};
+      if (data.supplier_id !== undefined)
+        updateData.supplier_id = data.supplier_id;
+      if (data.total_amount !== undefined)
+        updateData.total_amount = data.total_amount;
+      if (data.notes !== undefined) updateData.notes = data.notes;
+      if (data.invoice_number !== undefined)
+        updateData.invoice_number = data.invoice_number;
+      if (data.order_date !== undefined)
+        updateData.order_date = new Date(data.order_date);
+
+      if (Object.keys(updateData).length > 0) {
+        await queryRunner.manager.update(PurchaseOrder, id, updateData);
+      }
+
+      if (data.items) {
+        const oldItems = await queryRunner.manager.find(PurchaseOrderItem, {
+          where: { order_id: id },
+        });
+
+        for (const oldItem of oldItems) {
+          await this.inventoryService.addStockMovement(
+            {
+              product_id: oldItem.product_id,
+              warehouse_id: 1,
+              type: 'OUT' as any,
+              quantity: oldItem.quantity,
+              notes: `تعديل أمر شراء - عكس أمر رقم ${id}`,
+            },
+            queryRunner.manager,
+            true,
+          );
+        }
+
+        await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
+
+        for (const item of data.items) {
+          const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
+            order_id: id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.total,
+          });
+          await queryRunner.manager.save(PurchaseOrderItem, orderItem);
+
+          await this.inventoryService.addStockMovement(
+            {
+              product_id: item.product_id,
+              warehouse_id: 1,
+              type: 'IN' as any,
+              quantity: item.quantity,
+              notes: `تعديل أمر شراء - أمر رقم ${id}`,
+            },
+            queryRunner.manager,
+          );
+
+          const poProduct = await queryRunner.manager.findOne(Product, {
+            where: { id: item.product_id },
+          });
+          if (poProduct?.type === 'RAW') {
+            await queryRunner.manager.update(Product, item.product_id, {
+              last_purchase_price: item.price,
+              last_purchase_date: data.order_date
+                ? new Date(data.order_date)
+                : new Date(),
+              cost_price: item.price,
+            });
+          }
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      return this.orderRepo.findOne({
+        where: { id },
+        relations: ['supplier'],
+      });
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteOrder(id: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const items = await queryRunner.manager.find(PurchaseOrderItem, {
+        where: { order_id: id },
+      });
+
+      for (const item of items) {
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: item.product_id,
+            warehouse_id: 1,
+            type: 'OUT' as any,
+            quantity: item.quantity,
+            notes: `حذف أمر شراء - عكس أمر رقم ${id}`,
+          },
+          queryRunner.manager,
+          true,
+        );
+      }
+
+      await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
+      await queryRunner.manager.delete(PurchaseOrder, id);
+
+      await queryRunner.commitTransaction();
+      return { success: true };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ---- Payment (needs AccountingService) ----
+
+  async addPayment(data: {
+    supplier_id: number;
+    amount: number;
+    payment_date: string;
+    notes?: string;
+  }) {
+    const savedPayment = await this.paymentService.addPayment(data);
+
+    const supplier = await this.supplierRepo.findOne({
+      where: { id: data.supplier_id },
+    });
+    await this.accountingService.postAutomaticEntry({
+      type: 'PAYMENT',
+      amount: data.amount,
+      reference: `PAY-SUPP-${savedPayment.id}`,
+      description: `دفع لمورد: ${supplier?.name || data.supplier_id}`,
+    });
+
+    return savedPayment;
+  }
+
+  async getSupplierPayments(supplierId: number) {
+    return this.paymentService.getSupplierPayments(supplierId);
+  }
+
+  // ---- Return Delegation ----
+
   async getAllReturns() {
-    return this.returnRepo.find({ relations: ['supplier'] });
+    return this.purchaseReturnService.getAllReturns();
   }
 
   async getReturn(id: number) {
-    return this.returnRepo.findOne({
-      where: { id },
-      relations: ['supplier', 'items', 'items.product'],
-    });
+    return this.purchaseReturnService.getReturn(id);
   }
+
+  // ---- Complex Return Transaction (DataSource) ----
 
   async createReturn(data: {
     supplier_id: number;
@@ -528,16 +577,15 @@ export class PurchasesService {
           return_id: savedReturn.id,
           product_id: item.product_id,
           quantity: item.quantity,
-          price: item.price,
+          unit_price: item.unit_price,
           total: item.total,
         });
         await queryRunner.manager.save(PurchaseReturnItem, returnItem);
 
-        // 1. Deduct stock (OUT)
         await this.inventoryService.addStockMovement(
           {
             product_id: item.product_id,
-            warehouse_id: 1, // Main warehouse
+            warehouse_id: 1,
             type: 'OUT' as any,
             quantity: item.quantity,
             notes: `مرتجع مشتريات - رقم ${savedReturn.id}`,
@@ -547,17 +595,9 @@ export class PurchasesService {
         );
       }
 
-      // 2. Update Supplier Balance (Decrease debt we owe them)
-      // Note: Since purchases increase debt and payments decrease it, a return should decrease it.
-      // Wait, if Purchase Order increases balance, Returns should decrease it.
-      // Our getSupplierBalance does (totalPurchases - totalPayments). So Returns should be subtracted from totalPurchases.
-      // Actually, we don't have a balance field for suppliers, we calculate it.
-      // So we need to include Returns in getSupplierBalance and getStatementOfAccount.
-
-      // 3. Post to Accounting
       await this.accountingService.postAutomaticEntry({
         type: 'PURCHASE',
-        amount: -data.total_amount, // Reverse PURCHASE
+        amount: -data.total_amount,
         reference: `RET-PUR-${savedReturn.id}`,
         description: `مرتجع مشتريات - رقم ${savedReturn.id}`,
       });
@@ -572,254 +612,83 @@ export class PurchasesService {
     }
   }
 
-  // ==================== CURRENCY MANAGEMENT ====================
+  // ---- Currency Delegation ----
 
   async getCurrencies() {
-    return this.currencyRepo.find({ where: { is_active: true } });
+    return this.currencyService.getCurrencies();
   }
 
   async getAllCurrencies() {
-    return this.currencyRepo.find();
+    return this.currencyService.getAllCurrencies();
   }
 
-  async createCurrency(data: Partial<Currency>) {
-    const currency = this.currencyRepo.create(data);
-    return this.currencyRepo.save(currency);
+  async createCurrency(data: Partial<any>) {
+    return this.currencyService.createCurrency(data);
   }
 
-  async updateCurrency(id: number, data: Partial<Currency>) {
-    await this.currencyRepo.update(id, data);
-    return this.currencyRepo.findOne({ where: { id } });
+  async updateCurrency(id: number, data: Partial<any>) {
+    return this.currencyService.updateCurrency(id, data);
   }
 
   async deleteCurrency(id: number) {
-    return this.currencyRepo.delete(id);
+    return this.currencyService.deleteCurrency(id);
   }
-
-  // ==================== FX RATE HISTORY ====================
 
   async getFxRates(currencyId?: number) {
-    const where: any = {};
-    if (currencyId) where.currency_id = currencyId;
-    return this.fxRateRepo.find({
-      where,
-      relations: ['currency'],
-      order: { rate_date: 'DESC' },
-    });
+    return this.currencyService.getFxRates(currencyId);
   }
 
-  async addFxRate(data: {
-    currency_id: number;
-    rate_to_egp: number;
-    amount_paid?: number;
-    notes?: string;
-    rate_date: string;
-  }) {
-    const rate = this.fxRateRepo.create({
-      ...data,
-      rate_date: new Date(data.rate_date),
-    });
-    return this.fxRateRepo.save(rate);
+  async addFxRate(data: any) {
+    return this.currencyService.addFxRate(data);
   }
 
-  // ==================== WEIGHTED AVERAGE FX ====================
-  // حساب سعر الصرف المرجح: (مجموع المبالغ المدفوعة × سعر الصرف) ÷ إجمالي المبلغ المدفوع
   async calculateWeightedAverageFx(currencyId: number): Promise<number> {
-    const rates = await this.fxRateRepo.find({
-      where: { currency_id: currencyId },
-    });
-
-    const paidRates = rates.filter((r) => r.amount_paid && r.amount_paid > 0);
-    if (paidRates.length === 0) {
-      const latest = rates[rates.length - 1];
-      return latest ? Number(latest.rate_to_egp) : 1;
-    }
-
-    const totalAmount = paidRates.reduce(
-      (sum, r) => sum + Number(r.amount_paid),
-      0,
-    );
-    const weightedSum = paidRates.reduce(
-      (sum, r) => sum + Number(r.amount_paid) * Number(r.rate_to_egp),
-      0,
-    );
-
-    return totalAmount > 0 ? weightedSum / totalAmount : 1;
+    return this.currencyService.calculateWeightedAverageFx(currencyId);
   }
 
-  // ==================== LANDED COST CALCULATION ====================
-  /*
-   * مصفوفة التكلفة الكلية (Landed Cost Matrix):
-   * 1. التكلفة الأساسية = سعر الوحدة × سعر الصرف
-   * 2. عمولة المكتب = التكلفة الأساسية × نسبة العمولة
-   * 3. الجمارك = التكلفة الأساسية × نسبة الجمارك
-   * 4. الشحن = (إجمالي الشحن ÷ إجمالي وزن الشحنة) × وزن الوحدة
-   * 5. إجمالي التكلفة الكلية = مجموع ما سبق
-   */
-  async calculateLandedCost(orderId: number) {
-    const order = await this.orderRepo.findOne({
-      where: { id: orderId },
-      relations: ['items', 'items.product', 'supplier'],
-    });
-
-    if (!order) throw new Error('Order not found');
-
-    const fxRate = Number(order.exchange_rate) || 1;
-    const freightCost = Number(order.freight_cost) || 0;
-    const customsPercent = Number(order.customs_percent) || 0;
-    const commissionPercent = Number(order.commission_percent) || 0;
-    const totalWeight = Number(order.total_weight_kg) || 0;
-
-    const breakdown = order.items.map((item) => {
-      const baseCost = Number(item.price) * fxRate;
-      const commission = baseCost * (commissionPercent / 100);
-      const customs = baseCost * (customsPercent / 100);
-      const shipping =
-        totalWeight > 0 && Number(item.weight_kg) > 0
-          ? (freightCost / totalWeight) * Number(item.weight_kg)
-          : 0;
-
-      const unitLandedCost = baseCost + commission + customs + shipping;
-      const totalLandedCost = unitLandedCost * Number(item.quantity);
-
-      return {
-        item_id: item.id,
-        product_id: item.product_id,
-        product_name: item.product?.name || `Product #${item.product_id}`,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.price),
-        fx_rate: fxRate,
-        base_cost_egp: baseCost,
-        commission,
-        customs,
-        shipping,
-        unit_landed_cost: unitLandedCost,
-        total_landed_cost: totalLandedCost,
-        weight_kg: Number(item.weight_kg),
-      };
-    });
-
-    const totalLandedCost = breakdown.reduce(
-      (sum, b) => sum + b.total_landed_cost,
-      0,
-    );
-
-    return {
-      order_id: orderId,
-      supplier: order.supplier?.name,
-      invoice: order.invoice_number,
-      currency: order.currency_code || 'EGP',
-      fx_rate: fxRate,
-      freight_cost: freightCost,
-      customs_percent: customsPercent,
-      commission_percent: commissionPercent,
-      total_weight_kg: totalWeight,
-      total_landed_cost: totalLandedCost,
-      breakdown,
-    };
-  }
-
-  async updateLandedCost(
-    orderId: number,
-    data: {
-      freight_cost?: number;
-      customs_percent?: number;
-      commission_percent?: number;
-      total_weight_kg?: number;
-    },
-  ) {
-    const updateData: any = {};
-    if (data.freight_cost !== undefined) updateData.freight_cost = data.freight_cost;
-    if (data.customs_percent !== undefined) updateData.customs_percent = data.customs_percent;
-    if (data.commission_percent !== undefined) updateData.commission_percent = data.commission_percent;
-    if (data.total_weight_kg !== undefined) updateData.total_weight_kg = data.total_weight_kg;
-
-    if (Object.keys(updateData).length > 0) {
-      await this.orderRepo.update(orderId, updateData);
-    }
-
-    // Recalculate and save per-item landed cost
-    const result = await this.calculateLandedCost(orderId);
-
-    for (const b of result.breakdown) {
-      await this.orderItemRepo.update(b.item_id, {
-        landed_cost: b.unit_landed_cost,
-      });
-    }
-
-    await this.orderRepo.update(orderId, {
-      total_landed_cost: result.total_landed_cost,
-    });
-
-    return this.calculateLandedCost(orderId);
-  }
-
-  // ==================== CONTAINERS ====================
+  // ---- Container Delegation ----
 
   async getContainers() {
-    return this.containerRepo.find({ order: { name: 'ASC' } });
+    return this.containerService.getContainers();
   }
 
   async getContainer(id: number) {
-    return this.containerRepo.findOne({ where: { id } });
+    return this.containerService.getContainer(id);
   }
 
-  async createContainer(data: Partial<Container>) {
-    const container = this.containerRepo.create(data);
-    const saved = await this.containerRepo.save(container);
-    // Auto-calculate CBM
-    const cbm = (Number(saved.length_cm) * Number(saved.width_cm) * Number(saved.height_cm)) / 1_000_000;
-    saved.max_cbm = cbm;
-    return this.containerRepo.save(saved);
+  async createContainer(data: Partial<any>) {
+    return this.containerService.createContainer(data);
   }
 
-  async updateContainer(id: number, data: Partial<Container>) {
-    await this.containerRepo.update(id, data);
-    const container = await this.containerRepo.findOne({ where: { id } });
-    if (container) {
-      const cbm = (Number(container.length_cm) * Number(container.width_cm) * Number(container.height_cm)) / 1_000_000;
-      container.max_cbm = cbm;
-      await this.containerRepo.save(container);
-    }
-    return container;
+  async updateContainer(id: number, data: Partial<any>) {
+    return this.containerService.updateContainer(id, data);
   }
 
   async deleteContainer(id: number) {
-    return this.containerRepo.delete(id);
+    return this.containerService.deleteContainer(id);
   }
 
-  // ==================== CBM CALCULATION ====================
-  // حساب حجم الشحنة بالمتر المكعب: (الطول × العرض × الارتفاع × عدد الكراتين) ÷ 1,000,000
-  async calculateCBM(lengthCm: number, widthCm: number, heightCm: number, cartonsCount: number) {
-    const cbm = (lengthCm * widthCm * heightCm * cartonsCount) / 1_000_000;
-    const containers = await this.getContainers();
-    const containerSuggestions = containers
-      .filter((c) => c.is_active)
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        max_cbm: Number(c.max_cbm),
-        max_weight_kg: Number(c.max_weight_kg),
-        fits: cbm <= Number(c.max_cbm) && cbm > 0,
-        utilization_pct: cbm > 0 ? Math.min(100, (cbm / Number(c.max_cbm)) * 100) : 0,
-        remaining_cbm: Math.max(0, Number(c.max_cbm) - cbm),
-      }))
-      .sort((a, b) => b.utilization_pct - a.utilization_pct);
-
-    return {
-      carton_volume_cm3: lengthCm * widthCm * heightCm,
-      total_cbm: cbm,
-      carton_dimensions: { length_cm: lengthCm, width_cm: widthCm, height_cm: heightCm },
-      cartons_count: cartonsCount,
-      container_suggestions: containerSuggestions,
-    };
+  async calculateCBM(
+    lengthCm: number,
+    widthCm: number,
+    heightCm: number,
+    cartonsCount: number,
+  ) {
+    return this.containerService.calculateCBM(
+      lengthCm,
+      widthCm,
+      heightCm,
+      cartonsCount,
+    );
   }
 
-  // ==================== PACKING LIST ====================
+  // ---- Packing List ----
 
   async getPackingList(orderId: number) {
-    return this.packingListRepo.findOne({ where: { order_id: orderId } });
+    return this.packingListService.getPackingList(orderId);
   }
+
+  // ---- Cross-repo Packing List ----
 
   async createOrUpdatePackingList(
     orderId: number,
@@ -834,7 +703,6 @@ export class PurchasesService {
       notes?: string;
     },
   ) {
-    // Calculate CBM
     const totalCbm =
       (Number(data.carton_length_cm) *
         Number(data.carton_width_cm) *
@@ -842,25 +710,26 @@ export class PurchasesService {
         Number(data.cartons_count)) /
       1_000_000;
 
-    // Calculate weight deviation if both ordered and actual are available
     let weightDeviation: number | undefined;
     if (data.actual_gross_weight_kg && data.actual_net_weight_kg) {
       const order = await this.orderRepo.findOne({ where: { id: orderId } });
       if (order?.total_weight_kg && Number(order.total_weight_kg) > 0) {
         weightDeviation =
-          ((Number(data.actual_gross_weight_kg) - Number(order.total_weight_kg)) /
+          ((Number(data.actual_gross_weight_kg) -
+            Number(order.total_weight_kg)) /
             Number(order.total_weight_kg)) *
           100;
       }
     }
 
-    const existing = await this.packingListRepo.findOne({ where: { order_id: orderId } });
+    const existing = await this.packingListRepo.findOne({
+      where: { order_id: orderId },
+    });
 
     if (existing) {
       await this.packingListRepo.update(existing.id, {
         carton_length_cm: data.carton_length_cm,
         carton_width_cm: data.carton_width_cm,
-        carton_height_cm: data.carton_height_cm,
         cartons_count: data.cartons_count,
         total_cbm: totalCbm,
         actual_net_weight_kg: data.actual_net_weight_kg ?? null,
@@ -875,7 +744,6 @@ export class PurchasesService {
           order_id: orderId,
           carton_length_cm: data.carton_length_cm,
           carton_width_cm: data.carton_width_cm,
-          carton_height_cm: data.carton_height_cm,
           cartons_count: data.cartons_count,
           total_cbm: totalCbm,
           actual_net_weight_kg: data.actual_net_weight_kg ?? null,
@@ -887,22 +755,25 @@ export class PurchasesService {
       );
     }
 
-    const packingList = await this.packingListRepo.findOne({ where: { order_id: orderId } });
+    const packingList = await this.packingListRepo.findOne({
+      where: { order_id: orderId },
+    });
 
-    // Deviation alert
     const threshold = data.deviation_threshold_percent ?? 5;
     const alert =
       weightDeviation !== undefined && Math.abs(weightDeviation) > threshold
         ? {
             type: 'WEIGHT_DEVIATION',
             message: `انحراف الوزن بنسبة ${weightDeviation.toFixed(1)}% (الحد المسموح: ${threshold}%)`,
-            severity: Math.abs(weightDeviation) > threshold * 2 ? 'HIGH' as const : 'MEDIUM' as const,
+            severity:
+              Math.abs(weightDeviation) > threshold * 2
+                ? ('HIGH' as const)
+                : ('MEDIUM' as const),
             deviation_pct: weightDeviation,
           }
         : null;
 
-    // CBM suggestion
-    const cbmResult = await this.calculateCBM(
+    const cbmResult = await this.containerService.calculateCBM(
       Number(data.carton_length_cm),
       Number(data.carton_width_cm),
       Number(data.carton_height_cm),
@@ -916,23 +787,25 @@ export class PurchasesService {
     };
   }
 
-  // Smart Reorder: Suggest items to fill remaining container space
+  // ---- Cross-repo Reorder Suggestions ----
+
   async getReorderSuggestions(containerId: number) {
-    const container = await this.containerRepo.findOne({ where: { id: containerId } });
+    const container = await this.containerRepo.findOne({
+      where: { id: containerId },
+    });
     if (!container) throw new NotFoundException('Container not found');
 
-    // Get latest packing list for this container type
     const containers = await this.containerRepo.find();
-    const sameType = containers.filter(c => c.name === container.name);
+    const sameType = containers.filter((c) => c.name === container.name);
     const usedCbm = await this.packingListRepo
       .createQueryBuilder('pl')
       .select('COALESCE(SUM(pl.total_cbm), 0)', 'usedCbm')
-      .where('pl.container_id IN (:...ids)', { ids: sameType.map(c => c.id) })
+      .where('pl.container_id IN (:...ids)', { ids: sameType.map((c) => c.id) })
       .getRawOne();
-    const remainingCbm = Number(container.max_cbm) - Number(usedCbm?.usedCbm || 0);
+    const remainingCbm =
+      Number(container.max_cbm) - Number(usedCbm?.usedCbm || 0);
     if (remainingCbm <= 0) return { remaining_cbm: 0, suggestions: [] };
 
-    // Find low-stock products (finished goods, raw materials, accessories)
     const products = await this.productRepo
       .createQueryBuilder('p')
       .leftJoin(
@@ -945,16 +818,16 @@ export class PurchasesService {
         'stock',
         'stock.pid = p.id',
       )
-      .where('p.type IN (:...types)', { types: ['RAW', 'FINISHED', 'SEMI', 'ACCESSORY'] })
+      .where('p.type IN (:...types)', {
+        types: ['RAW', 'FINISHED', 'SEMI', 'ACCESSORY'],
+      })
       .andWhere('COALESCE(stock.total_qty, 0) <= COALESCE(p.min_stock, 0)')
       .getMany();
 
-    // Estimate volume per unit (rough: 10cm³ per unit default, or use product weight_grams as proxy)
     const suggestions = products
       .map((p) => {
-        const estCbmPerUnit = Number(p.weight_grams || 10) / 1000000; // grams -> cubic meters (rough)
+        const estCbmPerUnit = Number(p.weight_grams || 10) / 1000000;
         const maxFit = Math.floor(remainingCbm / estCbmPerUnit);
-        const stockQty = 0; // already low stock
         return {
           product_id: p.id,
           product_name: p.name,
@@ -970,5 +843,68 @@ export class PurchasesService {
       .slice(0, 10);
 
     return { remaining_cbm: remainingCbm, suggestions };
+  }
+
+  // ---- DataSource Queries ----
+
+  async getLatestPurchasePrice(
+    productId: number,
+  ): Promise<{ price: number; date: string | null }> {
+    const row = await this.dataSource
+      .createQueryBuilder()
+      .select([
+        'item.price',
+        'item.landed_cost',
+        'COALESCE(po.order_date, po.created_at) as ref_date',
+      ])
+      .from(PurchaseOrderItem, 'item')
+      .innerJoin('item.order', 'po')
+      .where('item.product_id = :productId', { productId })
+      .orderBy('COALESCE(po.order_date, po.created_at)', 'DESC')
+      .limit(1)
+      .getRawOne();
+
+    if (!row) return { price: 0, date: null };
+
+    return {
+      price: Number(row.price) + Number(row.landed_cost || 0),
+      date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
+    };
+  }
+
+  async getLatestPurchasePrices(
+    productIds: number[],
+  ): Promise<Record<number, { price: number; date: string | null }>> {
+    if (productIds.length === 0) return {};
+
+    const rows = await this.dataSource
+      .createQueryBuilder()
+      .select([
+        'item.product_id',
+        'item.price',
+        'item.landed_cost',
+        'COALESCE(po.order_date, po.created_at) as ref_date',
+      ])
+      .from(PurchaseOrderItem, 'item')
+      .innerJoin('item.order', 'po')
+      .where('item.product_id IN (:...productIds)', { productIds })
+      .orderBy('COALESCE(po.order_date, po.created_at)', 'DESC')
+      .getRawMany();
+
+    const result: Record<number, { price: number; date: string | null }> = {};
+    for (const id of productIds) {
+      result[id] = { price: 0, date: null };
+    }
+    const seen = new Set<number>();
+    for (const row of rows) {
+      if (!seen.has(row.product_id)) {
+        seen.add(row.product_id);
+        result[row.product_id] = {
+          price: Number(row.price) + Number(row.landed_cost || 0),
+          date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
+        };
+      }
+    }
+    return result;
   }
 }

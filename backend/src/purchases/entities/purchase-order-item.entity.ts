@@ -13,14 +13,14 @@ export class PurchaseOrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   order_id: number;
 
   @ManyToOne(() => PurchaseOrder, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: PurchaseOrder;
 
-  @Column()
+  @Column({ type: 'int' })
   product_id: number;
 
   @ManyToOne(() => Product)

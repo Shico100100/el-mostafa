@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { TestTube, Cog, Check, Factory, FileText } from 'lucide-react';
 
 interface BatchComponent {
     id: number;
@@ -170,7 +171,7 @@ export default function BatchDetailPage() {
                                     {backwardResult.map((c) => (
                                         <div key={c.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-xl">{c.raw_material ? '🧪' : '🔩'}</span>
+                                                <span className="text-xl">{c.raw_material ? <TestTube /> : <Cog />}</span>
                                                 <div>
                                                     <p className="font-bold text-sm">
                                                         {c.raw_material?.product?.name || c.accessory?.product?.name || 'مكون'}
@@ -210,7 +211,7 @@ export default function BatchDetailPage() {
                                         }`}
                                     >
                                         <span className="font-bold">{STATUS_MAP[s]?.label || s}</span>
-                                        {batch.status === s && <span className="mr-2 text-xs">✓</span>}
+                                        {batch.status === s && <span className="mr-2 text-xs"><Check /></span>}
                                     </button>
                                 ))}
                             </div>
@@ -223,7 +224,7 @@ export default function BatchDetailPage() {
                                     onClick={() => router.push(`/manufacturing/daily-production/${batch.production_id || ''}`)}
                                     className="w-full px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm transition text-right"
                                 >
-                                    🏭 عرض الإنتاج المرتبط
+                                    <Factory /> عرض الإنتاج المرتبط
                                 </button>
                                 <button
                                     onClick={() => {
@@ -232,7 +233,7 @@ export default function BatchDetailPage() {
                                     }}
                                     className="w-full px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm transition text-right"
                                 >
-                                    📋 نسخ رقم الدفعة
+                                    <FileText /> نسخ رقم الدفعة
                                 </button>
                             </div>
                         </div>

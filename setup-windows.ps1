@@ -88,19 +88,29 @@ if (-Not (Test-Path "backend\.env")) {
     
     $envContent = @"
 # Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_DATABASE=elmostafa_db
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=elmostafa_db
+DATABASE_TYPE=postgres
+DATABASE_SYNCHRONIZE=false
 
 # JWT Configuration
-JWT_SECRET=your-secret-key-here-change-in-production
-JWT_EXPIRATION=7d
+AUTH_JWT_SECRET=your-secret-key-here-change-in-production
+AUTH_JWT_TOKEN_EXPIRES_IN=1d
+AUTH_REFRESH_SECRET=your-refresh-secret-change-in-production
+AUTH_REFRESH_TOKEN_EXPIRES_IN=7d
 
 # Server Configuration
-PORT=3001
+APP_PORT=3001
 NODE_ENV=development
+API_PREFIX=api
+FRONTEND_DOMAIN=http://localhost:3000
+BACKEND_DOMAIN=http://localhost:3001
+
+# File Driver
+FILE_DRIVER=local
 "@
     
     Set-Content -Path "backend\.env" -Value $envContent

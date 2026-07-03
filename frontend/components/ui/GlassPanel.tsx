@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function GlassPanel({ children, className = '', title }: { children: React.ReactNode; className?: string; title?: string }) {
+export function GlassPanel({ children, className = '', title }: { children: React.ReactNode; className?: string; title?: React.ReactNode }) {
     return (
         <div className={`backdrop-blur-xl bg-black/40 border border-white/10 rounded-2xl shadow-2xl ${className}`}>
             {title && (

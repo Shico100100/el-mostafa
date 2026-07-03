@@ -13,7 +13,7 @@ export class FxRate {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int' })
   currency_id: number;
 
   @ManyToOne(() => Currency)
