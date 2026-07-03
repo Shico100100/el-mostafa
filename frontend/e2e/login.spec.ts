@@ -17,6 +17,6 @@ test.describe('Login Flow', () => {
     await page.fill('input[type="password"]', 'wrongpass');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=خطأ')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=كلمة المرور غير صحيحة')).toBeVisible({ timeout: 5000 });
   });
 });

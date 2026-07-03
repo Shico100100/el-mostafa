@@ -14,7 +14,8 @@ test.describe('Dashboard', () => {
   });
 
   test('should navigate to inventory', async ({ page }) => {
-    await page.click('text=المخزون');
+    await page.click('button:has-text("المخزون")');
+    await page.click('button:has-text("لوحة المخزون")');
     await expect(page).toHaveURL(/inventory2/);
   });
 });
