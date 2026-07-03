@@ -1,15 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:16-alpine
@@ -31,13 +28,18 @@ jobs:
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
+      AUTH_JWT_SECRET: ci-test-secret
+      AUTH_JWT_TOKEN_EXPIRES_IN: 15m
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Install backend dependencies
         run: npm ci
@@ -56,25 +58,94 @@ jobs:
         working-directory: frontend
 
       - name: Run backend TypeScript check
-        run: npm run typecheck
+        run: npx tsc --noEmit
         working-directory: backend
 
       - name: Run frontend TypeScript check
-        run: npm run typecheck
+        run: npx next build
         working-directory: frontend
 
       - name: Run backend tests
         run: npm test
         working-directory: backend
 
-      - name: Run frontend tests
-        run: npm run test
-        working-directory: frontend
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: backend/coverage/
 
-      - name: Run backend build
-        run: npm run build
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elmostafa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: elmostafa_test
+      AUTH_JWT_SECRET: ci-test-secret
+      AUTH_JWT_TOKEN_EXPIRES_IN: 15m
+      REDIS_HOST: localhost
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend deps
         working-directory: backend
+        run: npm ci
 
-      - name: Run frontend build
-        run: npm run build
+      - name: Install frontend deps
         working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install chromium
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          node dist/main &
+          sleep 5
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npx playwright test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker images
+        run: docker compose build
