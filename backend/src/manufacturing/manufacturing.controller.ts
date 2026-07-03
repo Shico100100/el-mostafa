@@ -56,12 +56,16 @@ export class ManufacturingController {
   // ==================== IMPORT / EXPORT (Moved to Top) ====================
 
   @Get('stats')
+  @ApiOperation({ summary: 'Get manufacturing statistics' })
+  @ApiResponse({ status: 200, description: 'Returns manufacturing stats' })
   async getManufacturingStats() {
     return this.manufacturingService.getManufacturingStats();
   }
 
   @Public()
   @Get('export/machines')
+  @ApiOperation({ summary: 'Export machines to Excel' })
+  @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportMachines(@Res() res: Response) {
     const buffer = await this.manufacturingService.exportMachines();
     res.set({
@@ -74,6 +78,8 @@ export class ManufacturingController {
 
   @Post('import/machines')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import machines from Excel' })
+  @ApiResponse({ status: 201, description: 'Machines imported' })
   async importMachines(@UploadedFile() file: Express.Multer.File) {
     let data: unknown[];
     try {
@@ -86,6 +92,8 @@ export class ManufacturingController {
 
   @Public()
   @Get('export/molds')
+  @ApiOperation({ summary: 'Export molds to Excel' })
+  @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportMolds(@Res() res: Response) {
     const buffer = await this.manufacturingService.exportMolds();
     res.set({
@@ -98,6 +106,8 @@ export class ManufacturingController {
 
   @Post('import/molds')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import molds from Excel' })
+  @ApiResponse({ status: 201, description: 'Molds imported' })
   async importMolds(@UploadedFile() file: Express.Multer.File) {
     let data: unknown[];
     try {
@@ -110,6 +120,8 @@ export class ManufacturingController {
 
   @Public()
   @Get('export/raw-materials')
+  @ApiOperation({ summary: 'Export raw materials to Excel' })
+  @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportRawMaterials(@Res() res: Response) {
     const buffer = await this.manufacturingService.exportRawMaterials();
     res.set({
@@ -122,6 +134,8 @@ export class ManufacturingController {
 
   @Post('import/raw-materials')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import raw materials from Excel' })
+  @ApiResponse({ status: 201, description: 'Raw materials imported' })
   async importRawMaterials(@UploadedFile() file: Express.Multer.File) {
     let data: unknown[];
     try {
@@ -134,6 +148,8 @@ export class ManufacturingController {
 
   // Upload Image
   @Post('upload')
+  @ApiOperation({ summary: 'Upload an image' })
+  @ApiResponse({ status: 201, description: 'Image URL returned' })
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -165,6 +181,8 @@ export class ManufacturingController {
 
   // BOMs
   @Get('boms')
+  @ApiOperation({ summary: 'Get all BOMs' })
+  @ApiResponse({ status: 200, description: 'Returns paginated BOMs' })
   getBOMs(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -176,43 +194,59 @@ export class ManufacturingController {
   }
 
   @Post('boms')
+  @ApiOperation({ summary: 'Create a BOM' })
+  @ApiResponse({ status: 201, description: 'BOM created' })
   createBOM(@Body() data: CreateBOMDto) {
     return this.manufacturingService.createBOM(data as unknown as Partial<BOM>);
   }
 
   @Get('boms/:id')
+  @ApiOperation({ summary: 'Get a BOM by ID' })
+  @ApiResponse({ status: 200, description: 'Returns the BOM' })
   getBOM(@Param('id') id: string) {
     return this.manufacturingService.getBOM(+id);
   }
 
   @Put('boms/:id')
+  @ApiOperation({ summary: 'Update a BOM' })
+  @ApiResponse({ status: 200, description: 'BOM updated' })
   updateBOM(@Param('id') id: string, @Body() data: CreateBOMDto) {
     return this.manufacturingService.updateBOM(+id, data);
   }
 
   @Delete('boms/:id')
+  @ApiOperation({ summary: 'Delete a BOM' })
+  @ApiResponse({ status: 200, description: 'BOM deleted' })
   deleteBOM(@Param('id') id: string) {
     return this.manufacturingService.deleteBOM(+id);
   }
 
   // Assembly
   @Post('assembly')
+  @ApiOperation({ summary: 'Create an assembly order' })
+  @ApiResponse({ status: 201, description: 'Assembly order created' })
   createAssembly(@Body() data: CreateAssemblyOrderDto) {
     return this.manufacturingService.createAssembly(data);
   }
 
   @Get('assembly')
+  @ApiOperation({ summary: 'Get all assembly orders' })
+  @ApiResponse({ status: 200, description: 'Returns assembly orders' })
   getAssemblyOrders() {
     return this.manufacturingService.getAssemblyOrders();
   }
 
   // Machines
   @Get('machines/status')
+  @ApiOperation({ summary: 'Get machines with current status' })
+  @ApiResponse({ status: 200, description: 'Returns machine statuses' })
   getMachinesStatus() {
     return this.manufacturingService.getMachinesWithStatus();
   }
 
   @Get('machines')
+  @ApiOperation({ summary: 'Get all machines' })
+  @ApiResponse({ status: 200, description: 'Returns paginated machines' })
   getAllMachines(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -224,6 +258,8 @@ export class ManufacturingController {
   }
 
   @Get('machines/overview')
+  @ApiOperation({ summary: 'Get machines overview with filters' })
+  @ApiResponse({ status: 200, description: 'Returns machines overview' })
   getMachinesOverview(
     @Query('search') search?: string,
     @Query('status') status?: string,
@@ -243,17 +279,23 @@ export class ManufacturingController {
   }
 
   @Post('machines')
+  @ApiOperation({ summary: 'Create a machine' })
+  @ApiResponse({ status: 201, description: 'Machine created' })
   createMachine(@Body() data: CreateMachineDto) {
     return this.manufacturingService.createMachine(data);
   }
 
   @Put('machines/:id')
+  @ApiOperation({ summary: 'Update a machine' })
+  @ApiResponse({ status: 200, description: 'Machine updated' })
   updateMachine(@Param('id') id: string, @Body() data: CreateMachineDto) {
     return this.manufacturingService.updateMachine(+id, data);
   }
 
   // Maintenance
   @Get('maintenance')
+  @ApiOperation({ summary: 'Get maintenance records' })
+  @ApiResponse({ status: 200, description: 'Returns maintenance records' })
   getMaintenance(@Query('machine_id') machineId?: string) {
     return this.manufacturingService.getMachineMaintenance(
       machineId ? +machineId : undefined,
@@ -261,12 +303,16 @@ export class ManufacturingController {
   }
 
   @Post('maintenance')
+  @ApiOperation({ summary: 'Create a maintenance record' })
+  @ApiResponse({ status: 201, description: 'Maintenance record created' })
   createMaintenance(@Body() data: CreateMaintenanceDto) {
     return this.manufacturingService.createMaintenance(data);
   }
 
   // Molds
   @Get('molds')
+  @ApiOperation({ summary: 'Get all molds' })
+  @ApiResponse({ status: 200, description: 'Returns paginated molds' })
   getAllMolds(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -278,11 +324,15 @@ export class ManufacturingController {
   }
 
   @Post('molds')
+  @ApiOperation({ summary: 'Create a mold' })
+  @ApiResponse({ status: 201, description: 'Mold created' })
   createMold(@Body() data: CreateMoldDto) {
     return this.manufacturingService.createMold(data);
   }
 
   @Put('molds/:id')
+  @ApiOperation({ summary: 'Update a mold' })
+  @ApiResponse({ status: 200, description: 'Mold updated' })
   updateMold(@Param('id') id: string, @Body() data: CreateMoldDto) {
     return this.manufacturingService.updateMold(+id, data);
   }
@@ -327,6 +377,8 @@ export class ManufacturingController {
 
   // Production
   @Get('production')
+  @ApiOperation({ summary: 'Get daily production records' })
+  @ApiResponse({ status: 200, description: 'Returns production records' })
   getDailyProduction(
     @Query('date') date?: string,
     @Query('start_date') startDate?: string,
@@ -340,6 +392,8 @@ export class ManufacturingController {
   }
 
   @Post('production')
+  @ApiOperation({ summary: 'Create a production record' })
+  @ApiResponse({ status: 201, description: 'Production record created' })
   async createProduction(@Body() data: CreateDailyProductionDto) {
     try {
       return await this.manufacturingService.createProduction(data);
@@ -356,6 +410,8 @@ export class ManufacturingController {
   }
 
   @Post('production/range')
+  @ApiOperation({ summary: 'Create range production records' })
+  @ApiResponse({ status: 201, description: 'Range production created' })
   async createRangeProduction(
     @Body() data: CreateRangeProductionDto,
     @Req() req: any,
@@ -373,6 +429,8 @@ export class ManufacturingController {
   }
 
   @Get('production/sessions')
+  @ApiOperation({ summary: 'Get range production sessions' })
+  @ApiResponse({ status: 200, description: 'Returns production sessions' })
   getRangeSessions(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -384,21 +442,29 @@ export class ManufacturingController {
   }
 
   @Get('production/sessions/:id')
+  @ApiOperation({ summary: 'Get a range production session by ID' })
+  @ApiResponse({ status: 200, description: 'Returns the session' })
   getRangeSession(@Param('id') id: string) {
     return this.manufacturingService.getRangeSessionById(+id);
   }
 
   @Delete('production/sessions/:id')
+  @ApiOperation({ summary: 'Delete a range production session' })
+  @ApiResponse({ status: 200, description: 'Session deleted' })
   deleteRangeSession(@Param('id') id: string) {
     return this.manufacturingService.deleteRangeSession(+id);
   }
 
   @Get('production/:id/history')
+  @ApiOperation({ summary: 'Get production history by ID' })
+  @ApiResponse({ status: 200, description: 'Returns production history' })
   getProductionHistory(@Param('id') id: string) {
     return this.manufacturingService.getProductionHistory(+id);
   }
 
   @Put('production/:id')
+  @ApiOperation({ summary: 'Update a production record' })
+  @ApiResponse({ status: 200, description: 'Production updated' })
   updateProduction(
     @Param('id') id: string,
     @Body() data: CreateDailyProductionDto,
@@ -407,12 +473,16 @@ export class ManufacturingController {
   }
 
   @Delete('production/:id')
+  @ApiOperation({ summary: 'Delete a production record' })
+  @ApiResponse({ status: 200, description: 'Production deleted' })
   deleteProduction(@Param('id') id: string) {
     return this.manufacturingService.deleteProduction(+id);
   }
 
   @Public()
   @Get('export/production-history')
+  @ApiOperation({ summary: 'Export production history to Excel' })
+  @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportProductionHistory(@Res() res: Response) {
     const buffer = await this.manufacturingService.exportProductionHistory();
     res.set({
@@ -425,6 +495,8 @@ export class ManufacturingController {
 
   @Post('import/production-history')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import production history from Excel' })
+  @ApiResponse({ status: 201, description: 'Production history imported' })
   async importProductionHistory(@UploadedFile() file: Express.Multer.File) {
     let data: unknown[];
     try {
@@ -444,24 +516,32 @@ export class ManufacturingController {
 
   // Get all raw materials
   @Get('raw-materials')
+  @ApiOperation({ summary: 'Get all raw materials' })
+  @ApiResponse({ status: 200, description: 'Returns all raw materials' })
   getRawMaterials() {
     return this.manufacturingService.getRawMaterials();
   }
 
   // Get single raw material
   @Get('raw-materials/:id')
+  @ApiOperation({ summary: 'Get a raw material by ID' })
+  @ApiResponse({ status: 200, description: 'Returns the raw material' })
   getRawMaterial(@Param('id') id: string) {
     return this.manufacturingService.getRawMaterial(+id);
   }
 
   // Create raw material
   @Post('raw-materials')
+  @ApiOperation({ summary: 'Create a raw material' })
+  @ApiResponse({ status: 201, description: 'Raw material created' })
   createRawMaterial(@Body() data: CreateRawMaterialDto) {
     return this.manufacturingService.createRawMaterial(data);
   }
 
   // Update raw material
   @Put('raw-materials/:id')
+  @ApiOperation({ summary: 'Update a raw material' })
+  @ApiResponse({ status: 200, description: 'Raw material updated' })
   updateRawMaterial(
     @Param('id') id: string,
     @Body() data: CreateRawMaterialDto,
@@ -471,12 +551,16 @@ export class ManufacturingController {
 
   // Delete raw material
   @Delete('raw-materials/:id')
+  @ApiOperation({ summary: 'Delete a raw material' })
+  @ApiResponse({ status: 200, description: 'Raw material deleted' })
   deleteRawMaterial(@Param('id') id: string) {
     return this.manufacturingService.deleteRawMaterial(+id);
   }
 
   // Get consumption history
   @Get('raw-materials/consumption/history')
+  @ApiOperation({ summary: 'Get consumption history' })
+  @ApiResponse({ status: 200, description: 'Returns consumption history' })
   getConsumptionHistory(
     @Query('raw_material_id') rawMaterialId?: string,
     @Query('start_date') startDate?: string,
@@ -495,12 +579,16 @@ export class ManufacturingController {
 
   // Record consumption
   @Post('raw-materials/consumption')
+  @ApiOperation({ summary: 'Record raw material consumption' })
+  @ApiResponse({ status: 201, description: 'Consumption recorded' })
   recordConsumption(@Body() data: RecordConsumptionDto) {
     return this.manufacturingService.recordConsumption(data);
   }
 
   // Get low stock alerts
   @Get('raw-materials/alerts/low-stock')
+  @ApiOperation({ summary: 'Get low stock alerts' })
+  @ApiResponse({ status: 200, description: 'Returns low stock alerts' })
   getLowStockAlerts() {
     return this.manufacturingService.getLowStockAlerts();
   }
@@ -558,6 +646,8 @@ export class ManufacturingController {
 
   // Add stock to raw material
   @Post('raw-materials/:id/purchase')
+  @ApiOperation({ summary: 'Add stock to a raw material' })
+  @ApiResponse({ status: 201, description: 'Stock added' })
   async addRawMaterialStock(
     @Param('id') id: string,
     @Body() data: AddRawMaterialStockDto,
@@ -589,6 +679,8 @@ export class ManufacturingController {
 
   // Get all movements (log)
   @Get('stock-movements')
+  @ApiOperation({ summary: 'Get all stock movements' })
+  @ApiResponse({ status: 200, description: 'Returns stock movements' })
   getAllStockMovements(
     @Query('type') type?: string,
     @Query('start_date') startDate?: string,
@@ -618,6 +710,8 @@ export class ManufacturingController {
 
   // ==================== FIXED COSTS ====================
   @Get('fixed-costs')
+  @ApiOperation({ summary: 'Get fixed costs' })
+  @ApiResponse({ status: 200, description: 'Returns fixed costs' })
   getFixedCosts(
     @Query('month') month?: string,
     @Query('year') year?: string,
@@ -633,6 +727,8 @@ export class ManufacturingController {
   }
 
   @Post('fixed-costs')
+  @ApiOperation({ summary: 'Create a fixed cost' })
+  @ApiResponse({ status: 201, description: 'Fixed cost created' })
   createFixedCost(@Body() data: CreateFixedCostDto) {
     return this.manufacturingService.createFixedCost(data);
   }
