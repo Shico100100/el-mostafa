@@ -1,43 +1,31 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { UserEntity as User } from '../../users/infrastructure/persistence/relational/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('audit_logs')
 export class AuditLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
-  user_id: number;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @Column()
+  userId: number;
 
   @Column()
-  action: string; // e.g., 'UPDATE_PRODUCT'
+  action: string;
 
   @Column()
-  method: string; // POST, PUT, DELETE
-
-  @Column()
-  endpoint: string;
-
-  @Column({ type: 'text', nullable: true })
-  payload: string;
+  entity: string;
 
   @Column({ nullable: true })
-  entity_id: string;
+  entityId: number;
+
+  @Column('jsonb', { nullable: true })
+  before: any;
+
+  @Column('jsonb', { nullable: true })
+  after: any;
 
   @Column({ nullable: true })
-  ip_address: string;
+  ip: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 }

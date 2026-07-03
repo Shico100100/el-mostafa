@@ -7,17 +7,19 @@ import { AuditLog } from './entities/audit-log.entity';
 export class AuditService {
   constructor(
     @InjectRepository(AuditLog)
-    private auditRepo: Repository<AuditLog>,
+    private repo: Repository<AuditLog>,
   ) {}
 
-  async getLogs(page = 1, limit = 50) {
-    const [items, total] = await this.auditRepo.findAndCount({
-      relations: ['user'],
-      order: { created_at: 'DESC' },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
+  async log(data: Partial<AuditLog>) {
+    const entry = this.repo.create(data);
+    return this.repo.save(entry);
+  }
 
-    return { items, total, page, limit };
+  async findAll(limit = 100) {
+    return this.repo.find({ order: { createdAt: 'DESC' }, take: limit });
+  }
+
+  async findByEntity(entity: string, entityId: number) {
+    return this.repo.find({ where: { entity, entityId }, order: { createdAt: 'DESC' } });
   }
 }
