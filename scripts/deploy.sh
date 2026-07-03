@@ -14,14 +14,19 @@ echo "Running database migrations..."
 docker-compose exec backend npm run migration:run
 
 echo "Seeding demo data..."
-docker-compose exec backend node -e "
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const token = jwt.sign({ email: 'admin@admin.com' }, process.env.JWT_SECRET, { expiresIn: '1h' });
-axios.post('http://localhost:3001/api/v1/system/seed', {}, { headers: { Authorization: 'Bearer ' + token } })
-  .then(() => console.log('Seed complete'))
-  .catch(err => console.error('Seed failed:', err.message));
-"
+# Generate JWT using Node's built-in crypto (no external deps needed)
+TOKEN=$(docker-compose exec backend node -e "
+const crypto = require('crypto');
+const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+const payload = Buffer.from(JSON.stringify({ email: 'admin@admin.com', iat: Math.floor(Date.now()/1000) })).toString('base64url');
+const data = header + '.' + payload;
+const signature = crypto.createHmac('sha256', process.env.AUTH_JWT_SECRET || 'super-secret-jwt-change-me').update(data).digest('base64url');
+console.log(data + '.' + signature);
+" | tr -d '\r')
+
+curl -s -X POST http://localhost:3001/api/v1/system/seed \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" || echo "Seed failed (may already be seeded)"
 
 echo "Deployment complete!"
 echo "Frontend: http://localhost:3000"

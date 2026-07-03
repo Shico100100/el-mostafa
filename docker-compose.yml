@@ -12,6 +12,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d elmostafa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   backend:
     build: ./backend
@@ -22,21 +28,34 @@ services:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: elmostafa
-      DATABASE_USER: postgres
+      DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-super-secret-jwt-change-me}
+      AUTH_JWT_TOKEN_EXPIRES_IN: ${AUTH_JWT_TOKEN_EXPIRES_IN:-1h}
+      AUTH_REFRESH_SECRET: ${AUTH_REFRESH_SECRET:-super-secret-refresh-change-me}
+      AUTH_REFRESH_TOKEN_EXPIRES_IN: ${AUTH_REFRESH_TOKEN_EXPIRES_IN:-7d}
+      AUTH_FORGOT_SECRET: ${AUTH_FORGOT_SECRET:-super-secret-forgot-change-me}
+      AUTH_FORGOT_TOKEN_EXPIRES_IN: ${AUTH_FORGOT_TOKEN_EXPIRES_IN:-1h}
+      AUTH_CONFIRM_EMAIL_SECRET: ${AUTH_CONFIRM_EMAIL_SECRET:-super-secret-confirm-change-me}
+      AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN: ${AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN:-1d}
       FRONTEND_DOMAIN: http://localhost:3000
       DATABASE_SYNCHRONIZE: "false"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:3001/api/v1}
     container_name: erp-frontend
     ports:
       - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
