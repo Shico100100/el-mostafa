@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { usePermission } from '@/lib/usePermission';
+import { resolveRoles } from '@/lib/resolveRoles';
+import ProtectedPage from '@/components/ProtectedPage';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -116,6 +119,14 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
+  const { roleId } = usePermission();
+  const allowedModules = useMemo(() => {
+    return modules.filter(mod => {
+      const roles = resolveRoles(mod.href);
+      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
+    });
+  }, [roleId]);
+
   if (pathname === '/login') {
     return <>{children}</>;
   }
@@ -171,7 +182,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-          {modules.map((mod) => {
+          {allowedModules.map((mod) => {
             const active = isActive(mod.href);
             const hasChildren = mod.children && mod.children.length > 0;
             const expanded = expandedSection === mod.href;
@@ -206,7 +217,10 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
                 </button>
                 {hasChildren && expanded && (
                   <div className="mr-4 mt-0.5 space-y-0.5 border-r border-white/10 pr-2">
-                    {mod.children!.map((child) => {
+                    {mod.children!.filter(child => {
+                      const roles = resolveRoles(child.href);
+                      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
+                    }).map((child) => {
                       const childActive = pathname === child.href || (child.href !== '/inventory2' && pathname.startsWith(child.href));
                       return (
                         <button
@@ -244,7 +258,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
 
       {/* Main content */}
       <main className="flex-1 min-w-0">
-        {children}
+        <ProtectedPage>{children}</ProtectedPage>
       </main>
     </div>
   );
