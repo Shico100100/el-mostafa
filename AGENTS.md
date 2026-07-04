@@ -1,6 +1,6 @@
 # Summary: ELMostafa — Full-Stack ERP System
 
-**Date:** 2026-07-01
+**Date:** 2026-07-04
 
 ---
 
@@ -8,7 +8,8 @@
 - **Backend:** NestJS on port 3001 (`C:\ELMostafa\backend\node dist\main`)
 - **Frontend:** Next.js on port 3000 (`npx next dev -H 0.0.0.0`)
 - **Database:** Docker PostgreSQL on port 5432 (container: `backend-postgres-1`)
-- **Login:** `admin@admin.com` / `admin123`
+- **Login:** `admin@admin.com` / `admin123`; also `manager@admin.com`, `worker@admin.com`, `viewer@admin.com` — all `admin123`
+- **Roles:** admin=1, manager=3, accountant=4, storekeeper=5, worker=6, viewer=7
 
 ---
 
@@ -50,6 +51,9 @@ cd C:\ELMostafa\frontend; $env:NODE_OPTIONS="--max-old-space-size=2048"; npx nex
 | Payroll | `/api/v1/payroll` | `profiles`, `attendance`, `salary-payments` |
 | Reports | `/api/v1/reports` | `production` |
 | System | `/api/v1/system` | `seed`, `reset`, `backup` (admin only) |
+| Notifications | `/api/v1/notifications` | `GET /`, `GET /unread-count`, `PATCH /:id/read` |
+| Documents | `/api/v1/documents` | `GET /`, `POST /`, `DELETE /:id` |
+| Audit | `/api/v1/audit` | `GET /` |
 
 ---
 
@@ -83,6 +87,13 @@ All 317 emoji occurrences across 112 frontend files replaced with lucide-react i
 - Old `.tsbuildinfo` cache files
 
 ---
+
+## Frontend RBAC Gating (v1.0.0)
+- `frontend/lib/permissions.ts` — 63 route→role mappings (1=admin, 3=manager, 4=accountant, 5=storekeeper, 6=worker, 7=viewer)
+- `frontend/lib/resolveRoles.ts` — longest-prefix match
+- `frontend/components/ProtectedPage.tsx` — auto page guard (no props, reads from pathname)
+- `frontend/components/GlobalSidebar.tsx` — sidebar filtered by role + all pages guarded
+- `frontend/lib/usePermission.ts` — exports isAdmin, isManager, isAccountant, isStorekeeper, isWorker, isViewer
 
 ## Known Limitations
 - MongoDB/Mongoose infrastructure exists in `src/` (unused, from boilerplate template)
