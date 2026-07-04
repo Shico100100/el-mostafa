@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePermission } from '@/lib/usePermission';
 import { resolveRoles } from '@/lib/resolveRoles';
-import ProtectedPage from '@/components/ProtectedPage';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -120,16 +119,36 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const { roleId } = usePermission();
+  const allowedRoles = useMemo(() => resolveRoles(pathname), [pathname]);
+  const hasAccess = allowedRoles.length === 0 || (roleId != null && allowedRoles.includes(roleId as number));
+
+  useEffect(() => {
+    if (!hasAccess && roleId != null) {
+      router.replace('/dashboard');
+    }
+  }, [hasAccess, roleId, router]);
+
   const allowedModules = useMemo(() => {
     return modules.filter(mod => {
       const roles = resolveRoles(mod.href);
-      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
+      const parentAccess = roles.length === 0 || (roleId != null && roles.includes(roleId as number));
+      if (!parentAccess) return false;
+      if (mod.children) {
+        const visibleChildren = mod.children.filter(child => {
+          const childRoles = resolveRoles(child.href);
+          return childRoles.length === 0 || (roleId != null && childRoles.includes(roleId as number));
+        });
+        return visibleChildren.length > 0;
+      }
+      return true;
     });
   }, [roleId]);
 
   if (pathname === '/login') {
     return <>{children}</>;
   }
+
+  if (!hasAccess && roleId != null) return null;
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -258,7 +277,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
 
       {/* Main content */}
       <main className="flex-1 min-w-0">
-        <ProtectedPage>{children}</ProtectedPage>
+        {children}
       </main>
     </div>
   );

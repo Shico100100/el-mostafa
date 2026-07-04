@@ -56,7 +56,6 @@ export const PAGE_PERMISSIONS: Record<string, number[]> = {
   '/reports': [1, 3, 4, 5, 7],
   '/reports/production': [1, 3, 4, 5, 7],
   '/notifications': [1, 3, 4, 5, 6, 7],
-  '/documents': [1, 3, 4, 5, 6, 7],
   '/users': [1],
   '/settings': [1, 3],
   '/audit': [1],

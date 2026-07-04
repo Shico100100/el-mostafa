@@ -52,8 +52,6 @@ export function usePermission() {
         });
     }, [parsed]);
 
-
-
     const hasRole = (requiredRoles: UserRole[]) => {
         if (!role) return false;
         return requiredRoles.includes(role);
@@ -63,8 +61,8 @@ export function usePermission() {
     const isManager = isAdmin || role === UserRole.MANAGER || roleId === 3;
     const isAccountant = isManager || role === UserRole.ACCOUNTANT || roleId === 4;
     const isStorekeeper = isManager || role === UserRole.STOREKEEPER || roleId === 5;
-    const isViewer = isStorekeeper || role === UserRole.VIEWER || roleId === 7;
-    const isWorker = isViewer || role === UserRole.WORKER || roleId === 6;
+    const isViewer = role === UserRole.VIEWER || roleId === 7;
+    const isWorker = role === UserRole.WORKER || roleId === 6;
 
     return { role, roleId, hasRole, isAdmin, isManager, isAccountant, isStorekeeper, isWorker, isViewer };
 }
