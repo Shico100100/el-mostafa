@@ -29,7 +29,20 @@ import type {
   CreateNotificationDto,
 } from './dto';
 
-const API_URL = '/api';
+function getApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('apiBaseUrl');
+    if (stored) return stored.replace(/\/+$/, '');
+  }
+  return '/api';
+}
+
+let API_URL = getApiUrl();
+
+export function setApiBaseUrl(url: string): void {
+  localStorage.setItem('apiBaseUrl', url.replace(/\/+$/, ''));
+  API_URL = url.replace(/\/+$/, '');
+}
 
 export const api = {
     async loginByEmail(email: string, password: string) {
