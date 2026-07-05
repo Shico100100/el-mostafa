@@ -73,6 +73,46 @@ def get_network_ip():
         return 'localhost'
 
 
+def start_docker_db():
+    """Start PostgreSQL Docker container if not running"""
+    print("🐘 Checking PostgreSQL Docker container...")
+    result = subprocess.run(
+        ["docker", "inspect", "-f", "{{.State.Running}}", "backend-postgres-1"],
+        capture_output=True, text=True,
+    )
+    if result.returncode == 0 and result.stdout.strip() == "true":
+        print("✅ PostgreSQL container already running.")
+        return
+    if result.returncode == 0 and result.stdout.strip() == "false":
+        print("🔄 Starting PostgreSQL container (exited)...")
+    else:
+        print("🔄 Starting PostgreSQL container...")
+
+    result = subprocess.run(
+        ["docker", "start", "backend-postgres-1"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print("❌ Failed to start PostgreSQL. Make sure Docker is running.")
+        print(result.stderr)
+        sys.exit(1)
+
+    # Wait for PostgreSQL to accept connections
+    import socket
+    for i in range(15):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        if sock.connect_ex(('localhost', 5432)) == 0:
+            sock.close()
+            print("✅ PostgreSQL container started and accepting connections.")
+            return
+        sock.close()
+        time.sleep(1)
+
+    print("❌ PostgreSQL container started but not accepting connections after 15s.")
+    sys.exit(1)
+
+
 def build_backend_if_needed():
     """Build the backend only if dist doesn't exist"""
     backend_dir = os.path.join(SCRIPT_DIR, "backend")
@@ -207,7 +247,11 @@ def main():
     # Check for .env file
     check_env_file()
     print()
-    
+
+    # Start PostgreSQL Docker container
+    start_docker_db()
+    print()
+
     # Kill any existing processes on ports 3000, 3001, and 8765
     print("🔄 Stopping existing servers...")
     subprocess.run(
