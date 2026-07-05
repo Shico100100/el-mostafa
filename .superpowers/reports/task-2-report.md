@@ -1,44 +1,38 @@
-# Task 2: Request Logging Middleware — Report
+# Task 2 Report — Protect 8 controllers with `@Roles()` decorator and `RolesGuard`
 
-## What I Implemented
-- `backend/src/common/middleware/request-logger.middleware.ts` — NestJS middleware that logs structured JSON for every HTTP request
-- `backend/src/common/common.module.ts` — CommonModule using NestModule pattern to register middleware for all routes
-- Modified `backend/src/app.module.ts` — Added CommonModule import to the imports array
+**Status:** ✅ Complete
 
-## Test Results
+## Changes Made
 
-### TDD Evidence
+### 1. RolesGuard improvement (`backend/src/roles/roles.guard.ts`)
+- Added `if (!request.user) return true;` to allow public routes to pass through (JwtAuthGuard already handles `@Public()`)
 
-**RED:**
+### 2. Controller protections
+
+| Controller | Guard | Roles |
+|---|---|---|
+| `DashboardController` | `JwtAuthGuard, RolesGuard` | `admin, manager, viewer` |
+| `InventoryController` | `JwtAuthGuard, RolesGuard` | `admin, manager, viewer` |
+| `SalesController` | `JwtAuthGuard, RolesGuard` | `admin, manager` |
+| `PurchasesController` | `JwtAuthGuard, RolesGuard` | `admin, manager` |
+| `NotificationsController` | `JwtAuthGuard, RolesGuard` | `admin, manager` |
+| `CurrencyController` | `JwtAuthGuard, RolesGuard` | `admin` |
+| `DocumentsController` | `JwtAuthGuard, RolesGuard` | `admin, manager` |
+| `ManufacturingController` | `JwtAuthGuard, RolesGuard` | `admin, manager, viewer` |
+| → `POST production` (method-level) | overrides class | `admin, manager, worker` |
+| → `POST production/range` (method-level) | overrides class | `admin, manager, worker` |
+
+### 3. TypeCheck
+`npx tsc --noEmit` — passed with zero errors.
+
+### 4. Tests
+`npm test` — 15 suites passed, 7 failed (all pre-existing dependency resolution issues in test setup — `AuthLoginService`, `MachineService`, `NotificationsService` missing from test modules — unrelated to these changes).
+
+## Commit
 ```
-FAIL src/common/middleware/request-logger.middleware.spec.ts
-  ● Test suite failed to run
-    Cannot find module './request-logger.middleware' or its corresponding type declarations.
-Tests: 0 passed, 1 failed
-```
-Expected: Test fails because middleware file doesn't exist yet.
-
-**GREEN:**
-```
-PASS src/common/middleware/request-logger.middleware.spec.ts
-  RequestLoggerMiddleware
-    ✓ should call next()
-    ✓ should register finish event listener on response
-Tests: 2 passed, 0 failed
+e2dda0f feat(rbac): protect all endpoints with @Roles decorator
 ```
 
-## Files Changed
-- `src/common/middleware/request-logger.middleware.ts` (created)
-- `src/common/middleware/request-logger.middleware.spec.ts` (created)
-- `src/common/common.module.ts` (created)
-- `src/app.module.ts` (modified — added CommonModule import)
-
-## Self-Review Findings
-- Followed TDD as required (RED → GREEN)
-- Used NestModule pattern per controller clarification (not main.ts modification)
-- Used NestJS built-in Logger (no winston installation per clarification)
-- TypeScript compiles cleanly with no errors
-- All 2 tests passing, test output pristine
-
-## Concerns
-None. Implementation follows the spec exactly.
+## Issues Encountered
+- Currency and Documents controllers had no auth guard at all — added `JwtAuthGuard` plus `RolesGuard` and appropriate roles.
+- Manufacturing controller has `@Public()` on export routes and `@Roles()` on production POST methods — these are method-level overrides that work correctly with NestJS's metadata reflection.

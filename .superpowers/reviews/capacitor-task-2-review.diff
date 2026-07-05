@@ -1,0 +1,40 @@
+﻿diff --git a/frontend/lib/api.ts b/frontend/lib/api.ts
+index 04d9e34..95cf625 100644
+--- a/frontend/lib/api.ts
++++ b/frontend/lib/api.ts
+@@ -22,21 +22,34 @@ import type {
+   CreateRangeProductionDto,
+   CreateBOMDto,
+   CreateCurrencyDto,
+   AddFxRateDto,
+   UpdateLandedCostDto,
+   CreateContainerDto,
+   CreatePackingListDto,
+   CreateNotificationDto,
+ } from './dto';
+ 
+-const API_URL = '/api';
++function getApiUrl(): string {
++  if (typeof window !== 'undefined') {
++    const stored = localStorage.getItem('apiBaseUrl');
++    if (stored) return stored.replace(/\/+$/, '');
++  }
++  return '/api';
++}
++
++let API_URL = getApiUrl();
++
++export function setApiBaseUrl(url: string): void {
++  localStorage.setItem('apiBaseUrl', url.replace(/\/+$/, ''));
++  API_URL = url.replace(/\/+$/, '');
++}
+ 
+ export const api = {
+     async loginByEmail(email: string, password: string) {
+ 
+         const response = await fetch(`${API_URL}/v1/auth/email/login`, {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+             },
+             body: JSON.stringify({ email, password }),

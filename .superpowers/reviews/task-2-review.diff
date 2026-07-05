@@ -1,0 +1,15 @@
+﻿diff --git a/frontend/lib/resolveRoles.ts b/frontend/lib/resolveRoles.ts
+new file mode 100644
+index 0000000..ac194b8
+--- /dev/null
++++ b/frontend/lib/resolveRoles.ts
+@@ -0,0 +1,9 @@
++import { PAGE_PERMISSIONS } from '@/lib/permissions';
++
++export function resolveRoles(pathname: string): number[] {
++  const keys = Object.keys(PAGE_PERMISSIONS)
++    .filter(k => pathname === k || pathname.startsWith(k + '/'))
++    .sort((a, b) => b.length - a.length);
++
++  return keys.length > 0 ? PAGE_PERMISSIONS[keys[0]] : [];
++}

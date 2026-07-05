@@ -1,0 +1,118 @@
+﻿diff --git a/frontend/components/GlobalSidebar.tsx b/frontend/components/GlobalSidebar.tsx
+index fedc21a..3ddaaa5 100644
+--- a/frontend/components/GlobalSidebar.tsx
++++ b/frontend/components/GlobalSidebar.tsx
+@@ -1,14 +1,17 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useMemo } from 'react';
+ import { usePathname, useRouter } from 'next/navigation';
++import { usePermission } from '@/lib/usePermission';
++import { resolveRoles } from '@/lib/resolveRoles';
++import ProtectedPage from '@/components/ProtectedPage';
+ import {
+   LayoutDashboard,
+   ShoppingCart,
+   Package,
+   Factory,
+   Calculator,
+   Users,
+   ShoppingBag,
+   ArrowLeft,
+   Menu,
+@@ -109,20 +112,28 @@ const modules: NavItem[] = [
+   { href: '/settings', label: '╪د┘╪ح╪╣╪»╪د╪»╪د╪ز', icon: Settings },
+   { href: '/audit', label: '╪│╪ش┘ ╪د┘╪ز╪»┘é┘è┘é', icon: FileText },
+ ];
+ 
+ export default function GlobalSidebar({ children }: { children: React.ReactNode }) {
+   const pathname = usePathname();
+   const router = useRouter();
+   const [open, setOpen] = useState(false);
+   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+ 
++  const { roleId } = usePermission();
++  const allowedModules = useMemo(() => {
++    return modules.filter(mod => {
++      const roles = resolveRoles(mod.href);
++      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
++    });
++  }, [roleId]);
++
+   if (pathname === '/login') {
+     return <>{children}</>;
+   }
+ 
+   const isActive = (href: string) => {
+     if (href === '/dashboard') return pathname === '/dashboard';
+     return pathname.startsWith(href);
+   };
+ 
+   const toggleSection = (href: string) => {
+@@ -164,21 +175,21 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+               <p className="text-[8px] text-slate-500 -mt-0.5">┘╪╕╪د┘à ╪ح╪»╪د╪▒╪ر ┘à╪ز┘â╪د┘à┘</p>
+             </div>
+           </div>
+           <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-slate-500 hover:text-white rounded-lg hover:bg-white/5 transition">
+             <X className="w-4 h-4" />
+           </button>
+         </div>
+ 
+         {/* Nav */}
+         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+-          {modules.map((mod) => {
++          {allowedModules.map((mod) => {
+             const active = isActive(mod.href);
+             const hasChildren = mod.children && mod.children.length > 0;
+             const expanded = expandedSection === mod.href;
+ 
+             return (
+               <div key={mod.href}>
+                 <button
+                   onClick={() => {
+                     if (hasChildren) {
+                       toggleSection(mod.href);
+@@ -199,21 +210,24 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+                     <svg
+                       className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                     >
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                     </svg>
+                   )}
+                 </button>
+                 {hasChildren && expanded && (
+                   <div className="mr-4 mt-0.5 space-y-0.5 border-r border-white/10 pr-2">
+-                    {mod.children!.map((child) => {
++                    {mod.children!.filter(child => {
++                      const roles = resolveRoles(child.href);
++                      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
++                    }).map((child) => {
+                       const childActive = pathname === child.href || (child.href !== '/inventory2' && pathname.startsWith(child.href));
+                       return (
+                         <button
+                           key={child.href}
+                           onClick={() => { router.push(child.href); setOpen(false); }}
+                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                             childActive
+                               ? 'bg-blue-600/10 text-blue-300 border border-blue-500/10'
+                               : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent'
+                           }`}
+@@ -237,15 +251,15 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition border border-transparent"
+           >
+             <ArrowLeft className="w-4 h-4 shrink-0" />
+             <span>╪د┘╪▒╪خ┘è╪│┘è╪ر</span>
+           </button>
+         </div>
+       </aside>
+ 
+       {/* Main content */}
+       <main className="flex-1 min-w-0">
+-        {children}
++        <ProtectedPage>{children}</ProtectedPage>
+       </main>
+     </div>
+   );
+ }

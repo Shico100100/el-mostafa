@@ -1,0 +1,275 @@
+﻿diff --git a/frontend/components/GlobalSidebar.tsx b/frontend/components/GlobalSidebar.tsx
+index fedc21a..3ddaaa5 100644
+--- a/frontend/components/GlobalSidebar.tsx
++++ b/frontend/components/GlobalSidebar.tsx
+@@ -1,14 +1,17 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useMemo } from 'react';
+ import { usePathname, useRouter } from 'next/navigation';
++import { usePermission } from '@/lib/usePermission';
++import { resolveRoles } from '@/lib/resolveRoles';
++import ProtectedPage from '@/components/ProtectedPage';
+ import {
+   LayoutDashboard,
+   ShoppingCart,
+   Package,
+   Factory,
+   Calculator,
+   Users,
+   ShoppingBag,
+   ArrowLeft,
+   Menu,
+@@ -109,20 +112,28 @@ const modules: NavItem[] = [
+   { href: '/settings', label: '╪د┘╪ح╪╣╪»╪د╪»╪د╪ز', icon: Settings },
+   { href: '/audit', label: '╪│╪ش┘ ╪د┘╪ز╪»┘é┘è┘é', icon: FileText },
+ ];
+ 
+ export default function GlobalSidebar({ children }: { children: React.ReactNode }) {
+   const pathname = usePathname();
+   const router = useRouter();
+   const [open, setOpen] = useState(false);
+   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+ 
++  const { roleId } = usePermission();
++  const allowedModules = useMemo(() => {
++    return modules.filter(mod => {
++      const roles = resolveRoles(mod.href);
++      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
++    });
++  }, [roleId]);
++
+   if (pathname === '/login') {
+     return <>{children}</>;
+   }
+ 
+   const isActive = (href: string) => {
+     if (href === '/dashboard') return pathname === '/dashboard';
+     return pathname.startsWith(href);
+   };
+ 
+   const toggleSection = (href: string) => {
+@@ -164,21 +175,21 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+               <p className="text-[8px] text-slate-500 -mt-0.5">┘╪╕╪د┘à ╪ح╪»╪د╪▒╪ر ┘à╪ز┘â╪د┘à┘</p>
+             </div>
+           </div>
+           <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-slate-500 hover:text-white rounded-lg hover:bg-white/5 transition">
+             <X className="w-4 h-4" />
+           </button>
+         </div>
+ 
+         {/* Nav */}
+         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+-          {modules.map((mod) => {
++          {allowedModules.map((mod) => {
+             const active = isActive(mod.href);
+             const hasChildren = mod.children && mod.children.length > 0;
+             const expanded = expandedSection === mod.href;
+ 
+             return (
+               <div key={mod.href}>
+                 <button
+                   onClick={() => {
+                     if (hasChildren) {
+                       toggleSection(mod.href);
+@@ -199,21 +210,24 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+                     <svg
+                       className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                     >
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                     </svg>
+                   )}
+                 </button>
+                 {hasChildren && expanded && (
+                   <div className="mr-4 mt-0.5 space-y-0.5 border-r border-white/10 pr-2">
+-                    {mod.children!.map((child) => {
++                    {mod.children!.filter(child => {
++                      const roles = resolveRoles(child.href);
++                      return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
++                    }).map((child) => {
+                       const childActive = pathname === child.href || (child.href !== '/inventory2' && pathname.startsWith(child.href));
+                       return (
+                         <button
+                           key={child.href}
+                           onClick={() => { router.push(child.href); setOpen(false); }}
+                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                             childActive
+                               ? 'bg-blue-600/10 text-blue-300 border border-blue-500/10'
+                               : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent'
+                           }`}
+@@ -237,15 +251,15 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode
+             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition border border-transparent"
+           >
+             <ArrowLeft className="w-4 h-4 shrink-0" />
+             <span>╪د┘╪▒╪خ┘è╪│┘è╪ر</span>
+           </button>
+         </div>
+       </aside>
+ 
+       {/* Main content */}
+       <main className="flex-1 min-w-0">
+-        {children}
++        <ProtectedPage>{children}</ProtectedPage>
+       </main>
+     </div>
+   );
+ }
+diff --git a/frontend/components/ProtectedPage.tsx b/frontend/components/ProtectedPage.tsx
+new file mode 100644
+index 0000000..d637ddf
+--- /dev/null
++++ b/frontend/components/ProtectedPage.tsx
+@@ -0,0 +1,24 @@
++'use client';
++
++import { useEffect, useMemo } from 'react';
++import { usePathname, useRouter } from 'next/navigation';
++import { usePermission } from '@/lib/usePermission';
++import { resolveRoles } from '@/lib/resolveRoles';
++
++export default function ProtectedPage({ children }: { children: React.ReactNode }) {
++  const { roleId } = usePermission();
++  const pathname = usePathname();
++  const router = useRouter();
++
++  const allowedRoles = useMemo(() => resolveRoles(pathname), [pathname]);
++  const hasAccess = allowedRoles.length === 0 || (roleId != null && allowedRoles.includes(roleId as number));
++
++  useEffect(() => {
++    if (!hasAccess && roleId != null) {
++      router.replace('/dashboard');
++    }
++  }, [hasAccess, roleId, router]);
++
++  if (hasAccess) return <>{children}</>;
++  return null;
++}
+diff --git a/frontend/lib/permissions.ts b/frontend/lib/permissions.ts
+new file mode 100644
+index 0000000..29cf3c4
+--- /dev/null
++++ b/frontend/lib/permissions.ts
+@@ -0,0 +1,64 @@
++// Role IDs: 1=admin, 2=user, 3=manager, 4=accountant, 5=storekeeper, 6=worker, 7=viewer
++export const PAGE_PERMISSIONS: Record<string, number[]> = {
++  '/dashboard': [1, 3, 4, 5, 6, 7],
++  '/sales': [1, 3],
++  '/sales/orders': [1, 3],
++  '/sales/customers': [1, 3],
++  '/sales/quotes': [1, 3],
++  '/sales/returns': [1, 3],
++  '/sales/customers/statement': [1, 3],
++  '/purchases': [1, 3, 4],
++  '/purchases/suppliers': [1, 3, 4],
++  '/purchases/suppliers/statement': [1, 3, 4],
++  '/purchases/orders': [1, 3, 4],
++  '/purchases/returns': [1, 3, 4],
++  '/purchases/currencies': [1],
++  '/purchases/containers': [1, 3, 4],
++  '/inventory2': [1, 3, 5, 6],
++  '/inventory2/products': [1, 3, 5, 6],
++  '/inventory2/products/bulk-prices': [1, 3, 5],
++  '/inventory2/semi-finished': [1, 3, 5, 6],
++  '/inventory2/stock': [1, 3, 5, 6],
++  '/inventory2/stock/movements': [1, 3, 5, 6],
++  '/inventory2/stock/transfer': [1, 3, 5, 6],
++  '/inventory2/stock/adjust': [1, 3, 5],
++  '/inventory2/warehouses': [1, 3, 5],
++  '/manufacturing': [1, 3, 5, 6],
++  '/manufacturing/raw-materials': [1, 3, 5, 6],
++  '/manufacturing/molds': [1, 3, 5, 6],
++  '/manufacturing/machines': [1, 3, 5, 6],
++  '/manufacturing/boms': [1, 3, 5, 6],
++  '/manufacturing/production': [1, 3, 6],
++  '/manufacturing/daily-production': [1, 3, 6],
++  '/manufacturing/planning': [1, 3, 5, 6],
++  '/manufacturing/schedule': [1, 3, 5, 6],
++  '/manufacturing/qc': [1, 3, 5],
++  '/manufacturing/assembly': [1, 3, 5, 6],
++  '/manufacturing/maintenance': [1, 3, 6],
++  '/manufacturing/kiosk': [1, 3, 6],
++  '/manufacturing/mrp': [1, 3, 5],
++  '/manufacturing/feasibility': [1, 3, 5],
++  '/manufacturing/traceability': [1, 3, 5, 6],
++  '/manufacturing/fixed-costs': [1, 3, 4],
++  '/bom': [1, 3, 5, 6],
++  '/assembly': [1, 3, 5, 6],
++  '/assembly/production': [1, 3, 6],
++  '/assembly/attendance': [1, 3, 6],
++  '/assembly/accessories': [1, 3, 5, 6],
++  '/assembly/plastic': [1, 3, 5, 6],
++  '/assembly/packaging': [1, 3, 5, 6],
++  '/assembly/bom': [1, 3, 5, 6],
++  '/accounting': [1, 3, 4],
++  '/accounting/journal': [1, 3, 4],
++  '/hr': [1, 3],
++  '/hr/payroll': [1, 3],
++  '/hr/employees': [1, 3],
++  '/reports': [1, 3, 4, 5, 7],
++  '/reports/production': [1, 3, 4, 5, 7],
++  '/notifications': [1, 3, 4, 5, 6, 7],
++  '/documents': [1, 3, 4, 5, 6, 7],
++  '/users': [1],
++  '/settings': [1, 3],
++  '/audit': [1],
++  '/dashboard/control-tower': [1, 3],
++};
+diff --git a/frontend/lib/resolveRoles.ts b/frontend/lib/resolveRoles.ts
+new file mode 100644
+index 0000000..ac194b8
+--- /dev/null
++++ b/frontend/lib/resolveRoles.ts
+@@ -0,0 +1,9 @@
++import { PAGE_PERMISSIONS } from '@/lib/permissions';
++
++export function resolveRoles(pathname: string): number[] {
++  const keys = Object.keys(PAGE_PERMISSIONS)
++    .filter(k => pathname === k || pathname.startsWith(k + '/'))
++    .sort((a, b) => b.length - a.length);
++
++  return keys.length > 0 ? PAGE_PERMISSIONS[keys[0]] : [];
++}
+diff --git a/frontend/lib/usePermission.ts b/frontend/lib/usePermission.ts
+index 99dd9d7..7c464c6 100644
+--- a/frontend/lib/usePermission.ts
++++ b/frontend/lib/usePermission.ts
+@@ -1,19 +1,20 @@
+ import { useEffect, useMemo, useState } from 'react';
+ import { jwtDecode } from 'jwt-decode';
+ 
+ export enum UserRole {
+     ADMIN = 'Admin',
+     MANAGER = 'Manager',
+     ACCOUNTANT = 'Accountant',
+     STOREKEEPER = 'Storekeeper',
+     WORKER = 'Worker',
++    VIEWER = 'Viewer',
+     USER = 'User',
+ }
+ 
+ type DecodedToken = {
+     role?:
+         | UserRole
+         | {
+               name: UserRole;
+               id: number;
+           };
+@@ -55,13 +56,15 @@ export function usePermission() {
+ 
+     const hasRole = (requiredRoles: UserRole[]) => {
+         if (!role) return false;
+         return requiredRoles.includes(role);
+     };
+ 
+     const isAdmin = role === UserRole.ADMIN || roleId === 1 || String(role).toLowerCase() === 'admin';
+     const isManager = isAdmin || role === UserRole.MANAGER || roleId === 3;
+     const isAccountant = isManager || role === UserRole.ACCOUNTANT || roleId === 4;
+     const isStorekeeper = isManager || role === UserRole.STOREKEEPER || roleId === 5;
++    const isViewer = isStorekeeper || role === UserRole.VIEWER || roleId === 7;
++    const isWorker = isViewer || role === UserRole.WORKER || roleId === 6;
+ 
+-    return { role, roleId, hasRole, isAdmin, isManager, isAccountant, isStorekeeper };
++    return { role, roleId, hasRole, isAdmin, isManager, isAccountant, isStorekeeper, isWorker, isViewer };
+ }

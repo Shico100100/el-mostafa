@@ -1,0 +1,42 @@
+﻿diff --git a/frontend/lib/usePermission.ts b/frontend/lib/usePermission.ts
+index 99dd9d7..7c464c6 100644
+--- a/frontend/lib/usePermission.ts
++++ b/frontend/lib/usePermission.ts
+@@ -1,19 +1,20 @@
+ import { useEffect, useMemo, useState } from 'react';
+ import { jwtDecode } from 'jwt-decode';
+ 
+ export enum UserRole {
+     ADMIN = 'Admin',
+     MANAGER = 'Manager',
+     ACCOUNTANT = 'Accountant',
+     STOREKEEPER = 'Storekeeper',
+     WORKER = 'Worker',
++    VIEWER = 'Viewer',
+     USER = 'User',
+ }
+ 
+ type DecodedToken = {
+     role?:
+         | UserRole
+         | {
+               name: UserRole;
+               id: number;
+           };
+@@ -55,13 +56,15 @@ export function usePermission() {
+ 
+     const hasRole = (requiredRoles: UserRole[]) => {
+         if (!role) return false;
+         return requiredRoles.includes(role);
+     };
+ 
+     const isAdmin = role === UserRole.ADMIN || roleId === 1 || String(role).toLowerCase() === 'admin';
+     const isManager = isAdmin || role === UserRole.MANAGER || roleId === 3;
+     const isAccountant = isManager || role === UserRole.ACCOUNTANT || roleId === 4;
+     const isStorekeeper = isManager || role === UserRole.STOREKEEPER || roleId === 5;
++    const isViewer = isStorekeeper || role === UserRole.VIEWER || roleId === 7;
++    const isWorker = isViewer || role === UserRole.WORKER || roleId === 6;
+ 
+-    return { role, roleId, hasRole, isAdmin, isManager, isAccountant, isStorekeeper };
++    return { role, roleId, hasRole, isAdmin, isManager, isAccountant, isStorekeeper, isWorker, isViewer };
+ }

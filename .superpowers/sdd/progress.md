@@ -34,3 +34,13 @@
 ## Notes
 
 - Task 1: Fixed missing readiness endpoint test, unrelated changes in commit analyzed as pre-existing
+Task 1: complete (commits 11c1a428, review pending)
+Task 2: complete (commits 11c1a42..e2dda0f, review clean)
+
+Task 1: complete (commits be964b2..723c283, review clean)
+
+Task 2: complete (commits 723c283..fe66192, review clean)
+
+Task 3: complete (commits fe66192..636b32f, review clean)
+
+Task 4: complete (commits 636b32f..2349ce3, review clean)
