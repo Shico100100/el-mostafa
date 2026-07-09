@@ -15,6 +15,17 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
+import {
+  CreateSupplierDto,
+  CreatePurchaseOrderDto,
+  CreateSupplierPaymentDto,
+  CreatePurchaseReturnDto,
+  CreateCurrencyDto,
+  CreateContainerDto,
+  CreatePackingListDto,
+  UpdateLandedCostDto,
+  AddFxRateDto,
+} from './dto';
 
 @ApiTags('Purchases')
 @Controller('purchases')
@@ -48,14 +59,14 @@ export class PurchasesController {
   @Post('suppliers')
   @ApiOperation({ summary: 'Create a supplier' })
   @ApiResponse({ status: 201, description: 'Supplier created' })
-  createSupplier(@Body() data: any) {
-    return this.purchasesService.createSupplier(data);
+  createSupplier(@Body() createSupplierDto: CreateSupplierDto) {
+    return this.purchasesService.createSupplier(createSupplierDto);
   }
 
   @Put('suppliers/:id')
   @ApiOperation({ summary: 'Update a supplier' })
   @ApiResponse({ status: 200, description: 'Supplier updated' })
-  updateSupplier(@Param('id') id: string, @Body() data: any) {
+  updateSupplier(@Param('id') id: string, @Body() data: Record<string, any>) {
     return this.purchasesService.updateSupplier(+id, data);
   }
 
@@ -70,7 +81,7 @@ export class PurchasesController {
   @Get('orders')
   @ApiOperation({ summary: 'Get all purchase orders' })
   @ApiResponse({ status: 200, description: 'Returns paginated orders' })
-  getAllOrders(@Query() query: any) {
+  getAllOrders(@Query() query: Record<string, any>) {
     return this.purchasesService.getAllOrders({
       page: query.page ? +query.page : 1,
       limit: query.limit ? +query.limit : 10,
@@ -90,14 +101,14 @@ export class PurchasesController {
   @Post('orders')
   @ApiOperation({ summary: 'Create a purchase order' })
   @ApiResponse({ status: 201, description: 'Order created' })
-  createOrder(@Body() data: any) {
-    return this.purchasesService.createOrder(data);
+  createOrder(@Body() createPurchaseOrderDto: CreatePurchaseOrderDto) {
+    return this.purchasesService.createOrder(createPurchaseOrderDto);
   }
 
   @Put('orders/:id')
   @ApiOperation({ summary: 'Update a purchase order' })
   @ApiResponse({ status: 200, description: 'Order updated' })
-  updateOrder(@Param('id') id: string, @Body() data: any) {
+  updateOrder(@Param('id') id: string, @Body() data: Record<string, any>) {
     return this.purchasesService.updateOrder(+id, data);
   }
 
@@ -119,8 +130,8 @@ export class PurchasesController {
   @Post('suppliers/:id/payments')
   @ApiOperation({ summary: 'Add a supplier payment' })
   @ApiResponse({ status: 201, description: 'Payment added' })
-  addPayment(@Param('id') id: string, @Body() data: any) {
-    return this.purchasesService.addPayment({ supplier_id: +id, ...data });
+  addPayment(@Param('id') id: string, @Body() createSupplierPaymentDto: CreateSupplierPaymentDto) {
+    return this.purchasesService.addPayment({ supplier_id: +id, ...createSupplierPaymentDto });
   }
 
   @Get('suppliers/:id/payments')
@@ -162,8 +173,8 @@ export class PurchasesController {
   @Post('returns')
   @ApiOperation({ summary: 'Create a purchase return' })
   @ApiResponse({ status: 201, description: 'Return created' })
-  createReturn(@Body() data: any) {
-    return this.purchasesService.createReturn(data);
+  createReturn(@Body() createPurchaseReturnDto: CreatePurchaseReturnDto) {
+    return this.purchasesService.createReturn(createPurchaseReturnDto);
   }
 
   // ==================== CURRENCY MANAGEMENT ====================
@@ -185,14 +196,14 @@ export class PurchasesController {
   @Post('currencies')
   @ApiOperation({ summary: 'Create a currency' })
   @ApiResponse({ status: 201, description: 'Currency created' })
-  createCurrency(@Body() data: any) {
-    return this.purchasesService.createCurrency(data);
+  createCurrency(@Body() createCurrencyDto: CreateCurrencyDto) {
+    return this.purchasesService.createCurrency(createCurrencyDto);
   }
 
   @Put('currencies/:id')
   @ApiOperation({ summary: 'Update a currency' })
   @ApiResponse({ status: 200, description: 'Currency updated' })
-  updateCurrency(@Param('id') id: string, @Body() data: any) {
+  updateCurrency(@Param('id') id: string, @Body() data: Record<string, any>) {
     return this.purchasesService.updateCurrency(+id, data);
   }
 
@@ -217,8 +228,8 @@ export class PurchasesController {
   @Post('fx-rates')
   @ApiOperation({ summary: 'Add an FX rate' })
   @ApiResponse({ status: 201, description: 'FX rate added' })
-  addFxRate(@Body() data: any) {
-    return this.purchasesService.addFxRate(data);
+  addFxRate(@Body() addFxRateDto: AddFxRateDto) {
+    return this.purchasesService.addFxRate(addFxRateDto);
   }
 
   @Get('fx-rates/weighted-average/:currencyId')
@@ -240,8 +251,8 @@ export class PurchasesController {
   @Put('orders/:id/landed-cost')
   @ApiOperation({ summary: 'Update landed cost' })
   @ApiResponse({ status: 200, description: 'Landed cost updated' })
-  updateLandedCost(@Param('id') id: string, @Body() data: any) {
-    return this.purchasesService.updateLandedCost(+id, data);
+  updateLandedCost(@Param('id') id: string, @Body() updateLandedCostDto: UpdateLandedCostDto) {
+    return this.purchasesService.updateLandedCost(+id, updateLandedCostDto);
   }
 
   // ==================== CONTAINERS ====================
@@ -263,14 +274,14 @@ export class PurchasesController {
   @Post('containers')
   @ApiOperation({ summary: 'Create a container' })
   @ApiResponse({ status: 201, description: 'Container created' })
-  createContainer(@Body() data: any) {
-    return this.purchasesService.createContainer(data);
+  createContainer(@Body() createContainerDto: CreateContainerDto) {
+    return this.purchasesService.createContainer(createContainerDto);
   }
 
   @Put('containers/:id')
   @ApiOperation({ summary: 'Update a container' })
   @ApiResponse({ status: 200, description: 'Container updated' })
-  updateContainer(@Param('id') id: string, @Body() data: any) {
+  updateContainer(@Param('id') id: string, @Body() data: Record<string, any>) {
     return this.purchasesService.updateContainer(+id, data);
   }
 
@@ -312,8 +323,8 @@ export class PurchasesController {
   @Post('orders/:id/packing-list')
   @ApiOperation({ summary: 'Create or update packing list' })
   @ApiResponse({ status: 200, description: 'Packing list saved' })
-  createOrUpdatePackingList(@Param('id') id: string, @Body() data: any) {
-    return this.purchasesService.createOrUpdatePackingList(+id, data);
+  createOrUpdatePackingList(@Param('id') id: string, @Body() createPackingListDto: CreatePackingListDto) {
+    return this.purchasesService.createOrUpdatePackingList(+id, createPackingListDto);
   }
 
   // ==================== SMART REORDER ALERTS ====================
