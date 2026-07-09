@@ -4,7 +4,7 @@
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { Stock } from './entities/stock.entity';
 import { MovementType, StockMovement } from './entities/stock-movement.entity';
@@ -14,6 +14,7 @@ import { CategoryService } from './category.service';
 import { ProductService } from './product.service';
 import { WarehouseService } from './warehouse.service';
 import { StockService } from './stock.service';
+import { TransactionHelper } from '../common/transaction.helper';
 
 @Injectable()
 export class InventoryService {
@@ -22,7 +23,7 @@ export class InventoryService {
     private productService: ProductService,
     private warehouseService: WarehouseService,
     private stockService: StockService,
-    private dataSource: DataSource,
+    private transactionHelper: TransactionHelper,
 
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
@@ -148,48 +149,42 @@ export class InventoryService {
     const warehouseId =
       productData.warehouse_id || (await this.getDefaultWarehouseId());
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const product = queryRunner.manager.create(Product, {
-        ...productData,
-        warehouse_id: warehouseId,
-      });
-      const saved = await queryRunner.manager.save(Product, product);
-
-      await queryRunner.manager.save(
-        queryRunner.manager.create(Stock, {
-          product_id: saved.id,
+    const saved = await this.transactionHelper.runInTransaction(
+      async (manager) => {
+        const product = manager.create(Product, {
+          ...productData,
           warehouse_id: warehouseId,
-          quantity: initial_stock || 0,
-        }),
-      );
+        });
+        const saved = await manager.save(Product, product);
 
-      if (initial_stock && initial_stock > 0) {
-        await this.addStockMovement(
-          {
+        await manager.save(
+          manager.create(Stock, {
             product_id: saved.id,
             warehouse_id: warehouseId,
-            type: MovementType.IN,
-            quantity: initial_stock,
-            notes: 'المخزون الافتتاحي',
-          },
-          queryRunner.manager,
+            quantity: initial_stock || 0,
+          }),
         );
-      }
 
-      await queryRunner.commitTransaction();
-      return this.productRepo.findOne({
-        where: { id: saved.id },
-        relations: ['category', 'warehouse'],
-      });
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+        if (initial_stock && initial_stock > 0) {
+          await this.addStockMovement(
+            {
+              product_id: saved.id,
+              warehouse_id: warehouseId,
+              type: MovementType.IN,
+              quantity: initial_stock,
+              notes: 'المخزون الافتتاحي',
+            },
+            manager,
+          );
+        }
+
+        return saved;
+      },
+    );
+    return this.productRepo.findOne({
+      where: { id: saved.id },
+      relations: ['category', 'warehouse'],
+    });
   }
 
   async updateProduct(
@@ -210,10 +205,7 @@ export class InventoryService {
       });
       const qty = oldStock ? Number(oldStock.quantity) : 0;
 
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      try {
+      await this.transactionHelper.runInTransaction(async (manager) => {
         if (qty > 0) {
           await this.addStockMovement(
             {
@@ -223,15 +215,15 @@ export class InventoryService {
               quantity: qty,
               notes: `نقل إلى المخزن ${productData.warehouse_id}`,
             },
-            queryRunner.manager,
+            manager,
           );
         }
-        await queryRunner.manager.delete(Stock, {
+        await manager.delete(Stock, {
           product_id: id,
           warehouse_id: oldProduct.warehouse_id,
         });
-        await queryRunner.manager.save(
-          queryRunner.manager.create(Stock, {
+        await manager.save(
+          manager.create(Stock, {
             product_id: id,
             warehouse_id: productData.warehouse_id,
             quantity: qty,
@@ -241,21 +233,15 @@ export class InventoryService {
           await this.addStockMovement(
             {
               product_id: id,
-              warehouse_id: productData.warehouse_id,
+              warehouse_id: productData.warehouse_id!,
               type: MovementType.IN,
               quantity: qty,
               notes: `نقل من المخزن ${oldProduct.warehouse_id}`,
             },
-            queryRunner.manager,
+            manager,
           );
         }
-        await queryRunner.commitTransaction();
-      } catch (err) {
-        await queryRunner.rollbackTransaction();
-        throw err;
-      } finally {
-        await queryRunner.release();
-      }
+      });
     }
 
     await this.productRepo.update(id, productData);
@@ -281,10 +267,7 @@ export class InventoryService {
     });
     const qty = stock ? Number(stock.quantity) : 0;
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
+    await this.transactionHelper.runInTransaction(async (manager) => {
       if (qty > 0) {
         await this.addStockMovement(
           {
@@ -296,15 +279,15 @@ export class InventoryService {
               ? `نقل إلى المخزن ${to_warehouse_id} - ${notes}`
               : `نقل إلى المخزن ${to_warehouse_id}`,
           },
-          queryRunner.manager,
+          manager,
         );
       }
-      await queryRunner.manager.delete(Stock, {
+      await manager.delete(Stock, {
         product_id,
         warehouse_id: from_warehouse_id,
       });
-      await queryRunner.manager.save(
-        queryRunner.manager.create(Stock, {
+      await manager.save(
+        manager.create(Stock, {
           product_id,
           warehouse_id: to_warehouse_id,
           quantity: qty,
@@ -321,19 +304,13 @@ export class InventoryService {
               ? `نقل من المخزن ${from_warehouse_id} - ${notes}`
               : `نقل من المخزن ${from_warehouse_id}`,
           },
-          queryRunner.manager,
+          manager,
         );
       }
-      await queryRunner.manager.update(Product, product_id, {
+      await manager.update(Product, product_id, {
         warehouse_id: to_warehouse_id,
       });
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    });
     return {
       success: true,
       product_id,
@@ -436,103 +413,96 @@ export class InventoryService {
       'علب',
     ];
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      let assigned = 0,
-        changed = 0;
-      for (const product of allProducts) {
-        let targetWarehouseId: number;
-        const nameLower = product.name.toLowerCase();
-        const catName = product.category?.name?.toLowerCase() || '';
+    const result = await this.transactionHelper.runInTransaction(
+      async (manager) => {
+        let assigned = 0,
+          changed = 0;
+        for (const product of allProducts) {
+          let targetWarehouseId: number;
+          const nameLower = product.name.toLowerCase();
+          const catName = product.category?.name?.toLowerCase() || '';
 
-        if (product.name.startsWith('بلاستيك'))
-          targetWarehouseId = whMap.PLASTIC;
-        else if (product.type === 'RAW' || product.type === 'RAW_PLASTIC')
-          targetWarehouseId = whMap.PLASTIC;
-        else if (product.type === 'FINISHED')
-          targetWarehouseId = whMap.FINISHED;
-        else if (product.type === 'PACKAGING')
-          targetWarehouseId = whMap.PACKING;
-        else if (product.type === 'IMPORTED')
-          targetWarehouseId = whMap.ACCESSORY;
-        else {
-          targetWarehouseId = packingKeywords.some(
-            (kw) => nameLower.includes(kw) || catName.includes(kw),
-          )
-            ? whMap.PACKING
-            : accessoryKeywords.some(
-                  (kw) => nameLower.includes(kw) || catName.includes(kw),
-                )
-              ? whMap.ACCESSORY
-              : whMap.PLASTIC;
-        }
+          if (product.name.startsWith('بلاستيك'))
+            targetWarehouseId = whMap.PLASTIC;
+          else if (product.type === 'RAW' || product.type === 'RAW_PLASTIC')
+            targetWarehouseId = whMap.PLASTIC;
+          else if (product.type === 'FINISHED')
+            targetWarehouseId = whMap.FINISHED;
+          else if (product.type === 'PACKAGING')
+            targetWarehouseId = whMap.PACKING;
+          else if (product.type === 'IMPORTED')
+            targetWarehouseId = whMap.ACCESSORY;
+          else {
+            targetWarehouseId = packingKeywords.some(
+              (kw) => nameLower.includes(kw) || catName.includes(kw),
+            )
+              ? whMap.PACKING
+              : accessoryKeywords.some(
+                    (kw) => nameLower.includes(kw) || catName.includes(kw),
+                  )
+                ? whMap.ACCESSORY
+                : whMap.PLASTIC;
+          }
 
-        if (targetWarehouseId !== product.warehouse_id) {
-          const oldWH = product.warehouse_id;
-          await queryRunner.manager.update(Product, product.id, {
-            warehouse_id: targetWarehouseId,
-          });
-          const stock = await queryRunner.manager.findOne(Stock, {
-            where: { product_id: product.id, warehouse_id: oldWH },
-          });
-          const qty = stock ? Number(stock.quantity) : 0;
-          if (stock)
-            await queryRunner.manager.delete(Stock, {
-              product_id: product.id,
-              warehouse_id: oldWH,
-            });
-          await queryRunner.manager.save(
-            queryRunner.manager.create(Stock, {
-              product_id: product.id,
+          if (targetWarehouseId !== product.warehouse_id) {
+            const oldWH = product.warehouse_id;
+            await manager.update(Product, product.id, {
               warehouse_id: targetWarehouseId,
-              quantity: qty,
-            }),
-          );
+            });
+            const stock = await manager.findOne(Stock, {
+              where: { product_id: product.id, warehouse_id: oldWH },
+            });
+            const qty = stock ? Number(stock.quantity) : 0;
+            if (stock)
+              await manager.delete(Stock, {
+                product_id: product.id,
+                warehouse_id: oldWH,
+              });
+            await manager.save(
+              manager.create(Stock, {
+                product_id: product.id,
+                warehouse_id: targetWarehouseId,
+                quantity: qty,
+              }),
+            );
 
-          if (qty > 0) {
-            if (oldWH)
+            if (qty > 0) {
+              if (oldWH)
+                await this.addStockMovement(
+                  {
+                    product_id: product.id,
+                    warehouse_id: oldWH,
+                    type: MovementType.OUT,
+                    quantity: qty,
+                    notes: `إعادة توزيع ذكي من المخزن ${oldWH}`,
+                  },
+                  manager,
+                );
               await this.addStockMovement(
                 {
                   product_id: product.id,
-                  warehouse_id: oldWH,
-                  type: MovementType.OUT,
+                  warehouse_id: targetWarehouseId,
+                  type: MovementType.IN,
                   quantity: qty,
-                  notes: `إعادة توزيع ذكي من المخزن ${oldWH}`,
+                  notes: `إعادة توزيع ذكي إلى ${targetWarehouseId}`,
                 },
-                queryRunner.manager,
+                manager,
               );
-            await this.addStockMovement(
-              {
-                product_id: product.id,
-                warehouse_id: targetWarehouseId,
-                type: MovementType.IN,
-                quantity: qty,
-                notes: `إعادة توزيع ذكي إلى ${targetWarehouseId}`,
-              },
-              queryRunner.manager,
-            );
+            }
+            if (oldWH) changed++;
+            else assigned++;
           }
-          if (oldWH) changed++;
-          else assigned++;
         }
-      }
-      await queryRunner.commitTransaction();
-      return {
-        assigned,
-        changed,
-        total: allProducts.length,
-        message:
-          assigned + changed > 0
-            ? `تم توزيع ${assigned + changed} منتج (${assigned} توزيع جديد، ${changed} إعادة توزيع)`
-            : 'جميع المنتجات في المخازن الصحيحة بالفعل',
-      };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+        return { assigned, changed };
+      },
+    );
+    return {
+      ...result,
+      total: allProducts.length,
+      message:
+        result.assigned + result.changed > 0
+          ? `تم توزيع ${result.assigned + result.changed} منتج (${result.assigned} توزيع جديد، ${result.changed} إعادة توزيع)`
+          : 'جميع المنتجات في المخازن الصحيحة بالفعل',
+    };
   }
 }
