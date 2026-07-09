@@ -14,8 +14,8 @@ export default function PlasticPage() {
     useEffect(() => {
         api.getProducts('FINISHED')
             .then((data: unknown) => {
-                const items = (data as { products?: Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }> } | Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }>);
-                const arr = Array.isArray(items) ? items : (items?.products || []);
+                const items = data as { data?: Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }> } | Array<{ id: number; name: string; sku: string; unit: string; stock_quantity: number }>;
+                const arr = Array.isArray(items) ? items : (items?.data || []);
                 setProducts(arr);
             })
             .catch(() => setProducts([]))

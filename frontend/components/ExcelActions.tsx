@@ -83,7 +83,10 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Import failed');
+            if (!response.ok) {
+                const errorBody = await response.text().catch(() => '');
+                throw new Error(`Import failed (${response.status}): ${errorBody}`);
+            }
 
             const result = await response.json();
 

@@ -10,20 +10,36 @@ export class CacheService implements OnModuleDestroy {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
       maxRetriesPerRequest: 3,
+      lazyConnect: true,
+    });
+    this.client.on('error', () => {
+      // Redis unavailable — cache ops silently no-op
     });
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const data = await this.client.get(key);
-    return data ? (JSON.parse(data) as T) : null;
+    try {
+      const data = await this.client.get(key);
+      return data ? (JSON.parse(data) as T) : null;
+    } catch {
+      return null;
+    }
   }
 
   async set(key: string, value: any, ttl: number = 60): Promise<void> {
-    await this.client.set(key, JSON.stringify(value), 'EX', ttl);
+    try {
+      await this.client.set(key, JSON.stringify(value), 'EX', ttl);
+    } catch {
+      // ignore
+    }
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key);
+    try {
+      await this.client.del(key);
+    } catch {
+      // ignore
+    }
   }
 
   async onModuleDestroy() {

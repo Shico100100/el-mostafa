@@ -101,7 +101,7 @@ export function useDailyProduction() {
       setDailyRecords(daily);
       setWeeklyRecords(weekly);
       setMachines(mach.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')));
-      setMolds(mol.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')));
+      setMolds(Array.isArray(mol) ? mol.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) : (mol as any)?.items?.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) ?? []);
       setRawMaterials(mat.sort((a: RawMaterial, b: RawMaterial) =>
         (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')));
     } catch (error) {

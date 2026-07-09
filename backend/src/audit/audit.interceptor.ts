@@ -22,13 +22,16 @@ export class AuditInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(async (response) => {
         try {
+          const userId = req.user?.id;
+          if (!userId) return;
           await this.auditService.log({
-            userId: req.user?.id || 0,
+            userId,
             action: method === 'POST' ? 'CREATE' : method === 'DELETE' ? 'DELETE' : 'UPDATE',
-            entity: context.getHandler().name,
-            entityId: response?.id,
-            after: response,
-            ip: req.ip,
+            method,
+            endpoint: `${req.route?.path || ''} ${context.getHandler().name}`,
+            entityId: response?.id != null ? String(response.id) : undefined,
+            payload: typeof response === 'object' ? JSON.stringify(response).slice(0, 2000) : undefined,
+            ipAddress: req.ip,
           });
         } catch (error) {
           console.error('Audit log failed:', error);

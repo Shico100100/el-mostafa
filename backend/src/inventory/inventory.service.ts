@@ -7,8 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { Stock } from './entities/stock.entity';
-import { MovementType } from './entities/stock-movement.entity';
+import { MovementType, StockMovement } from './entities/stock-movement.entity';
 import { Warehouse } from './entities/warehouse.entity';
+import { Category } from './entities/category.entity';
 import { CategoryService } from './category.service';
 import { ProductService } from './product.service';
 import { WarehouseService } from './warehouse.service';
@@ -35,10 +36,10 @@ export class InventoryService {
   async getAllCategories() {
     return this.categoryService.getAllCategories();
   }
-  async createCategory(data: any) {
+  async createCategory(data: Partial<Category>) {
     return this.categoryService.createCategory(data);
   }
-  async updateCategory(id: number, data: any) {
+  async updateCategory(id: number, data: Partial<Category>) {
     return this.categoryService.updateCategory(id, data);
   }
   async deleteCategory(id: number) {
@@ -46,7 +47,15 @@ export class InventoryService {
   }
 
   // ==================== PRODUCT DELEGATION ====================
-  async getAllProducts(options: any) {
+  async getAllProducts(options: {
+    search?: string;
+    type?: string;
+    categoryId?: number;
+    page?: number;
+    limit?: number;
+    lowStock?: boolean;
+    warehouseId?: number;
+  }) {
     return this.productService.getAllProducts(options);
   }
   async getProduct(id: number) {
@@ -64,7 +73,14 @@ export class InventoryService {
   async importProductsFromExcel(buffer: Buffer) {
     return this.productService.importProductsFromExcel(buffer);
   }
-  async bulkUpdatePrices(data: any) {
+  async bulkUpdatePrices(data: {
+    productIds?: number[];
+    categoryId?: number;
+    type?: string;
+    priceField: 'selling_price' | 'cost_price';
+    updateType: 'percentage' | 'fixed';
+    value: number;
+  }) {
     return this.productService.bulkUpdatePrices(data);
   }
   async autoPriceProduct(productId: number) {
@@ -84,10 +100,10 @@ export class InventoryService {
   async getWarehouseStock(warehouseId: number) {
     return this.warehouseService.getWarehouseStock(warehouseId);
   }
-  async createWarehouse(data: any) {
+  async createWarehouse(data: Partial<Warehouse>) {
     return this.warehouseService.createWarehouse(data);
   }
-  async updateWarehouse(id: number, data: any) {
+  async updateWarehouse(id: number, data: Partial<Warehouse>) {
     return this.warehouseService.updateWarehouse(id, data);
   }
   async deleteWarehouse(id: number) {
@@ -101,13 +117,20 @@ export class InventoryService {
   async getStockMovements(productId?: number, warehouseId?: number) {
     return this.stockService.getStockMovements(productId, warehouseId);
   }
-  async updateStockMovement(id: number, data: any) {
+  async updateStockMovement(id: number, data: Partial<StockMovement>) {
     return this.stockService.updateStockMovement(id, data);
   }
 
   // ==================== METHODS KEPT FOR EXTERNAL MODULES (purchases, sales) ====================
   async addStockMovement(
-    data: any,
+    data: {
+      product_id: number;
+      warehouse_id: number;
+      type: MovementType;
+      quantity: number;
+      notes?: string;
+      date?: Date;
+    },
     manager?: EntityManager,
     skipStockCheck?: boolean,
   ) {

@@ -20,7 +20,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { ManufacturingService } from './manufacturing.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { sheetToJson } from '../utils/excel-export';
@@ -91,7 +91,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importMachines(data);
+    return this.manufacturingService.importMachines(data as any[]);
   }
 
   @Public()
@@ -119,7 +119,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importMolds(data);
+    return this.manufacturingService.importMolds(data as any[]);
   }
 
   @Public()
@@ -147,7 +147,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importRawMaterials(data);
+    return this.manufacturingService.importRawMaterials(data as any[]);
   }
 
   // Upload Image
@@ -409,11 +409,12 @@ export class ManufacturingController {
   @ApiResponse({ status: 201, description: 'Range production created' })
   async createRangeProduction(
     @Body() data: CreateRangeProductionDto,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
+    const user = req.user as { id?: number };
     return await this.manufacturingService.createRangeProduction({
       ...data,
-      user_id: req.user?.id,
+      user_id: user?.id,
     });
   }
 
@@ -493,7 +494,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importProductionHistory(data);
+    return this.manufacturingService.importProductionHistory(data as any[]);
   }
 
   @Get('machines/:id/last-mold')
@@ -557,7 +558,13 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const filters: any = {};
+    const filters: {
+      product_id?: number;
+      start_date?: Date;
+      end_date?: Date;
+      page?: number;
+      limit?: number;
+    } = {};
     if (rawMaterialId) filters.product_id = +rawMaterialId;
     if (startDate) filters.start_date = new Date(startDate);
     if (endDate) filters.end_date = new Date(endDate);

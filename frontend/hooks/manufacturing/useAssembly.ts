@@ -23,7 +23,7 @@ export function useAssembly() {
         api.fetchWithAuth('/manufacturing/boms'),
         api.fetchWithAuth('/manufacturing/assembly'),
       ]);
-      setBoms(sortAlphabetically(bomsData, 'name'));
+      setBoms(sortAlphabetically(Array.isArray(bomsData) ? bomsData : ((bomsData as any)?.items ?? []), 'name'));
       setOrders(ordersData);
     } catch (error) {
       console.error('Error loading data:', error);

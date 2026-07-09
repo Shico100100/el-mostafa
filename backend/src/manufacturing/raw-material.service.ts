@@ -110,7 +110,7 @@ export class RawMaterialService {
       return {
         id: p.id,
         product_id: p.id,
-        product: { ...p, preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null },
+        product: { ...p, preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null, name: p.product_name },
         product_name: p.product_name,
         preferred_supplier_id: p.preferred_supplier_id,
         preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null,
@@ -479,7 +479,7 @@ export class RawMaterialService {
   }
 
   async createStockMovement(data: {
-    productId: number;
+    rawMaterialId: number;
     type: 'IN' | 'OUT';
     quantity: number;
     price?: number;
@@ -487,7 +487,7 @@ export class RawMaterialService {
     reference?: string;
     notes?: string;
   }) {
-    const product = await this.findRawProduct(data.productId);
+    const product = await this.findRawProduct(data.rawMaterialId);
     const warehouseId = await this.warehouseHelper.getDefaultWarehouseId();
     let stock = await this.stockRepo.findOne({
       where: { product_id: product.id },

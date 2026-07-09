@@ -46,11 +46,11 @@ export class AnalyticsService {
       `);
 
       const totalValue = productsWithStock.reduce(
-        (sum: number, p: any) => sum + Number(p.quantity) * Number(p.selling_price),
+        (sum: number, p: Record<string, any>) => sum + Number(p.quantity) * Number(p.selling_price),
         0,
       );
 
-      const lowStockItems = productsWithStock.filter((p: any) => {
+      const lowStockItems = productsWithStock.filter((p: Record<string, any>) => {
         const qty = Number(p.quantity);
         const min = Number(p.min_stock || 0);
         return qty <= min;

@@ -40,10 +40,32 @@ export class SystemService {
 
       // 2. Re-seed default data
 
-      // Seed roles first (required by user FK constraint)
+      // Seed all roles (required by user FK constraint)
       const roleRepo = queryRunner.manager.getRepository('RoleEntity');
-      const adminRole = roleRepo.create({ id: 1, name: 'admin' });
-      await roleRepo.save(adminRole);
+      const allRoles = [
+        { id: 1, name: 'admin' },
+        { id: 2, name: 'user' },
+        { id: 3, name: 'manager' },
+        { id: 4, name: 'accountant' },
+        { id: 5, name: 'storekeeper' },
+        { id: 6, name: 'worker' },
+        { id: 7, name: 'viewer' },
+      ];
+      for (const r of allRoles) {
+        await roleRepo.save(roleRepo.create(r));
+      }
+      const adminRole = await roleRepo.findOneByOrFail({ id: 1 });
+
+      // Seed all statuses (required by user FK constraint)
+      const statusRepo = queryRunner.manager.getRepository('StatusEntity');
+      const allStatuses = [
+        { id: 1, name: 'active' },
+        { id: 2, name: 'inactive' },
+      ];
+      for (const s of allStatuses) {
+        await statusRepo.save(statusRepo.create(s));
+      }
+      this.logger.log('Statuses created');
 
       // Seed Admin User
       const userRepo = queryRunner.manager.getRepository(User);

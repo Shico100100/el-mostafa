@@ -29,10 +29,18 @@ import type {
   CreateNotificationDto,
 } from './dto';
 
-function getApiUrl(): string {
+function normalizeApiUrl(url: string): string {
+  let normalized = url.replace(/\/+$/, '');
+  if (!normalized.endsWith('/api')) {
+    normalized += '/api';
+  }
+  return normalized;
+}
+
+export function getApiUrl(): string {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('apiBaseUrl');
-    if (stored) return stored.replace(/\/+$/, '');
+    if (stored) return normalizeApiUrl(stored);
   }
   return '/api';
 }
@@ -40,8 +48,9 @@ function getApiUrl(): string {
 let API_URL = getApiUrl();
 
 export function setApiBaseUrl(url: string): void {
-  localStorage.setItem('apiBaseUrl', url.replace(/\/+$/, ''));
-  API_URL = url.replace(/\/+$/, '');
+  const normalized = normalizeApiUrl(url);
+  localStorage.setItem('apiBaseUrl', normalized);
+  API_URL = normalized;
 }
 
 export const api = {

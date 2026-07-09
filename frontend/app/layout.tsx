@@ -7,6 +7,7 @@ import { BackButtonProvider } from "@/components/BackButton";
 import { AuthProvider } from "@/components/AuthProvider";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import GlobalSidebar from "@/components/GlobalSidebar";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +57,7 @@ export default function RootLayout({
           <BackButtonProvider>
             <GlobalSidebar>{children}</GlobalSidebar>
             <ChatbotWidget />
+            <ServiceWorkerRegister />
           </BackButtonProvider>
         </AuthProvider>
       </body>

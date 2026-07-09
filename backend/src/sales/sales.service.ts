@@ -249,7 +249,7 @@ export class SalesService {
     total_amount: number;
     notes?: string;
     order_date?: string;
-    items: any[];
+    items: Array<{ product_id: number; quantity: number; price: number; total: number; warehouse_id?: number }>;
   }) {
     if (!data.customer_id) throw new BadRequestException('معرف العميل مطلوب');
     if (!data.items || data.items.length === 0)
@@ -632,7 +632,7 @@ export class SalesService {
     total_amount: number;
     reason?: string;
     return_date?: string;
-    items: any[];
+    items: Array<{ product_id: number; quantity: number; unit_price: number; total: number }>;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

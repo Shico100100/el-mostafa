@@ -6,26 +6,26 @@ export class AuditLog {
   id: number;
 
   @Column()
-  userId: number;
-
-  @Column()
   action: string;
 
   @Column()
-  entity: string;
+  method: string;
 
-  @Column({ nullable: true })
-  entityId: number;
+  @Column()
+  endpoint: string;
 
-  @Column('jsonb', { nullable: true })
-  before: any;
+  @Column({ type: 'text', nullable: true })
+  payload: string;
 
-  @Column('jsonb', { nullable: true })
-  after: any;
+  @Column({ name: 'entity_id', nullable: true })
+  entityId: string;
 
-  @Column({ nullable: true })
-  ip: string;
+  @Column({ name: 'ip_address', nullable: true })
+  ipAddress: string;
 
-  @CreateDateColumn()
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

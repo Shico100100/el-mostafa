@@ -73,9 +73,56 @@ def get_network_ip():
         return 'localhost'
 
 
+DOCKER_DESKTOP_PATHS = [
+    r"C:\Program Files\Docker\Docker\Docker Desktop.exe",
+]
+
+def _docker_available():
+    """Check if docker CLI responds"""
+    result = subprocess.run(
+        ["docker", "info", "--format", "{{.ServerVersion}}"],
+        capture_output=True, text=True, timeout=10,
+    )
+    return result.returncode == 0
+
+def _start_docker_desktop():
+    """Launch Docker Desktop if not already running"""
+    for dd_path in DOCKER_DESKTOP_PATHS:
+        if os.path.exists(dd_path):
+            print("🔄 Docker Desktop not running — launching...")
+            subprocess.run(
+                ["start", "", dd_path],
+                shell=True, capture_output=True,
+            )
+            return True
+    print("⚠️  Docker Desktop not found at any known path.")
+    print("   Please start Docker Desktop manually.")
+    return False
+
+def _wait_for_docker(max_retries=60):
+    """Wait for the Docker daemon to respond"""
+    start = time.time()
+    print("⏳ Waiting for Docker daemon to be ready...", end="", flush=True)
+    for _ in range(max_retries):
+        if _docker_available():
+            elapsed = time.time() - start
+            print(f" ✅ ({elapsed:.0f}s)")
+            return True
+        time.sleep(2)
+    elapsed = time.time() - start
+    print(f"\n❌ Docker not ready after {elapsed:.0f}s.")
+    return False
+
 def start_docker_db():
     """Start PostgreSQL Docker container if not running"""
     print("🐘 Checking PostgreSQL Docker container...")
+
+    # If Docker isn't running, try to start it
+    if not _docker_available():
+        _start_docker_desktop()
+        if not _wait_for_docker():
+            sys.exit(1)
+
     result = subprocess.run(
         ["docker", "inspect", "-f", "{{.State.Running}}", "backend-postgres-1"],
         capture_output=True, text=True,
@@ -93,7 +140,7 @@ def start_docker_db():
         capture_output=True, text=True,
     )
     if result.returncode != 0:
-        print("❌ Failed to start PostgreSQL. Make sure Docker is running.")
+        print("❌ Failed to start PostgreSQL. Make sure the container exists.")
         print(result.stderr)
         sys.exit(1)
 
@@ -149,7 +196,7 @@ def start_backend():
     env = {**os.environ, "NODE_ENV": "production"}
     env["NODE_NO_WARNINGS"] = "1"
     # Set FRONTEND_DOMAIN to accept both local and network origins
-    env["FRONTEND_DOMAIN"] = f"http://localhost:3000,http://{network_ip}:3000"
+    env["FRONTEND_DOMAIN"] = f"http://localhost:3000,http://localhost,http://{network_ip}:3000"
 
 
     proc = subprocess.Popen(

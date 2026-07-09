@@ -20,6 +20,6 @@ export class AuditService {
   }
 
   async findByEntity(entity: string, entityId: number) {
-    return this.repo.find({ where: { entity, entityId }, order: { createdAt: 'DESC' } });
+    return this.repo.find({ where: { entityId: String(entityId) }, order: { createdAt: 'DESC' } });
   }
 }

@@ -43,3 +43,20 @@ startup.log
 # OS packages
 python-installer.exe
 *.exe
+
+# Python cache
+__pycache__/
+*.pyc
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Graphify output
+graphify-out/
+
+# Local PostgreSQL
+pg16/
+
+# Build output
+dist/
+.next/

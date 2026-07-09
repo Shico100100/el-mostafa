@@ -3,15 +3,17 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-const PUBLIC_PATHS = ['/login'];
+const PUBLIC_PATHS = ['/login', '/login/'];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
+  const normalizedPath = pathname.replace(/\/+$/, '');
+
   useEffect(() => {
-    if (PUBLIC_PATHS.includes(pathname)) {
+    if (PUBLIC_PATHS.includes(normalizedPath)) {
       setReady(true);
       return;
     }
@@ -23,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
-  if (!ready && !PUBLIC_PATHS.includes(pathname)) {
+  if (!ready && !PUBLIC_PATHS.includes(normalizedPath)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="flex flex-col items-center gap-4">

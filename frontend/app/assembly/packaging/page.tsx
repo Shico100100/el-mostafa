@@ -22,8 +22,8 @@ export default function PackagingPage() {
     useEffect(() => {
         api.getProducts()
             .then((data: unknown) => {
-                const items = (data as { products?: Product[] } | Product[]);
-                const list = Array.isArray(items) ? items : items.products || [];
+                const items = data as { data?: Product[] } | Product[];
+                const list = Array.isArray(items) ? items : items?.data || [];
                 setProducts(list);
             })
             .catch(() => setProducts([]))

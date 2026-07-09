@@ -5,12 +5,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Machine } from './entities/machine.entity';
+import { Machine, MachineStatus } from './entities/machine.entity';
+import { MachineMaintenance } from './entities/machine-maintenance.entity';
+import { MoldIssue } from './entities/mold-issue.entity';
+import { FixedCost } from './entities/fixed-cost.entity';
+import { SupplierMaterial } from './entities/supplier-material.entity';
+import { BOM } from './entities/bom.entity';
 import { Mold } from './entities/mold.entity';
 import { DailyProduction } from './entities/daily-production.entity';
 import { ProductionRecordHistory } from './entities/production-record-history.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
-import { BOM } from './entities/bom.entity';
 import { AssemblyOrder } from './entities/assembly-order.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
@@ -62,13 +66,20 @@ export class ManufacturingService {
   async getAllMachines(page = 1, limit = 50) {
     return this.machineService.getAllMachines(page, limit);
   }
-  async getMachinesOverview(filters?: any) {
+  async getMachinesOverview(filters?: {
+    search?: string;
+    status?: MachineStatus;
+    sortBy?: 'name' | 'status' | 'next_maintenance';
+    sortOrder?: 'ASC' | 'DESC';
+    page?: number;
+    limit?: number;
+  }) {
     return this.machineService.getMachinesOverview(filters);
   }
-  async createMachine(data: any) {
+  async createMachine(data: Partial<Machine>) {
     return this.machineService.createMachine(data);
   }
-  async updateMachine(id: number, data: any) {
+  async updateMachine(id: number, data: Partial<Machine>) {
     return this.machineService.updateMachine(id, data);
   }
   async getMachinesWithStatus() {
@@ -77,7 +88,7 @@ export class ManufacturingService {
   async getMachineMaintenance(machineId?: number) {
     return this.machineService.getMachineMaintenance(machineId);
   }
-  async createMaintenance(data: any) {
+  async createMaintenance(data: Partial<MachineMaintenance>) {
     return this.machineService.createMaintenance(data);
   }
   async getMachineHistory(id: number) {
@@ -86,7 +97,7 @@ export class ManufacturingService {
   async exportMachines() {
     return this.machineService.exportMachines();
   }
-  async importMachines(data: any[]) {
+  async importMachines(data: Partial<Machine>[]) {
     return this.machineService.importMachines(data);
   }
 
@@ -94,10 +105,10 @@ export class ManufacturingService {
   async getAllMolds(page = 1, limit = 50) {
     return this.moldService.getAllMolds(page, limit);
   }
-  async createMold(data: any) {
+  async createMold(data: Partial<Mold>) {
     return this.moldService.createMold(data);
   }
-  async updateMold(id: number, data: any) {
+  async updateMold(id: number, data: Partial<Mold>) {
     return this.moldService.updateMold(id, data);
   }
   async syncAllMoldProducts() {
@@ -112,10 +123,10 @@ export class ManufacturingService {
   async getMoldIssues(moldId?: number) {
     return this.moldService.getMoldIssues(moldId);
   }
-  async createMoldIssue(data: any) {
+  async createMoldIssue(data: Partial<MoldIssue>) {
     return this.moldService.createMoldIssue(data);
   }
-  async updateMoldIssue(id: number, data: any) {
+  async updateMoldIssue(id: number, data: Partial<MoldIssue>) {
     return this.moldService.updateMoldIssue(id, data);
   }
   async getMoldStats(moldId: number) {
@@ -130,12 +141,12 @@ export class ManufacturingService {
   async exportMolds() {
     return this.moldService.exportMolds();
   }
-  async importMolds(data: any[]) {
+  async importMolds(data: Partial<Mold>[]) {
     return this.moldService.importMolds(data);
   }
 
   // ==================== DELEGATED FIXED COST METHODS ====================
-  async createFixedCost(data: any) {
+  async createFixedCost(data: Partial<FixedCost>) {
     return this.fixedCostService.createFixedCost(data);
   }
   async getFixedCosts(month?: string, year?: string, page = 1, limit = 50) {
@@ -152,13 +163,13 @@ export class ManufacturingService {
   async getBOMs(page = 1, limit = 50) {
     return this.bomService.getBOMs(page, limit);
   }
-  async createBOM(data: any) {
+  async createBOM(data: Partial<BOM>) {
     return this.bomService.createBOM(data);
   }
   async getBOM(id: number) {
     return this.bomService.getBOM(id);
   }
-  async updateBOM(id: number, data: any) {
+  async updateBOM(id: number, data: Record<string, any>) {
     return this.bomService.updateBOM(id, data);
   }
   async deleteBOM(id: number) {
@@ -173,24 +184,48 @@ export class ManufacturingService {
 
   // ==================== DELEGATED RAW MATERIAL METHODS ====================
   async getRawMaterials() {
-    return this.productRepo.find({ where: { type: 'RAW' } });
+    return this.rawMaterialService.getRawMaterials();
   }
   async getRawMaterial(id: number) {
     return this.rawMaterialService.getRawMaterial(id);
   }
-  async createRawMaterial(data: any) {
+  async createRawMaterial(data: {
+    product_id: number;
+    reorder_point?: number;
+    reorder_quantity?: number;
+    avg_consumption_rate?: number;
+    notes?: string;
+  }) {
     return this.rawMaterialService.createRawMaterial(data);
   }
-  async updateRawMaterial(id: number, data: any) {
+  async updateRawMaterial(id: number, data: {
+    reorder_point?: number;
+    reorder_quantity?: number;
+    avg_consumption_rate?: number;
+    notes?: string;
+  }) {
     return this.rawMaterialService.updateRawMaterial(id, data);
   }
   async deleteRawMaterial(id: number) {
     return this.rawMaterialService.deleteRawMaterial(id);
   }
-  async recordConsumption(data: any) {
+  async recordConsumption(data: {
+    product_id: number;
+    quantity: number;
+    assembly_order_id?: number;
+    production_id?: number;
+    batch_number?: string;
+    notes?: string;
+  }) {
     return this.rawMaterialService.recordConsumption(data);
   }
-  async getConsumptionHistory(filters?: any) {
+  async getConsumptionHistory(filters?: {
+    product_id?: number;
+    start_date?: Date;
+    end_date?: Date;
+    page?: number;
+    limit?: number;
+  }) {
     return this.rawMaterialService.getConsumptionHistory(filters);
   }
   async getLowStockAlerts() {
@@ -202,13 +237,20 @@ export class ManufacturingService {
   async getMaterialSuppliers(rawMaterialId: number) {
     return this.rawMaterialService.getMaterialSuppliers(rawMaterialId);
   }
-  async addSupplierMaterial(data: any) {
+  async addSupplierMaterial(data: Partial<SupplierMaterial>) {
     return this.rawMaterialService.addSupplierMaterial(data);
   }
-  async updateSupplierMaterial(id: number, data: any) {
+  async updateSupplierMaterial(id: number, data: Partial<SupplierMaterial>) {
     return this.rawMaterialService.updateSupplierMaterial(id, data);
   }
-  async addRawMaterialStock(data: any) {
+  async addRawMaterialStock(data: {
+    product_id: number;
+    quantity: number;
+    price?: number;
+    supplier_id?: number;
+    date: Date;
+    notes?: string;
+  }) {
     return this.rawMaterialService.addRawMaterialStock(data);
   }
   async getRawMaterialMovements(rawMaterialId: number) {
@@ -217,13 +259,30 @@ export class ManufacturingService {
   async deleteStockMovement(id: number) {
     return this.rawMaterialService.deleteStockMovement(id);
   }
-  async createStockMovement(data: any) {
+  async createStockMovement(data: {
+    rawMaterialId: number;
+    type: 'IN' | 'OUT';
+    quantity: number;
+    price?: number;
+    date: Date;
+    reference?: string;
+    notes?: string;
+  }) {
     return this.rawMaterialService.createStockMovement(data);
   }
-  async updateStockMovement(id: number, data: any) {
+  async updateStockMovement(id: number, data: {
+    quantity?: number;
+    price?: number;
+    date?: Date;
+    notes?: string;
+  }) {
     return this.rawMaterialService.updateStockMovement(id, data);
   }
-  async getAllStockMovements(filters: any) {
+  async getAllStockMovements(filters: {
+    type?: MovementType;
+    startDate?: Date;
+    endDate?: Date;
+  }) {
     return this.rawMaterialService.getAllStockMovements(filters);
   }
   async recalculateRawMaterialStock(rawMaterialId: number) {
@@ -232,7 +291,7 @@ export class ManufacturingService {
   async exportRawMaterials() {
     return this.rawMaterialService.exportRawMaterials();
   }
-  async importRawMaterials(data: any[]) {
+  async importRawMaterials(data: Record<string, any>[]) {
     return this.rawMaterialService.importRawMaterials(data);
   }
 
@@ -546,8 +605,9 @@ export class ManufacturingService {
           session_id: savedSession.id,
         });
         results.push(record);
-      } catch (err: any) {
-        errors.push({ date: data.end_date, error: err.message });
+      } catch (err) {
+        const error = err as Error;
+        errors.push({ date: data.end_date, error: error.message });
       }
     } else {
       const workingDays = this.getWorkingDaysArray(
@@ -570,8 +630,8 @@ export class ManufacturingService {
             session_id: savedSession.id,
           });
           results.push(record);
-        } catch (err: any) {
-          errors.push({ date: day, error: err.message });
+        } catch (err) {
+          errors.push({ date: day, error: (err as Error).message });
         }
       }
     }
@@ -604,8 +664,8 @@ export class ManufacturingService {
     for (const record of records) {
       try {
         await this.deleteProduction(record.id);
-      } catch (err: any) {
-        errors.push({ id: record.id, error: err.message });
+      } catch (err) {
+        errors.push({ id: record.id, error: (err as Error).message });
       }
     }
     await this.sessionRepo.delete(id);
@@ -947,11 +1007,11 @@ export class ManufacturingService {
     });
   }
 
-  async importProductionHistory(data: any[]) {
+  async importProductionHistory(data: Record<string, any>[]) {
     const results = { success: 0, failed: 0, errors: [] as string[] };
     for (const row of data) {
       try {
-        const prodData: any = {
+        const prodData: Record<string, any> = {
           machine_id: row['Machine ID'],
           mold_id: row['Mold ID'],
           product_id: row['Raw Material ID'],
@@ -988,9 +1048,9 @@ export class ManufacturingService {
         }
         await this.createProduction(prodData);
         results.success++;
-      } catch (err: any) {
+      } catch (err) {
         results.failed++;
-        results.errors.push(`Row ${JSON.stringify(row)}: ${err.message}`);
+        results.errors.push(`Row ${JSON.stringify(row)}: ${(err as Error).message}`);
       }
     }
     return results;

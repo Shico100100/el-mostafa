@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, FindOptionsWhere } from 'typeorm';
 import { EmployeeProfile } from './entities/employee-profile.entity';
 import { SalaryPayment } from './entities/salary-payment.entity';
 import {
@@ -112,7 +112,7 @@ export class PayrollService {
   }
 
   async getPayments(month?: string) {
-    const where: any = {};
+    const where: FindOptionsWhere<SalaryPayment> = {};
     if (month) where.month = month;
     return this.paymentRepo.find({
       where,

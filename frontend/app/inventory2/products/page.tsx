@@ -39,7 +39,7 @@ function ProductsPageContent() {
   const [boms, setBoms] = useState<BOM[]>([]);
 
   useEffect(() => {
-    api.fetchWithAuth<BOM[]>('/manufacturing/boms').then((d) => setBoms(d || [])).catch(() => {});
+    api.fetchWithAuth<{ items: BOM[] }>('/manufacturing/boms').then((d) => setBoms(d?.items || [])).catch(() => {});
   }, []);
 
   const statsCards = [

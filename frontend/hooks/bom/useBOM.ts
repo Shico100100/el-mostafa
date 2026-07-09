@@ -45,7 +45,7 @@ export function useBOM() {
         api.getProducts(),
         api.getProducts('SEMI_FINISHED'),
       ]);
-      setBoms(bomsData || []);
+      setBoms(bomsData?.items || bomsData || []);
       const merged = [...(defaultProducts || []), ...(semiFinished || [])];
       setProducts(merged);
     } catch (error) {

@@ -8,9 +8,11 @@ import { SupplierPayment } from './entities/supplier-payment.entity';
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
 import { Container } from './entities/container.entity';
+import { Currency } from './entities/currency.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
+import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
 import { SupplierService } from './suppliers/supplier.service';
@@ -302,7 +304,7 @@ export class PurchasesService {
     notes?: string;
     order_date?: string;
     invoice_number?: string;
-    items: any[];
+    items: Array<{ product_id: number; quantity: number; price: number; total: number }>;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -332,7 +334,7 @@ export class PurchasesService {
           {
             product_id: item.product_id,
             warehouse_id: 1,
-            type: 'IN' as any,
+            type: MovementType.IN,
             quantity: item.quantity,
             notes: `شراء - أمر رقم ${savedOrder.id}`,
             date: savedOrder.order_date,
@@ -377,7 +379,7 @@ export class PurchasesService {
       notes?: string;
       order_date?: string;
       invoice_number?: string;
-      items?: any[];
+      items?: Array<{ product_id: number; quantity: number; price: number; total: number }>;
     },
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -385,7 +387,7 @@ export class PurchasesService {
     await queryRunner.startTransaction();
 
     try {
-      const updateData: any = {};
+      const updateData: Partial<PurchaseOrder> = {};
       if (data.supplier_id !== undefined)
         updateData.supplier_id = data.supplier_id;
       if (data.total_amount !== undefined)
@@ -410,7 +412,7 @@ export class PurchasesService {
             {
               product_id: oldItem.product_id,
               warehouse_id: 1,
-              type: 'OUT' as any,
+              type: MovementType.OUT,
               quantity: oldItem.quantity,
               notes: `تعديل أمر شراء - عكس أمر رقم ${id}`,
             },
@@ -435,7 +437,7 @@ export class PurchasesService {
             {
               product_id: item.product_id,
               warehouse_id: 1,
-              type: 'IN' as any,
+              type: MovementType.IN,
               quantity: item.quantity,
               notes: `تعديل أمر شراء - أمر رقم ${id}`,
             },
@@ -486,7 +488,7 @@ export class PurchasesService {
           {
             product_id: item.product_id,
             warehouse_id: 1,
-            type: 'OUT' as any,
+            type: MovementType.OUT,
             quantity: item.quantity,
             notes: `حذف أمر شراء - عكس أمر رقم ${id}`,
           },
@@ -553,7 +555,7 @@ export class PurchasesService {
     total_amount: number;
     reason?: string;
     return_date?: string;
-    items: any[];
+    items: Array<{ product_id: number; quantity: number; unit_price: number; total: number }>;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -586,7 +588,7 @@ export class PurchasesService {
           {
             product_id: item.product_id,
             warehouse_id: 1,
-            type: 'OUT' as any,
+            type: MovementType.OUT,
             quantity: item.quantity,
             notes: `مرتجع مشتريات - رقم ${savedReturn.id}`,
             date: savedReturn.return_date,
@@ -622,11 +624,11 @@ export class PurchasesService {
     return this.currencyService.getAllCurrencies();
   }
 
-  async createCurrency(data: Partial<any>) {
+  async createCurrency(data: Partial<Currency>) {
     return this.currencyService.createCurrency(data);
   }
 
-  async updateCurrency(id: number, data: Partial<any>) {
+  async updateCurrency(id: number, data: Partial<Currency>) {
     return this.currencyService.updateCurrency(id, data);
   }
 
@@ -638,7 +640,13 @@ export class PurchasesService {
     return this.currencyService.getFxRates(currencyId);
   }
 
-  async addFxRate(data: any) {
+  async addFxRate(data: {
+    currency_id: number;
+    rate_to_egp: number;
+    amount_paid?: number;
+    notes?: string;
+    rate_date: string;
+  }) {
     return this.currencyService.addFxRate(data);
   }
 
@@ -656,11 +664,11 @@ export class PurchasesService {
     return this.containerService.getContainer(id);
   }
 
-  async createContainer(data: Partial<any>) {
+  async createContainer(data: Partial<Container>) {
     return this.containerService.createContainer(data);
   }
 
-  async updateContainer(id: number, data: Partial<any>) {
+  async updateContainer(id: number, data: Partial<Container>) {
     return this.containerService.updateContainer(id, data);
   }
 

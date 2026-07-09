@@ -44,3 +44,9 @@ Task 2: complete (commits 723c283..fe66192, review clean)
 Task 3: complete (commits fe66192..636b32f, review clean)
 
 Task 4: complete (commits 636b32f..2349ce3, review clean)
+
+Task 1 (Capacitor): complete (commits 6858f68..72d7e8c, review clean)
+Task 2 (Capacitor): complete (commits 72d7e8c..202c1df, review clean)
+Task 3 (Capacitor): complete (commits 202c1df..61e634e, review clean)
+Task 4 (Capacitor): complete (commits 61e634e..1508401, review clean)
+Task 5 (Capacitor): complete (commits 1508401..3fe8ce1, review pending)
