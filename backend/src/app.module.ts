@@ -25,9 +25,6 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { MongooseConfigService } from './database/mongoose-config.service';
-import { DatabaseConfig } from './database/config/database-config.type';
 import { InventoryModule } from './inventory/inventory.module';
 import { SalesModule } from './sales/sales.module';
 import { PurchasesModule } from './purchases/purchases.module';
@@ -43,9 +40,7 @@ import { SearchModule } from './search/search.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MetricsInterceptor } from './metrics/metrics.interceptor';
-import { SentryModule } from './sentry/sentry.module';
-import { SentryInterceptor } from './sentry/sentry.interceptor';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
@@ -53,20 +48,7 @@ import { CommonModule } from './common/common.module';
 import { CacheModule } from './cache/cache.module';
 import { CurrencyModule } from './currency/currency.module';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
-
-// <database-block>
-const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
-  .isDocumentDatabase
-  ? MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
-    })
-  : TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options: DataSourceOptions) => {
-        return new DataSource(options).initialize();
-      },
-    });
-// </database-block>
+import { AllExceptionsFilter } from './utils/exception-filter';
 
 @Module({
   imports: [
@@ -84,7 +66,12 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       ],
       envFilePath: ['.env'],
     }),
-    infrastructureDatabaseModule,
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options: DataSourceOptions) => {
+        return new DataSource(options).initialize();
+      },
+    }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     ScheduleModule.forRoot(),
     I18nModule.forRootAsync({
@@ -135,15 +122,14 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     HealthModule,
     CommonModule,
     CacheModule,
-    SentryModule,
     MetricsModule,
     DocumentsModule,
     CurrencyModule,
   ],
   providers: [
     {
-      provide: APP_INTERCEPTOR,
-      useClass: SentryInterceptor,
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
     {
       provide: APP_INTERCEPTOR,

@@ -400,18 +400,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a production record' })
   @ApiResponse({ status: 201, description: 'Production record created' })
   async createProduction(@Body() data: CreateDailyProductionDto) {
-    try {
-      return await this.manufacturingService.createProduction(data);
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('❌ createProduction failed:', message);
-      throw new InternalServerErrorException(
-        error instanceof Error ? error.message : 'Failed to create production',
-      );
-    }
+    return await this.manufacturingService.createProduction(data);
   }
 
   @Roles(RoleEnum.admin, RoleEnum.manager, RoleEnum.worker)
@@ -422,16 +411,10 @@ export class ManufacturingController {
     @Body() data: CreateRangeProductionDto,
     @Req() req: any,
   ) {
-    try {
-      return await this.manufacturingService.createRangeProduction({
-        ...data,
-        user_id: req.user?.id,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('❌ createRangeProduction failed:', message);
-      throw new InternalServerErrorException(message);
-    }
+    return await this.manufacturingService.createRangeProduction({
+      ...data,
+      user_id: req.user?.id,
+    });
   }
 
   @Get('production/sessions')
@@ -658,18 +641,11 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: AddRawMaterialStockDto,
   ) {
-    try {
-      return await this.manufacturingService.addRawMaterialStock({
-        ...data,
-        product_id: +id,
-        date: data.date ? new Date(data.date) : new Date(),
-      });
-    } catch (err: any) {
-      this.logger.error('[addRawMaterialStock] Error:', err?.message || err);
-      throw new BadRequestException(
-        err?.message || 'Failed to add raw material stock',
-      );
-    }
+    return await this.manufacturingService.addRawMaterialStock({
+      ...data,
+      product_id: +id,
+      date: data.date ? new Date(data.date) : new Date(),
+    });
   }
 
   // Get material movements
