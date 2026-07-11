@@ -22,6 +22,12 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import type { Response, Request } from 'express';
 import { ManufacturingService } from './manufacturing.service';
+import { MachineService } from './machines/machine.service';
+import { MoldService } from './mold.service';
+import { FixedCostService } from './fixed-cost.service';
+import { BOMService } from './bom.service';
+import { RawMaterialService } from './raw-material.service';
+import { DailyProductionService } from './daily-production.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { sheetToJson } from '../utils/excel-export';
 import { Public } from '../auth/public.decorator';
@@ -55,7 +61,15 @@ import { MovementType } from '../inventory/entities/stock-movement.entity';
 export class ManufacturingController {
   private readonly logger = new Logger(ManufacturingController.name);
 
-  constructor(private manufacturingService: ManufacturingService) {}
+  constructor(
+    private manufacturingService: ManufacturingService,
+    private machineService: MachineService,
+    private moldService: MoldService,
+    private fixedCostService: FixedCostService,
+    private bomService: BOMService,
+    private rawMaterialService: RawMaterialService,
+    private dailyProductionService: DailyProductionService,
+  ) {}
 
   // ==================== IMPORT / EXPORT (Moved to Top) ====================
 
@@ -71,7 +85,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Export machines to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportMachines(@Res() res: Response) {
-    const buffer = await this.manufacturingService.exportMachines();
+    const buffer = await this.machineService.exportMachines();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -91,7 +105,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importMachines(data as any[]);
+    return this.machineService.importMachines(data as any[]);
   }
 
   @Public()
@@ -99,7 +113,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Export molds to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportMolds(@Res() res: Response) {
-    const buffer = await this.manufacturingService.exportMolds();
+    const buffer = await this.moldService.exportMolds();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -119,7 +133,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importMolds(data as any[]);
+    return this.moldService.importMolds(data as any[]);
   }
 
   @Public()
@@ -127,7 +141,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Export raw materials to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportRawMaterials(@Res() res: Response) {
-    const buffer = await this.manufacturingService.exportRawMaterials();
+    const buffer = await this.rawMaterialService.exportRawMaterials();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -147,7 +161,7 @@ export class ManufacturingController {
     } catch {
       throw new BadRequestException('ملف Excel غير صالح');
     }
-    return this.manufacturingService.importRawMaterials(data as any[]);
+    return this.rawMaterialService.importRawMaterials(data as any[]);
   }
 
   // Upload Image
@@ -175,12 +189,12 @@ export class ManufacturingController {
   // History
   @Get('machines/:id/history')
   getMachineHistory(@Param('id') id: string) {
-    return this.manufacturingService.getMachineHistory(+id);
+    return this.machineService.getMachineHistory(+id);
   }
 
   @Get('molds/:id/history')
   getMoldHistory(@Param('id') id: string) {
-    return this.manufacturingService.getMoldHistory(+id);
+    return this.moldService.getMoldHistory(+id);
   }
 
   // BOMs
@@ -191,7 +205,7 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.manufacturingService.getBOMs(
+    return this.bomService.getBOMs(
       page ? +page : 1,
       limit ? +limit : 50,
     );
@@ -201,28 +215,28 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a BOM' })
   @ApiResponse({ status: 201, description: 'BOM created' })
   createBOM(@Body() data: CreateBOMDto) {
-    return this.manufacturingService.createBOM(data as unknown as Partial<BOM>);
+    return this.bomService.createBOM(data as unknown as Partial<BOM>);
   }
 
   @Get('boms/:id')
   @ApiOperation({ summary: 'Get a BOM by ID' })
   @ApiResponse({ status: 200, description: 'Returns the BOM' })
   getBOM(@Param('id') id: string) {
-    return this.manufacturingService.getBOM(+id);
+    return this.bomService.getBOM(+id);
   }
 
   @Put('boms/:id')
   @ApiOperation({ summary: 'Update a BOM' })
   @ApiResponse({ status: 200, description: 'BOM updated' })
   updateBOM(@Param('id') id: string, @Body() data: CreateBOMDto) {
-    return this.manufacturingService.updateBOM(+id, data);
+    return this.bomService.updateBOM(+id, data);
   }
 
   @Delete('boms/:id')
   @ApiOperation({ summary: 'Delete a BOM' })
   @ApiResponse({ status: 200, description: 'BOM deleted' })
   deleteBOM(@Param('id') id: string) {
-    return this.manufacturingService.deleteBOM(+id);
+    return this.bomService.deleteBOM(+id);
   }
 
   // Assembly
@@ -245,7 +259,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get machines with current status' })
   @ApiResponse({ status: 200, description: 'Returns machine statuses' })
   getMachinesStatus() {
-    return this.manufacturingService.getMachinesWithStatus();
+    return this.machineService.getMachinesWithStatus();
   }
 
   @Get('machines')
@@ -255,7 +269,7 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.manufacturingService.getAllMachines(
+    return this.machineService.getAllMachines(
       page ? +page : 1,
       limit ? +limit : 50,
     );
@@ -272,7 +286,7 @@ export class ManufacturingController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.manufacturingService.getMachinesOverview({
+    return this.machineService.getMachinesOverview({
       search,
       status: status as MachineStatus,
       sortBy,
@@ -286,14 +300,14 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a machine' })
   @ApiResponse({ status: 201, description: 'Machine created' })
   createMachine(@Body() data: CreateMachineDto) {
-    return this.manufacturingService.createMachine(data);
+    return this.machineService.createMachine(data);
   }
 
   @Put('machines/:id')
   @ApiOperation({ summary: 'Update a machine' })
   @ApiResponse({ status: 200, description: 'Machine updated' })
   updateMachine(@Param('id') id: string, @Body() data: CreateMachineDto) {
-    return this.manufacturingService.updateMachine(+id, data);
+    return this.machineService.updateMachine(+id, data);
   }
 
   // Maintenance
@@ -301,7 +315,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get maintenance records' })
   @ApiResponse({ status: 200, description: 'Returns maintenance records' })
   getMaintenance(@Query('machine_id') machineId?: string) {
-    return this.manufacturingService.getMachineMaintenance(
+    return this.machineService.getMachineMaintenance(
       machineId ? +machineId : undefined,
     );
   }
@@ -310,7 +324,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a maintenance record' })
   @ApiResponse({ status: 201, description: 'Maintenance record created' })
   createMaintenance(@Body() data: CreateMaintenanceDto) {
-    return this.manufacturingService.createMaintenance(data);
+    return this.machineService.createMaintenance(data);
   }
 
   // Molds
@@ -321,7 +335,7 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.manufacturingService.getAllMolds(
+    return this.moldService.getAllMolds(
       page ? +page : 1,
       limit ? +limit : 50,
     );
@@ -331,52 +345,52 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a mold' })
   @ApiResponse({ status: 201, description: 'Mold created' })
   createMold(@Body() data: CreateMoldDto) {
-    return this.manufacturingService.createMold(data);
+    return this.moldService.createMold(data);
   }
 
   @Put('molds/:id')
   @ApiOperation({ summary: 'Update a mold' })
   @ApiResponse({ status: 200, description: 'Mold updated' })
   updateMold(@Param('id') id: string, @Body() data: CreateMoldDto) {
-    return this.manufacturingService.updateMold(+id, data);
+    return this.moldService.updateMold(+id, data);
   }
 
   @Post('sync-molds')
   syncAllMoldProducts() {
-    return this.manufacturingService.syncAllMoldProducts();
+    return this.moldService.syncAllMoldProducts();
   }
 
   @Post('recalculate-semi-finished-costs')
   recalculateSemiFinishedCosts() {
-    return this.manufacturingService.recalculateSemiFinishedCosts();
+    return this.moldService.recalculateSemiFinishedCosts();
   }
 
   @Get('semi-finished-products/:id/details')
   getSemiFinishedDetails(@Param('id') id: string) {
-    return this.manufacturingService.getSemiFinishedDetails(+id);
+    return this.moldService.getSemiFinishedDetails(+id);
   }
 
   // Mold Issues
   @Get('mold-issues')
   getMoldIssues(@Query('mold_id') moldId?: string) {
-    return this.manufacturingService.getMoldIssues(
+    return this.moldService.getMoldIssues(
       moldId ? +moldId : undefined,
     );
   }
 
   @Post('mold-issues')
   createMoldIssue(@Body() data: CreateMoldIssueDto) {
-    return this.manufacturingService.createMoldIssue(data);
+    return this.moldService.createMoldIssue(data);
   }
 
   @Put('mold-issues/:id')
   updateMoldIssue(@Param('id') id: string, @Body() data: CreateMoldIssueDto) {
-    return this.manufacturingService.updateMoldIssue(+id, data);
+    return this.moldService.updateMoldIssue(+id, data);
   }
 
   @Get('molds/:id/stats')
   getMoldStats(@Param('id') id: string) {
-    return this.manufacturingService.getMoldStats(+id);
+    return this.moldService.getMoldStats(+id);
   }
 
   // Production
@@ -388,7 +402,7 @@ export class ManufacturingController {
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
   ) {
-    return this.manufacturingService.getDailyProduction(
+    return this.dailyProductionService.getDailyProduction(
       date,
       startDate,
       endDate,
@@ -425,7 +439,7 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.manufacturingService.getRangeSessions(
+    return this.dailyProductionService.getRangeSessions(
       page ? +page : 1,
       limit ? +limit : 20,
     );
@@ -435,7 +449,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get a range production session by ID' })
   @ApiResponse({ status: 200, description: 'Returns the session' })
   getRangeSession(@Param('id') id: string) {
-    return this.manufacturingService.getRangeSessionById(+id);
+    return this.dailyProductionService.getRangeSessionById(+id);
   }
 
   @Delete('production/sessions/:id')
@@ -449,7 +463,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get production history by ID' })
   @ApiResponse({ status: 200, description: 'Returns production history' })
   getProductionHistory(@Param('id') id: string) {
-    return this.manufacturingService.getProductionHistory(+id);
+    return this.dailyProductionService.getProductionHistory(+id);
   }
 
   @Put('production/:id')
@@ -474,7 +488,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Export production history to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportProductionHistory(@Res() res: Response) {
-    const buffer = await this.manufacturingService.exportProductionHistory();
+    const buffer = await this.dailyProductionService.exportProductionHistory();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -499,7 +513,7 @@ export class ManufacturingController {
 
   @Get('machines/:id/last-mold')
   getLastMold(@Param('id') id: string) {
-    return this.manufacturingService.getLastMoldForMachine(+id);
+    return this.moldService.getLastMoldForMachine(+id);
   }
 
   // ==================== RAW MATERIALS ====================
@@ -509,7 +523,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get all raw materials' })
   @ApiResponse({ status: 200, description: 'Returns all raw materials' })
   getRawMaterials() {
-    return this.manufacturingService.getRawMaterials();
+    return this.rawMaterialService.getRawMaterials();
   }
 
   // Get single raw material
@@ -517,7 +531,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get a raw material by ID' })
   @ApiResponse({ status: 200, description: 'Returns the raw material' })
   getRawMaterial(@Param('id') id: string) {
-    return this.manufacturingService.getRawMaterial(+id);
+    return this.rawMaterialService.getRawMaterial(+id);
   }
 
   // Create raw material
@@ -525,7 +539,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a raw material' })
   @ApiResponse({ status: 201, description: 'Raw material created' })
   createRawMaterial(@Body() data: CreateRawMaterialDto) {
-    return this.manufacturingService.createRawMaterial(data);
+    return this.rawMaterialService.createRawMaterial(data);
   }
 
   // Update raw material
@@ -536,7 +550,7 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: CreateRawMaterialDto,
   ) {
-    return this.manufacturingService.updateRawMaterial(+id, data);
+    return this.rawMaterialService.updateRawMaterial(+id, data);
   }
 
   // Delete raw material
@@ -544,7 +558,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Delete a raw material' })
   @ApiResponse({ status: 200, description: 'Raw material deleted' })
   deleteRawMaterial(@Param('id') id: string) {
-    return this.manufacturingService.deleteRawMaterial(+id);
+    return this.rawMaterialService.deleteRawMaterial(+id);
   }
 
   // Get consumption history
@@ -570,7 +584,7 @@ export class ManufacturingController {
     if (endDate) filters.end_date = new Date(endDate);
     filters.page = page ? +page : 1;
     filters.limit = limit ? +limit : 50;
-    return this.manufacturingService.getConsumptionHistory(filters);
+    return this.rawMaterialService.getConsumptionHistory(filters);
   }
 
   // Record consumption
@@ -578,7 +592,7 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Record raw material consumption' })
   @ApiResponse({ status: 201, description: 'Consumption recorded' })
   recordConsumption(@Body() data: RecordConsumptionDto) {
-    return this.manufacturingService.recordConsumption(data);
+    return this.rawMaterialService.recordConsumption(data);
   }
 
   // Get low stock alerts
@@ -586,19 +600,19 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Get low stock alerts' })
   @ApiResponse({ status: 200, description: 'Returns low stock alerts' })
   getLowStockAlerts() {
-    return this.manufacturingService.getLowStockAlerts();
+    return this.rawMaterialService.getLowStockAlerts();
   }
 
   // Get supplier materials
   @Get('suppliers/:id/materials')
   getSupplierMaterials(@Param('id') id: string) {
-    return this.manufacturingService.getSupplierMaterials(+id);
+    return this.rawMaterialService.getSupplierMaterials(+id);
   }
 
   // Get material suppliers
   @Get('raw-materials/:id/suppliers')
   getMaterialSuppliers(@Param('id') id: string) {
-    return this.manufacturingService.getMaterialSuppliers(+id);
+    return this.rawMaterialService.getMaterialSuppliers(+id);
   }
 
   // Add supplier to material
@@ -607,7 +621,7 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: CreateSupplierMaterialDto,
   ) {
-    return this.manufacturingService.addSupplierMaterial({
+    return this.rawMaterialService.addSupplierMaterial({
       ...data,
       product_id: +id,
     });
@@ -619,7 +633,7 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: CreateSupplierMaterialDto,
   ) {
-    return this.manufacturingService.updateSupplierMaterial(+id, data);
+    return this.rawMaterialService.updateSupplierMaterial(+id, data);
   }
 
   // Calculate production cost
@@ -628,16 +642,16 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Query('quantity') quantity?: string,
   ) {
-    return this.manufacturingService.calculateProductionCost(
+    return this.bomService.calculateProductionCost(
       +id,
       quantity ? +quantity : 1,
     );
   }
 
-  // BOM Explosion: تفجير المكونات مع الأوزان والمواصفات
+  // BOM Explosion
   @Get('boms/:id/explode')
   explodeBOM(@Param('id') id: string, @Query('quantity') quantity?: string) {
-    return this.manufacturingService.explodeBOM(+id, quantity ? +quantity : 1);
+    return this.bomService.explodeBOM(+id, quantity ? +quantity : 1);
   }
 
   // Add stock to raw material
@@ -648,7 +662,7 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: AddRawMaterialStockDto,
   ) {
-    return await this.manufacturingService.addRawMaterialStock({
+    return await this.rawMaterialService.addRawMaterialStock({
       ...data,
       product_id: +id,
       date: data.date ? new Date(data.date) : new Date(),
@@ -658,12 +672,12 @@ export class ManufacturingController {
   // Get material movements
   @Get('raw-materials/:id/movements')
   getRawMaterialMovements(@Param('id') id: string) {
-    return this.manufacturingService.getRawMaterialMovements(+id);
+    return this.rawMaterialService.getRawMaterialMovements(+id);
   }
   // Delete material movement
   @Delete('stock-movements/:id')
   deleteStockMovement(@Param('id') id: string) {
-    return this.manufacturingService.deleteStockMovement(+id);
+    return this.rawMaterialService.deleteStockMovement(+id);
   }
 
   // Get all movements (log)
@@ -675,7 +689,7 @@ export class ManufacturingController {
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
   ) {
-    return this.manufacturingService.getAllStockMovements({
+    return this.rawMaterialService.getAllStockMovements({
       type: type as MovementType,
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
@@ -688,13 +702,13 @@ export class ManufacturingController {
     @Param('id') id: string,
     @Body() data: Partial<CreateManufacturingStockMovementDto>,
   ) {
-    return this.manufacturingService.updateStockMovement(+id, data);
+    return this.rawMaterialService.updateStockMovement(+id, data);
   }
 
-  // Create stock movement (for OUT movements like consumption)
+  // Create stock movement
   @Post('stock-movements')
   createStockMovement(@Body() data: CreateManufacturingStockMovementDto) {
-    return this.manufacturingService.createStockMovement(data);
+    return this.rawMaterialService.createStockMovement(data);
   }
 
   // ==================== FIXED COSTS ====================
@@ -707,7 +721,7 @@ export class ManufacturingController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.manufacturingService.getFixedCosts(
+    return this.fixedCostService.getFixedCosts(
       month,
       year,
       page ? +page : 1,
@@ -719,20 +733,20 @@ export class ManufacturingController {
   @ApiOperation({ summary: 'Create a fixed cost' })
   @ApiResponse({ status: 201, description: 'Fixed cost created' })
   createFixedCost(@Body() data: CreateFixedCostDto) {
-    return this.manufacturingService.createFixedCost(data);
+    return this.fixedCostService.createFixedCost(data);
   }
   @Delete('fixed-costs/:id')
   deleteFixedCost(@Param('id') id: string) {
-    return this.manufacturingService.deleteFixedCost(+id);
+    return this.fixedCostService.deleteFixedCost(+id);
   }
 
   @Get('overhead-rate')
   getOverheadRate(@Query('month') month: string) {
-    return this.manufacturingService.calculateOverheadRate(month);
+    return this.fixedCostService.calculateOverheadRate(month);
   }
 
   @Post('raw-materials/:id/recalculate')
   recalculateStock(@Param('id') id: string) {
-    return this.manufacturingService.recalculateRawMaterialStock(+id);
+    return this.rawMaterialService.recalculateRawMaterialStock(+id);
   }
 }

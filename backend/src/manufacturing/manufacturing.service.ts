@@ -5,11 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Machine, MachineStatus } from './entities/machine.entity';
-import { MachineMaintenance } from './entities/machine-maintenance.entity';
-import { MoldIssue } from './entities/mold-issue.entity';
-import { FixedCost } from './entities/fixed-cost.entity';
-import { SupplierMaterial } from './entities/supplier-material.entity';
+import { Machine } from './entities/machine.entity';
 import { BOM } from './entities/bom.entity';
 import { Mold } from './entities/mold.entity';
 import { DailyProduction } from './entities/daily-production.entity';
@@ -23,25 +19,15 @@ import {
   MovementType,
 } from '../inventory/entities/stock-movement.entity';
 import { AccountingService } from '../accounting/accounting.service';
-import { MachineService } from './machines/machine.service';
-import { MoldService } from './mold.service';
 import { FixedCostService } from './fixed-cost.service';
-import { BOMService } from './bom.service';
-import { RawMaterialService } from './raw-material.service';
-import { DailyProductionService } from './daily-production.service';
 import { WarehouseHelper } from './warehouse.helper';
 
 @Injectable()
 export class ManufacturingService {
   constructor(
-    private machineService: MachineService,
-    private moldService: MoldService,
-    private fixedCostService: FixedCostService,
-    private bomService: BOMService,
-    private rawMaterialService: RawMaterialService,
-    private dailyProductionService: DailyProductionService,
     private warehouseHelper: WarehouseHelper,
     private accountingService: AccountingService,
+    private fixedCostService: FixedCostService,
     private dataSource: DataSource,
 
     @InjectRepository(DailyProduction)
@@ -61,264 +47,6 @@ export class ManufacturingService {
     @InjectRepository(Machine)
     private machineRepo: Repository<Machine>,
   ) {}
-
-  // ==================== DELEGATED MACHINE METHODS ====================
-  async getAllMachines(page = 1, limit = 50) {
-    return this.machineService.getAllMachines(page, limit);
-  }
-  async getMachinesOverview(filters?: {
-    search?: string;
-    status?: MachineStatus;
-    sortBy?: 'name' | 'status' | 'next_maintenance';
-    sortOrder?: 'ASC' | 'DESC';
-    page?: number;
-    limit?: number;
-  }) {
-    return this.machineService.getMachinesOverview(filters);
-  }
-  async createMachine(data: Partial<Machine>) {
-    return this.machineService.createMachine(data);
-  }
-  async updateMachine(id: number, data: Partial<Machine>) {
-    return this.machineService.updateMachine(id, data);
-  }
-  async getMachinesWithStatus() {
-    return this.machineService.getMachinesWithStatus();
-  }
-  async getMachineMaintenance(machineId?: number) {
-    return this.machineService.getMachineMaintenance(machineId);
-  }
-  async createMaintenance(data: Partial<MachineMaintenance>) {
-    return this.machineService.createMaintenance(data);
-  }
-  async getMachineHistory(id: number) {
-    return this.machineService.getMachineHistory(id);
-  }
-  async exportMachines() {
-    return this.machineService.exportMachines();
-  }
-  async importMachines(data: Partial<Machine>[]) {
-    return this.machineService.importMachines(data);
-  }
-
-  // ==================== DELEGATED MOLD METHODS ====================
-  async getAllMolds(page = 1, limit = 50) {
-    return this.moldService.getAllMolds(page, limit);
-  }
-  async createMold(data: Partial<Mold>) {
-    return this.moldService.createMold(data);
-  }
-  async updateMold(id: number, data: Partial<Mold>) {
-    return this.moldService.updateMold(id, data);
-  }
-  async syncAllMoldProducts() {
-    return this.moldService.syncAllMoldProducts();
-  }
-  async getSemiFinishedDetails(productId: number) {
-    return this.moldService.getSemiFinishedDetails(productId);
-  }
-  async recalculateSemiFinishedCosts() {
-    return this.moldService.recalculateSemiFinishedCosts();
-  }
-  async getMoldIssues(moldId?: number) {
-    return this.moldService.getMoldIssues(moldId);
-  }
-  async createMoldIssue(data: Partial<MoldIssue>) {
-    return this.moldService.createMoldIssue(data);
-  }
-  async updateMoldIssue(id: number, data: Partial<MoldIssue>) {
-    return this.moldService.updateMoldIssue(id, data);
-  }
-  async getMoldStats(moldId: number) {
-    return this.moldService.getMoldStats(moldId);
-  }
-  async getMoldHistory(moldId: number) {
-    return this.moldService.getMoldHistory(moldId);
-  }
-  async getLastMoldForMachine(machineId: number) {
-    return this.moldService.getLastMoldForMachine(machineId);
-  }
-  async exportMolds() {
-    return this.moldService.exportMolds();
-  }
-  async importMolds(data: Partial<Mold>[]) {
-    return this.moldService.importMolds(data);
-  }
-
-  // ==================== DELEGATED FIXED COST METHODS ====================
-  async createFixedCost(data: Partial<FixedCost>) {
-    return this.fixedCostService.createFixedCost(data);
-  }
-  async getFixedCosts(month?: string, year?: string, page = 1, limit = 50) {
-    return this.fixedCostService.getFixedCosts(month, year, page, limit);
-  }
-  async deleteFixedCost(id: number) {
-    return this.fixedCostService.deleteFixedCost(id);
-  }
-  async calculateOverheadRate(month: string) {
-    return this.fixedCostService.calculateOverheadRate(month);
-  }
-
-  // ==================== DELEGATED BOM METHODS ====================
-  async getBOMs(page = 1, limit = 50) {
-    return this.bomService.getBOMs(page, limit);
-  }
-  async createBOM(data: Partial<BOM>) {
-    return this.bomService.createBOM(data);
-  }
-  async getBOM(id: number) {
-    return this.bomService.getBOM(id);
-  }
-  async updateBOM(id: number, data: Record<string, any>) {
-    return this.bomService.updateBOM(id, data);
-  }
-  async deleteBOM(id: number) {
-    return this.bomService.deleteBOM(id);
-  }
-  async calculateProductionCost(bomId: number, quantity: number) {
-    return this.bomService.calculateProductionCost(bomId, quantity);
-  }
-  async explodeBOM(bomId: number, quantity: number) {
-    return this.bomService.explodeBOM(bomId, quantity);
-  }
-
-  // ==================== DELEGATED RAW MATERIAL METHODS ====================
-  async getRawMaterials() {
-    return this.rawMaterialService.getRawMaterials();
-  }
-  async getRawMaterial(id: number) {
-    return this.rawMaterialService.getRawMaterial(id);
-  }
-  async createRawMaterial(data: {
-    product_id: number;
-    reorder_point?: number;
-    reorder_quantity?: number;
-    avg_consumption_rate?: number;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.createRawMaterial(data);
-  }
-  async updateRawMaterial(id: number, data: {
-    reorder_point?: number;
-    reorder_quantity?: number;
-    avg_consumption_rate?: number;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.updateRawMaterial(id, data);
-  }
-  async deleteRawMaterial(id: number) {
-    return this.rawMaterialService.deleteRawMaterial(id);
-  }
-  async recordConsumption(data: {
-    product_id: number;
-    quantity: number;
-    assembly_order_id?: number;
-    production_id?: number;
-    batch_number?: string;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.recordConsumption(data);
-  }
-  async getConsumptionHistory(filters?: {
-    product_id?: number;
-    start_date?: Date;
-    end_date?: Date;
-    page?: number;
-    limit?: number;
-  }) {
-    return this.rawMaterialService.getConsumptionHistory(filters);
-  }
-  async getLowStockAlerts() {
-    return this.rawMaterialService.getLowStockAlerts();
-  }
-  async getSupplierMaterials(supplierId: number) {
-    return this.rawMaterialService.getSupplierMaterials(supplierId);
-  }
-  async getMaterialSuppliers(rawMaterialId: number) {
-    return this.rawMaterialService.getMaterialSuppliers(rawMaterialId);
-  }
-  async addSupplierMaterial(data: Partial<SupplierMaterial>) {
-    return this.rawMaterialService.addSupplierMaterial(data);
-  }
-  async updateSupplierMaterial(id: number, data: Partial<SupplierMaterial>) {
-    return this.rawMaterialService.updateSupplierMaterial(id, data);
-  }
-  async addRawMaterialStock(data: {
-    product_id: number;
-    quantity: number;
-    price?: number;
-    supplier_id?: number;
-    date: Date;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.addRawMaterialStock(data);
-  }
-  async getRawMaterialMovements(rawMaterialId: number) {
-    return this.rawMaterialService.getRawMaterialMovements(rawMaterialId);
-  }
-  async deleteStockMovement(id: number) {
-    return this.rawMaterialService.deleteStockMovement(id);
-  }
-  async createStockMovement(data: {
-    rawMaterialId: number;
-    type: 'IN' | 'OUT';
-    quantity: number;
-    price?: number;
-    date: Date;
-    reference?: string;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.createStockMovement(data);
-  }
-  async updateStockMovement(id: number, data: {
-    quantity?: number;
-    price?: number;
-    date?: Date;
-    notes?: string;
-  }) {
-    return this.rawMaterialService.updateStockMovement(id, data);
-  }
-  async getAllStockMovements(filters: {
-    type?: MovementType;
-    startDate?: Date;
-    endDate?: Date;
-  }) {
-    return this.rawMaterialService.getAllStockMovements(filters);
-  }
-  async recalculateRawMaterialStock(rawMaterialId: number) {
-    return this.rawMaterialService.recalculateRawMaterialStock(rawMaterialId);
-  }
-  async exportRawMaterials() {
-    return this.rawMaterialService.exportRawMaterials();
-  }
-  async importRawMaterials(data: Record<string, any>[]) {
-    return this.rawMaterialService.importRawMaterials(data);
-  }
-
-  // ==================== DELEGATED PRODUCTION QUERY METHODS ====================
-  async getDailyProduction(
-    date?: string,
-    startDate?: string,
-    endDate?: string,
-  ) {
-    return this.dailyProductionService.getDailyProduction(
-      date,
-      startDate,
-      endDate,
-    );
-  }
-  async getProductionHistory(productionId: number) {
-    return this.dailyProductionService.getProductionHistory(productionId);
-  }
-  async getRangeSessions(page = 1, limit = 20) {
-    return this.dailyProductionService.getRangeSessions(page, limit);
-  }
-  async getRangeSessionById(id: number) {
-    return this.dailyProductionService.getRangeSessionById(id);
-  }
-  async exportProductionHistory() {
-    return this.dailyProductionService.exportProductionHistory();
-  }
 
   // ==================== COMPLEX TRANSACTIONS (keep here) ====================
 
