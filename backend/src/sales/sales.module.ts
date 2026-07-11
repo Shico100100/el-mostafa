@@ -45,5 +45,6 @@ import { SalesReturnService } from './sales-returns/sales-return.service';
     SalesReturnService,
   ],
   controllers: [SalesController],
+  exports: [SalesService, TypeOrmModule],
 })
 export class SalesModule {}

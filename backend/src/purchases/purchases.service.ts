@@ -8,31 +8,20 @@ import { SupplierPayment } from './entities/supplier-payment.entity';
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
 import { Container } from './entities/container.entity';
-import { Currency } from './entities/currency.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
-import { SupplierService } from './suppliers/supplier.service';
-import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
 import { PaymentService } from './supplier-payments/payment.service';
-import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
-import { CurrencyService } from './currencies/currency.service';
 import { ContainerService } from './containers/container.service';
-import { PackingListService } from './packing-lists/packing-list.service';
 
 @Injectable()
 export class PurchasesService {
   constructor(
-    private supplierService: SupplierService,
-    private purchaseOrderService: PurchaseOrderService,
     private paymentService: PaymentService,
-    private purchaseReturnService: PurchaseReturnService,
-    private currencyService: CurrencyService,
     private containerService: ContainerService,
-    private packingListService: PackingListService,
     @InjectRepository(Supplier)
     private supplierRepo: Repository<Supplier>,
     @InjectRepository(PurchaseOrder)
@@ -52,28 +41,6 @@ export class PurchasesService {
     private accountingService: AccountingService,
     private dataSource: DataSource,
   ) {}
-
-  // ---- Supplier Delegation ----
-
-  async getAllSuppliers() {
-    return this.supplierService.getAllSuppliers();
-  }
-
-  async getSupplier(id: number) {
-    return this.supplierService.getSupplier(id);
-  }
-
-  async createSupplier(data: Partial<Supplier>) {
-    return this.supplierService.createSupplier(data);
-  }
-
-  async updateSupplier(id: number, data: Partial<Supplier>) {
-    return this.supplierService.updateSupplier(id, data);
-  }
-
-  async deleteSupplier(id: number) {
-    return this.supplierService.deleteSupplier(id);
-  }
 
   // ---- Supplier Aging / Balance / Statement (cross-repo) ----
 
@@ -256,44 +223,6 @@ export class PurchasesService {
       runningBalance += m.debit - m.credit;
       return { ...m, balance: runningBalance };
     });
-  }
-
-  // ---- Order Delegation ----
-
-  async getAllOrders(
-    options: {
-      page?: number;
-      limit?: number;
-      search?: string;
-      fromDate?: string;
-      toDate?: string;
-    } = {},
-  ) {
-    return this.purchaseOrderService.getAllOrders(options);
-  }
-
-  async getOrder(id: number) {
-    return this.purchaseOrderService.getOrder(id);
-  }
-
-  async getOrderItems(orderId: number) {
-    return this.purchaseOrderService.getOrderItems(orderId);
-  }
-
-  async calculateLandedCost(orderId: number) {
-    return this.purchaseOrderService.calculateLandedCost(orderId);
-  }
-
-  async updateLandedCost(
-    orderId: number,
-    data: {
-      freight_cost?: number;
-      customs_percent?: number;
-      commission_percent?: number;
-      total_weight_kg?: number;
-    },
-  ) {
-    return this.purchaseOrderService.updateLandedCost(orderId, data);
   }
 
   // ---- Complex Order Transactions (DataSource) ----
@@ -533,20 +462,6 @@ export class PurchasesService {
     return savedPayment;
   }
 
-  async getSupplierPayments(supplierId: number) {
-    return this.paymentService.getSupplierPayments(supplierId);
-  }
-
-  // ---- Return Delegation ----
-
-  async getAllReturns() {
-    return this.purchaseReturnService.getAllReturns();
-  }
-
-  async getReturn(id: number) {
-    return this.purchaseReturnService.getReturn(id);
-  }
-
   // ---- Complex Return Transaction (DataSource) ----
 
   async createReturn(data: {
@@ -612,88 +527,6 @@ export class PurchasesService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  // ---- Currency Delegation ----
-
-  async getCurrencies() {
-    return this.currencyService.getCurrencies();
-  }
-
-  async getAllCurrencies() {
-    return this.currencyService.getAllCurrencies();
-  }
-
-  async createCurrency(data: Partial<Currency>) {
-    return this.currencyService.createCurrency(data);
-  }
-
-  async updateCurrency(id: number, data: Partial<Currency>) {
-    return this.currencyService.updateCurrency(id, data);
-  }
-
-  async deleteCurrency(id: number) {
-    return this.currencyService.deleteCurrency(id);
-  }
-
-  async getFxRates(currencyId?: number) {
-    return this.currencyService.getFxRates(currencyId);
-  }
-
-  async addFxRate(data: {
-    currency_id: number;
-    rate_to_egp: number;
-    amount_paid?: number;
-    notes?: string;
-    rate_date: string;
-  }) {
-    return this.currencyService.addFxRate(data);
-  }
-
-  async calculateWeightedAverageFx(currencyId: number): Promise<number> {
-    return this.currencyService.calculateWeightedAverageFx(currencyId);
-  }
-
-  // ---- Container Delegation ----
-
-  async getContainers() {
-    return this.containerService.getContainers();
-  }
-
-  async getContainer(id: number) {
-    return this.containerService.getContainer(id);
-  }
-
-  async createContainer(data: Partial<Container>) {
-    return this.containerService.createContainer(data);
-  }
-
-  async updateContainer(id: number, data: Partial<Container>) {
-    return this.containerService.updateContainer(id, data);
-  }
-
-  async deleteContainer(id: number) {
-    return this.containerService.deleteContainer(id);
-  }
-
-  async calculateCBM(
-    lengthCm: number,
-    widthCm: number,
-    heightCm: number,
-    cartonsCount: number,
-  ) {
-    return this.containerService.calculateCBM(
-      lengthCm,
-      widthCm,
-      heightCm,
-      cartonsCount,
-    );
-  }
-
-  // ---- Packing List ----
-
-  async getPackingList(orderId: number) {
-    return this.packingListService.getPackingList(orderId);
   }
 
   // ---- Cross-repo Packing List ----

@@ -11,6 +11,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PurchasesService } from './purchases.service';
+import { SupplierService } from './suppliers/supplier.service';
+import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
+import { CurrencyService } from './currencies/currency.service';
+import { ContainerService } from './containers/container.service';
+import { PackingListService } from './packing-lists/packing-list.service';
+import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
+import { PaymentService } from './supplier-payments/payment.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
@@ -32,14 +39,23 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.admin, RoleEnum.manager)
 export class PurchasesController {
-  constructor(private purchasesService: PurchasesService) {}
+  constructor(
+    private purchasesService: PurchasesService,
+    private supplierService: SupplierService,
+    private purchaseOrderService: PurchaseOrderService,
+    private currencyService: CurrencyService,
+    private containerService: ContainerService,
+    private packingListService: PackingListService,
+    private purchaseReturnService: PurchaseReturnService,
+    private paymentService: PaymentService,
+  ) {}
 
   // Suppliers
   @Get('suppliers')
   @ApiOperation({ summary: 'Get all suppliers' })
   @ApiResponse({ status: 200, description: 'Returns all suppliers' })
   getAllSuppliers() {
-    return this.purchasesService.getAllSuppliers();
+    return this.supplierService.getAllSuppliers();
   }
 
   @Get('suppliers/aging')
@@ -53,28 +69,28 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get a supplier by ID' })
   @ApiResponse({ status: 200, description: 'Returns the supplier' })
   getSupplier(@Param('id') id: string) {
-    return this.purchasesService.getSupplier(+id);
+    return this.supplierService.getSupplier(+id);
   }
 
   @Post('suppliers')
   @ApiOperation({ summary: 'Create a supplier' })
   @ApiResponse({ status: 201, description: 'Supplier created' })
   createSupplier(@Body() createSupplierDto: CreateSupplierDto) {
-    return this.purchasesService.createSupplier(createSupplierDto);
+    return this.supplierService.createSupplier(createSupplierDto);
   }
 
   @Put('suppliers/:id')
   @ApiOperation({ summary: 'Update a supplier' })
   @ApiResponse({ status: 200, description: 'Supplier updated' })
   updateSupplier(@Param('id') id: string, @Body() data: Record<string, any>) {
-    return this.purchasesService.updateSupplier(+id, data);
+    return this.supplierService.updateSupplier(+id, data);
   }
 
   @Delete('suppliers/:id')
   @ApiOperation({ summary: 'Delete a supplier' })
   @ApiResponse({ status: 200, description: 'Supplier deleted' })
   deleteSupplier(@Param('id') id: string) {
-    return this.purchasesService.deleteSupplier(+id);
+    return this.supplierService.deleteSupplier(+id);
   }
 
   // Orders
@@ -82,7 +98,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get all purchase orders' })
   @ApiResponse({ status: 200, description: 'Returns paginated orders' })
   getAllOrders(@Query() query: Record<string, any>) {
-    return this.purchasesService.getAllOrders({
+    return this.purchaseOrderService.getAllOrders({
       page: query.page ? +query.page : 1,
       limit: query.limit ? +query.limit : 10,
       search: query.search,
@@ -95,7 +111,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get a purchase order by ID' })
   @ApiResponse({ status: 200, description: 'Returns the order' })
   getOrder(@Param('id') id: string) {
-    return this.purchasesService.getOrder(+id);
+    return this.purchaseOrderService.getOrder(+id);
   }
 
   @Post('orders')
@@ -123,7 +139,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get order items' })
   @ApiResponse({ status: 200, description: 'Returns order items' })
   getOrderItems(@Param('id') id: string) {
-    return this.purchasesService.getOrderItems(+id);
+    return this.purchaseOrderService.getOrderItems(+id);
   }
 
   // Supplier Payments
@@ -138,7 +154,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get supplier payments' })
   @ApiResponse({ status: 200, description: 'Returns supplier payments' })
   getSupplierPayments(@Param('id') id: string) {
-    return this.purchasesService.getSupplierPayments(+id);
+    return this.paymentService.getSupplierPayments(+id);
   }
 
   @Get('suppliers/:id/statement')
@@ -160,14 +176,14 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get all purchase returns' })
   @ApiResponse({ status: 200, description: 'Returns all returns' })
   getAllReturns() {
-    return this.purchasesService.getAllReturns();
+    return this.purchaseReturnService.getAllReturns();
   }
 
   @Get('returns/:id')
   @ApiOperation({ summary: 'Get a purchase return by ID' })
   @ApiResponse({ status: 200, description: 'Returns the return record' })
   getReturn(@Param('id') id: string) {
-    return this.purchasesService.getReturn(+id);
+    return this.purchaseReturnService.getReturn(+id);
   }
 
   @Post('returns')
@@ -183,35 +199,35 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get active currencies' })
   @ApiResponse({ status: 200, description: 'Returns active currencies' })
   getCurrencies() {
-    return this.purchasesService.getCurrencies();
+    return this.currencyService.getCurrencies();
   }
 
   @Get('currencies/all')
   @ApiOperation({ summary: 'Get all currencies' })
   @ApiResponse({ status: 200, description: 'Returns all currencies' })
   getAllCurrencies() {
-    return this.purchasesService.getAllCurrencies();
+    return this.currencyService.getAllCurrencies();
   }
 
   @Post('currencies')
   @ApiOperation({ summary: 'Create a currency' })
   @ApiResponse({ status: 201, description: 'Currency created' })
   createCurrency(@Body() createCurrencyDto: CreateCurrencyDto) {
-    return this.purchasesService.createCurrency(createCurrencyDto);
+    return this.currencyService.createCurrency(createCurrencyDto);
   }
 
   @Put('currencies/:id')
   @ApiOperation({ summary: 'Update a currency' })
   @ApiResponse({ status: 200, description: 'Currency updated' })
   updateCurrency(@Param('id') id: string, @Body() data: Record<string, any>) {
-    return this.purchasesService.updateCurrency(+id, data);
+    return this.currencyService.updateCurrency(+id, data);
   }
 
   @Delete('currencies/:id')
   @ApiOperation({ summary: 'Delete a currency' })
   @ApiResponse({ status: 200, description: 'Currency deleted' })
   deleteCurrency(@Param('id') id: string) {
-    return this.purchasesService.deleteCurrency(+id);
+    return this.currencyService.deleteCurrency(+id);
   }
 
   // ==================== FX RATES ====================
@@ -220,7 +236,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get FX rates' })
   @ApiResponse({ status: 200, description: 'Returns FX rates' })
   getFxRates(@Query('currency_id') currencyId?: string) {
-    return this.purchasesService.getFxRates(
+    return this.currencyService.getFxRates(
       currencyId ? +currencyId : undefined,
     );
   }
@@ -229,14 +245,14 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Add an FX rate' })
   @ApiResponse({ status: 201, description: 'FX rate added' })
   addFxRate(@Body() addFxRateDto: AddFxRateDto) {
-    return this.purchasesService.addFxRate(addFxRateDto);
+    return this.currencyService.addFxRate(addFxRateDto);
   }
 
   @Get('fx-rates/weighted-average/:currencyId')
   @ApiOperation({ summary: 'Calculate weighted average FX rate' })
   @ApiResponse({ status: 200, description: 'Returns weighted average' })
   weightedAverageFx(@Param('currencyId') currencyId: string) {
-    return this.purchasesService.calculateWeightedAverageFx(+currencyId);
+    return this.currencyService.calculateWeightedAverageFx(+currencyId);
   }
 
   // ==================== LANDED COST ====================
@@ -245,14 +261,14 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Calculate landed cost' })
   @ApiResponse({ status: 200, description: 'Returns landed cost' })
   getLandedCost(@Param('id') id: string) {
-    return this.purchasesService.calculateLandedCost(+id);
+    return this.purchaseOrderService.calculateLandedCost(+id);
   }
 
   @Put('orders/:id/landed-cost')
   @ApiOperation({ summary: 'Update landed cost' })
   @ApiResponse({ status: 200, description: 'Landed cost updated' })
   updateLandedCost(@Param('id') id: string, @Body() updateLandedCostDto: UpdateLandedCostDto) {
-    return this.purchasesService.updateLandedCost(+id, updateLandedCostDto);
+    return this.purchaseOrderService.updateLandedCost(+id, updateLandedCostDto);
   }
 
   // ==================== CONTAINERS ====================
@@ -261,35 +277,35 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get all containers' })
   @ApiResponse({ status: 200, description: 'Returns all containers' })
   getContainers() {
-    return this.purchasesService.getContainers();
+    return this.containerService.getContainers();
   }
 
   @Get('containers/:id')
   @ApiOperation({ summary: 'Get a container by ID' })
   @ApiResponse({ status: 200, description: 'Returns the container' })
   getContainer(@Param('id') id: string) {
-    return this.purchasesService.getContainer(+id);
+    return this.containerService.getContainer(+id);
   }
 
   @Post('containers')
   @ApiOperation({ summary: 'Create a container' })
   @ApiResponse({ status: 201, description: 'Container created' })
   createContainer(@Body() createContainerDto: CreateContainerDto) {
-    return this.purchasesService.createContainer(createContainerDto);
+    return this.containerService.createContainer(createContainerDto);
   }
 
   @Put('containers/:id')
   @ApiOperation({ summary: 'Update a container' })
   @ApiResponse({ status: 200, description: 'Container updated' })
   updateContainer(@Param('id') id: string, @Body() data: Record<string, any>) {
-    return this.purchasesService.updateContainer(+id, data);
+    return this.containerService.updateContainer(+id, data);
   }
 
   @Delete('containers/:id')
   @ApiOperation({ summary: 'Delete a container' })
   @ApiResponse({ status: 200, description: 'Container deleted' })
   deleteContainer(@Param('id') id: string) {
-    return this.purchasesService.deleteContainer(+id);
+    return this.containerService.deleteContainer(+id);
   }
 
   // ==================== CBM CALCULATION ====================
@@ -303,7 +319,7 @@ export class PurchasesController {
     @Query('height') height: string,
     @Query('cartons') cartons: string,
   ) {
-    return this.purchasesService.calculateCBM(
+    return this.containerService.calculateCBM(
       +length,
       +width,
       +height,
@@ -317,7 +333,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Get packing list for an order' })
   @ApiResponse({ status: 200, description: 'Returns packing list' })
   getPackingList(@Param('id') id: string) {
-    return this.purchasesService.getPackingList(+id);
+    return this.packingListService.getPackingList(+id);
   }
 
   @Post('orders/:id/packing-list')

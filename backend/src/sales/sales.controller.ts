@@ -13,6 +13,11 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { SalesService } from './sales.service';
+import { CustomerService } from './customers/customer.service';
+import { SalesOrderService } from './sales-orders/sales-order.service';
+import { QuoteService } from './quotes/quote.service';
+import { CustomerPaymentService } from './customer-payments/customer-payment.service';
+import { SalesReturnService } from './sales-returns/sales-return.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
@@ -31,14 +36,21 @@ import { QuoteStatus } from './entities/quote.entity';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.admin, RoleEnum.manager)
 export class SalesController {
-  constructor(private salesService: SalesService) {}
+  constructor(
+    private salesService: SalesService,
+    private customerService: CustomerService,
+    private salesOrderService: SalesOrderService,
+    private quoteService: QuoteService,
+    private customerPaymentService: CustomerPaymentService,
+    private salesReturnService: SalesReturnService,
+  ) {}
 
   // Customers
   @Get('customers')
   @ApiOperation({ summary: 'Get all customers' })
   @ApiResponse({ status: 200, description: 'Returns all customers' })
   getAllCustomers() {
-    return this.salesService.getAllCustomers();
+    return this.customerService.getAllCustomers();
   }
 
   @Get('customers/aging')
@@ -52,7 +64,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Get a customer by ID' })
   @ApiResponse({ status: 200, description: 'Returns the customer' })
   getCustomer(@Param('id') id: string) {
-    return this.salesService.getCustomer(+id);
+    return this.customerService.getCustomer(+id);
   }
 
   @Post('customers/:id/payments')
@@ -66,7 +78,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Get customer payments' })
   @ApiResponse({ status: 200, description: 'Returns customer payments' })
   getPayments(@Param('id') id: string) {
-    return this.salesService.getCustomerPayments(+id);
+    return this.customerPaymentService.getCustomerPayments(+id);
   }
 
   @Get('customers/:id/statement')
@@ -80,21 +92,21 @@ export class SalesController {
   @ApiOperation({ summary: 'Create a customer' })
   @ApiResponse({ status: 201, description: 'Customer created' })
   createCustomer(@Body() data: CreateCustomerDto) {
-    return this.salesService.createCustomer(data);
+    return this.customerService.createCustomer(data);
   }
 
   @Put('customers/:id')
   @ApiOperation({ summary: 'Update a customer' })
   @ApiResponse({ status: 200, description: 'Customer updated' })
   updateCustomer(@Param('id') id: string, @Body() data: CreateCustomerDto) {
-    return this.salesService.updateCustomer(+id, data);
+    return this.customerService.updateCustomer(+id, data);
   }
 
   @Delete('customers/:id')
   @ApiOperation({ summary: 'Delete a customer' })
   @ApiResponse({ status: 200, description: 'Customer deleted' })
   deleteCustomer(@Param('id') id: string) {
-    return this.salesService.deleteCustomer(+id);
+    return this.customerService.deleteCustomer(+id);
   }
 
   // Orders
@@ -102,14 +114,14 @@ export class SalesController {
   @ApiOperation({ summary: 'Get all sales orders' })
   @ApiResponse({ status: 200, description: 'Returns paginated orders' })
   getAllOrders(@Query() query: any) {
-    return this.salesService.getAllOrders(query);
+    return this.salesOrderService.getAllOrders(query);
   }
 
   @Get('orders/:id')
   @ApiOperation({ summary: 'Get a sales order by ID' })
   @ApiResponse({ status: 200, description: 'Returns the order' })
   getOrder(@Param('id') id: string) {
-    return this.salesService.getOrder(+id);
+    return this.salesOrderService.getOrder(+id);
   }
 
   @Post('orders')
@@ -123,7 +135,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Get order items' })
   @ApiResponse({ status: 200, description: 'Returns order items' })
   getOrderItems(@Param('id') id: string) {
-    return this.salesService.getOrderItems(+id);
+    return this.salesOrderService.getOrderItems(+id);
   }
 
   @Delete('orders/:id')
@@ -138,14 +150,14 @@ export class SalesController {
   @ApiOperation({ summary: 'Get all quotes' })
   @ApiResponse({ status: 200, description: 'Returns all quotes' })
   getAllQuotes() {
-    return this.salesService.getAllQuotes();
+    return this.quoteService.getAllQuotes();
   }
 
   @Get('quotes/:id')
   @ApiOperation({ summary: 'Get a quote by ID' })
   @ApiResponse({ status: 200, description: 'Returns the quote' })
   getQuote(@Param('id') id: string) {
-    return this.salesService.getQuote(+id);
+    return this.quoteService.getQuote(+id);
   }
 
   @Post('quotes')
@@ -159,7 +171,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Update quote status' })
   @ApiResponse({ status: 200, description: 'Quote status updated' })
   updateQuoteStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.salesService.updateQuoteStatus(+id, status as QuoteStatus);
+    return this.quoteService.updateQuoteStatus(+id, status as QuoteStatus);
   }
 
   @Post('quotes/:id/convert')
@@ -181,14 +193,14 @@ export class SalesController {
   @ApiOperation({ summary: 'Get all sales returns' })
   @ApiResponse({ status: 200, description: 'Returns all returns' })
   getAllReturns() {
-    return this.salesService.getAllReturns();
+    return this.salesReturnService.getAllReturns();
   }
 
   @Get('returns/:id')
   @ApiOperation({ summary: 'Get a sales return by ID' })
   @ApiResponse({ status: 200, description: 'Returns the return record' })
   getReturn(@Param('id') id: string) {
-    return this.salesService.getReturn(+id);
+    return this.salesReturnService.getReturn(+id);
   }
 
   @Post('returns')
@@ -203,7 +215,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Export sales orders to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportOrders(@Res() res: Response) {
-    const buffer = await this.salesService.exportOrdersToExcel();
+    const buffer = await this.salesOrderService.exportOrdersToExcel();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -216,7 +228,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Export customers to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
   async exportCustomers(@Res() res: Response) {
-    const buffer = await this.salesService.exportCustomersToExcel();
+    const buffer = await this.customerService.exportCustomersToExcel();
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

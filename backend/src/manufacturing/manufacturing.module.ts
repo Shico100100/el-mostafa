@@ -19,18 +19,11 @@ import { AssemblyOrder } from './entities/assembly-order.entity';
 import { RawMaterialConsumption } from './entities/raw-material-consumption.entity';
 import { SupplierMaterial } from './entities/supplier-material.entity';
 import { FixedCost } from './entities/fixed-cost.entity';
-import { Product } from '../inventory/entities/product.entity';
-import { Stock } from '../inventory/entities/stock.entity';
-import { StockMovement } from '../inventory/entities/stock-movement.entity';
-import { Warehouse } from '../inventory/entities/warehouse.entity';
-import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
-import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 import { AssemblyController } from './assembly.controller';
 import { AssemblyService } from './assembly.service';
 import { Attendance } from './entities/attendance.entity';
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
-import { UserEntity as User } from '../users/infrastructure/persistence/relational/entities/user.entity';
 import { ProductionSchedule } from './entities/production-schedule.entity';
 import { PlanningService } from './planning.service';
 import { PlanningController } from './planning.controller';
@@ -46,9 +39,10 @@ import { FeasibilityReportEntity } from './entities/feasibility-report.entity';
 import { ManufacturingOrder } from './entities/manufacturing-order.entity';
 import { ManufacturingOrderService } from './manufacturing-order.service';
 import { ManufacturingOrderController } from './manufacturing-order.controller';
-import { SalesOrder } from '../sales/entities/sales-order.entity';
-import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
 import { AccountingModule } from '../accounting/accounting.module';
+import { InventoryModule } from '../inventory/inventory.module';
+import { PurchasesModule } from '../purchases/purchases.module';
+import { SalesModule } from '../sales/sales.module';
 import { ProductionBatch } from './entities/production-batch.entity';
 import { BatchComponent } from './entities/batch-component.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
@@ -61,6 +55,9 @@ import { AccessoriesService } from './accessories.service';
 @Module({
   imports: [
     AccountingModule,
+    InventoryModule,
+    PurchasesModule,
+    SalesModule,
     TypeOrmModule.forFeature([
       Machine,
       MachineMaintenance,
@@ -73,19 +70,10 @@ import { AccessoriesService } from './accessories.service';
       RawMaterialConsumption,
       SupplierMaterial,
       FixedCost,
-      Product,
-      Stock,
-      StockMovement,
-      Warehouse,
       Attendance,
-      User,
       ProductionSchedule,
       QCInspection,
-      PurchaseOrder,
-      PurchaseOrderItem,
       ManufacturingOrder,
-      SalesOrder,
-      SalesOrderItem,
       ProductionBatch,
       BatchComponent,
       FeasibilityReportEntity,

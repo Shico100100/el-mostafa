@@ -39,6 +39,6 @@ import { BOM, BOMItem } from '../manufacturing/entities/bom.entity';
     StockService,
   ],
   controllers: [InventoryController],
-  exports: [InventoryService],
+  exports: [InventoryService, TypeOrmModule],
 })
 export class InventoryModule {}

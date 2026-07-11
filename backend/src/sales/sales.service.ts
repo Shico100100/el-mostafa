@@ -20,20 +20,12 @@ import {
   MovementType,
 } from '../inventory/entities/stock-movement.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { CustomerService } from './customers/customer.service';
-import { SalesOrderService } from './sales-orders/sales-order.service';
 import { QuoteService } from './quotes/quote.service';
-import { CustomerPaymentService } from './customer-payments/customer-payment.service';
-import { SalesReturnService } from './sales-returns/sales-return.service';
 
 @Injectable()
 export class SalesService {
   constructor(
-    private customerService: CustomerService,
-    private salesOrderService: SalesOrderService,
     private quoteService: QuoteService,
-    private customerPaymentService: CustomerPaymentService,
-    private salesReturnService: SalesReturnService,
     @InjectRepository(Customer)
     private customerRepo: Repository<Customer>,
     @InjectRepository(SalesOrder)
@@ -48,32 +40,6 @@ export class SalesService {
     private accountingService: AccountingService,
     private dataSource: DataSource,
   ) {}
-
-  // ---- Customer Delegation ----
-
-  async getAllCustomers() {
-    return this.customerService.getAllCustomers();
-  }
-
-  async getCustomer(id: number) {
-    return this.customerService.getCustomer(id);
-  }
-
-  async createCustomer(data: Partial<Customer>) {
-    return this.customerService.createCustomer(data);
-  }
-
-  async updateCustomer(id: number, data: Partial<Customer>) {
-    return this.customerService.updateCustomer(id, data);
-  }
-
-  async deleteCustomer(id: number) {
-    return this.customerService.deleteCustomer(id);
-  }
-
-  async exportCustomersToExcel() {
-    return this.customerService.exportCustomersToExcel();
-  }
 
   // ---- Customer Aging / Statement (cross-repo) ----
 
@@ -216,30 +182,6 @@ export class SalesService {
       runningBalance += m.debit - m.credit;
       return { ...m, balance: runningBalance };
     });
-  }
-
-  // ---- Order Delegation ----
-
-  async getAllOrders(query?: {
-    search?: string;
-    fromDate?: string;
-    toDate?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    return this.salesOrderService.getAllOrders(query);
-  }
-
-  async getOrder(id: number) {
-    return this.salesOrderService.getOrder(id);
-  }
-
-  async getOrderItems(orderId: number) {
-    return this.salesOrderService.getOrderItems(orderId);
-  }
-
-  async exportOrdersToExcel() {
-    return this.salesOrderService.exportOrdersToExcel();
   }
 
   // ---- Complex Order Transaction ----
@@ -390,20 +332,6 @@ export class SalesService {
       reference: `DEL-ORD-${id}`,
       description: `حذف فاتورة بيع رقم ${id}`,
     });
-  }
-
-  // ---- Quote Delegation ----
-
-  async getAllQuotes() {
-    return this.quoteService.getAllQuotes();
-  }
-
-  async getQuote(id: number) {
-    return this.quoteService.getQuote(id);
-  }
-
-  async updateQuoteStatus(id: number, status: QuoteStatus) {
-    return this.quoteService.updateQuoteStatus(id, status);
   }
 
   async deleteQuote(id: number) {
@@ -608,20 +536,6 @@ export class SalesService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async getCustomerPayments(customerId: number) {
-    return this.customerPaymentService.getCustomerPayments(customerId);
-  }
-
-  // ---- Return Delegation ----
-
-  async getAllReturns() {
-    return this.salesReturnService.getAllReturns();
-  }
-
-  async getReturn(id: number) {
-    return this.salesReturnService.getReturn(id);
   }
 
   // ---- Complex Return Transaction ----
