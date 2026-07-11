@@ -378,53 +378,9 @@ export class ManufacturingService {
 
     const savedProduction = await this.dataSource.transaction(
       async (manager) => {
-        const productRepo = manager.getRepository(Product);
-        const stockRepo = manager.getRepository(Stock);
-        const stockMovementRepo = manager.getRepository(StockMovement);
         const productionRepo = manager.getRepository(DailyProduction);
         const moldRepo = manager.getRepository(Mold);
         const bomRepo = manager.getRepository(BOM);
-
-        if (data.mold_id && data.total_production_kg) {
-          const mold = await moldRepo.findOne({ where: { id: data.mold_id } });
-          if (mold && Number(mold.product_weight) > 0) {
-            const productName = `بلاستيك ${mold.name}`;
-            let product = await productRepo.findOne({
-              where: { name: productName, type: 'SEMI_FINISHED' },
-            });
-            if (!product) {
-              product = productRepo.create({
-                name: productName,
-                type: 'SEMI_FINISHED',
-                unit: 'piece',
-                cost_price: 0,
-                selling_price: 0,
-              });
-              product = await productRepo.save(product);
-            }
-            let productStock = await stockRepo.findOne({
-              where: { product_id: product.id },
-            });
-            if (!productStock) {
-              productStock = stockRepo.create({
-                product_id: product.id,
-                warehouse_id: plasticWhId,
-                quantity: 0,
-              });
-            }
-            const oldStockQty = Number(productStock.quantity || 0);
-            const oldCost = Number(product.cost_price || 0);
-            const newPieces = Number(data.pieces_produced || 1);
-            const wac =
-              oldStockQty + newPieces > 0
-                ? (oldStockQty * oldCost + newPieces * (overheadCost || 0)) /
-                  (oldStockQty + newPieces)
-                : overheadCost || 0;
-            await productRepo.update(product.id, { cost_price: wac });
-            productStock.quantity = Number(productStock.quantity) + newPieces;
-            await stockRepo.save(productStock);
-          }
-        }
 
         const production = productionRepo.create(data);
         const saved = await productionRepo.save(production);
@@ -450,64 +406,26 @@ export class ManufacturingService {
         if (data.mold_id && data.pieces_produced) {
           const mold = await moldRepo.findOne({ where: { id: data.mold_id } });
           if (mold) {
-            const productName = `بلاستيك ${mold.name}`;
-            const product = await productRepo.findOne({
-              where: { name: productName, type: 'SEMI_FINISHED' },
-            });
-            if (product) {
-              const stock = await stockRepo.findOne({
-                where: { product_id: product.id },
-              });
-              await stockMovementRepo.save({
-                product_id: product.id,
-                warehouse_id: stock?.warehouse_id || plasticWhId,
-                type: MovementType.IN,
-                quantity: data.pieces_produced,
-                reference_type: 'PRODUCTION',
-                reference_id: saved.id,
-                date: data.date || new Date(),
-                notes: `Production #${saved.id}`,
-              });
-            }
+            await this.warehouseHelper.addSemiFinishedStock(
+              mold.name,
+              data.pieces_produced,
+              overheadCost,
+              plasticWhId,
+              { type: 'PRODUCTION', id: saved.id },
+              manager,
+            );
           }
         }
 
         if (data.product_id && data.total_production_kg) {
           const effectiveRmId =
             (data as any).substitute_material_id ?? data.product_id;
-          const prod = await this.productRepo.findOne({
-            where: { id: effectiveRmId, type: 'RAW' },
-          });
-          if (prod) {
-            const rmStock = await stockRepo.findOne({
-              where: { product_id: prod.id },
-            });
-            if (rmStock) {
-              if (
-                !(data as any).allow_negative_stock &&
-                Number(rmStock.quantity) < Number(data.total_production_kg)
-              ) {
-                throw new BadRequestException(
-                  `رصيد غير كافٍ للمادة الخام: ${prod.name || 'غير معروف'} (المطلوب: ${data.total_production_kg}, المتوفر: ${rmStock.quantity})`,
-                );
-              }
-              rmStock.quantity =
-                Number(rmStock.quantity) - Number(data.total_production_kg);
-              await stockRepo.save(rmStock);
-              await stockMovementRepo.save({
-                product_id: prod.id,
-                warehouse_id: rmStock.warehouse_id,
-                type: MovementType.OUT,
-                quantity: data.total_production_kg,
-                reference_type: 'PRODUCTION',
-                reference_id: saved.id,
-                date: data.date || new Date(),
-                notes: (data as any).substitute_material_id
-                  ? `Substituted material for production: ${saved.id} (original: ${data.product_id})`
-                  : `Used in production: ${saved.id}`,
-              });
-            }
-          }
+          await this.warehouseHelper.deductRawMaterialStock(
+            effectiveRmId,
+            data.total_production_kg,
+            { type: 'PRODUCTION', id: saved.id },
+            manager,
+          );
         }
 
         if (data.mold_id && data.pieces_produced) {
@@ -518,32 +436,12 @@ export class ManufacturingService {
               relations: ['items'],
             });
             if (bom && bom.items.length > 0) {
-              for (const item of bom.items) {
-                const requiredQty =
-                  Number(item.quantity) * Number(data.pieces_produced);
-                const itemStock = await stockRepo.findOne({
-                  where: { product_id: item.product_id },
-                });
-                if (itemStock) {
-                  if (Number(itemStock.quantity) < requiredQty) {
-                    throw new BadRequestException(
-                      `رصيد غير كافٍ لمكون BOM: ${item.product?.name || 'غير معروف'} (المطلوب: ${requiredQty}, المتوفر: ${itemStock.quantity})`,
-                    );
-                  }
-                  itemStock.quantity = Number(itemStock.quantity) - requiredQty;
-                  await stockRepo.save(itemStock);
-                  await stockMovementRepo.save({
-                    product_id: item.product_id,
-                    warehouse_id: itemStock.warehouse_id,
-                    type: MovementType.OUT,
-                    quantity: requiredQty,
-                    reference_type: 'PRODUCTION_BOM',
-                    reference_id: saved.id,
-                    date: data.date || new Date(),
-                    notes: `BOM Deduction for Production #${saved.id}`,
-                  });
-                }
-              }
+              await this.warehouseHelper.processBOMConsumption(
+                bom,
+                data.pieces_produced,
+                { type: 'PRODUCTION_BOM', id: saved.id },
+                manager,
+              );
             }
           }
         }
@@ -680,70 +578,28 @@ export class ManufacturingService {
     if (!production) throw new NotFoundException('سجل الإنتاج غير موجود');
 
     return this.dataSource.transaction(async (manager) => {
-      const stockRepo = manager.getRepository(Stock);
-      const stockMovementRepo = manager.getRepository(StockMovement);
-      const productRepo = manager.getRepository(Product);
       const bomRepo = manager.getRepository(BOM);
       const historyRepo = manager.getRepository(ProductionRecordHistory);
 
       if (production.product_id && production.total_production_kg) {
-        const prod = await this.productRepo.findOne({
-          where: { id: production.product_id, type: 'RAW' },
-        });
-        if (prod) {
-          const stock = await stockRepo.findOne({
-            where: { product_id: prod.id },
-          });
-          if (stock) {
-            stock.quantity =
-              Number(stock.quantity) + Number(production.total_production_kg);
-            await stockRepo.save(stock);
-            await stockMovementRepo.save({
-              product_id: prod.id,
-              warehouse_id: stock.warehouse_id,
-              type: MovementType.IN,
-              quantity: production.total_production_kg,
-              reference_type: 'PRODUCTION_DELETE',
-              reference_id: id,
-              date: new Date(),
-              notes: `Reversal of Production #${id}`,
-            });
-          }
-        }
+        await this.warehouseHelper.reverseRawMaterialStock(
+          production.product_id,
+          production.total_production_kg,
+          { type: 'PRODUCTION_DELETE', id },
+          manager,
+        );
       }
 
       if (production.mold && production.pieces_produced) {
-        const productName = `بلاستيك ${production.mold.name}`;
-        const product = await productRepo.findOne({
-          where: { name: productName, type: 'SEMI_FINISHED' },
-        });
-        if (product) {
-          const stock = await stockRepo.findOne({
-            where: { product_id: product.id },
-          });
-          if (stock) {
-            if (Number(stock.quantity) < Number(production.pieces_produced)) {
-              throw new BadRequestException(
-                `رصيد غير كافٍ لعكس الإنتاج: ${product.name} (المطلوب: ${production.pieces_produced}, المتوفر: ${stock.quantity})`,
-              );
-            }
-            stock.quantity =
-              Number(stock.quantity) - Number(production.pieces_produced);
-            await stockRepo.save(stock);
-            const plasticWhId =
-              await this.warehouseHelper.getPlasticWarehouseId();
-            await stockMovementRepo.save({
-              product_id: product.id,
-              warehouse_id: stock.warehouse_id || plasticWhId,
-              type: MovementType.OUT,
-              quantity: production.pieces_produced,
-              reference_type: 'PRODUCTION_DELETE',
-              reference_id: id,
-              date: new Date(),
-              notes: `Reversal of Production #${id}`,
-            });
-          }
-        }
+        const plasticWhId =
+          await this.warehouseHelper.getPlasticWarehouseId();
+        await this.warehouseHelper.reverseSemiFinishedStock(
+          production.mold.name,
+          production.pieces_produced,
+          plasticWhId,
+          { type: 'PRODUCTION_DELETE', id },
+          manager,
+        );
       }
 
       if (
@@ -756,27 +612,12 @@ export class ManufacturingService {
           relations: ['items'],
         });
         if (bom && bom.items.length > 0) {
-          for (const item of bom.items) {
-            const requiredQty =
-              Number(item.quantity) * Number(production.pieces_produced);
-            const itemStock = await stockRepo.findOne({
-              where: { product_id: item.product_id },
-            });
-            if (itemStock) {
-              itemStock.quantity = Number(itemStock.quantity) + requiredQty;
-              await stockRepo.save(itemStock);
-              await stockMovementRepo.save({
-                product_id: item.product_id,
-                warehouse_id: itemStock.warehouse_id,
-                type: MovementType.IN,
-                quantity: requiredQty,
-                reference_type: 'PRODUCTION_BOM_DELETE',
-                reference_id: id,
-                date: new Date(),
-                notes: `BOM Reversal for Production #${id}`,
-              });
-            }
-          }
+          await this.warehouseHelper.reverseBOMConsumption(
+            bom,
+            production.pieces_produced,
+            { type: 'PRODUCTION_BOM_DELETE', id },
+            manager,
+          );
         }
       }
 
@@ -832,71 +673,26 @@ export class ManufacturingService {
     const plasticWhId = await this.warehouseHelper.getPlasticWarehouseId();
 
     return this.dataSource.transaction(async (manager) => {
-      const productRepo = manager.getRepository(Product);
-      const stockRepo = manager.getRepository(Stock);
-      const stockMovementRepo = manager.getRepository(StockMovement);
       const productionRepo = manager.getRepository(DailyProduction);
       const historyRepo = manager.getRepository(ProductionRecordHistory);
 
       if (oldProduction.product_id && oldProduction.total_production_kg) {
-        const oldProd = await this.productRepo.findOne({
-          where: { id: oldProduction.product_id, type: 'RAW' },
-        });
-        if (oldProd) {
-          const stock = await stockRepo.findOne({
-            where: { product_id: oldProd.id },
-          });
-          if (stock) {
-            stock.quantity =
-              Number(stock.quantity) +
-              Number(oldProduction.total_production_kg);
-            await stockRepo.save(stock);
-            await stockMovementRepo.save({
-              product_id: oldProd.id,
-              warehouse_id: stock.warehouse_id,
-              type: MovementType.IN,
-              quantity: oldProduction.total_production_kg,
-              reference_type: 'PRODUCTION_CORRECTION',
-              reference_id: id,
-              date: new Date(),
-              notes: `Modification reversal for Prod #${id}`,
-            });
-          }
-        }
+        await this.warehouseHelper.reverseRawMaterialStock(
+          oldProduction.product_id,
+          oldProduction.total_production_kg,
+          { type: 'PRODUCTION_CORRECTION', id },
+          manager,
+        );
       }
 
       if (oldProduction.mold && oldProduction.pieces_produced) {
-        const productName = `بلاستيك ${oldProduction.mold.name}`;
-        const product = await productRepo.findOne({
-          where: { name: productName, type: 'SEMI_FINISHED' },
-        });
-        if (product) {
-          const stock = await stockRepo.findOne({
-            where: { product_id: product.id },
-          });
-          if (stock) {
-            if (
-              Number(stock.quantity) < Number(oldProduction.pieces_produced)
-            ) {
-              throw new BadRequestException(
-                `رصيد غير كافٍ لعكس تعديل الإنتاج: ${product.name} (المطلوب: ${oldProduction.pieces_produced}, المتوفر: ${stock.quantity})`,
-              );
-            }
-            stock.quantity =
-              Number(stock.quantity) - Number(oldProduction.pieces_produced);
-            await stockRepo.save(stock);
-            await stockMovementRepo.save({
-              product_id: product.id,
-              warehouse_id: stock.warehouse_id || plasticWhId,
-              type: MovementType.OUT,
-              quantity: oldProduction.pieces_produced,
-              reference_type: 'PRODUCTION_CORRECTION',
-              reference_id: id,
-              date: new Date(),
-              notes: `Modification reversal for Prod #${id}`,
-            });
-          }
-        }
+        await this.warehouseHelper.reverseSemiFinishedStock(
+          oldProduction.mold.name,
+          oldProduction.pieces_produced,
+          plasticWhId,
+          { type: 'PRODUCTION_CORRECTION', id },
+          manager,
+        );
       }
 
       await productionRepo.update(id, data);
@@ -911,76 +707,23 @@ export class ManufacturingService {
         updatedProduction.product_id &&
         updatedProduction.total_production_kg
       ) {
-        const prod = await this.productRepo.findOne({
-          where: { id: updatedProduction.product_id, type: 'RAW' },
-        });
-        if (prod) {
-          const stock = await stockRepo.findOne({
-            where: { product_id: prod.id },
-          });
-          if (stock) {
-            if (
-              Number(stock.quantity) <
-              Number(updatedProduction.total_production_kg)
-            ) {
-              throw new BadRequestException(
-                `رصيد غير كافٍ للمادة الخام: ${prod.name || 'غير معروف'} (المطلوب: ${updatedProduction.total_production_kg}, المتوفر: ${stock.quantity})`,
-              );
-            }
-            stock.quantity =
-              Number(stock.quantity) -
-              Number(updatedProduction.total_production_kg);
-            await stockRepo.save(stock);
-            await stockMovementRepo.save({
-              product_id: prod.id,
-              warehouse_id: stock.warehouse_id,
-              type: MovementType.OUT,
-              quantity: updatedProduction.total_production_kg,
-              reference_type: 'PRODUCTION',
-              reference_id: id,
-              date: updatedProduction.date || new Date(),
-              notes: `Used in production: ${id}`,
-            });
-          }
-        }
+        await this.warehouseHelper.deductRawMaterialStock(
+          updatedProduction.product_id,
+          updatedProduction.total_production_kg,
+          { type: 'PRODUCTION', id },
+          manager,
+        );
       }
 
       if (updatedProduction.mold && updatedProduction.pieces_produced) {
-        const productName = `بلاستيك ${updatedProduction.mold.name}`;
-        let product = await productRepo.findOne({
-          where: { name: productName, type: 'SEMI_FINISHED' },
-        });
-        if (!product) {
-          product = productRepo.create({
-            name: productName,
-            type: 'SEMI_FINISHED',
-            unit: 'piece',
-          });
-          await productRepo.save(product);
-        }
-        let stock = await stockRepo.findOne({
-          where: { product_id: product.id },
-        });
-        if (!stock) {
-          stock = stockRepo.create({
-            product_id: product.id,
-            warehouse_id: plasticWhId,
-            quantity: 0,
-          });
-        }
-        stock.quantity =
-          Number(stock.quantity) + Number(updatedProduction.pieces_produced);
-        await stockRepo.save(stock);
-        await stockMovementRepo.save({
-          product_id: product.id,
-          warehouse_id: plasticWhId,
-          type: MovementType.IN,
-          quantity: updatedProduction.pieces_produced,
-          reference_type: 'PRODUCTION',
-          reference_id: id,
-          date: updatedProduction.date || new Date(),
-          notes: `Production: ${updatedProduction.total_production_kg}kg`,
-        });
+        await this.warehouseHelper.addSemiFinishedStock(
+          updatedProduction.mold.name,
+          updatedProduction.pieces_produced,
+          undefined,
+          plasticWhId,
+          { type: 'PRODUCTION', id },
+          manager,
+        );
       }
 
       const newSnapshot = {
@@ -1079,33 +822,15 @@ export class ManufacturingService {
         totalCost += Number(item.product?.cost_price || 0) * requiredQty;
       }
 
-      const stockMovementRepo = manager.getRepository(StockMovement);
-      for (const item of bom.items) {
-        const requiredQty = Number(item.quantity) * Number(data.quantity);
-        await this.warehouseHelper.safeDeductStock(
-          item.product_id,
-          requiredQty,
-          manager,
-        );
-        const stockRepo = manager.getRepository(Stock);
-        const stock = await stockRepo.findOne({
-          where: { product_id: item.product_id },
-        });
-        await stockMovementRepo.save({
-          product_id: item.product_id,
-          warehouse_id:
-            stock?.warehouse_id ||
-            (await this.warehouseHelper.getDefaultWarehouseId()),
-          type: MovementType.OUT,
-          quantity: requiredQty,
-          reference_type: 'ASSEMBLY',
-          reference_id: 0,
-          date: new Date(),
-          notes: `تجميع لـ ${bom.product?.name || bom.product_id}`,
-        });
-      }
+      await this.warehouseHelper.processBOMConsumption(
+        bom,
+        data.quantity,
+        { type: 'ASSEMBLY', id: 0 },
+        manager,
+      );
 
       const stockRepo = manager.getRepository(Stock);
+      const stockMovementRepo = manager.getRepository(StockMovement);
       let finishedStock = await stockRepo.findOne({
         where: { product_id: bom.product_id },
       });
