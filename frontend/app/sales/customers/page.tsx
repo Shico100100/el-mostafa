@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCustomers } from '@/hooks/sales/useCustomers';
-import { useAuth } from '@/hooks/useAuth';
 import { CustomersHeader } from '@/components/sales/customers/CustomersHeader';
 import { CustomerFilters } from '@/components/sales/customers/CustomerFilters';
 import { CustomerCard } from '@/components/sales/customers/CustomerCard';
@@ -19,7 +18,17 @@ import autoTable from 'jspdf-autotable';
 
 export default function CustomersPage() {
   const router = useRouter();
-  const { token } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = localStorage.getItem('token');
+    if (!t) {
+      router.push('/login');
+    } else {
+      setToken(t);
+    }
+  }, [router]);
+
   const {
     customers,
     filteredCustomers,
@@ -53,12 +62,6 @@ export default function CustomersPage() {
     openQuickView,
     closeQuickView,
   } = useCustomers();
-
-  useEffect(() => {
-    if (!token) {
-      router.push('/login');
-    }
-  }, [token, router]);
 
   const handleExportExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -218,17 +221,17 @@ export default function CustomersPage() {
 
         {/* Modals */}
         <AddEditCustomerDialog
-          isOpen={showModal}
+          visible={showModal}
           onClose={() => {
             setShowModal(false);
             setEditingCustomer(null);
           }}
           onSave={handleSave}
-          customer={editingCustomer}
+          editingCustomer={editingCustomer}
         />
 
         <CollectionDialog
-          isOpen={showPaymentModal}
+          visible={showPaymentModal}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedCustomer(null);
@@ -238,7 +241,7 @@ export default function CustomersPage() {
         />
 
         <StatementModal
-          isOpen={showStatementModal}
+          visible={showStatementModal}
           onClose={() => {
             setShowStatementModal(false);
             setSelectedCustomer(null);
