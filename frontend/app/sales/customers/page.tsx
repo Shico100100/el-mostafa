@@ -11,6 +11,7 @@ import { CustomerCharts } from '@/components/sales/customers/CustomerCharts';
 import { AddEditCustomerDialog } from '@/components/sales/customers/AddEditCustomerDialog';
 import { CollectionDialog } from '@/components/sales/customers/CollectionDialog';
 import { StatementModal } from '@/components/sales/customers/StatementModal';
+import { OVERDUE_THRESHOLD } from '@/components/sales/customers/types';
 import { Loader2 } from 'lucide-react';
 import * as ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
@@ -63,6 +64,12 @@ export default function CustomersPage() {
     closeQuickView,
   } = useCustomers();
 
+  useEffect(() => {
+    if (showQuickView && quickViewCustomer) {
+      loadStatement(quickViewCustomer.id);
+    }
+  }, [showQuickView, quickViewCustomer, loadStatement]);
+
   const handleExportExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('العملاء');
@@ -79,7 +86,7 @@ export default function CustomersPage() {
 
     // Add data
     filteredCustomers.forEach((customer) => {
-      const status = customer.balance <= 0 ? 'أمين' : customer.balance <= 10000 ? 'مدين' : 'مدين متأخر';
+      const status = customer.balance <= 0 ? 'أمين' : customer.balance <= OVERDUE_THRESHOLD ? 'مدين' : 'مدين متأخر';
       worksheet.addRow({
         name: customer.name,
         phone: customer.phone || '',
@@ -113,7 +120,7 @@ export default function CustomersPage() {
 
     // Table data
     const tableData = filteredCustomers.map((customer) => {
-      const status = customer.balance <= 0 ? 'أمين' : customer.balance <= 10000 ? 'مدين' : 'مدين متأخر';
+      const status = customer.balance <= 0 ? 'أمين' : customer.balance <= OVERDUE_THRESHOLD ? 'مدين' : 'مدين متأخر';
       return [
         customer.name,
         customer.phone || '-',
@@ -249,9 +256,11 @@ export default function CustomersPage() {
           customer={selectedCustomer}
           statement={statement}
           loading={statementLoading}
-          month={statementMonth}
-          year={statementYear}
-          onFilter={handleStatementFilter}
+          month={statementMonth?.toString() ?? ''}
+          year={statementYear?.toString() ?? ''}
+          onMonthChange={(v) => handleStatementFilter(parseInt(v) || undefined, statementYear)}
+          onYearChange={(v) => handleStatementFilter(statementMonth, parseInt(v) || undefined)}
+          onApplyFilter={() => {}}
           onClearFilter={clearStatementFilter}
         />
       </div>

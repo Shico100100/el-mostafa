@@ -17,6 +17,8 @@ export interface StatementItem {
   balance: number;
 }
 
+export const OVERDUE_THRESHOLD = 10000;
+
 export type FilterStatus = 'all' | 'clean' | 'debt' | 'overdue';
 export type SortField = 'name' | 'balance' | 'createdAt';
 export type SortOrder = 'asc' | 'desc';

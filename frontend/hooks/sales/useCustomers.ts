@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Customer, StatementItem, FilterState, FilterStatus, SortField, SortOrder } from '@/components/sales/customers/types';
+import { Customer, StatementItem, FilterState, FilterStatus, SortField, SortOrder, OVERDUE_THRESHOLD } from '@/components/sales/customers/types';
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -136,7 +136,7 @@ export function useCustomers() {
           case 'debt':
             return c.balance > 0;
           case 'overdue':
-            return c.balance > 10000; // Threshold for overdue
+            return c.balance > OVERDUE_THRESHOLD;
           default:
             return true;
         }

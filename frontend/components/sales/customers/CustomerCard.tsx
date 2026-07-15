@@ -2,7 +2,7 @@
 
 import { MoreVertical, FileText, Wallet, Pencil, Phone, Mail, MapPin } from 'lucide-react';
 import { useState } from 'react';
-import { Customer } from './types';
+import { Customer, OVERDUE_THRESHOLD } from './types';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -23,7 +23,7 @@ export function CustomerCard({
 
   const getStatusColor = (balance: number) => {
     if (balance <= 0) return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', dot: 'bg-emerald-400', label: 'أمين' };
-    if (balance <= 10000) return { text: 'text-amber-400', bg: 'bg-amber-500/10', dot: 'bg-amber-400', label: 'مدين' };
+    if (balance <= OVERDUE_THRESHOLD) return { text: 'text-amber-400', bg: 'bg-amber-500/10', dot: 'bg-amber-400', label: 'مدين' };
     return { text: 'text-red-400', bg: 'bg-red-500/10', dot: 'bg-red-400', label: 'مدين متأخر' };
   };
 
