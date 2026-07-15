@@ -1,7 +1,6 @@
 'use client';
 
 import { X, FileText, Wallet, Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
 import { Customer, StatementItem } from './types';
 
 interface CustomerQuickViewProps {
