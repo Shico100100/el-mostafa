@@ -83,10 +83,10 @@ export function useCustomers() {
     }
   };
 
-  const handlePayment = async (data: { amount: number; payment_date: string; notes?: string }) => {
+  const handlePayment = async (data: { amount: number; payment_date: string | null; notes?: string }) => {
     if (!selectedCustomer) return;
     try {
-      await api.addCustomerPayment(selectedCustomer.id, data);
+      await api.addCustomerPayment(Number(selectedCustomer.id), data);
       toast.success('تم تسجيل السند بنجاح');
       await loadCustomers();
       setShowPaymentModal(false);
