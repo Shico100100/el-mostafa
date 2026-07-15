@@ -61,7 +61,7 @@ export function CustomerCharts({ stats, customers }: CustomerChartsProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
