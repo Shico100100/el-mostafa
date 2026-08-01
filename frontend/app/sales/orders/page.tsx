@@ -1,8 +1,9 @@
 'use client';
 
-import { Plus, FileSpreadsheet } from 'lucide-react';
+import { Plus, FileSpreadsheet, CloudDownload } from 'lucide-react';
 import { useSetBackButton } from '@/components/BackButton';
 import { useSalesOrders } from '@/hooks/sales/useSalesOrders';
+import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import { SalesOrderFilters } from '@/components/sales/orders/SalesOrderFilters';
 import { SalesOrdersTable } from '@/components/sales/orders/SalesOrdersTable';
 import { SalesOrderPrintTemplate } from '@/components/sales/orders/SalesOrderPrintTemplate';
@@ -13,6 +14,7 @@ import { QuickCustomerModal } from '@/components/sales/orders/modals/QuickCustom
 
 export default function SalesOrdersPage() {
   useSetBackButton('/dashboard');
+  const { syncInvoices, syncing } = usePeachtreeSync();
   const {
     orders, loading, customers, products,
     filters, setFilters, totalPages, totalItems,
@@ -21,12 +23,11 @@ export default function SalesOrdersPage() {
     selectedOrder, selectedOrderForPayment, setSelectedOrderForPayment,
     showQuickCustomerModal, setShowQuickCustomerModal,
     quickCustomerData, setQuickCustomerData,
-    manufacturingOrdersMap,
     newOrder, setNewOrder,
     paymentData, setPaymentData,
     componentRef, orderToPrint, setOrderToPrint,
 
-    resetFilters,
+    resetFilters, loadData,
     handleAddItem, handleRemoveItem, handleItemChange,
     calculateTotal,
     handleQuickCustomerSubmit,
@@ -34,7 +35,6 @@ export default function SalesOrdersPage() {
     handleSubmit,
     handleDuplicateOrder,
     handleExport,
-    handleSendToManufacturing,
     openPayment, openDetails, closeDetails,
   } = useSalesOrders();
 
@@ -47,6 +47,14 @@ export default function SalesOrdersPage() {
             <button onClick={handleExport} className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 px-4 py-2 rounded-lg border border-emerald-500/30 transition flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4" />
               تصدير Excel
+            </button>
+            <button
+              onClick={() => syncInvoices(['sales_invoices', 'invoice_line_items']).finally(loadData)}
+              disabled={syncing}
+              className="bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 px-4 py-2 rounded-lg border border-teal-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CloudDownload className="w-4 h-4" />
+              {syncing ? 'جارٍ الاستيراد...' : 'استيراد من Peachtree'}
             </button>
             <button onClick={() => setShowModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-blue-900/40">
               <Plus className="w-5 h-5" />
@@ -61,13 +69,11 @@ export default function SalesOrdersPage() {
         <SalesOrdersTable
           orders={orders} loading={loading} filters={filters}
           totalPages={totalPages} totalItems={totalItems}
-          manufacturingOrdersMap={manufacturingOrdersMap}
           onPageChange={setFilters}
           onOpenDetails={openDetails}
           onDuplicate={handleDuplicateOrder}
           onOpenPayment={openPayment}
           onPrint={setOrderToPrint}
-          onSendToManufacturing={handleSendToManufacturing}
         />
       </main>
 

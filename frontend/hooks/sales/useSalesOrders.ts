@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
 import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
-import type { Order, Customer, Product, ManufacturingOrder, NewOrderData, PaymentData, Filters } from '@/components/sales/orders/types';
+import type { Order, Customer, Product, NewOrderData, PaymentData, Filters } from '@/components/sales/orders/types';
 
 export function useSalesOrders() {
   const router = useRouter();
@@ -25,15 +25,13 @@ export function useSalesOrders() {
     fromDate: '',
     toDate: '',
     page: 1,
-    limit: 10,
+    limit: 20,
   });
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
   const [showQuickCustomerModal, setShowQuickCustomerModal] = useState(false);
   const [quickCustomerData, setQuickCustomerData] = useState({ name: '', phone: '', email: '', address: '' });
-
-  const [manufacturingOrdersMap, setManufacturingOrdersMap] = useState<Record<number, ManufacturingOrder[]>>({});
 
   const [newOrder, setNewOrder] = useState<NewOrderData>({
     customer_id: '',
@@ -64,29 +62,6 @@ export function useSalesOrders() {
       handlePrint();
     }
   }, [orderToPrint, handlePrint]);
-
-  const handleSendToManufacturing = async (orderId: number) => {
-    try {
-      const mos = await api.createManufacturingOrdersFromSalesOrder(orderId) as ManufacturingOrder[];
-      setManufacturingOrdersMap(prev => ({ ...prev, [orderId]: mos }));
-      toast.success('تم إرسال الطلب للتصنيع');
-    } catch (error) {
-      console.error('Error creating manufacturing orders:', error);
-      toast.error('فشل إرسال الطلب للتصنيع');
-    }
-  };
-
-  const loadManufacturingStatus = useCallback(async () => {
-    try {
-      const mos = await api.getManufacturingOrders() as ManufacturingOrder[];
-      const map: Record<number, ManufacturingOrder[]> = {};
-      for (const mo of mos) {
-        if (!map[mo.sales_order_id]) map[mo.sales_order_id] = [];
-        map[mo.sales_order_id].push(mo);
-      }
-      setManufacturingOrdersMap(map);
-    } catch (e) { console.error('Failed to load manufacturing orders:', e); }
-  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -129,12 +104,8 @@ export function useSalesOrders() {
     loadData();
   }, [router, loadData]);
 
-  useEffect(() => {
-    if (!loading) loadManufacturingStatus();
-  }, [loading, loadManufacturingStatus]);
-
   const resetFilters = () => {
-    setFilters({ search: '', fromDate: '', toDate: '', page: 1, limit: 10 });
+    setFilters({ search: '', fromDate: '', toDate: '', page: 1, limit: 20 });
   };
 
   const handleAddItem = () => {
@@ -308,13 +279,12 @@ export function useSalesOrders() {
     selectedOrder, selectedOrderForPayment, setSelectedOrderForPayment,
     showQuickCustomerModal, setShowQuickCustomerModal,
     quickCustomerData, setQuickCustomerData,
-    manufacturingOrdersMap,
     newOrder, setNewOrder,
     paymentData, setPaymentData,
     componentRef, orderToPrint, setOrderToPrint,
 
     // Handlers
-    resetFilters,
+    resetFilters, loadData,
     handleAddItem, handleRemoveItem, handleItemChange,
     calculateTotal,
     handleQuickCustomerSubmit,
@@ -322,7 +292,6 @@ export function useSalesOrders() {
     handleSubmit,
     handleDuplicateOrder,
     handleExport,
-    handleSendToManufacturing,
     openPayment, openDetails, closeDetails,
   };
 }
