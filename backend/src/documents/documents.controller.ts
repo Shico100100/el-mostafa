@@ -29,6 +29,11 @@ export class DocumentsController {
     return this.service.upload(file, body.entityType, body.entityId);
   }
 
+  @Get()
+  findAll() {
+    return this.service.findAll();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.service.findOne(id);

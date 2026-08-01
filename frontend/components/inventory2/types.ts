@@ -1,6 +1,6 @@
 // RAW_PLASTIC exists in DB but treated as RAW in the UI (خام)
 // SEMI_FINISHED is the DB value; SEMI is also accepted for display grouping
-export type ProductType = 'FINISHED' | 'IMPORTED' | 'RAW' | 'PACKAGING' | 'RAW_PLASTIC' | 'SEMI' | 'SEMI_FINISHED';
+export type ProductType = 'FINISHED' | 'IMPORTED' | 'RAW' | 'PACKAGING' | 'RAW_PLASTIC' | 'SEMI' | 'SEMI_FINISHED' | 'DORMANT';
 
 export interface Product {
   id: number;
@@ -89,6 +89,7 @@ const displayLabels: Record<string, string> = {
   PACKAGING: 'تغليف',
   SEMI: 'نصف مصنع',
   SEMI_FINISHED: 'نصف مصنع',
+  DORMANT: 'خامل',
 };
 
 export function productTypeLabel(type: string): string {

@@ -9,6 +9,7 @@ const typeConfig: Record<string, { class: string }> = {
   RAW: { class: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
   SEMI: { class: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
   SEMI_FINISHED: { class: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
+  DORMANT: { class: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
 };
 
 export function TypeBadge({ type }: { type: string }) {

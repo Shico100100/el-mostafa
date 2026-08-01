@@ -51,6 +51,11 @@ export class NotificationsController {
     );
   }
 
+  @Patch('mark-all-read')
+  markAllRead() {
+    return this.notificationsService.markAllRead();
+  }
+
   @Patch(':id/read')
   markAsRead(@Param('id') id: string) {
     return this.notificationsService.markAsRead(+id);

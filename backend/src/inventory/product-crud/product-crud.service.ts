@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { Stock } from '../entities/stock.entity';
 import { Warehouse } from '../entities/warehouse.entity';
@@ -17,6 +17,7 @@ export class ProductCrudService {
     private warehouseRepo: Repository<Warehouse>,
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
+    private dataSource: DataSource,
   ) {}
 
   async getDefaultWarehouseId(): Promise<number> {
@@ -69,9 +70,7 @@ export class ProductCrudService {
         else query.andWhere('product.type = :type', { type });
       }
     } else {
-      query.andWhere('product.type != :excludeType', {
-        excludeType: 'SEMI_FINISHED',
-      });
+      query.andWhere("product.type NOT IN ('SEMI_FINISHED', 'DORMANT')");
     }
     if (categoryId)
       query.andWhere('product.category_id = :categoryId', { categoryId });
@@ -83,7 +82,7 @@ export class ProductCrudService {
     }
     if (lowStock) {
       query.andWhere(
-        '(SELECT COALESCE(SUM(s.quantity), 0) FROM stock s WHERE s.product_id = product.id) <= COALESCE(product.min_stock, 0)',
+        `(SELECT COALESCE(SUM(CASE WHEN sm.type = 'IN' THEN sm.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN sm.type = 'OUT' THEN sm.quantity ELSE 0 END), 0) FROM stock_movements sm WHERE sm.product_id = product.id) <= COALESCE(product.min_stock, 0)`,
       );
     }
     query.orderBy('product.created_at', 'DESC');
@@ -109,15 +108,17 @@ export class ProductCrudService {
   private async enrichWithStock(products: Product[]) {
     if (products.length === 0) return [];
     const productIds = products.map((p) => p.id);
-    const stocks = await this.stockRepo
-      .createQueryBuilder('stock')
-      .select('stock.product_id', 'product_id')
-      .addSelect('SUM(stock.quantity)', 'total')
-      .where('stock.product_id IN (:...productIds)', { productIds })
-      .groupBy('stock.product_id')
-      .getRawMany();
+    const stockRows = await this.dataSource.query(
+      `SELECT product_id,
+        COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS total
+      FROM stock_movements
+      WHERE product_id = ANY($1)
+      GROUP BY product_id`,
+      [productIds],
+    );
     const stockMap = new Map(
-      stocks.map((s) => [Number(s.product_id), Number(s.total)]),
+      stockRows.map((s: any) => [Number(s.product_id), Number(s.total)]),
     );
     return products.map((p) => ({
       ...p,

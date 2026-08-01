@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { DailyProduction } from './entities/daily-production.entity';
-import { ProductionRecordHistory } from './entities/production-record-history.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
+import { ProductionRecordHistory } from './entities/production-record-history.entity';
 import { multiSheetToBuffer } from '../utils/excel-export';
 
 @Injectable()
@@ -11,11 +11,18 @@ export class DailyProductionService {
   constructor(
     @InjectRepository(DailyProduction)
     private productionRepo: Repository<DailyProduction>,
-    @InjectRepository(ProductionRecordHistory)
-    private historyRepo: Repository<ProductionRecordHistory>,
     @InjectRepository(RangeProductionSession)
     private sessionRepo: Repository<RangeProductionSession>,
+    @InjectRepository(ProductionRecordHistory)
+    private recordHistoryRepo: Repository<ProductionRecordHistory>,
   ) {}
+
+  async getRecordHistory(productionId: number) {
+    return this.recordHistoryRepo.find({
+      where: { production_id: productionId },
+      order: { changed_at: 'DESC' },
+    });
+  }
 
   async getDailyProduction(
     date?: string,
@@ -34,14 +41,6 @@ export class DailyProductionService {
       where,
       relations: ['machine', 'mold', 'product'],
       order: { date: 'DESC', id: 'DESC' },
-    });
-  }
-
-  async getProductionHistory(productionId: number) {
-    return this.historyRepo.find({
-      where: { production: { id: productionId } },
-      relations: ['changedByUser'],
-      order: { changed_at: 'DESC' },
     });
   }
 
@@ -77,10 +76,6 @@ export class DailyProductionService {
     const sessions = await this.sessionRepo.find({
       relations: ['machine', 'mold', 'product', 'createdByUser'],
       order: { created_at: 'DESC' },
-    });
-    const history = await this.historyRepo.find({
-      relations: ['changedByUser'],
-      order: { changed_at: 'DESC' },
     });
 
     return multiSheetToBuffer([
@@ -125,20 +120,6 @@ export class DailyProductionService {
           'Created At': s.created_at,
         })),
       },
-      {
-        name: 'Change History',
-        data: history.map((h) => ({
-          ID: h.id,
-          'Production ID': h.production_id,
-          'Change Type': h.change_type,
-          'Old Values': JSON.stringify(h.old_values),
-          'New Values': JSON.stringify(h.new_values),
-          'Changed By': h.changedByUser
-            ? `${h.changedByUser.firstName || ''} ${h.changedByUser.lastName || ''}`.trim()
-            : h.changed_by?.toString() || '',
-          'Changed At': h.changed_at,
-        })),
-      },
-    ]);
+      ]);
   }
 }

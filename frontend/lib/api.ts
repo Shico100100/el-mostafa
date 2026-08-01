@@ -6,25 +6,16 @@ import type {
   CreateJournalEntryDto,
   CreateSalesOrderDto,
   CreatePurchaseOrderDto,
-  SaveSalaryPaymentDto,
   CreateCustomerPaymentDto,
   CreateSupplierPaymentDto,
-  CreateProductionScheduleDto,
-  CreateQCInspectionDto,
   CreateSalesReturnDto,
   CreatePurchaseReturnDto,
   CreateDailyProductionDto,
   AddRawMaterialStockDto,
   CreateManufacturingStockMovementDto,
-  CreateAttendanceDto,
-  CalculatePayrollDto,
-  UpdateEmployeeProfileDto,
   CreateRangeProductionDto,
   CreateBOMDto,
-  CreateCurrencyDto,
-  AddFxRateDto,
   UpdateLandedCostDto,
-  CreateContainerDto,
   CreatePackingListDto,
   CreateNotificationDto,
 } from './dto';
@@ -84,6 +75,13 @@ export const api = {
 
     async getMe() {
         return this.fetchWithAuth('/v1/auth/me');
+    },
+
+    async changePassword(oldPassword: string, newPassword: string) {
+        return this.fetchWithAuth('/v1/auth/me', {
+            method: 'PATCH',
+            body: JSON.stringify({ password: newPassword, oldPassword }),
+        });
     },
 
     _refreshPromise: null as Promise<boolean> | null,
@@ -325,21 +323,6 @@ export const api = {
         });
     },
 
-    async getPayrollEmployees() {
-        return this.fetchWithAuth('/v1/payroll/profiles');
-    },
-
-    async getPayrollPayments() {
-        return this.fetchWithAuth('/v1/payroll/payments');
-    },
-
-    async savePayrollPayment(data: SaveSalaryPaymentDto) {
-        return this.fetchWithAuth('/v1/payroll/payments', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
     async getCustomerStatement(customerId: number) {
         return this.fetchWithAuth(`/v1/sales/customers/${customerId}/statement`);
     },
@@ -362,45 +345,8 @@ export const api = {
         });
     },
 
-    async getProductionSchedules() {
-        return this.fetchWithAuth('/v1/manufacturing/planning');
-    },
-
-    async createProductionSchedule(data: CreateProductionScheduleDto) {
-        return this.fetchWithAuth('/v1/manufacturing/planning', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async updateProductionSchedule(id: number, data: CreateProductionScheduleDto) {
-        return this.fetchWithAuth(`/v1/manufacturing/planning/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
-    },
-
     async getMoldStatus() {
         return this.fetchWithAuth('/v1/manufacturing/molds');
-    },
-
-    async getMold(id: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/molds/${id}`);
-    },
-
-    async getProductionPlanning() {
-        return this.fetchWithAuth('/v1/manufacturing/planning');
-    },
-
-    async getQCInspections() {
-        return this.fetchWithAuth('/v1/manufacturing/qc/recent');
-    },
-
-    async createQCInspection(data: CreateQCInspectionDto) {
-        return this.fetchWithAuth('/v1/manufacturing/qc', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
     },
 
     async getSalesReturns() {
@@ -498,27 +444,6 @@ export const api = {
         });
     },
 
-    async getAttendance() {
-        return this.fetchWithAuth('/v1/manufacturing/attendance');
-    },
-
-    async getWorkers() {
-        return this.fetchWithAuth('/v1/manufacturing/attendance/workers');
-    },
-
-    async saveAttendance(data: CreateAttendanceDto) {
-        return this.fetchWithAuth('/v1/manufacturing/attendance', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async deleteAttendance(id: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/attendance/${id}`, {
-            method: 'DELETE',
-        });
-    },
-
     async getTrends() {
         return this.fetchWithAuth('/v1/reports/trends');
     },
@@ -538,37 +463,8 @@ export const api = {
         });
     },
 
-    async getPayrollProfiles() {
-        return this.fetchWithAuth('/v1/payroll/profiles');
-    },
-
-    async calculatePayroll(data: CalculatePayrollDto) {
-        const qs = data.month ? `?month=${data.month}` : '';
-        return this.fetchWithAuth(`/v1/payroll/calculate${qs}`);
-    },
-
-    async updatePayrollProfile(id: number, data: UpdateEmployeeProfileDto) {
-        return this.fetchWithAuth(`/v1/payroll/profiles/${id}`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
     async getManufacturingStats() {
         return this.fetchWithAuth('/v1/manufacturing/stats');
-    },
-
-    async getQCStats() {
-        return this.fetchWithAuth('/v1/manufacturing/qc/stats');
-    },
-
-    async getQCPending() {
-        return this.fetchWithAuth('/v1/manufacturing/qc/pending');
-    },
-
-    async getQCRecent(limit?: number) {
-        const qs = limit ? `?limit=${limit}` : '';
-        return this.fetchWithAuth(`/v1/manufacturing/qc/recent${qs}`);
     },
 
     async getSalesReport(data: { startDate: string; endDate: string }) {
@@ -705,12 +601,6 @@ export const api = {
         });
     },
 
-    async deleteProductionSchedule(id: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/planning/${id}`, {
-            method: 'DELETE',
-        });
-    },
-
     async getMolds() {
         return this.fetchWithAuth('/v1/manufacturing/molds');
     },
@@ -753,52 +643,6 @@ export const api = {
         return this.fetchWithAuth(`/v1/manufacturing/boms/${id}/cost${q}`);
     },
 
-    // Currency APIs
-    async getCurrencies() {
-        return this.fetchWithAuth('/v1/purchases/currencies');
-    },
-
-    async getAllCurrencies() {
-        return this.fetchWithAuth('/v1/purchases/currencies/all');
-    },
-
-    async createCurrency(data: CreateCurrencyDto) {
-        return this.fetchWithAuth('/v1/purchases/currencies', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async updateCurrency(id: number, data: CreateCurrencyDto) {
-        return this.fetchWithAuth(`/v1/purchases/currencies/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async deleteCurrency(id: number) {
-        return this.fetchWithAuth(`/v1/purchases/currencies/${id}`, {
-            method: 'DELETE',
-        });
-    },
-
-    // FX Rate APIs
-    async getFxRates(currencyId?: number) {
-        const q = currencyId ? `?currency_id=${currencyId}` : '';
-        return this.fetchWithAuth(`/v1/purchases/fx-rates${q}`);
-    },
-
-    async addFxRate(data: AddFxRateDto) {
-        return this.fetchWithAuth('/v1/purchases/fx-rates', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async getWeightedAverageFx(currencyId: number) {
-        return this.fetchWithAuth(`/v1/purchases/fx-rates/weighted-average/${currencyId}`);
-    },
-
     // Landed Cost APIs
     async getLandedCost(orderId: number) {
         return this.fetchWithAuth(`/v1/purchases/orders/${orderId}/landed-cost`);
@@ -809,35 +653,6 @@ export const api = {
             method: 'PUT',
             body: JSON.stringify(data),
         });
-    },
-
-    // Container APIs
-    async getContainers() {
-        return this.fetchWithAuth('/v1/purchases/containers');
-    },
-
-    async createContainer(data: CreateContainerDto) {
-        return this.fetchWithAuth('/v1/purchases/containers', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async updateContainer(id: number, data: CreateContainerDto) {
-        return this.fetchWithAuth(`/v1/purchases/containers/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async deleteContainer(id: number) {
-        return this.fetchWithAuth(`/v1/purchases/containers/${id}`, {
-            method: 'DELETE',
-        });
-    },
-
-    async calculateCBM(length: number, width: number, height: number, cartons: number) {
-        return this.fetchWithAuth(`/v1/purchases/cbm?length=${length}&width=${width}&height=${height}&cartons=${cartons}`);
     },
 
     // Packing List APIs
@@ -859,41 +674,9 @@ export const api = {
         });
     },
 
-    async markNotificationAsRead(id: number) {
-        return this.markNotificationRead(id);
-    },
-
-    // Smart Reorder Alerts
-    async getReorderSuggestions(containerId: number) {
-        return this.fetchWithAuth(`/v1/purchases/reorder-suggestions/${containerId}`);
-    },
-
-    // Shipment Profitability
-    async getShipmentProfitability(startDate?: string, endDate?: string) {
-        const params = new URLSearchParams();
-        if (startDate) params.set('startDate', startDate);
-        if (endDate) params.set('endDate', endDate);
-        const qs = params.toString();
-        return this.fetchWithAuth(`/v1/reports/shipment-profitability${qs ? '?' + qs : ''}`);
-    },
-
-    // MRP
-    async getMRPPlanning() {
-        return this.fetchWithAuth('/v1/manufacturing/mrp/planning');
-    },
-
-    async getQCDashboard() {
-        const [stats, recent] = await Promise.all([
-            this.getQCStats(),
-            this.getQCRecent(50),
-        ]);
-        return { stats, recent };
-    },
-
-    // Sales Excel exports
     async exportSalesOrders() {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/v1/sales/export/orders', {
+        const response = await fetch(`${API_URL}/v1/sales/export/orders`, {
             headers: { ...(token && { Authorization: `Bearer ${token}` }) },
         });
         if (!response.ok) throw new Error('Export failed');
@@ -906,42 +689,9 @@ export const api = {
         window.URL.revokeObjectURL(url);
     },
 
-    // Manufacturing Orders
-    async getManufacturingOrders(params?: { status?: string; sales_order_id?: number }) {
-        const searchParams = new URLSearchParams();
-        if (params?.status) searchParams.set('status', params.status);
-        if (params?.sales_order_id) searchParams.set('sales_order_id', String(params.sales_order_id));
-        const qs = [...searchParams].length ? '?' + searchParams.toString() : '';
-        return this.fetchWithAuth(`/v1/manufacturing/manufacturing-orders${qs}`);
-    },
-
-    async createManufacturingOrdersFromSalesOrder(salesOrderId: number): Promise<unknown> {
-        return this.fetchWithAuth(`/v1/manufacturing/manufacturing-orders/from-sales-order/${salesOrderId}`, {
-            method: 'POST',
-        });
-    },
-
-    async getManufacturingOrdersBySalesOrder(salesOrderId: number): Promise<unknown> {
-        return this.fetchWithAuth(`/v1/manufacturing/manufacturing-orders/by-sales-order/${salesOrderId}`);
-    },
-
-    async updateManufacturingOrderStatus(id: number, status: string): Promise<unknown> {
-        return this.fetchWithAuth(`/v1/manufacturing/manufacturing-orders/${id}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status }),
-        });
-    },
-
-    async updateManufacturingOrderProduced(id: number, quantity: number): Promise<unknown> {
-        return this.fetchWithAuth(`/v1/manufacturing/manufacturing-orders/${id}/produced`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity }),
-        });
-    },
-
     async exportSalesCustomers() {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/v1/sales/export/customers', {
+        const response = await fetch(`${API_URL}/v1/sales/export/customers`, {
             headers: { ...(token && { Authorization: `Bearer ${token}` }) },
         });
         if (!response.ok) throw new Error('Export failed');
@@ -954,85 +704,15 @@ export const api = {
         window.URL.revokeObjectURL(url);
     },
 
-    // Traceability / Batch Tracking
-    async getBatches(status?: string) {
-        const qs = status ? `?status=${status}` : '';
-        return this.fetchWithAuth(`/v1/manufacturing/traceability${qs}`);
+    async markProductAsDormant(productId: number) {
+        return this.fetchWithAuth(`/v1/inventory/products/${productId}/mark-dormant`, { method: 'POST' });
     },
 
-    async getBatch(id: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/${id}`);
+    async restoreProduct(productId: number) {
+        return this.fetchWithAuth(`/v1/inventory/products/${productId}/restore`, { method: 'POST' });
     },
 
-    async createBatch(dto: {
-        product_id: number;
-        production_date: string;
-        expiry_date?: string;
-        quantity: number;
-        unit?: string;
-        notes?: string;
-        production_id?: number;
-        components?: {
-            product_id?: number;
-            accessory_id?: number;
-            supplier_batch_number?: string;
-            quantity_used: number;
-            unit?: string;
-            cost_per_unit?: number;
-        }[];
-    }) {
-        return this.fetchWithAuth('/v1/manufacturing/traceability', {
-            method: 'POST',
-            body: JSON.stringify(dto),
-        });
-    },
-
-    async updateBatchStatus(id: number, status: string) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/${id}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status }),
-        });
-    },
-
-    async recallBatch(id: number, reason?: string) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/${id}/recall`, {
-            method: 'POST',
-            body: JSON.stringify({ reason }),
-        });
-    },
-
-    async getExpiringBatches(days: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/expiring?days=${days}`);
-    },
-
-    // Production Feasibility
-    async analyzeProductionFeasibility(items: { productId: number; quantity: number }[]) {
-        return this.fetchWithAuth('/v1/manufacturing/feasibility/analyze', {
-            method: 'POST',
-            body: JSON.stringify({ items }),
-        });
-    },
-
-    async saveFeasibilityReport(data: { items: { productId: number; quantity: number }[]; report: unknown }) {
-        return this.fetchWithAuth('/v1/manufacturing/feasibility/save', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-
-    async getProductionHistory(productId: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/feasibility/production-history/${productId}`);
-    },
-
-    async getAssemblyOrders() {
-        return this.fetchWithAuth('/v1/manufacturing/assembly');
-    },
-
-    async forwardTrace(supplierBatch: string) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/trace/forward?supplierBatch=${encodeURIComponent(supplierBatch)}`);
-    },
-
-    async backwardTrace(batchId: number) {
-        return this.fetchWithAuth(`/v1/manufacturing/traceability/trace/backward/${batchId}`);
+    async getShipmentProfitability(startDate: string, endDate: string) {
+        return this.fetchWithAuth(`/v1/reports/shipment-profitability?startDate=${startDate}&endDate=${endDate}`);
     },
 };

@@ -26,6 +26,7 @@ import type { Response } from 'express';
 import {
   CreateCategoryDto,
   CreateProductDto,
+  UpdateProductDto,
   CreateWarehouseDto,
   CreateStockMovementDto,
   TransferStockDto,
@@ -154,7 +155,7 @@ export class InventoryController {
   @Put('products/:id')
   @ApiOperation({ summary: 'Update a product' })
   @ApiResponse({ status: 200, description: 'Product updated' })
-  updateProduct(@Param('id') id: string, @Body() data: CreateProductDto) {
+  updateProduct(@Param('id') id: string, @Body() data: UpdateProductDto) {
     return this.inventoryService.updateProduct(+id, data);
   }
 
@@ -303,9 +304,23 @@ export class InventoryController {
   }
 
   @Post('products/:id/auto-price')
-  @ApiOperation({ summary: 'Auto price a product based on cost' })
-  @ApiResponse({ status: 200, description: 'Product priced' })
+  @ApiOperation({ summary: 'Auto-price a product' })
+  @ApiResponse({ status: 200, description: 'Price updated' })
   autoPriceProduct(@Param('id') id: string) {
     return this.inventoryService.autoPriceProduct(+id);
+  }
+
+  @Post('products/:id/mark-dormant')
+  @ApiOperation({ summary: 'Mark a product as dormant' })
+  @ApiResponse({ status: 200, description: 'Product marked as dormant' })
+  markProductAsDormant(@Param('id') id: string) {
+    return this.inventoryService.markProductAsDormant(+id);
+  }
+
+  @Post('products/:id/restore')
+  @ApiOperation({ summary: 'Restore a dormant product' })
+  @ApiResponse({ status: 200, description: 'Product restored' })
+  restoreProduct(@Param('id') id: string) {
+    return this.inventoryService.restoreProduct(+id);
   }
 }

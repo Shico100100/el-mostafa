@@ -21,6 +21,7 @@ const typeOptions = [
   { value: 'PACKAGING', label: 'تغليف' },
   { value: 'RAW', label: 'خام' },
   { value: 'SEMI_FINISHED', label: 'نصف مصنع' },
+  { value: 'DORMANT', label: 'خامل' },
 ];
 
 function toProductData(p: Product) {
@@ -75,6 +76,7 @@ function ProductsPageContent() {
           onOpenAdjustment={h.openAdjustment}
           onEditFull={(p) => { h.setEditingProduct(p); h.setShowModal(true); }}
           onDuplicate={(p) => { const dup = { ...p, id: 0 as any, name: `${p.name} (نسخة)`, stock_quantity: '0' }; h.setEditingProduct(dup as any); h.setShowModal(true); }}
+          onMarkDormant={h.handleMarkDormant} onRestoreProduct={h.handleRestoreProduct}
           onDelete={h.handleDelete} onRowClick={(id) => router.push(`/inventory2/products/${id}`)}
           boms={boms} latestPrices={h.latestPrices} margin={h.margin}
           page={h.page} totalPages={h.totalPages} totalItems={h.totalItems} onPageChange={h.setPage} />

@@ -145,11 +145,12 @@ export function useProducts() {
 
   const handleSaveProduct = async (data: any) => {
     try {
+      const { id, stock_quantity, ...clean } = data;
       if (editingProduct) {
-        await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(data) });
+        await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(clean) });
         toast.success('تم التحديث');
       } else {
-        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify(data) });
+        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify({ ...clean, initial_stock: stock_quantity }) });
         toast.success('تمت الإضافة');
       }
       setShowModal(false);
@@ -216,6 +217,46 @@ export function useProducts() {
     } catch { toast.error('فشل التحديث'); }
   };
 
+  const handleMarkDormant = async (productId: number) => {
+    toast.custom((t: any) => (
+      <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
+        <p className="text-white text-lg font-semibold mb-4">نقل المنتج إلى المخزن الخامل؟</p>
+        <p className="text-slate-400 text-sm mb-4">سيتم نقل المخزون الحالي إلى المخزن الخامل وإخفاء المنتج من القائمة الافتراضية</p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={() => toast.dismiss(t)} className="px-4 py-2 bg-slate-700/50 text-slate-200 rounded-lg hover:bg-slate-700 transition">إلغاء</button>
+          <button onClick={async () => {
+            toast.dismiss(t);
+            try {
+              await api.markProductAsDormant(productId);
+              toast.success('تم نقل المنتج للخامل');
+              loadData();
+            } catch { toast.error('فشل نقل المنتج'); }
+          }} className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition">نقل</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
+  const handleRestoreProduct = async (productId: number) => {
+    toast.custom((t: any) => (
+      <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
+        <p className="text-white text-lg font-semibold mb-4">استرجاع المنتج من الخامل؟</p>
+        <p className="text-slate-400 text-sm mb-4">سيتم نقل المخزون إلى مخزن المنتج التام وإعادة المنتج للقائمة</p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={() => toast.dismiss(t)} className="px-4 py-2 bg-slate-700/50 text-slate-200 rounded-lg hover:bg-slate-700 transition">إلغاء</button>
+          <button onClick={async () => {
+            toast.dismiss(t);
+            try {
+              await api.restoreProduct(productId);
+              toast.success('تم استرجاع المنتج');
+              loadData();
+            } catch { toast.error('فشل الاسترجاع'); }
+          }} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">استرجاع</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
   const handleSmartAssign = async () => {
     try {
       const result = await api.fetchWithAuth<{ message: string }>('/inventory/products/smart-assign', { method: 'POST' });
@@ -242,6 +283,6 @@ export function useProducts() {
     setEditForm, setInlineEditingId, setAdjustingId,
     loadData, toggleSort, handleExport, handleImport, handleSaveProduct,
     handleDelete, startInlineEdit, saveInlineEdit, openAdjustment, saveAdjustment,
-    handleBulkPriceUpdate, handleSmartAssign, margin,
+    handleBulkPriceUpdate, handleSmartAssign, handleMarkDormant, handleRestoreProduct, margin,
   };
 }

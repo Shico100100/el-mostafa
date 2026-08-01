@@ -161,7 +161,7 @@ export class InventoryService {
           manager.create(Stock, {
             product_id: saved.id,
             warehouse_id: warehouseId,
-            quantity: initial_stock || 0,
+            quantity: 0,
           }),
         );
 
@@ -191,8 +191,7 @@ export class InventoryService {
     id: number,
     data: Partial<Product> & { initial_stock?: number },
   ) {
-    const { initial_stock: _initialStock, ...productData } = data;
-    void _initialStock;
+    const { initial_stock, ...productData } = data;
     const oldProduct = await this.productRepo.findOne({ where: { id } });
 
     if (
@@ -226,7 +225,7 @@ export class InventoryService {
           manager.create(Stock, {
             product_id: id,
             warehouse_id: productData.warehouse_id,
-            quantity: qty,
+            quantity: 0,
           }),
         );
         if (qty > 0) {
@@ -244,10 +243,67 @@ export class InventoryService {
       });
     }
 
+    const targetWarehouseId =
+      productData.warehouse_id ?? oldProduct?.warehouse_id;
+
+    if (initial_stock !== undefined && oldProduct && targetWarehouseId) {
+      const targetQty = Number(initial_stock);
+      if (targetQty >= 0) {
+        const stock = await this.stockRepo.findOne({
+          where: { product_id: id, warehouse_id: targetWarehouseId },
+        });
+        const currentQty = stock ? Number(stock.quantity) : 0;
+        const delta = targetQty - currentQty;
+        if (delta !== 0) {
+          await this.addStockMovement({
+            product_id: id,
+            warehouse_id: targetWarehouseId,
+            type: delta > 0 ? MovementType.IN : MovementType.OUT,
+            quantity: Math.abs(delta),
+            notes: 'تعديل المخزون السريع',
+          });
+        }
+      }
+    }
+
     await this.productRepo.update(id, productData);
     return this.productRepo.findOne({
       where: { id },
       relations: ['category', 'warehouse'],
+    });
+  }
+
+  async markProductAsDormant(productId: number) {
+    const product = await this.productRepo.findOne({ where: { id: productId } });
+    if (!product) throw new NotFoundException('المنتج غير موجود');
+    if (product.type === 'DORMANT') throw new BadRequestException('المنتج خامل بالفعل');
+
+    let dormantWarehouse = await this.warehouseRepo.findOne({ where: { name: 'خامل' } });
+    if (!dormantWarehouse) {
+      dormantWarehouse = await this.warehouseRepo.save(
+        this.warehouseRepo.create({ name: 'خامل', is_active: true }),
+      );
+    }
+
+    return this.updateProduct(productId, {
+      type: 'DORMANT',
+      warehouse_id: dormantWarehouse.id,
+    });
+  }
+
+  async restoreProduct(productId: number) {
+    const product = await this.productRepo.findOne({ where: { id: productId } });
+    if (!product) throw new NotFoundException('المنتج غير موجود');
+    if (product.type !== 'DORMANT') throw new BadRequestException('المنتج ليس خاملاً');
+
+    const defaultWarehouse = await this.warehouseRepo.findOne({ where: { name: 'منتج تام' } });
+    const targetWarehouseId = defaultWarehouse
+      ? defaultWarehouse.id
+      : (await this.getDefaultWarehouseId());
+
+    return this.updateProduct(productId, {
+      type: 'FINISHED',
+      warehouse_id: targetWarehouseId,
     });
   }
 
@@ -290,7 +346,7 @@ export class InventoryService {
         manager.create(Stock, {
           product_id,
           warehouse_id: to_warehouse_id,
-          quantity: qty,
+          quantity: 0,
         }),
       );
       if (qty > 0) {
@@ -335,8 +391,8 @@ export class InventoryService {
     await this.addStockMovement({
       product_id: data.product_id,
       warehouse_id: data.warehouse_id,
-      type: MovementType.IN,
-      quantity: 0,
+      type: MovementType.ADJUST,
+      quantity: data.new_quantity,
       notes: data.notes
         ? `تعديل يدوي - ${data.notes} (الكمية الجديدة: ${data.new_quantity})`
         : `تعديل يدوي (الكمية الجديدة: ${data.new_quantity})`,
@@ -462,7 +518,7 @@ export class InventoryService {
               manager.create(Stock, {
                 product_id: product.id,
                 warehouse_id: targetWarehouseId,
-                quantity: qty,
+                quantity: 0,
               }),
             );
 

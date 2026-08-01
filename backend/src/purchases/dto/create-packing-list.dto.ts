@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -8,10 +7,10 @@ import {
 } from 'class-validator';
 
 export class CreatePackingListDto {
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
-  container_id: number;
+  container_id?: number;
 
   @ApiProperty({ example: 40.0 })
   @IsNumber()

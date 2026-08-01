@@ -1,13 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { DailyProduction } from './daily-production.entity';
-import { UserEntity as User } from '../../users/infrastructure/persistence/relational/entities/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('production_record_history')
 export class ProductionRecordHistory {
@@ -17,26 +8,18 @@ export class ProductionRecordHistory {
   @Column({ type: 'int' })
   production_id: number;
 
-  @ManyToOne(() => DailyProduction)
-  @JoinColumn({ name: 'production_id' })
-  production: DailyProduction;
+  @Column({ type: 'json', nullable: true })
+  old_values: any;
 
-  @Column({ type: 'json' })
-  old_values: Record<string, any>;
+  @Column({ type: 'json', nullable: true })
+  new_values: any;
 
-  @Column({ type: 'json' })
-  new_values: Record<string, any>;
+  @Column({ type: 'varchar', nullable: true })
+  change_type: string | null;
 
-  @Column()
-  change_type: string;
+  @Column({ type: 'int', nullable: true })
+  changed_by: number | null;
 
-  @Column({ nullable: true })
-  changed_by: number;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'changed_by' })
-  changedByUser: User;
-
-  @CreateDateColumn()
-  changed_at: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  changed_at: Date | null;
 }

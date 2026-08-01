@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Package, Box, Gauge, Warehouse, Check, Zap, Pencil, ClipboardList, Trash2 } from 'lucide-react';
+import { Package, Box, Gauge, Check, Zap, Pencil, ClipboardList, Trash2, PowerOff, RotateCcw } from 'lucide-react';
 import { TypeBadge, StockBadge } from '@/components/inventory2/Badge';
 import type { BOM, Product } from '@/components/inventory2/types';
 
@@ -23,7 +23,7 @@ interface Props {
   loading: boolean;
   sortField: string;
   sortDir: string;
-  onToggleSort: (f: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onToggleSort: (f: any) => void;  
   inlineEditingId: number | null;
   editForm: Record<string, string>;
   onEditFormChange: (f: Record<string, string>) => void;
@@ -33,6 +33,8 @@ interface Props {
   onEditFull: (p: Product) => void;
   onDuplicate: (p: Product) => void;
   onDelete: (id: number) => void;
+  onMarkDormant: (id: number) => void;
+  onRestoreProduct: (id: number) => void;
   onRowClick: (id: number) => void;
   boms: BOM[];
   latestPrices: Record<number, { price: number }>;
@@ -47,6 +49,7 @@ export function Inventory2ProductsTable({
   products, loading, sortField, sortDir, onToggleSort,
   inlineEditingId, editForm, onEditFormChange,
   onStartInlineEdit, onSaveInlineEdit, onOpenAdjustment, onEditFull, onDuplicate, onDelete,
+  onMarkDormant, onRestoreProduct,
   onRowClick, boms, latestPrices, margin,
   page, totalPages, totalItems, onPageChange,
 }: Props) {
@@ -63,7 +66,6 @@ export function Inventory2ProductsTable({
               <th className="px-4 py-4 text-right text-white font-semibold text-sm w-14">صورة</th>
               <SortHeader field="name" label="المنتج" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
               <SortHeader field="type" label="النوع" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
-              <th className="px-6 py-4 text-right text-white font-semibold text-sm">المخزن</th>
               <SortHeader field="cost_price" label="التكلفة" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
               <SortHeader field="selling_price" label="سعر البيع" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
               <SortHeader field="margin" label="الهامش" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
@@ -93,7 +95,6 @@ export function Inventory2ProductsTable({
                     <div className="text-xs text-slate-500 mt-0.5">{product.unit || 'قطعة'}</div>
                   </td>
                   <td className="px-6 py-4"><TypeBadge type={product.type} /></td>
-                  <td className="px-6 py-4"><span className="text-sm text-slate-400 flex items-center gap-1"><Warehouse className="w-3.5 h-3.5" />{product.warehouse_id || '-'}</span></td>
                   <td className="px-6 py-4 text-slate-300 text-sm">{cost.toFixed(2)}</td>
                   <td className="px-6 py-4">
                     {inlineEditingId === product.id ? (
@@ -139,6 +140,11 @@ export function Inventory2ProductsTable({
                           <button onClick={() => onOpenAdjustment(product.id)} className="p-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-200 rounded-lg transition" title="تسوية"><Gauge className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onEditFull(product)} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Pencil className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onDuplicate(product)} className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-200 rounded-lg transition" title="نسخ المنتج"><ClipboardList className="w-3.5 h-3.5" /></button>
+                          {product.type === 'DORMANT' ? (
+                            <button onClick={() => onRestoreProduct(product.id)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-200 rounded-lg transition" title="استرجاع"><RotateCcw className="w-3.5 h-3.5" /></button>
+                          ) : (
+                            <button onClick={() => onMarkDormant(product.id)} className="p-1.5 bg-amber-500/20 hover:bg-amber-500/40 text-amber-200 rounded-lg transition" title="نقل للخامل"><PowerOff className="w-3.5 h-3.5" /></button>
+                          )}
                           <button onClick={() => onDelete(product.id)} className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg transition" title="حذف"><Trash2 className="w-3.5 h-3.5" /></button>
                         </>
                       )}
@@ -149,7 +155,7 @@ export function Inventory2ProductsTable({
             })}
             {products.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-6 py-16 text-center text-slate-500">
+                <td colSpan={9} className="px-6 py-16 text-center text-slate-500">
                   <Package className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                   <p>لا توجد منتجات</p>
                 </td>

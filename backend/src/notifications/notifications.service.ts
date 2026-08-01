@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, Not } from 'typeorm';
+import { Repository, LessThanOrEqual, Not, DataSource } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Notification } from './notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
@@ -26,6 +26,7 @@ export class NotificationsService {
     @InjectRepository(SalesOrder)
     private salesOrderRepo: Repository<SalesOrder>,
     private notificationsGateway: NotificationsGateway,
+    private dataSource: DataSource,
   ) {}
 
   async create(
@@ -62,6 +63,10 @@ export class NotificationsService {
     return this.notificationRepo.update(id, { isRead: true });
   }
 
+  async markAllRead() {
+    return this.notificationRepo.update({ isRead: false }, { isRead: true });
+  }
+
   // Proactive Alert Checks
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async runSystemChecks() {
@@ -74,10 +79,13 @@ export class NotificationsService {
   private async checkLowStock() {
     const products = await this.productRepo.find();
     for (const product of products) {
-      const stocks = await this.stockRepo.find({
-        where: { product_id: product.id },
-      });
-      const totalQty = stocks.reduce((sum, s) => sum + Number(s.quantity), 0);
+      const result = await this.dataSource.query(
+        `SELECT COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+                COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS total
+         FROM stock_movements WHERE product_id = $1`,
+        [product.id],
+      );
+      const totalQty = Number(result[0]?.total) || 0;
       const minStock = Number(product.min_stock || 0);
 
       if (totalQty <= minStock && minStock > 0) {

@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
@@ -38,7 +39,6 @@ import {
   CreateMachineDto,
   CreateMoldDto,
   CreateBOMDto,
-  CreateAssemblyOrderDto,
   CreateMaintenanceDto,
   CreateMoldIssueDto,
   CreateRawMaterialDto,
@@ -239,21 +239,6 @@ export class ManufacturingController {
     return this.bomService.deleteBOM(+id);
   }
 
-  // Assembly
-  @Post('assembly')
-  @ApiOperation({ summary: 'Create an assembly order' })
-  @ApiResponse({ status: 201, description: 'Assembly order created' })
-  createAssembly(@Body() data: CreateAssemblyOrderDto) {
-    return this.manufacturingService.createAssembly(data);
-  }
-
-  @Get('assembly')
-  @ApiOperation({ summary: 'Get all assembly orders' })
-  @ApiResponse({ status: 200, description: 'Returns assembly orders' })
-  getAssemblyOrders() {
-    return this.manufacturingService.getAssemblyOrders();
-  }
-
   // Machines
   @Get('machines/status')
   @ApiOperation({ summary: 'Get machines with current status' })
@@ -308,6 +293,20 @@ export class ManufacturingController {
   @ApiResponse({ status: 200, description: 'Machine updated' })
   updateMachine(@Param('id') id: string, @Body() data: CreateMachineDto) {
     return this.machineService.updateMachine(+id, data);
+  }
+
+  @Post('machines/:id/calculate-depreciation')
+  @ApiOperation({ summary: 'Queue depreciation calculation for a machine' })
+  @ApiResponse({ status: 201, description: 'Depreciation job queued' })
+  calculateMachineDepreciation(@Param('id') id: string) {
+    return this.machineService.queueDepreciationCalculation(+id);
+  }
+
+  @Post('machines/calculate-all-depreciation')
+  @ApiOperation({ summary: 'Queue depreciation for all machines' })
+  @ApiResponse({ status: 201, description: 'All depreciation jobs queued' })
+  calculateAllDepreciation() {
+    return this.machineService.queueAllDepreciation();
   }
 
   // Maintenance
@@ -459,13 +458,6 @@ export class ManufacturingController {
     return this.manufacturingService.deleteRangeSession(+id);
   }
 
-  @Get('production/:id/history')
-  @ApiOperation({ summary: 'Get production history by ID' })
-  @ApiResponse({ status: 200, description: 'Returns production history' })
-  getProductionHistory(@Param('id') id: string) {
-    return this.dailyProductionService.getProductionHistory(+id);
-  }
-
   @Put('production/:id')
   @ApiOperation({ summary: 'Update a production record' })
   @ApiResponse({ status: 200, description: 'Production updated' })
@@ -474,6 +466,13 @@ export class ManufacturingController {
     @Body() data: CreateDailyProductionDto,
   ) {
     return this.manufacturingService.updateProduction(+id, data);
+  }
+
+  @Get('production/:id/history')
+  @ApiOperation({ summary: 'Get change history for a production record' })
+  @ApiResponse({ status: 200, description: 'Returns production record history' })
+  getProductionRecordHistory(@Param('id') id: string) {
+    return this.dailyProductionService.getRecordHistory(+id);
   }
 
   @Delete('production/:id')
@@ -697,7 +696,7 @@ export class ManufacturingController {
   }
 
   // Update stock movement
-  @Put('stock-movements/:id')
+  @Patch('stock-movements/:id')
   updateStockMovement(
     @Param('id') id: string,
     @Body() data: Partial<CreateManufacturingStockMovementDto>,

@@ -36,6 +36,10 @@ export class DocumentsService {
     return doc;
   }
 
+  async findAll() {
+    return this.repo.find({ order: { createdAt: 'DESC' } });
+  }
+
   async findByEntity(entityType: string, entityId: number) {
     return this.repo.find({ where: { entityType, entityId } });
   }
