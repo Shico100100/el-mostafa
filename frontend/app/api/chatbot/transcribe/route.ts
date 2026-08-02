@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = 'http://localhost:8765/api/chatbot/speech/transcribe';
+const CHATBOT_BASE = process.env.CHATBOT_URL || 'http://localhost:8765';
+const API_URL = `${CHATBOT_BASE}/api/chatbot/speech/transcribe`;
 
 export async function POST(request: NextRequest) {
   try {
