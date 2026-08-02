@@ -36,7 +36,7 @@ export function ConsumptionTable({ items }: Props) {
                   <td className="px-6 py-4"><div className="text-green-400 font-semibold">{Number(c.total_cost).toFixed(2)} ج.م</div></td>
                   <td className="px-6 py-4">
                     <div className="text-gray-300">
-                      {c.assembly_order ? `تجميع #${c.assembly_order.id}` : c.production ? `إنتاج #${c.production.id}` : 'يدوي'}
+                      {c.production ? `إنتاج #${c.production.id}` : 'يدوي'}
                     </div>
                   </td>
                   <td className="px-6 py-4"><div className="text-gray-400 text-sm">{c.notes || '-'}</div></td>

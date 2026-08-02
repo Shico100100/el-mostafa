@@ -98,12 +98,13 @@ export function useDailyProduction() {
         api.getMolds(),
         api.getRawMaterials(),
       ]);
-      setDailyRecords(daily);
-      setWeeklyRecords(weekly);
-      setMachines(mach.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')));
+      setDailyRecords(Array.isArray(daily) ? daily : (daily as any)?.items ?? []);
+      setWeeklyRecords(Array.isArray(weekly) ? weekly : (weekly as any)?.items ?? []);
+      setMachines(Array.isArray(mach) ? mach.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')) : (mach as any)?.items?.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')) ?? []);
       setMolds(Array.isArray(mol) ? mol.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) : (mol as any)?.items?.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) ?? []);
-      setRawMaterials(mat.sort((a: RawMaterial, b: RawMaterial) =>
-        (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')));
+      setRawMaterials(Array.isArray(mat) ? mat.sort((a: RawMaterial, b: RawMaterial) =>
+        (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')) : (mat as any)?.items?.sort((a: RawMaterial, b: RawMaterial) =>
+        (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')) ?? []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {

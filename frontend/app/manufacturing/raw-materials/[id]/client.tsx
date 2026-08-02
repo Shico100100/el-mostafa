@@ -302,6 +302,7 @@ export default function RawMaterialDetailsPage() {
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">السعر</th>
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">المورد / المرجع</th>
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">ملاحظات</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">الرصيد بعد الحركة</th>
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">تعديل</th>
                                     <th className="px-6 py-4 text-right text-sm font-semibold text-gray-300">حذف</th>
                                 </tr>
@@ -309,13 +310,29 @@ export default function RawMaterialDetailsPage() {
                             <tbody className="divide-y divide-white/10">
                                 {filteredMovements.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
                                             لا توجد حركات مسجلة
                                         </td>
                                     </tr>
-                                ) : (
-                                    filteredMovements.map((mov, idx) => (
-                                        <tr key={idx} className="hover:bg-white/5 transition">
+                                ) : (() => {
+                                    const sorted = [...movements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                                    let netChange = 0;
+                                    sorted.forEach(m => {
+                                        const qty = Number(m.quantity);
+                                        if (m.type === 'IN') netChange += qty;
+                                        else netChange -= qty;
+                                    });
+                                    const currentStock = Number(rawMaterial.current_stock || 0);
+                                    const balanceMap = new Map<number, number>();
+                                    let balance = currentStock - netChange;
+                                    sorted.forEach(m => {
+                                        const qty = Number(m.quantity);
+                                        if (m.type === 'IN') balance += qty;
+                                        else balance -= qty;
+                                        balanceMap.set(m.id, balance);
+                                    });
+                                    return filteredMovements.map((mov) => (
+                                        <tr key={mov.id} className="hover:bg-white/5 transition">
                                             <td className="px-6 py-4 text-gray-300">
                                                 {mov.date ? new Date(mov.date).toLocaleDateString('ar-EG') : '-'}
                                             </td>
@@ -329,6 +346,9 @@ export default function RawMaterialDetailsPage() {
                                             <td className="px-6 py-4 text-gray-300">{mov.price ? `${Number(mov.price).toFixed(2)} ج.م` : '-'}</td>
                                             <td className="px-6 py-4 text-gray-300">{mov.reference}</td>
                                             <td className="px-6 py-4 text-gray-400 text-sm">{mov.notes || '-'}</td>
+                                            <td className={`px-6 py-4 text-center font-bold text-sm ${(balanceMap.get(mov.id) ?? 0) >= 0 ? 'text-white' : 'text-red-400'}`}>
+                                                {(balanceMap.get(mov.id) ?? 0).toLocaleString()}
+                                            </td>
                                             <td className="px-6 py-4 flex gap-2 justify-end">
                                                 <button
                                                     onClick={() => handleEditMovement(mov)}
@@ -344,8 +364,8 @@ export default function RawMaterialDetailsPage() {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ));
+                                })()}
                             </tbody>
                         </table>
                     </div>
