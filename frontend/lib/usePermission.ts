@@ -39,17 +39,13 @@ export function usePermission() {
         if (!parsed?.role) return;
 
         const r = parsed.role;
-        // Avoid setState directly in effect body for this rule.
-        // Compute next state first, then apply in a microtask.
-        const next =
-            typeof r === 'object'
-                ? { role: r.name as UserRole, roleId: r.id as number | null }
-                : { role: r as UserRole, roleId: null };
-
-        queueMicrotask(() => {
-            setRole(next.role);
-            setRoleId(next.roleId);
-        });
+        if (typeof r === 'object' && r !== null) {
+            setRole(r.name as UserRole);
+            setRoleId(r.id as number | null);
+        } else {
+            setRole(r as UserRole);
+            setRoleId(null);
+        }
     }, [parsed]);
 
     const hasRole = (requiredRoles: UserRole[]) => {

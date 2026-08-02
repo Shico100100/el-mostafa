@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { sortAlphabetically } from './sort-utils';
 
 describe('sortAlphabetically', () => {
-  const items = [
+  const items: { name: string }[] = [
     { name: 'ب' },
     { name: 'أ' },
     { name: 'ج' },
@@ -15,7 +15,7 @@ describe('sortAlphabetically', () => {
   });
 
   it('sorts by getter function', () => {
-    const sorted = sortAlphabetically(items, i => i.name);
+    const sorted = sortAlphabetically(items, (i: { name: string }) => i.name);
     expect(sorted.map(i => i.name)).toEqual(['أ', 'ب', 'ت', 'ج']);
   });
 

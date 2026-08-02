@@ -5,29 +5,29 @@
  * Sorts an array of objects alphabetically by a specific field or getter function, supporting Arabic.
  */
 export const sortAlphabetically = <T>(
-    raw: unknown,
+    raw: T[] | { items?: T[]; data?: T[] } | null | undefined,
     fieldOrGetter: keyof T | ((item: T) => string | number | null | undefined),
 ): T[] => {
-    let arr: unknown[];
+    let arr: T[];
     if (Array.isArray(raw)) {
         arr = raw;
-    } else if (raw && typeof raw === 'object') {
-        const r = raw as Record<string, unknown>;
-        arr = (r.items || r.data || []) as unknown[];
+    } else if (raw && typeof raw === 'object' && 'items' in raw && Array.isArray((raw as { items?: T[] }).items)) {
+        arr = (raw as { items: T[] }).items;
+    } else if (raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data?: T[] }).data)) {
+        arr = (raw as { data: T[] }).data;
     } else {
         return [];
     }
     if (!Array.isArray(arr)) return [];
-    const result: T[] = [];
-    for (let i = 0; i < arr.length; i++) result.push(arr[i]);
+    const result = [...arr];
     result.sort((a, b) => {
-        const valA = typeof fieldOrGetter === 'function'
-            ? String((fieldOrGetter as (item: T) => string | number | null | undefined)(a) ?? '')
-            : String(a[fieldOrGetter as keyof T] ?? '');
-        const valB = typeof fieldOrGetter === 'function'
-            ? String((fieldOrGetter as (item: T) => string | number | null | undefined)(b) ?? '')
-            : String(b[fieldOrGetter as keyof T] ?? '');
-        return valA.localeCompare(valB, 'ar', { sensitivity: 'base' });
+        const getVal = (item: T) => {
+            const val = typeof fieldOrGetter === 'function'
+                ? (fieldOrGetter as (item: T) => string | number | null | undefined)(item)
+                : item[fieldOrGetter as keyof T];
+            return String(val ?? '');
+        };
+        return getVal(a).localeCompare(getVal(b), 'ar', { sensitivity: 'base' });
     });
     return result;
 };

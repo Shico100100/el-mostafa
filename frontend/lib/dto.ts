@@ -338,7 +338,6 @@ export interface RecordProductionDto {
 export interface RecordConsumptionDto {
   product_id: number;
   quantity: number;
-  assembly_order_id?: number;
   production_id?: number;
   batch_number?: string;
   notes?: string;
@@ -414,15 +413,6 @@ export interface CreateQCInspectionDto {
   notes?: string;
 }
 
-export interface CreateAssemblyOrderDto {
-  date: string;
-  bom_id: number;
-  quantity: number;
-  worker_id?: number;
-  total_cost?: number;
-  status?: string;
-}
-
 export interface CreateFixedCostDto {
   month: string;
   category?: string;
@@ -481,34 +471,6 @@ export interface UpdateUserDto {
   photo?: unknown;
   role?: unknown;
   status?: unknown;
-}
-
-// ==================== Payroll DTOs ====================
-
-export interface SaveSalaryPaymentDto {
-  user_id: number;
-  month: string;
-  base_salary: number;
-  attendance_days?: number;
-  absent_days?: number;
-  overtime_pay?: number;
-  bonuses?: number;
-  deductions?: number;
-  net_salary: number;
-  status?: string;
-  payment_date?: string;
-  notes?: string;
-}
-
-export interface UpdateEmployeeProfileDto {
-  base_salary?: number;
-  working_hours_per_day?: number;
-  overtime_rate?: number;
-  deduction_rate?: number;
-}
-
-export interface CalculatePayrollDto {
-  month: string;
 }
 
 // ==================== Notifications DTOs ====================
