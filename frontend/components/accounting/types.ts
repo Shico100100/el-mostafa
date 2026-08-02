@@ -7,7 +7,9 @@ export interface Account {
 }
 
 export interface TrialBalanceItem {
-  account_name: string;
-  debit: string | number;
-  credit: string | number;
+  code: string;
+  name: string;
+  type: string;
+  balance: number;
+  displayBalance: { dr: number; cr: number };
 }

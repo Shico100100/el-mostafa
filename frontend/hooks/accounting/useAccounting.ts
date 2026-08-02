@@ -67,9 +67,14 @@ export function useAccounting() {
   ];
 
   const topTrialBalance = trialBalance
-    .sort((a, b) => (Number(b.debit) + Number(b.credit)) - (Number(a.debit) + Number(a.credit)))
+    .filter(item => Math.abs(item.displayBalance?.dr || 0) > 0 || Math.abs(item.displayBalance?.cr || 0) > 0)
+    .sort((a, b) => (Math.abs(b.balance)) - Math.abs(a.balance))
     .slice(0, 5)
-    .map(item => ({ name: item.account_name, debit: Number(item.debit), credit: Number(item.credit) }));
+    .map(item => ({
+      name: item.name,
+      debit: item.displayBalance?.dr || 0,
+      credit: item.displayBalance?.cr || 0,
+    }));
 
   const totalsByType = (['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'] as const).map(t => ({
     type: t,
