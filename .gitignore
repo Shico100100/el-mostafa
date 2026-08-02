@@ -60,3 +60,22 @@ pg16/
 # Build output
 dist/
 .next/
+playwright-report/
+test-results/
+.pw_cache/
+
+# Local agent/tooling data (not part of the app)
+.superpowers/
+.swarm/
+.claude-flow/
+.ruflo/
+ruflo/
+.claude/
+node_modules.bak/
+package-lock.json.bak
+*.dump
+*.db
+andrid.txt
+query
+AGENTS1.md
+backup_*.dump

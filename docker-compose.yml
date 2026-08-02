@@ -1,11 +1,11 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
     container_name: erp-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     restart: unless-stopped
 
   postgres:
@@ -24,6 +24,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    command: >
+      postgres
+        -c shared_buffers=256MB
+        -c effective_cache_size=1GB
+        -c work_mem=16MB
+        -c maintenance_work_mem=128MB
+        -c max_connections=100
+        -c random_page_cost=1.1
     restart: unless-stopped
 
   backend:
@@ -37,6 +45,8 @@ services:
       DATABASE_NAME: elmostafa
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-super-secret-jwt-change-me}
       AUTH_JWT_TOKEN_EXPIRES_IN: ${AUTH_JWT_TOKEN_EXPIRES_IN:-1h}
       AUTH_REFRESH_SECRET: ${AUTH_REFRESH_SECRET:-super-secret-refresh-change-me}
@@ -50,6 +60,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
 
   frontend:
@@ -66,3 +78,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

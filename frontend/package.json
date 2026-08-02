@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
+    "dev": "next dev -H 0.0.0.0 --webpack",
     "dev:clean": "powershell -Command \"if (Test-Path '.next/dev/cache/turbopack') { Remove-Item -Recurse -Force '.next/dev/cache/turbopack'; Write-Output 'cleared turbopack cache' }\" && next dev -H 0.0.0.0",
     "fixfs": "powershell -NoProfile -ExecutionPolicy Bypass -File \"scripts\\fix-slow-filesystem.ps1\"",
     "build": "next build",
-    "build:capacitor": "cross-env CAPACITOR_BUILD=true next build && npx cap sync",
+    "build:capacitor": "npx cap sync",
     "start": "next start -H 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
@@ -28,6 +28,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.4.11",
+    "es-toolkit": "^1.43.0",
     "exceljs": "^4.4.0",
     "form-data": "^4.0.6",
     "js-yaml": "^4.2.0",
@@ -71,3 +72,4 @@
     "vitest": "^4.1.9"
   }
 }
+

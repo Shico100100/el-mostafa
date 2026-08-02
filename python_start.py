@@ -79,11 +79,14 @@ DOCKER_DESKTOP_PATHS = [
 
 def _docker_available():
     """Check if docker CLI responds"""
-    result = subprocess.run(
-        ["docker", "info", "--format", "{{.ServerVersion}}"],
-        capture_output=True, text=True, timeout=10,
-    )
-    return result.returncode == 0
+    try:
+        result = subprocess.run(
+            ["docker", "info", "--format", "{{.ServerVersion}}"],
+            capture_output=True, text=True, timeout=10,
+        )
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
 
 def _start_docker_desktop():
     """Launch Docker Desktop if not already running"""
@@ -217,7 +220,8 @@ def start_frontend():
 
     # Bind to all network interfaces so other PCs can access
     network_ip = get_network_ip()
-    env = {**os.environ, "HOSTNAME": "0.0.0.0", "ALLOWED_DEV_ORIGINS": f"localhost,{network_ip}", "NODE_OPTIONS": "--max-old-space-size=2048"}
+    origin_subnet = ".".join(network_ip.split(".")[:3]) + ".*" if network_ip.count(".") == 3 else network_ip
+    env = {**os.environ, "HOSTNAME": "0.0.0.0", "ALLOWED_DEV_ORIGINS": f"localhost,{network_ip},{origin_subnet}", "NODE_OPTIONS": "--max-old-space-size=2048"}
 
     # Use Popen to run in background
     proc = subprocess.Popen(
