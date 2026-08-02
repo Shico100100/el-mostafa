@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Package, Box, BarChart3, Wrench, Users, Receipt, ClipboardList, Factory, ShoppingCart, Building2, Cog, DollarSign, Banknote, TrendingUp, Radar, Bot, User, ScrollText } from 'lucide-react';
+import { Package, Box, BarChart3, Wrench, Users, Receipt, Undo2, Factory, ShoppingCart, Building2, Cog, DollarSign, Banknote, TrendingUp, Radar, Bot, User, ScrollText } from 'lucide-react';
 
 interface ActionItem {
   icon: React.ReactNode;
@@ -31,7 +31,7 @@ const actionGroups: ActionGroup[] = [
     items: [
       { icon: <Users />, label: 'العملاء', desc: 'الديون والفواتير', onClick: (r) => r.push('/sales/customers') },
       { icon: <Receipt />, label: 'أوامر البيع', desc: 'تسجيل فواتير', onClick: (r) => r.push('/sales/orders') },
-      { icon: <ClipboardList />, label: 'عروض الأسعار', desc: 'إنشاء وتحويل', onClick: (r) => r.push('/sales/quotes') },
+      { icon: <Undo2 />, label: 'المرتجعات', desc: 'مرتجعات المبيعات', onClick: (r) => r.push('/sales/returns') },
     ],
   },
   {
@@ -40,14 +40,13 @@ const actionGroups: ActionGroup[] = [
       { icon: <Factory />, label: 'الموردين', desc: 'المشتريات', onClick: (r) => r.push('/purchases/suppliers') },
       { icon: <ShoppingCart />, label: 'أوامر الشراء', desc: 'فواتير الشراء', onClick: (r) => r.push('/purchases/orders') },
       { icon: <Building2 />, label: 'الإنتاج', desc: 'أوامر التصنيع', onClick: (r) => r.push('/manufacturing') },
-      { icon: <Cog />, label: 'التجميع', desc: 'أقسام التجميع', onClick: (r) => r.push('/assembly') },
+      { icon: <Cog />, label: 'الماكينات', desc: 'إدارة الماكينات', onClick: (r) => r.push('/manufacturing/machines') },
     ],
   },
   {
     title: 'المالية والإدارة', color: 'border-purple-500/20',
     items: [
       { icon: <DollarSign />, label: 'الحسابات', desc: 'القيود والتقارير', onClick: (r) => r.push('/accounting') },
-      { icon: <Banknote />, label: 'الرواتب', desc: 'مسير الرواتب', onClick: (r) => r.push('/hr/payroll') },
       { icon: <BarChart3 />, label: 'التقارير', desc: 'تحليلات الأداء', onClick: (r) => r.push('/reports') },
     ],
   },

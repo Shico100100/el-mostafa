@@ -5,9 +5,10 @@ import { usePermission } from '@/lib/usePermission';
 import { useDashboard } from '@/lib/dashboard/dashboard-context';
 import { useDate } from '@/lib/dashboard/date-context';
 import { api } from '@/lib/api';
-import { TrendingUp, Package, DollarSign, Factory, Cog, Wrench, Bot, Radar, Trophy, Star } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Factory, Cog, Wrench, Bot, Radar, Trophy, Star, BarChart3, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/dashboard/useDashboardStats';
 import { DashboardToolbar } from '@/components/dashboard/DashboardToolbar';
+import { RefreshCw } from 'lucide-react';
 import { AccountBalancesPanel } from '@/components/dashboard/AccountBalancesPanel';
 import { ARAgingPanel } from '@/components/dashboard/ARAgingPanel';
 import { APAgingPanel } from '@/components/dashboard/APAgingPanel';
@@ -23,13 +24,14 @@ import { AttendanceWidget } from '@/components/dashboard/AttendanceWidget';
 import { TopList } from '@/components/dashboard/TopList';
 import { TransactionsTimeline } from '@/components/dashboard/TransactionsTimeline';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { LowStockPanel } from '@/components/dashboard/LowStockPanel';
 
 export function DashboardPageContent() {
   const router = useRouter();
   const { isAdmin } = usePermission();
   const { visiblePanels, isCustomizing } = useDashboard();
   const { debouncedDate } = useDate();
-  const { stats } = useDashboardStats();
+  const { stats, lastRefresh, refresh } = useDashboardStats();
 
   const handleLogout = () => {
     api.clearAuth();
@@ -57,9 +59,12 @@ export function DashboardPageContent() {
   const summaryCards = stats ? [
     { label: 'المبيعات (هذا الشهر)', value: Number(stats.totalSales), icon: <TrendingUp />, color: 'from-emerald-600 to-teal-600', badge: 'شهري' },
     { label: 'المشتريات (هذا الشهر)', value: Number(stats.totalPurchases), icon: <Package />, color: 'from-blue-600 to-cyan-600', badge: 'شهري' },
+    { label: 'صافي الربح', value: Number(stats.grossMargin || 0), icon: <BarChart3 />, color: 'from-teal-600 to-emerald-600', badge: 'شهري' },
     { label: 'رصيد الخزينة', value: Number(stats.treasuryBalance), icon: <DollarSign />, color: 'from-violet-600 to-purple-600', badge: 'حالي' },
     { label: 'قيمة المخزون', value: Number(stats.totalStockValue), icon: <Factory />, color: 'from-amber-600 to-orange-600', badge: 'تقديري' },
+    { label: 'المبالغ المستحقة', value: Number(stats.totalOutstandingAR || 0), icon: <ArrowDownRight />, color: 'from-cyan-600 to-blue-600', badge: 'عملاء' },
     { label: 'أوامر الإنتاج', value: Number(stats.productionCount), icon: <Cog />, color: 'from-rose-600 to-pink-600', badge: 'هذا الشهر' },
+    { label: 'أموال للموردين', value: Number(stats.totalOutstandingAP || 0), icon: <ArrowUpRight />, color: 'from-orange-600 to-red-600', badge: 'موردين' },
     { label: 'صيانة متأخرة', value: Number(stats.maintenanceOverdueCount), icon: <Wrench />, color: 'from-red-600 to-rose-600', badge: 'متأخر' },
   ] : [];
 
@@ -86,6 +91,9 @@ export function DashboardPageContent() {
 
           <div className="flex items-center gap-1.5">
             <LiveClock />
+            <button onClick={refresh} title="تحديث البيانات" className="p-1.5 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition">
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
             <div className="w-px h-5 bg-white/5 mx-1" />
             <NotificationBell />
               <button onClick={() => { const e = new CustomEvent('toggle-chatbot'); window.dispatchEvent(e); }}
@@ -122,7 +130,7 @@ export function DashboardPageContent() {
             </p>
 
             {summaryCards.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {summaryCards.map((card) => (
                   <div key={card.label}
                     className="relative group/card bg-slate-900/40 backdrop-blur-sm rounded-xl border border-white/5 p-3 overflow-hidden hover:border-white/15 transition-all duration-300">
@@ -189,6 +197,10 @@ export function DashboardPageContent() {
 
           <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-white/5 p-5 hover:border-white/10 transition-all duration-300">
             <TransactionsTimeline sales={stats?.latestSales} purchases={stats?.latestPurchases} />
+          </div>
+
+          <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-white/5 p-5 hover:border-white/10 transition-all duration-300">
+            <LowStockPanel />
           </div>
         </div>
 

@@ -3,9 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { PanelWrapper } from './PanelWrapper';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from 'recharts';
 
 interface PnLData {
   totalRevenue: number;
@@ -19,6 +16,7 @@ export function RevenueExpensesPanel() {
   const [state, setState] = useState<'loading' | 'error' | 'empty' | 'ready'>('loading');
   const [data, setData] = useState<PnLData | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +43,6 @@ export function RevenueExpensesPanel() {
           const months = trends.map((t) => ({ month: t.month, revenue: t.sales, expenses: t.purchases }));
           const totalRevenue = months.reduce((s, m) => s + m.revenue, 0);
           const totalExpenses = months.reduce((s, m) => s + m.expenses, 0);
-
           setData({
             totalRevenue,
             totalExpenses,
@@ -63,6 +60,8 @@ export function RevenueExpensesPanel() {
   }, [retryKey]);
 
   const retry = useCallback(() => { setState('loading'); setRetryKey((k) => k + 1); }, []);
+
+  const maxVal = data?.months ? Math.max(...data.months.map((m) => Math.max(m.revenue, m.expenses)), 1) : 1;
 
   return (
     <PanelWrapper
@@ -96,18 +95,44 @@ export function RevenueExpensesPanel() {
           </div>
 
           {Array.isArray(data.months) && data.months.length > 0 && (
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height={176}>
-                <BarChart data={data.months}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                  <XAxis dataKey="month" stroke="#475569" fontSize={9} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#475569" fontSize={9} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #ffffff10', borderRadius: '12px', fontSize: '12px' }} />
-                  <Legend wrapperStyle={{ fontSize: '10px' }} />
-                  <Bar dataKey="revenue" name="الإيرادات" fill="#10b981" radius={[3, 3, 0, 0]} barSize={12} />
-                  <Bar dataKey="expenses" name="المصروفات" fill="#f43f5e" radius={[3, 3, 0, 0]} barSize={12} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-44 relative">
+              <div className="flex items-end gap-1 h-full px-1">
+                {data.months.map((m, i) => {
+                  const revH = (m.revenue / maxVal) * 100;
+                  const expH = (m.expenses / maxVal) * 100;
+                  return (
+                    <div
+                      key={m.month}
+                      className="flex-1 flex flex-col items-center gap-0.5 relative group/bar"
+                      onMouseEnter={() => setHoveredIdx(i)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                    >
+                      {hoveredIdx === i && (
+                        <div className="absolute bottom-full mb-2 z-20 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-[9px] whitespace-nowrap shadow-xl pointer-events-none">
+                          <div className="text-slate-300 font-bold mb-1">{m.month}</div>
+                          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />إيرادات: {m.revenue.toLocaleString()}</div>
+                          <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-rose-400" />مصروفات: {m.expenses.toLocaleString()}</div>
+                        </div>
+                      )}
+                      <div className="w-full flex gap-px items-end" style={{ height: '100%' }}>
+                        <div
+                          className="flex-1 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm transition-all duration-300 hover:from-emerald-500 hover:to-emerald-300"
+                          style={{ height: `${Math.max(revH, 2)}%` }}
+                        />
+                        <div
+                          className="flex-1 bg-gradient-to-t from-rose-600 to-rose-400 rounded-t-sm transition-all duration-300 hover:from-rose-500 hover:to-rose-300"
+                          style={{ height: `${Math.max(expH, 2)}%` }}
+                        />
+                      </div>
+                      <span className="text-[8px] text-slate-600 truncate w-full text-center">{m.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-emerald-400" /><span className="text-[9px] text-slate-500">الإيرادات</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-rose-400" /><span className="text-[9px] text-slate-500">المصروفات</span></div>
+              </div>
             </div>
           )}
         </div>
