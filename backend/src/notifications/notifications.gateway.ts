@@ -5,6 +5,10 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import jwt from 'jsonwebtoken';
+import type { AllConfigType } from '../config/config.type';
 
 function isLocalNetworkOrigin(origin: string): boolean {
   if (!origin) return false;
@@ -44,20 +48,38 @@ function isLocalNetworkOrigin(origin: string): boolean {
   },
   namespace: '/notifications',
 })
+@Injectable()
 export class NotificationsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
   server: Server;
 
-  private connectedClients: Map<string, Socket> = new Map();
+  private connectedClients: Map<string, { socket: Socket; userId?: number }> =
+    new Map();
+
+  constructor(private configService: ConfigService<AllConfigType>) {}
 
   handleConnection(client: Socket) {
-    const token = client.handshake.auth?.token || client.handshake.query?.token;
-    if (token) {
-      this.connectedClients.set(client.id, client);
+    const token =
+      client.handshake.auth?.token || client.handshake.query?.token;
+    if (!token) {
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const secret = this.configService.getOrThrow('auth.secret', {
+        infer: true,
+      });
+      const payload = jwt.verify(token, secret) as { id: number; role: number; sessionId: string };
+      this.connectedClients.set(client.id, {
+        socket: client,
+        userId: payload.id,
+      });
+      void client.join(`user:${payload.id}`);
       void client.join('all');
-    } else {
+    } catch {
       client.disconnect();
     }
   }
@@ -76,6 +98,9 @@ export class NotificationsGateway
     actionData?: any;
     createdAt: Date;
   }) {
+    if (notification.userId) {
+      this.server.to(`user:${notification.userId}`).emit('notification', notification);
+    }
     this.server.to('all').emit('notification', notification);
   }
 }
