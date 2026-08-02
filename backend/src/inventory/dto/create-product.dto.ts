@@ -81,4 +81,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   raw_material_type?: string;
+
+  @ApiPropertyOptional({ example: 100 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  initial_stock?: number;
 }

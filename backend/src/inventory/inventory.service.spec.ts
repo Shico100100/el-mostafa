@@ -6,6 +6,7 @@ import { CategoryService } from './category.service';
 import { ProductService } from './product.service';
 import { WarehouseService } from './warehouse.service';
 import { StockService } from './stock.service';
+import { TransactionHelper } from '../common/transaction.helper';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
 import { Warehouse } from './entities/warehouse.entity';
@@ -18,6 +19,7 @@ describe('InventoryService', () => {
   let productService: ProductService;
   let warehouseService: WarehouseService;
   let stockService: StockService;
+  let transactionHelper: TransactionHelper;
   let productRepo: Repository<Product>;
   let stockRepo: Repository<Stock>;
   let warehouseRepo: Repository<Warehouse>;
@@ -60,6 +62,19 @@ describe('InventoryService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InventoryService,
+        {
+          provide: TransactionHelper,
+          useValue: {
+            runInTransaction: jest.fn().mockImplementation((fn) =>
+              fn({
+                create: jest.fn().mockImplementation((entity, data) => data),
+                save: jest.fn().mockImplementation((entity, data) => ({ id: 1, ...data })),
+                delete: jest.fn().mockResolvedValue(undefined),
+                update: jest.fn().mockResolvedValue(undefined),
+              }),
+            ),
+          },
+        },
         {
           provide: CategoryService,
           useValue: {
@@ -175,6 +190,7 @@ describe('InventoryService', () => {
     productService = module.get(ProductService);
     warehouseService = module.get(WarehouseService);
     stockService = module.get(StockService);
+    transactionHelper = module.get(TransactionHelper);
     productRepo = module.get(getRepositoryToken(Product));
     stockRepo = module.get(getRepositoryToken(Stock));
     warehouseRepo = module.get(getRepositoryToken(Warehouse));
@@ -251,14 +267,11 @@ describe('InventoryService', () => {
         initial_stock: 100,
       } as any);
 
-      expect(mockQueryRunner.connect).toHaveBeenCalled();
-      expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
-      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-      expect(mockQueryRunner.release).toHaveBeenCalled();
+      expect(transactionHelper.runInTransaction).toHaveBeenCalled();
     });
 
     it('should rollback transaction on error', async () => {
-      mockQueryRunner.manager.save.mockRejectedValueOnce(new Error('DB error'));
+      (transactionHelper.runInTransaction as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
       (productRepo.findOne as jest.Mock).mockRejectedValue(new Error('DB error'));
 
       await expect(
@@ -346,7 +359,7 @@ describe('InventoryService', () => {
 
       expect(result.success).toBe(true);
       expect(result.quantity).toBe(50);
-      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(transactionHelper.runInTransaction).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when product not found', async () => {

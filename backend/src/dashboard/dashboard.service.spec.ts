@@ -10,6 +10,7 @@ import { Machine } from '../manufacturing/entities/machine.entity';
 import { Attendance } from '../manufacturing/entities/attendance.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
 import { CacheService } from '../cache/cache.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -108,6 +109,12 @@ describe('DashboardService', () => {
             get: jest.fn().mockResolvedValue(null),
             set: jest.fn().mockResolvedValue(undefined),
             del: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            getUnreadCount: jest.fn().mockResolvedValue(0),
           },
         },
       ],

@@ -16,6 +16,7 @@ import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import { AllExceptionsFilter } from './utils/exception-filter';
+import helmet from 'helmet';
 import { RouteAliasesMiddleware } from './route-aliases.middleware';
 import { setupSwagger } from './swagger';
 
@@ -36,6 +37,7 @@ async function bootstrap() {
     logger: ['error', 'warn'],
   });
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  app.use(helmet());
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 

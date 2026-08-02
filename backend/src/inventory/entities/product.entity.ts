@@ -67,13 +67,13 @@ export class Product {
   @Column({ nullable: true })
   raw_material_type: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
   reorder_point: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
   reorder_quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4, default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 4, default: 0, nullable: true })
   avg_consumption_rate: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
@@ -95,7 +95,7 @@ export class Product {
   @Column({ nullable: true, type: 'text' })
   notes: string;
 
-  @Column({ default: true })
+  @Column({ default: true, nullable: true })
   is_active: boolean;
 
   @DeleteDateColumn()

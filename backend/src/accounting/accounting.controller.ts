@@ -1,6 +1,10 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Query } from '@nestjs/common';
 import { AccountingService } from './accounting.service';
-import { CreateAccountDto, CreateJournalEntryDto } from './dto';
+import {
+  CreateAccountDto,
+  CreateJournalEntryDto,
+  ReverseJournalEntryDto,
+} from './dto';
 
 @Controller('accounting')
 export class AccountingController {
@@ -22,13 +26,35 @@ export class AccountingController {
   }
 
   @Get('journal')
-  getJournalEntries() {
-    return this.accountingService.getJournalEntries();
+  getJournalEntries(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('accountId') accountId?: string,
+  ) {
+    return this.accountingService.getJournalEntries({
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      startDate,
+      endDate,
+      accountId: accountId ? parseInt(accountId, 10) : undefined,
+    });
   }
 
   @Post('journal')
   createJournalEntry(@Body() data: CreateJournalEntryDto) {
     return this.accountingService.createJournalEntry(data);
+  }
+
+  @Post('journal/reverse')
+  reverseJournalEntry(@Body() data: ReverseJournalEntryDto) {
+    return this.accountingService.reverseJournalEntry(data.entryIds);
+  }
+
+  @Post('balances/reconcile')
+  reconcileBalances() {
+    return this.accountingService.reconcileBalances();
   }
 
   @Get('trial-balance')

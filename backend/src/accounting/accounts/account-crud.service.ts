@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Account, AccountType } from '../entities/account.entity';
+import { CacheService } from '../../cache/cache.service';
 
 @Injectable()
 export class AccountCrudService {
@@ -9,6 +10,7 @@ export class AccountCrudService {
     @InjectRepository(Account)
     private accountRepo: Repository<Account>,
     private dataSource: DataSource,
+    @Inject(CacheService) private cacheService: CacheService,
   ) {}
 
   async onModuleInit() {
@@ -83,17 +85,28 @@ export class AccountCrudService {
     return this.accountRepo.findOne({ where: { code } });
   }
 
+  async invalidateCache() {
+    await this.cacheService.del('accounts_all');
+  }
+
   async getAccounts() {
-    return this.accountRepo.find({ order: { code: 'ASC' } });
+    const cached = await this.cacheService.get<any[]>('accounts_all');
+    if (cached) return cached;
+    const accounts = await this.accountRepo.find({ order: { code: 'ASC' } });
+    await this.cacheService.set('accounts_all', accounts, 3600);
+    return accounts;
   }
 
   async createAccount(data: Partial<Account>) {
     const account = this.accountRepo.create(data);
-    return this.accountRepo.save(account);
+    const saved = await this.accountRepo.save(account);
+    await this.cacheService.del('accounts_all');
+    return saved;
   }
 
   async updateAccount(id: number, data: Partial<Account>) {
     await this.accountRepo.update(id, data);
+    await this.cacheService.del('accounts_all');
     return this.accountRepo.findOne({ where: { id } });
   }
 }

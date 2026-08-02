@@ -5,13 +5,20 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Account } from './account.entity';
 
 @Entity('journal_entries')
+@Index(['date', 'id'])
+@Index(['account_id'])
+@Index(['reversal_of'])
 export class JournalEntry {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ type: 'bigint', nullable: true })
+  reversal_of: number | null;
 
   @Column({ type: 'date' })
   date: Date;

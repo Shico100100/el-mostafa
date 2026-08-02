@@ -5,6 +5,7 @@ const mockRedis = {
   set: jest.fn(),
   del: jest.fn(),
   quit: jest.fn().mockResolvedValue(undefined),
+  on: jest.fn(),
 };
 
 jest.mock('ioredis', () => ({

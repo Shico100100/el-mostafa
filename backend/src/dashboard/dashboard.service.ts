@@ -42,86 +42,40 @@ export class DashboardService {
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     monthEnd.setHours(0, 0, 0, 0);
 
-    const [
-      salesResult,
-      purchasesResult,
-      treasury,
-      stockValueQuery,
-      productionSum,
-      maintenanceOverdueCount,
-      topCustomers,
-      topProducts,
-      attendanceSummary,
-      salesTrend,
-      latestSales,
-      latestPurchases,
-      unreadNotifications,
-    ] = await Promise.all([
-      // 1. Total Sales (This Month)
+    const batch1 = await Promise.all([
       this.salesRepo
         .createQueryBuilder('order')
         .select('COALESCE(SUM(order.total_amount), 0)', 'total')
         .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
         .getRawOne(),
-
-      // 2. Total Purchases (This Month)
       this.purchaseRepo
         .createQueryBuilder('order')
         .select('COALESCE(SUM(order.total_amount), 0)', 'total')
         .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
         .getRawOne(),
-
-      // 3. Treasury Balance
-      this.accountRepo.findOne({ where: { id: 1 } }),
-
-      // 4. Total Stock Value
-      this.accountRepo.query(`
-        SELECT COALESCE(SUM(s.quantity * p.cost_price), 0) as total_value
-        FROM stock s
-        JOIN products p ON s.product_id = p.id
-      `),
-
-      // 5. Total Pieces Produced (This Month)
+      this.accountRepo.findOne({ where: { code: '1103' } }),
       this.productionRepo
         .createQueryBuilder('dp')
         .select('COALESCE(SUM(dp.pieces_produced), 0)', 'total')
         .where('dp.date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
         .getRawOne(),
+    ]);
 
-      // 6. Machines with Overdue Maintenance
+    const batch2 = await Promise.all([
+      this.accountRepo.query(`
+        SELECT COALESCE(SUM(mov_net.current_stock * p.cost_price), 0) as total_value
+        FROM (
+          SELECT product_id,
+            COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+            COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+          FROM stock_movements
+          GROUP BY product_id
+        ) mov_net
+        JOIN products p ON mov_net.product_id = p.id
+      `),
       this.machineRepo.count({
         where: { next_maintenance: LessThan(now) },
       }),
-
-      // 7. Top 5 Customers by Total Sales (This Month)
-      this.salesRepo
-        .createQueryBuilder('order')
-        .leftJoin('order.customer', 'customer')
-        .select('customer.name', 'name')
-        .addSelect('SUM(order.total_amount)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
-        .andWhere('customer.id IS NOT NULL')
-        .groupBy('customer.id')
-        .addGroupBy('customer.name')
-        .orderBy('total', 'DESC')
-        .limit(5)
-        .getRawMany(),
-
-      // 8. Top 5 Products by Total Sales Quantity (This Month)
-      this.salesItemRepo
-        .createQueryBuilder('item')
-        .innerJoin('item.order', 'order')
-        .innerJoin('item.product', 'product')
-        .select('product.name', 'name')
-        .addSelect('SUM(item.quantity)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
-        .groupBy('product.id')
-        .addGroupBy('product.name')
-        .orderBy('total', 'DESC')
-        .limit(5)
-        .getRawMany(),
-
-      // 9. Today's Attendance Summary (SQL GROUP BY)
       this.attendanceRepo
         .createQueryBuilder('att')
         .select(
@@ -141,16 +95,41 @@ export class DashboardService {
           today: now.toISOString().split('T')[0],
         })
         .getRawOne(),
+    ]);
 
-      // 10. Sales Trend (Last 7 Days) - SQL GROUP BY
+    const batch3 = await Promise.all([
+      this.salesRepo
+        .createQueryBuilder('order')
+        .leftJoin('order.customer', 'customer')
+        .select('customer.name', 'name')
+        .addSelect('SUM(order.total_amount)', 'total')
+        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .andWhere('customer.id IS NOT NULL')
+        .groupBy('customer.id')
+        .addGroupBy('customer.name')
+        .orderBy('total', 'DESC')
+        .limit(5)
+        .getRawMany(),
+      this.salesItemRepo
+        .createQueryBuilder('item')
+        .innerJoin('item.order', 'order')
+        .innerJoin('item.product', 'product')
+        .select('product.name', 'name')
+        .addSelect('SUM(item.quantity)', 'total')
+        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .groupBy('product.id')
+        .addGroupBy('product.name')
+        .orderBy('total', 'DESC')
+        .limit(5)
+        .getRawMany(),
       this.salesRepo
         .createQueryBuilder('order')
         .select("TO_CHAR(order.order_date, 'YYYY-MM-DD')", 'date')
         .addSelect('SUM(order.total_amount)', 'value')
-        .where('order.order_date >= :sevenDaysAgo', {
-          sevenDaysAgo: (() => {
+        .where('order.order_date >= :startOfMonth', {
+          startOfMonth: (() => {
             const d = new Date(now);
-            d.setDate(d.getDate() - 6);
+            d.setDate(1);
             d.setHours(0, 0, 0, 0);
             return d;
           })(),
@@ -159,26 +138,28 @@ export class DashboardService {
         .groupBy("TO_CHAR(order.order_date, 'YYYY-MM-DD')")
         .orderBy("TO_CHAR(order.order_date, 'YYYY-MM-DD')", 'ASC')
         .getRawMany(),
-
-      // 11. Latest 5 Sales Orders (with customer name in single query)
       this.salesRepo
         .createQueryBuilder('order')
         .leftJoinAndSelect('order.customer', 'customer')
         .orderBy('order.created_at', 'DESC')
         .take(5)
         .getMany(),
+    ]);
 
-      // 12. Latest 5 Purchase Orders (with supplier name in single query)
+    const [salesResult, purchasesResult, treasury, productionSum] = batch1;
+    const [stockValueQuery, maintenanceOverdueCount, attendanceSummary] = batch2;
+    const [topCustomers, topProducts, salesTrend, latestSales] = batch3;
+
+    const batch4 = await Promise.all([
       this.purchaseRepo
         .createQueryBuilder('order')
         .leftJoinAndSelect('order.supplier', 'supplier')
         .orderBy('order.created_at', 'DESC')
         .take(5)
         .getMany(),
-
-      // 13. Unread Notifications Count
       this.notificationsService.getUnreadCount(),
     ]);
+    const [latestPurchases, unreadNotifications] = batch4;
 
     const totalSales = Number(salesResult?.total) || 0;
     const totalPurchases = Number(purchasesResult?.total) || 0;

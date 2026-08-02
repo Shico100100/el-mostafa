@@ -34,7 +34,6 @@ import { ReportsModule } from './reports/reports.module';
 import { SystemModule } from './system/system.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AccountingModule } from './accounting/accounting.module';
-import { PayrollModule } from './payroll/payroll.module';
 import { AuditModule } from './audit/audit.module';
 import { SearchModule } from './search/search.module';
 import { MetricsModule } from './metrics/metrics.module';
@@ -42,11 +41,15 @@ import { DocumentsModule } from './documents/documents.module';
 import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AuditInterceptor } from './audit/audit.interceptor';
+import { LoggingInterceptor } from './common/logging.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
 import { CommonModule } from './common/common.module';
 import { CacheModule } from './cache/cache.module';
 import { CurrencyModule } from './currency/currency.module';
+import { PeachtreeSyncModule } from './peachtree-sync/peachtree-sync.module';
+import { JobsModule } from './jobs/jobs.module';
+import { BullModule } from '@nestjs/bullmq';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { AllExceptionsFilter } from './utils/exception-filter';
 
@@ -97,6 +100,13 @@ import { AllExceptionsFilter } from './utils/exception-filter';
       imports: [ConfigModule],
       inject: [ConfigService],
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    }),
+    JobsModule,
     UsersModule,
     FilesModule,
     AuthModule,
@@ -116,7 +126,6 @@ import { AllExceptionsFilter } from './utils/exception-filter';
     SystemModule,
     NotificationsModule,
     AccountingModule,
-    PayrollModule,
     AuditModule,
     SearchModule,
     HealthModule,
@@ -125,6 +134,7 @@ import { AllExceptionsFilter } from './utils/exception-filter';
     MetricsModule,
     DocumentsModule,
     CurrencyModule,
+    PeachtreeSyncModule,
   ],
   providers: [
     {
@@ -138,6 +148,10 @@ import { AllExceptionsFilter } from './utils/exception-filter';
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
     {
       provide: APP_GUARD,

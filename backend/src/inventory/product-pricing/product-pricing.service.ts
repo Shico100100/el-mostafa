@@ -34,7 +34,10 @@ export class ProductPricingService {
     for (const mov of movements) {
       if (mov.type === MovementType.IN)
         calculatedQuantity += Number(mov.quantity);
-      else calculatedQuantity -= Number(mov.quantity);
+      else if (mov.type === MovementType.OUT)
+        calculatedQuantity -= Number(mov.quantity);
+      else if (mov.type === MovementType.ADJUST)
+        calculatedQuantity = Number(mov.quantity);
     }
     let stock = await this.stockRepo.findOne({ where: { product_id: id } });
     if (!stock) {

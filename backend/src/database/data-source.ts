@@ -28,6 +28,9 @@ export const AppDataSource = new DataSource({
     max: process.env.DATABASE_MAX_CONNECTIONS
       ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10)
       : 100,
+    min: 2,
+    idleTimeoutMillis: 60000,
+    connectionTimeoutMillis: 10000,
     ssl:
       process.env.DATABASE_SSL_ENABLED === 'true'
         ? {
