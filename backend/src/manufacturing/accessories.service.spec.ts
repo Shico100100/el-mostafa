@@ -137,7 +137,7 @@ describe('AccessoriesService', () => {
 
     it('should return empty array when no accessories exist', async () => {
       mockQuery.mockReset();
-      mockQuery.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([]);
       const result = await service.findAll();
       expect(result).toEqual([]);
     });
@@ -156,7 +156,7 @@ describe('AccessoriesService', () => {
         image_path: null,
         notes: 'Silver',
       });
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 10, quantity: 300 });
+      mockQuery.mockResolvedValueOnce([{ current_stock: 300 }]);
 
       const result = await service.findOne(10);
 
@@ -175,7 +175,7 @@ describe('AccessoriesService', () => {
         id: 10, type: 'ACCESSORY', name: 'Button', preferred_supplier: null,
         reorder_point: 50, last_purchase_price: 0.5, weight_per_piece: 1, image_path: null, notes: null,
       });
-      (stockRepo.findOne as jest.Mock).mockResolvedValue(null);
+      mockQuery.mockResolvedValueOnce([{ current_stock: 0 }]);
 
       const result = await service.findOne(10);
       expect(result.current_stock).toBe(0);

@@ -9,9 +9,7 @@ import { Machine } from './entities/machine.entity';
 import { BOM } from './entities/bom.entity';
 import { Mold } from './entities/mold.entity';
 import { DailyProduction } from './entities/daily-production.entity';
-import { ProductionRecordHistory } from './entities/production-record-history.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
-import { AssemblyOrder } from './entities/assembly-order.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
 import {
@@ -32,8 +30,6 @@ export class ManufacturingService {
 
     @InjectRepository(DailyProduction)
     private productionRepo: Repository<DailyProduction>,
-    @InjectRepository(ProductionRecordHistory)
-    private historyRepo: Repository<ProductionRecordHistory>,
     @InjectRepository(RangeProductionSession)
     private sessionRepo: Repository<RangeProductionSession>,
     @InjectRepository(Mold)
@@ -42,8 +38,6 @@ export class ManufacturingService {
     private productRepo: Repository<Product>,
     @InjectRepository(BOM)
     private bomRepo: Repository<BOM>,
-    @InjectRepository(AssemblyOrder)
-    private assemblyRepo: Repository<AssemblyOrder>,
     @InjectRepository(Machine)
     private machineRepo: Repository<Machine>,
   ) {}
@@ -177,15 +171,10 @@ export class ManufacturingService {
       },
     );
 
-    if (data.pieces_produced && overheadCost) {
-      const totalCost = Number(data.pieces_produced) * overheadCost;
-      await this.accountingService.postAutomaticEntry({
-        type: 'PRODUCTION',
-        amount: totalCost,
-        reference: `PROD-${savedProduction.id}`,
-        description: `إنتاج - اجمالي تكلفة الدفعة ${savedProduction.id}`,
-      });
-    }
+    // Production accounting is handled by stock movements
+    // (Raw material OUT + Semi-finished product IN)
+    // No separate journal entry needed to avoid double-counting inventory value
+
     return savedProduction;
   }
 
@@ -242,14 +231,21 @@ export class ManufacturingService {
       );
       if (workingDays.length === 0)
         throw new BadRequestException('لا توجد أيام عمل في النطاق المحدد');
-      const dailyKg = Number(data.total_production_kg) / workingDays.length;
-      for (const day of workingDays) {
+      const totalKg = Number(data.total_production_kg);
+      const dailyKg = Math.floor((totalKg / workingDays.length) * 100) / 100;
+      let remainingKg = totalKg;
+      for (let i = 0; i < workingDays.length; i++) {
+        const day = workingDays[i];
+        const dayKg = i === workingDays.length - 1
+          ? Math.round(remainingKg * 100) / 100
+          : dailyKg;
+        remainingKg -= dailyKg;
         try {
           const record = await this.createProduction({
             machine_id: data.machine_id,
             mold_id: data.mold_id,
             product_id: data.product_id,
-            total_production_kg: Math.round(dailyKg * 100) / 100,
+            total_production_kg: dayKg,
             hours_worked: data.hours_worked ?? 8,
             notes: `توزيع ${data.total_production_kg}كجم من ${data.start_date} - ${data.notes || ''}`,
             date: new Date(day),
@@ -307,7 +303,6 @@ export class ManufacturingService {
 
     return this.dataSource.transaction(async (manager) => {
       const bomRepo = manager.getRepository(BOM);
-      const historyRepo = manager.getRepository(ProductionRecordHistory);
 
       if (production.product_id && production.total_production_kg) {
         await this.warehouseHelper.reverseRawMaterialStock(
@@ -349,22 +344,6 @@ export class ManufacturingService {
         }
       }
 
-      await historyRepo.save({
-        production: { id } as unknown as DailyProduction,
-        old_values: {
-          machine_id: production.machine_id,
-          mold_id: production.mold_id,
-          product_id: production.product_id,
-          date: production.date,
-          total_production_kg: production.total_production_kg,
-          pieces_produced: production.pieces_produced,
-          hours_worked: production.hours_worked,
-          notes: production.notes,
-          status: production.status,
-        },
-        new_values: {},
-        change_type: 'DELETE',
-      });
       return manager.getRepository(DailyProduction).delete(id);
     });
   }
@@ -375,18 +354,6 @@ export class ManufacturingService {
       relations: ['mold', 'product'],
     });
     if (!oldProduction) throw new NotFoundException('سجل الإنتاج غير موجود');
-
-    const oldSnapshot = {
-      machine_id: oldProduction.machine_id,
-      mold_id: oldProduction.mold_id,
-      product_id: oldProduction.product_id,
-      date: oldProduction.date,
-      total_production_kg: oldProduction.total_production_kg,
-      pieces_produced: oldProduction.pieces_produced,
-      hours_worked: oldProduction.hours_worked,
-      notes: oldProduction.notes,
-      status: oldProduction.status,
-    };
 
     if (data.mold_id && data.total_production_kg) {
       const mold = await this.moldRepo.findOne({ where: { id: data.mold_id } });
@@ -402,7 +369,6 @@ export class ManufacturingService {
 
     return this.dataSource.transaction(async (manager) => {
       const productionRepo = manager.getRepository(DailyProduction);
-      const historyRepo = manager.getRepository(ProductionRecordHistory);
 
       if (oldProduction.product_id && oldProduction.total_production_kg) {
         await this.warehouseHelper.reverseRawMaterialStock(
@@ -454,26 +420,6 @@ export class ManufacturingService {
         );
       }
 
-      const newSnapshot = {
-        machine_id: updatedProduction.machine_id,
-        mold_id: updatedProduction.mold_id,
-        product_id: updatedProduction.product_id,
-        date: updatedProduction.date,
-        total_production_kg: updatedProduction.total_production_kg,
-        pieces_produced: updatedProduction.pieces_produced,
-        hours_worked: updatedProduction.hours_worked,
-        notes: updatedProduction.notes,
-        status: updatedProduction.status,
-      };
-
-      if (JSON.stringify(oldSnapshot) !== JSON.stringify(newSnapshot)) {
-        await historyRepo.save({
-          production: { id } as unknown as DailyProduction,
-          old_values: oldSnapshot,
-          new_values: newSnapshot,
-          change_type: 'UPDATE',
-        });
-      }
       return updatedProduction;
     });
   }
@@ -525,81 +471,5 @@ export class ManufacturingService {
       }
     }
     return results;
-  }
-
-  async createAssembly(data: { bom_id: number; quantity: number; date: Date }) {
-    const bom = await this.bomRepo.findOne({
-      where: { id: data.bom_id },
-      relations: ['items', 'items.product', 'product'],
-    });
-    if (!bom) throw new NotFoundException('قائمة المكونات غير موجودة');
-
-    return this.dataSource.transaction(async (manager) => {
-      let totalCost = 0;
-      for (const item of bom.items) {
-        const requiredQty = Number(item.quantity) * Number(data.quantity);
-        const stockRepo = manager.getRepository(Stock);
-        const stock = await stockRepo.findOne({
-          where: { product_id: item.product_id },
-        });
-        if (!stock || Number(stock.quantity) < requiredQty) {
-          throw new BadRequestException(
-            `رصيد غير كافٍ للمكون: ${item.product?.name || 'غير معروف'} (المطلوب: ${requiredQty}, المتوفر: ${stock ? Number(stock.quantity) : 0})`,
-          );
-        }
-        totalCost += Number(item.product?.cost_price || 0) * requiredQty;
-      }
-
-      await this.warehouseHelper.processBOMConsumption(
-        bom,
-        data.quantity,
-        { type: 'ASSEMBLY', id: 0 },
-        manager,
-      );
-
-      const stockRepo = manager.getRepository(Stock);
-      const stockMovementRepo = manager.getRepository(StockMovement);
-      let finishedStock = await stockRepo.findOne({
-        where: { product_id: bom.product_id },
-      });
-      if (!finishedStock) {
-        finishedStock = stockRepo.create({
-          product_id: bom.product_id,
-          warehouse_id: await this.warehouseHelper.getDefaultWarehouseId(),
-          quantity: 0,
-        });
-      }
-      finishedStock.quantity =
-        Number(finishedStock.quantity) + Number(data.quantity);
-      await stockRepo.save(finishedStock);
-
-      await stockMovementRepo.save({
-        product_id: bom.product_id,
-        warehouse_id: finishedStock.warehouse_id,
-        type: MovementType.IN,
-        quantity: data.quantity,
-        reference_type: 'ASSEMBLY',
-        reference_id: 0,
-        date: new Date(),
-        notes: 'إخراج تجميع',
-      });
-
-      const assemblyRepo = manager.getRepository(AssemblyOrder);
-      const order = assemblyRepo.create({
-        bom_id: data.bom_id,
-        quantity_produced: data.quantity,
-        date: data.date,
-        total_cost: totalCost,
-        status: 'COMPLETED',
-      });
-      return assemblyRepo.save(order);
-    });
-  }
-
-  async getAssemblyOrders() {
-    return this.assemblyRepo.find({
-      relations: ['bom', 'bom.product'],
-      order: { date: 'DESC' },
-    });
   }
 }

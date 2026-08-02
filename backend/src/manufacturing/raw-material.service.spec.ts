@@ -145,37 +145,7 @@ describe('RawMaterialService', () => {
             raw_material_type: 'plastic',
             weight_per_piece: null,
             is_active: true,
-            current_stock: 75,
-            warehouse_id: 1,
-          },
-          {
-            id: 1,
-            product_id: 1,
-            product_name: 'Plastic Granules',
-            preferred_supplier_id: 10,
-            reorder_point: 50,
-            reorder_quantity: 100,
-            avg_consumption_rate: 5,
-            last_purchase_price: 12.5,
-            last_purchase_date: '2026-01-15',
-            notes: 'High grade',
-            created_at: new Date(),
-            updated_at: new Date(),
-            sku: 'RM-001',
-            barcode: '123',
-            cost_price: 12,
-            selling_price: 0,
-            unit: 'kg',
-            type: 'RAW',
-            description: 'Plastic',
-            min_stock: 20,
-            weight_grams: 1000,
-            image_path: null,
-            raw_material_type: 'plastic',
-            weight_per_piece: null,
-            is_active: true,
-            current_stock: 25,
-            warehouse_id: 2,
+            current_stock: 100,
           },
         ])
         .mockResolvedValueOnce([{ id: 10, name: 'Supplier A' }]);
@@ -191,8 +161,7 @@ describe('RawMaterialService', () => {
     it('should aggregate stock across multiple warehouses', async () => {
       mockQuery
         .mockResolvedValueOnce([
-          { id: 1, product_id: 1, product_name: 'Resin', preferred_supplier_id: null, reorder_point: 10, reorder_quantity: 20, avg_consumption_rate: 1, last_purchase_price: 5, last_purchase_date: null, notes: null, created_at: new Date(), updated_at: new Date(), sku: null, barcode: null, cost_price: 5, selling_price: 0, unit: 'kg', type: 'RAW', description: null, min_stock: null, weight_grams: null, image_path: null, raw_material_type: null, weight_per_piece: null, is_active: true, current_stock: 30, warehouse_id: 1 },
-          { id: 1, product_id: 1, product_name: 'Resin', preferred_supplier_id: null, reorder_point: 10, reorder_quantity: 20, avg_consumption_rate: 1, last_purchase_price: 5, last_purchase_date: null, notes: null, created_at: new Date(), updated_at: new Date(), sku: null, barcode: null, cost_price: 5, selling_price: 0, unit: 'kg', type: 'RAW', description: null, min_stock: null, weight_grams: null, image_path: null, raw_material_type: null, weight_per_piece: null, is_active: true, current_stock: 20, warehouse_id: 2 },
+          { id: 1, product_id: 1, product_name: 'Resin', preferred_supplier_id: null, reorder_point: 10, reorder_quantity: 20, avg_consumption_rate: 1, last_purchase_price: 5, last_purchase_date: null, notes: null, created_at: new Date(), updated_at: new Date(), sku: null, barcode: null, cost_price: 5, selling_price: 0, unit: 'kg', type: 'RAW', description: null, min_stock: null, weight_grams: null, image_path: null, raw_material_type: null, weight_per_piece: null, is_active: true, current_stock: 50 },
         ])
         .mockResolvedValueOnce([]);
 
@@ -201,7 +170,7 @@ describe('RawMaterialService', () => {
     });
 
     it('should return empty array when no raw materials exist', async () => {
-      mockQuery.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      mockQuery.mockResolvedValueOnce([]);
       const result = await service.getRawMaterials();
       expect(result).toEqual([]);
     });
@@ -221,7 +190,7 @@ describe('RawMaterialService', () => {
       (supplierMaterialRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, supplier_id: 10, product_id: 1, price: 12.5, supplier: { id: 10, name: 'Supplier A' } },
       ]);
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 1, quantity: 75 });
+      mockQuery.mockResolvedValueOnce([{ total_in: 100, total_out: 25 }]);
 
       const result = await service.getRawMaterial(1) as any;
 
@@ -239,7 +208,7 @@ describe('RawMaterialService', () => {
     it('should return 0 current stock when no stock record exists', async () => {
       (productRepo.findOne as jest.Mock).mockResolvedValue({ id: 1, type: 'RAW', name: 'Resin', preferred_supplier_id: null, preferred_supplier: null });
       (supplierMaterialRepo.find as jest.Mock).mockResolvedValue([]);
-      (stockRepo.findOne as jest.Mock).mockResolvedValue(null);
+      mockQuery.mockResolvedValueOnce([{ total_in: 0, total_out: 0 }]);
 
       const result = await service.getRawMaterial(1) as any;
       expect(result.current_stock).toBe(0);

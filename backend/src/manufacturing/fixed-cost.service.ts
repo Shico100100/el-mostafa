@@ -122,10 +122,23 @@ export class FixedCostService {
     machineId?: number,
     dailyHours: number = 8,
   ): Promise<number> {
+    if (dailyHours <= 0) dailyHours = 8;
     const { avgTotalFixedCost, avgTotalElectricity, avgActiveDays } =
       await this.getAveragedMonthlyCosts(monthStr, 1);
     if (avgTotalFixedCost === 0 || avgActiveDays === 0) return 0;
-    const machineCount = (await this.machineRepo.count()) || 1;
+
+    const [ly, lm] = monthStr.split('-').map(Number);
+    const monthEndDate = `${monthStr}-${new Date(ly, lm, 0).getDate()}`;
+    const activeMachines = await this.productionRepo
+      .createQueryBuilder('p')
+      .select('COUNT(DISTINCT p.machine_id)', 'cnt')
+      .where('p.date BETWEEN :start AND :end', {
+        start: monthStr + '-01',
+        end: monthEndDate,
+      })
+      .getRawOne();
+    const machineCount = Number(activeMachines?.cnt) || (await this.machineRepo.count()) || 1;
+
     const nonElectricHourly =
       (avgTotalFixedCost - avgTotalElectricity) /
       avgActiveDays /
@@ -149,14 +162,21 @@ export class FixedCostService {
       }
     }
     let machineElectricHourly = 0;
-    if (machineId && avgTotalElectricity > 0) {
-      const [ly, lm] = monthStr.split('-').map(Number);
-      const endDate = `${monthStr}-${new Date(ly, lm, 0).getDate()}`;
+    if (machineId) {
+      // Use current month's electricity bill first, fall back to averaged
+      const currentMonthCosts = await this.fixedCostRepo.find({
+        where: { month: monthStr },
+      });
+      const currentMonthElectric = currentMonthCosts
+        .filter((c) => c.category === 'ELECTRICITY')
+        .reduce((sum, c) => sum + Number(c.amount), 0);
+      const electricBill = currentMonthElectric > 0 ? currentMonthElectric : avgTotalElectricity;
+
       const monthProductions = await this.productionRepo.find({
         where: {
           date: Between(
             (monthStr + '-01') as unknown as Date,
-            endDate as unknown as Date,
+            monthEndDate as unknown as Date,
           ),
         },
       });
@@ -165,7 +185,7 @@ export class FixedCostService {
         0,
       );
       if (totalHours > 0)
-        machineElectricHourly = avgTotalElectricity / totalHours;
+        machineElectricHourly = electricBill / totalHours;
     }
     return (
       nonElectricHourly + machineElectricHourly + machineDepreciationHourly

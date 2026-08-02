@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { Machine, MachineStatus } from '../entities/machine.entity';
 import {
@@ -8,6 +10,7 @@ import {
 } from '../entities/machine-maintenance.entity';
 import { DailyProduction } from '../entities/daily-production.entity';
 import { jsonToSheetBuffer } from '../../utils/excel-export';
+import { CacheService } from '../../cache/cache.service';
 
 @Injectable()
 export class MachineService {
@@ -20,22 +23,29 @@ export class MachineService {
     private maintenanceRepo: Repository<MachineMaintenance>,
     @InjectRepository(DailyProduction)
     private productionRepo: Repository<DailyProduction>,
+    @Inject(CacheService) private cacheService: CacheService,
+    @InjectQueue('depreciation') private depreciationQueue: Queue,
   ) {}
 
   async getAllMachines(page = 1, limit = 50) {
+    const cacheKey = `machines_all_${page}_${limit}`;
+    const cached = await this.cacheService.get<any>(cacheKey);
+    if (cached) return cached;
     const take = Math.min(Math.max(limit, 1), 200);
     const skip = (Math.max(page, 1) - 1) * take;
     const [items, total] = await this.machineRepo.findAndCount({
       skip,
       take,
     });
-    return {
+    const result = {
       items,
       total,
       page,
       limit: take,
       totalPages: Math.ceil(total / take),
     };
+    await this.cacheService.set(cacheKey, result, 600);
+    return result;
   }
 
   async getMachinesOverview(filters?: {
@@ -124,16 +134,20 @@ export class MachineService {
 
   async createMachine(data: Partial<Machine>) {
     const machine = this.machineRepo.create(data);
-    return this.machineRepo.save(machine);
+    const saved = await this.machineRepo.save(machine);
+    await this.cacheService.delByPattern('machines_all_*');
+    return saved;
   }
 
   async updateMachine(id: number, data: Partial<Machine>) {
     await this.machineRepo.update(id, data);
+    await this.cacheService.delByPattern('machines_all_*');
     return this.machineRepo.findOne({ where: { id } });
   }
 
   async deleteMachine(id: number) {
-    return this.machineRepo.delete(id);
+    await this.machineRepo.delete(id);
+    await this.cacheService.delByPattern('machines_all_*');
   }
 
   async getMachinesWithStatus() {
@@ -215,6 +229,40 @@ export class MachineService {
         created++;
       }
     }
+    await this.cacheService.delByPattern('machines_all_*');
     return { created, updated };
+  }
+
+  async queueDepreciationCalculation(machineId: number) {
+    const machine = await this.machineRepo.findOne({ where: { id: machineId } });
+    if (!machine) throw new NotFoundException('الماكينة غير موجودة');
+    const job = await this.depreciationQueue.add('calculate', {
+      machineId: machine.id,
+      machineName: machine.name,
+      purchasePrice: machine.price || 0,
+      usefulLife: machine.useful_life_years || 10,
+      salvageValue: 0,
+      startDate: machine.purchase_date?.toISOString() || new Date().toISOString(),
+      endDate: new Date().toISOString(),
+    });
+    return { jobId: job.id, message: 'جاري حساب الإهلاك في الخلفية' };
+  }
+
+  async queueAllDepreciation() {
+    const machines = await this.machineRepo.find();
+    const jobs = await Promise.all(
+      machines.map((m) =>
+        this.depreciationQueue.add('calculate', {
+          machineId: m.id,
+          machineName: m.name,
+          purchasePrice: m.price || 0,
+          usefulLife: m.useful_life_years || 10,
+          salvageValue: 0,
+          startDate: m.purchase_date?.toISOString() || new Date().toISOString(),
+          endDate: new Date().toISOString(),
+        }),
+      ),
+    );
+    return { count: jobs.length, message: `جاري حساب إهلاك ${jobs.length} ماكينة في الخلفية` };
   }
 }

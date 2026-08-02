@@ -30,7 +30,7 @@ export class RangeProductionSession {
   @JoinColumn({ name: 'mold_id' })
   mold: Mold;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   product_id: number;
 
   @ManyToOne(() => Product)

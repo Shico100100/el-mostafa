@@ -34,14 +34,14 @@ export class BOM {
   @Column({ type: 'int', default: 1 })
   pcs_per_box: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   carton_product_id: number;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'carton_product_id' })
   carton_product: Product;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   box_product_id: number;
 
   @ManyToOne(() => Product)

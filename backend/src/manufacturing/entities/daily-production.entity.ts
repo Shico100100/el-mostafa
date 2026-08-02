@@ -34,7 +34,7 @@ export class DailyProduction {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   product_id: number;
 
   @Column({ type: 'date' })

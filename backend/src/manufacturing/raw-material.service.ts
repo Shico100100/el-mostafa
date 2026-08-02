@@ -69,34 +69,24 @@ export class RawMaterialService {
         p.raw_material_type,
         p.weight_per_piece,
         p.is_active,
-        COALESCE(SUM(s.quantity), 0) AS current_stock,
-        s.warehouse_id
+        COALESCE(mov.total_in, 0) - COALESCE(mov.total_out, 0) AS current_stock
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END) AS total_in,
+          SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END) AS total_out
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'RAW' AND p.deleted_at IS NULL
-      GROUP BY p.id, s.warehouse_id
       ORDER BY p.name ASC
     `);
 
-    // Aggregate stock across warehouses per product
-    const stockMap = new Map<number, number>();
-    const productMap = new Map<number, any>();
-    for (const row of rows) {
-      const qty = Number(row.current_stock) || 0;
-      if (productMap.has(row.id)) {
-        const existing = stockMap.get(row.id) || 0;
-        stockMap.set(row.id, existing + qty);
-      } else {
-        productMap.set(row.id, row);
-        stockMap.set(row.id, qty);
-      }
-    }
-
     // Fetch preferred suppliers for all products in one query
-    const productIds = [...productMap.keys()];
+    const productIds = rows.map((r: any) => r.id);
     let suppliers: any[] = [];
     if (productIds.length > 0) {
-      const placeholders = productIds.map((_, i) => `$${i + 1}`).join(',');
+      const placeholders = productIds.map((_: any, i: number) => `$${i + 1}`).join(',');
       suppliers = await this.dataSource.query(
         `SELECT * FROM suppliers WHERE id IN (SELECT preferred_supplier_id FROM products WHERE id IN (${placeholders}) AND preferred_supplier_id IS NOT NULL)`,
         productIds,
@@ -105,8 +95,8 @@ export class RawMaterialService {
     const supplierMap = new Map<number, any>();
     for (const s of suppliers) supplierMap.set(s.id, s);
 
-    return [...productMap.values()].map((p) => {
-      const currentStock = stockMap.get(p.id) || 0;
+    return rows.map((p: any) => {
+      const currentStock = Number(p.current_stock) || 0;
       return {
         id: p.id,
         product_id: p.id,
@@ -143,9 +133,14 @@ export class RawMaterialService {
       where: { product_id: product.id },
       relations: ['supplier'],
     });
-    const stock = await this.stockRepo.findOne({
-      where: { product_id: product.id },
-    });
+    const movementAgg = await this.dataSource.query(
+      `SELECT
+        COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) AS total_in,
+        COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS total_out
+      FROM stock_movements WHERE product_id = $1`,
+      [id],
+    );
+    const currentStock = Number(movementAgg[0]?.total_in || 0) - Number(movementAgg[0]?.total_out || 0);
     return {
       id: product.id,
       product_id: product.id,
@@ -159,7 +154,7 @@ export class RawMaterialService {
       last_purchase_date: product.last_purchase_date,
       notes: product.notes,
       supplier_materials: supplierMaterials,
-      current_stock: stock ? Number(stock.quantity) : 0,
+      current_stock: currentStock,
     };
   }
 
@@ -193,7 +188,6 @@ export class RawMaterialService {
   async recordConsumption(data: {
     product_id: number;
     quantity: number;
-    assembly_order_id?: number;
     production_id?: number;
     batch_number?: string;
     notes?: string;
@@ -226,9 +220,9 @@ export class RawMaterialService {
         type: MovementType.OUT,
         quantity: data.quantity,
         reference_type: 'CONSUMPTION',
-        reference_id: data.assembly_order_id || data.production_id || 0,
+        reference_id: data.production_id || 0,
         date: new Date(),
-        notes: data.notes || 'Raw material consumption',
+        notes: data.notes || 'استهلاك مادة خام',
       });
     }
     return this.consumptionRepo.save(consumption);
@@ -252,7 +246,7 @@ export class RawMaterialService {
       where.consumed_at = Between(filters.start_date, filters.end_date);
     const [items, total] = await this.consumptionRepo.findAndCount({
       where,
-      relations: ['product', 'assembly_order', 'production'],
+      relations: ['product', 'production'],
       order: { consumed_at: 'DESC' },
       skip,
       take,
@@ -281,12 +275,17 @@ export class RawMaterialService {
         p.notes,
         p.created_at,
         p.updated_at,
-        COALESCE(SUM(s.quantity), 0) AS current_stock
+        COALESCE(mov.total_in, 0) - COALESCE(mov.total_out, 0) AS current_stock
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END) AS total_in,
+          SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END) AS total_out
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'RAW' AND p.deleted_at IS NULL
-      GROUP BY p.id
-      HAVING COALESCE(SUM(s.quantity), 0) <= p.reorder_point
+      HAVING COALESCE(mov.total_in, 0) - COALESCE(mov.total_out, 0) <= p.reorder_point
       ORDER BY p.name ASC
     `);
 

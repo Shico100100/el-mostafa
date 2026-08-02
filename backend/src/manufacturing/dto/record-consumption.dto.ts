@@ -21,11 +21,6 @@ export class RecordConsumptionDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()
-  assembly_order_id?: number;
-
-  @ApiPropertyOptional({ example: 1 })
-  @IsOptional()
-  @IsNumber()
   production_id?: number;
 
   @ApiPropertyOptional({ example: 'BATCH-001' })

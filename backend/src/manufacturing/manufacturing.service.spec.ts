@@ -3,6 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ManufacturingService } from './manufacturing.service';
 import { AccountingService } from '../accounting/accounting.service';
+import { FixedCostService } from './fixed-cost.service';
+import { WarehouseHelper } from './warehouse.helper';
 import { Machine } from './entities/machine.entity';
 import { MachineMaintenance } from './entities/machine-maintenance.entity';
 import { Mold } from './entities/mold.entity';
@@ -10,7 +12,6 @@ import { MoldIssue } from './entities/mold-issue.entity';
 import { DailyProduction } from './entities/daily-production.entity';
 import { BOM } from './entities/bom.entity';
 import { BOMItem } from './entities/bom.entity';
-import { AssemblyOrder } from './entities/assembly-order.entity';
 import { RawMaterialConsumption } from './entities/raw-material-consumption.entity';
 import { SupplierMaterial } from './entities/supplier-material.entity';
 import { Product } from '../inventory/entities/product.entity';
@@ -19,8 +20,6 @@ import { StockMovement } from '../inventory/entities/stock-movement.entity';
 import { FixedCost } from './entities/fixed-cost.entity';
 import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
-import { ProductionRecordHistory } from './entities/production-record-history.entity';
-import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 
 describe('ManufacturingService', () => {
   let service: ManufacturingService;
@@ -57,10 +56,6 @@ describe('ManufacturingService', () => {
           useValue: {},
         },
         {
-          provide: getRepositoryToken(AssemblyOrder),
-          useValue: {},
-        },
-        {
           provide: getRepositoryToken(RawMaterialConsumption),
           useValue: {},
         },
@@ -93,15 +88,17 @@ describe('ManufacturingService', () => {
           useValue: {},
         },
         {
-          provide: getRepositoryToken(ProductionRecordHistory),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(PurchaseOrderItem),
-          useValue: {},
+          provide: WarehouseHelper,
+          useValue: {
+            getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
+          },
         },
         {
           provide: AccountingService,
+          useValue: {},
+        },
+        {
+          provide: FixedCostService,
           useValue: {},
         },
         {

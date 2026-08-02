@@ -7,7 +7,6 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Product } from '../../inventory/entities/product.entity';
-import { AssemblyOrder } from './assembly-order.entity';
 import { DailyProduction } from './daily-production.entity';
 
 @Entity('raw_material_consumptions')
@@ -15,7 +14,7 @@ export class RawMaterialConsumption {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   product_id: number;
 
   @Column({ nullable: true })
@@ -27,13 +26,6 @@ export class RawMaterialConsumption {
 
   @Column({ type: 'decimal', precision: 10, scale: 4 })
   quantity: number;
-
-  @Column({ nullable: true })
-  assembly_order_id: number;
-
-  @ManyToOne(() => AssemblyOrder, { nullable: true })
-  @JoinColumn({ name: 'assembly_order_id' })
-  assembly_order: AssemblyOrder;
 
   @Column({ nullable: true })
   production_id: number;

@@ -24,7 +24,7 @@ export class Mold {
   @Column()
   name: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   product_id: number;
 
   @ManyToOne(() => Product, { nullable: true })

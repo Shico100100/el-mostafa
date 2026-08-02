@@ -109,7 +109,7 @@ export class MoldService {
 
   async syncAllMoldProducts() {
     const molds = await this.moldRepo.find();
-    for (const mold of molds) await this.ensureProductForMold(mold);
+    await Promise.all(molds.map((mold) => this.ensureProductForMold(mold)));
     return {
       message: 'Synchronization complete',
       processed_molds: molds.length,

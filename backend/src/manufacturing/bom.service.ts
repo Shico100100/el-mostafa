@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, DataSource } from 'typeorm';
 import { BOM, BOMItem } from './entities/bom.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
@@ -29,6 +29,7 @@ export class BOMService {
     private productionRepo: Repository<DailyProduction>,
     @InjectRepository(PurchaseOrderItem)
     private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
+    private dataSource: DataSource,
   ) {}
 
   async getBOMs(page = 1, limit = 50) {
@@ -217,10 +218,13 @@ export class BOMService {
         const weight = Number(product.weight_grams) || 0;
         const itemWeight = weight * requiredQty;
         totalWeight += itemWeight;
-        const stockRow = await this.stockRepo.findOne({
-          where: { product_id: product.id },
-        });
-        const stockQty = stockRow ? Number(stockRow.quantity) : 0;
+        const stockRows = await this.dataSource.query(
+          `SELECT COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+                  COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS total
+           FROM stock_movements WHERE product_id = $1`,
+          [product.id],
+        );
+        const stockQty = Number(stockRows[0]?.total) || 0;
         let componentCostPrice = Number(product.cost_price);
         if (!componentCostPrice) {
           const lastItem = await this.purchaseOrderItemRepo.findOne({

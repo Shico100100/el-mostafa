@@ -60,11 +60,16 @@ export class AccessoriesService {
         p.is_active,
         p.created_at,
         p.updated_at,
-        COALESCE(SUM(s.quantity), 0) AS current_stock
+        COALESCE(mov.current_stock, 0) AS current_stock
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'ACCESSORY' AND p.deleted_at IS NULL
-      GROUP BY p.id
       ORDER BY p.name ASC
     `);
 
@@ -106,9 +111,13 @@ export class AccessoriesService {
 
   async findOne(id: number) {
     const product = await this.findAccessoryProduct(id);
-    const stock = await this.stockRepo.findOne({
-      where: { product_id: product.id },
-    });
+    const result = await this.dataSource.query(
+      `SELECT
+        COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+      FROM stock_movements WHERE product_id = $1`,
+      [id],
+    );
     return {
       id: product.id,
       product,
@@ -118,7 +127,7 @@ export class AccessoriesService {
       weight_per_piece: product.weight_per_piece,
       image_path: product.image_path,
       notes: product.notes,
-      current_stock: stock ? Number(stock.quantity) : 0,
+      current_stock: Number(result[0]?.current_stock) || 0,
     };
   }
 
@@ -126,9 +135,15 @@ export class AccessoriesService {
     const result = await this.dataSource.query(`
       SELECT
         COUNT(p.id) AS count,
-        COALESCE(SUM(COALESCE(s.quantity, 0) * p.cost_price), 0) AS total_value
+        COALESCE(SUM(COALESCE(mov.current_stock, 0) * p.cost_price), 0) AS total_value
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'ACCESSORY' AND p.deleted_at IS NULL
     `);
     return {
@@ -159,12 +174,17 @@ export class AccessoriesService {
         p.id,
         p.name,
         p.unit,
-        COALESCE(SUM(s.quantity), 0) AS current_stock,
+        COALESCE(mov.current_stock, 0) AS current_stock,
         (SELECT sm.date FROM stock_movements sm WHERE sm.product_id = p.id AND sm.type = 'OUT' ORDER BY sm.date DESC LIMIT 1) AS last_movement_date
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'ACCESSORY' AND p.deleted_at IS NULL
-      GROUP BY p.id
       ORDER BY p.name ASC
     `);
     const results = rows.map((p: any) => ({
@@ -185,12 +205,17 @@ export class AccessoriesService {
         p.id,
         p.name,
         p.unit,
-        COALESCE(SUM(s.quantity), 0) AS current_stock,
+        COALESCE(mov.current_stock, 0) AS current_stock,
         (SELECT sm.date FROM stock_movements sm WHERE sm.product_id = p.id ORDER BY sm.date DESC LIMIT 1) AS last_movement_date
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'ACCESSORY' AND p.deleted_at IS NULL
-      GROUP BY p.id
       HAVING
         (SELECT sm.date FROM stock_movements sm WHERE sm.product_id = p.id ORDER BY sm.date DESC LIMIT 1) IS NULL
         OR (SELECT sm.date FROM stock_movements sm WHERE sm.product_id = p.id ORDER BY sm.date DESC LIMIT 1) < $1
@@ -214,12 +239,17 @@ export class AccessoriesService {
         p.last_purchase_price,
         p.cost_price,
         p.preferred_supplier_id,
-        COALESCE(SUM(s.quantity), 0) AS current_stock
+        COALESCE(mov.current_stock, 0) AS current_stock
       FROM products p
-      LEFT JOIN stock s ON s.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
       WHERE p.type = 'ACCESSORY' AND p.deleted_at IS NULL
-      GROUP BY p.id
-      HAVING COALESCE(SUM(s.quantity), 0) < p.reorder_point
+      HAVING COALESCE(mov.current_stock, 0) < p.reorder_point
       ORDER BY p.name ASC
     `);
 
