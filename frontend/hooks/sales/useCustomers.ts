@@ -34,7 +34,8 @@ export function useCustomers() {
     try {
       setLoading(true);
       const data = await api.fetchWithAuth('/sales/customers');
-      setCustomers(data);
+      const mapped = (data as any[]).map((c) => ({ ...c, balance: Number(c.balance) }));
+      setCustomers(mapped);
     } catch (error) {
       toast.error('حدث خطأ أثناء تحميل العملاء');
     } finally {

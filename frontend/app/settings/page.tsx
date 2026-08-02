@@ -58,9 +58,13 @@ export default function SettingsPage() {
 
           <SettingsActions
             showPasswordModal={h.showPasswordModal}
+            currentPassword={h.currentPassword}
             newPassword={h.newPassword}
+            confirmPassword={h.confirmPassword}
             syncLoading={h.syncLoading}
+            onCurrentPasswordChange={h.setCurrentPassword}
             onPasswordChange={h.setNewPassword}
+            onConfirmPasswordChange={h.setConfirmPassword}
             onPasswordSubmit={h.handleChangePassword}
             onPasswordClose={() => h.setShowPasswordModal(false)}
             onSyncMolds={h.handleSyncMolds}

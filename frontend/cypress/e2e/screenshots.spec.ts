@@ -47,18 +47,6 @@ describe('📸 Auto Screenshot Capture for Documentation', () => {
     snap('06-purchases-suppliers');
   });
 
-  it('Purchases - Containers', () => {
-    cy.visit('/purchases/containers');
-    cy.contains('حاويات', { timeout: 15000 }).should('be.visible');
-    snap('07-purchases-containers');
-  });
-
-  it('Purchases - Currencies', () => {
-    cy.visit('/purchases/currencies');
-    cy.contains('عملات', { timeout: 15000 }).should('be.visible');
-    snap('08-purchases-currencies');
-  });
-
   // ============= MANUFACTURING =============
   it('Manufacturing - Dashboard', () => {
     cy.visit('/manufacturing');
@@ -73,33 +61,9 @@ describe('📸 Auto Screenshot Capture for Documentation', () => {
   });
 
   it('Manufacturing - BOM', () => {
-    cy.visit('/manufacturing/bom');
+    cy.visit('/bom');
     cy.contains('قائمة', { timeout: 15000 }).should('be.visible');
     snap('11-manufacturing-bom');
-  });
-
-  it('Manufacturing - MRP', () => {
-    cy.visit('/manufacturing/mrp');
-    cy.contains('MRP', { timeout: 15000 }).should('be.visible');
-    snap('12-manufacturing-mrp');
-  });
-
-  it('Manufacturing - Planning', () => {
-    cy.visit('/manufacturing/planning');
-    cy.contains('تخطيط', { timeout: 15000 }).should('be.visible');
-    snap('13-manufacturing-planning');
-  });
-
-  it('Manufacturing - Schedule', () => {
-    cy.visit('/manufacturing/schedule');
-    cy.contains('جدولة', { timeout: 15000 }).should('be.visible');
-    snap('14-manufacturing-schedule');
-  });
-
-  it('Manufacturing - QC', () => {
-    cy.visit('/manufacturing/qc');
-    cy.contains('جودة', { timeout: 15000 }).should('be.visible');
-    snap('15-manufacturing-qc');
   });
 
   it('Manufacturing - Raw Materials', () => {
@@ -138,43 +102,6 @@ describe('📸 Auto Screenshot Capture for Documentation', () => {
     snap('21-manufacturing-kiosk');
   });
 
-  it('Manufacturing - Traceability', () => {
-    cy.visit('/manufacturing/traceability');
-    cy.contains('تتبع', { timeout: 15000 }).should('be.visible');
-    snap('22-manufacturing-traceability');
-  });
-
-  // ============= ASSEMBLY =============
-  it('Assembly - Dashboard', () => {
-    cy.visit('/assembly');
-    cy.contains('تجميع', { timeout: 15000 }).should('be.visible');
-    snap('23-assembly-dashboard');
-  });
-
-  it('Assembly - Accessories', () => {
-    cy.visit('/assembly/accessories');
-    cy.contains('أكسسوارات', { timeout: 15000 }).should('be.visible');
-    snap('24-assembly-accessories');
-  });
-
-  it('Assembly - Plastic', () => {
-    cy.visit('/assembly/plastic');
-    cy.contains('بلاستيك', { timeout: 15000 }).should('be.visible');
-    snap('25-assembly-plastic');
-  });
-
-  it('Assembly - Packaging', () => {
-    cy.visit('/assembly/packaging');
-    cy.contains('تغليف', { timeout: 15000 }).should('be.visible');
-    snap('26-assembly-packaging');
-  });
-
-  it('Assembly - BOM', () => {
-    cy.visit('/assembly/bom');
-    cy.contains('قائمة', { timeout: 15000 }).should('be.visible');
-    snap('27-assembly-bom');
-  });
-
   // ============= ACCOUNTING =============
   it('Accounting - Dashboard', () => {
     cy.visit('/accounting');
@@ -186,13 +113,6 @@ describe('📸 Auto Screenshot Capture for Documentation', () => {
     cy.visit('/accounting/journal');
     cy.contains('قيد', { timeout: 15000 }).should('be.visible');
     snap('29-accounting-journal');
-  });
-
-  // ============= HR =============
-  it('HR - Payroll', () => {
-    cy.visit('/hr/payroll');
-    cy.contains('مرتبات', { timeout: 15000 }).should('be.visible');
-    snap('30-hr-payroll');
   });
 
   // ============= REPORTS =============

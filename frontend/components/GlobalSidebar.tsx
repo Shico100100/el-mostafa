@@ -10,7 +10,6 @@ import {
   Package,
   Factory,
   Calculator,
-  Users,
   ShoppingBag,
   ArrowLeft,
   Menu,
@@ -36,7 +35,6 @@ const modules: NavItem[] = [
     children: [
       { href: '/sales/customers', label: 'العملاء' },
       { href: '/sales/orders', label: 'طلبات البيع' },
-      { href: '/sales/quotes', label: 'عروض الأسعار' },
       { href: '/sales/returns', label: 'مرتجعات' },
     ],
   },
@@ -46,8 +44,6 @@ const modules: NavItem[] = [
       { href: '/purchases/suppliers', label: 'الموردين' },
       { href: '/purchases/orders', label: 'أوامر الشراء' },
       { href: '/purchases/returns', label: 'مرتجعات' },
-      { href: '/purchases/currencies', label: 'العملات' },
-      { href: '/purchases/containers', label: 'الحاويات' },
     ],
   },
   {
@@ -70,18 +66,7 @@ const modules: NavItem[] = [
       { href: '/manufacturing/molds', label: 'القوالب' },
       { href: '/manufacturing/raw-materials', label: 'الخامات' },
       { href: '/manufacturing/daily-production', label: 'إنتاج يومي' },
-      { href: '/manufacturing/planning', label: 'التخطيط' },
-      { href: '/manufacturing/qc', label: 'الجودة' },
-      { href: '/manufacturing/assembly', label: 'لوحة التجميع' },
-      { href: '/assembly/accessories', label: 'الملحقات' },
-      { href: '/assembly/production', label: 'إنتاج التجميع' },
-      { href: '/assembly/attendance', label: 'الحضور' },
-      { href: '/assembly/packaging', label: 'التغليف' },
-      { href: '/assembly/plastic', label: 'بلاستيك' },
       { href: '/manufacturing/maintenance', label: 'الصيانة' },
-      { href: '/manufacturing/mrp', label: 'MRP' },
-      { href: '/manufacturing/feasibility', label: 'الجدوى' },
-      { href: '/manufacturing/traceability', label: 'التتبع' },
       { href: '/manufacturing/fixed-costs', label: 'تكاليف ثابتة' },
     ],
   },
@@ -90,13 +75,6 @@ const modules: NavItem[] = [
     children: [
       { href: '/accounting', label: 'الحسابات' },
       { href: '/accounting/journal', label: 'اليومية' },
-    ],
-  },
-  {
-    href: '/hr', label: 'الموارد البشرية', icon: Users,
-    children: [
-      { href: '/hr/payroll', label: 'الرواتب' },
-      { href: '/hr/employees', label: 'الموظفين' },
     ],
   },
   {

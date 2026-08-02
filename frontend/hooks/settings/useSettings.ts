@@ -12,6 +12,8 @@ export function useSettings() {
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
@@ -49,13 +51,17 @@ export function useSettings() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('كلمتا المرور غير متطابقتين');
+      return;
+    }
     try {
-      if (user) {
-        await api.updateUser(user.id, { password: newPassword });
-        toast.success('تم تغيير كلمة المرور بنجاح');
-        setShowPasswordModal(false);
-        setNewPassword('');
-      }
+      await api.changePassword(currentPassword, newPassword);
+      toast.success('تم تغيير كلمة المرور بنجاح');
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setCurrentPassword('');
+      setConfirmPassword('');
     } catch {
       toast.error('حدث خطأ أثناء تغيير كلمة المرور');
     }
@@ -105,6 +111,7 @@ export function useSettings() {
   return {
     loading, user,
     showPasswordModal, setShowPasswordModal, newPassword, setNewPassword,
+    currentPassword, setCurrentPassword, confirmPassword, setConfirmPassword,
     backupLoading, restoreLoading, resetLoading, syncLoading,
     handleBackup, handleChangePassword, handleRestore, handleFactoryReset, handleSyncMolds,
   };

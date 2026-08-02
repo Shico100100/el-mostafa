@@ -9,8 +9,8 @@ function StatCard({ label, value, icon, color }: StatCardDef) {
     <div className="bg-white/5 backdrop-blur rounded-xl border border-white/10 p-4 flex items-center gap-4">
       <div className={`p-3 rounded-lg ${color}`}>{icon}</div>
       <div>
-        <div className="text-2xl font-bold text-white">{value}</div>
-        <div className="text-xs text-slate-400">{label}</div>
+        <div className="stat-value">{value}</div>
+        <div className="stat-label">{label}</div>
       </div>
     </div>
   );

@@ -32,9 +32,10 @@ export function usePurchaseOrders() {
   const [showLowStockAlert, setShowLowStockAlert] = useState(true);
 
   const [filters, setFilters] = useState({
-    search: '', fromDate: '', toDate: '', page: 1, limit: 10,
+    search: '', fromDate: '', toDate: '', page: 1, limit: 20,
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const [typingValues, setTypingValues] = useState<{ [key: string]: string }>({});
 
@@ -103,8 +104,12 @@ export function usePurchaseOrders() {
         api.fetchWithAuth('/inventory/products'),
       ]);
 
-      setOrders(ordersData.items || []);
+      const sortedOrders = (ordersData.items || []).sort(
+        (a: Order, b: Order) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setOrders(sortedOrders);
       setTotalPages(ordersData.totalPages || 1);
+      setTotalItems(ordersData.total || 0);
 
       setSuppliers(sortAlphabetically(suppliersData || [], 'name'));
       setProducts(sortAlphabetically(productsData || [], 'name'));
@@ -425,7 +430,7 @@ export function usePurchaseOrders() {
       });
 
       const productsData = await api.fetchWithAuth('/inventory/products') as Product[];
-      const sortedProducts = sortAlphabetically(productsData, 'name');
+      const sortedProducts = sortAlphabetically<Product>(productsData, 'name');
       setProducts(sortedProducts);
 
       if (activeItemIndex !== null) {
@@ -574,7 +579,7 @@ export function usePurchaseOrders() {
     showPackingListModal, packingListOrderId, packingListForm, packingListResult,
     savingPackingList,
     lowStockProducts, showLowStockAlert,
-    filters, totalPages, typingValues, orderToPrint,
+    filters, totalPages, totalItems, typingValues, orderToPrint,
     componentRef, fileInputRef,
 
     setShowModal, setEditingOrder, setNewOrder,

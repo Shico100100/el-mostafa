@@ -2,9 +2,13 @@
 
 interface Props {
   showPasswordModal: boolean;
+  currentPassword: string;
   newPassword: string;
+  confirmPassword: string;
   syncLoading: boolean;
+  onCurrentPasswordChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
+  onConfirmPasswordChange: (v: string) => void;
   onPasswordSubmit: (e: React.FormEvent) => void;
   onPasswordClose: () => void;
   onSyncMolds: () => void;
@@ -12,8 +16,9 @@ interface Props {
 }
 
 export function SettingsActions({
-  showPasswordModal, newPassword, syncLoading,
-  onPasswordChange, onPasswordSubmit, onPasswordClose,
+  showPasswordModal, currentPassword, newPassword, confirmPassword, syncLoading,
+  onCurrentPasswordChange, onPasswordChange, onConfirmPasswordChange,
+  onPasswordSubmit, onPasswordClose,
   onSyncMolds, onSetShowPasswordModal,
 }: Props) {
   return (
@@ -36,13 +41,27 @@ export function SettingsActions({
             <h2 className="text-2xl font-bold text-white mb-6">تغيير كلمة المرور</h2>
             <form onSubmit={onPasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">كلمة المرور الجديدة</label>
-                <input type="password" value={newPassword} onChange={(e) => onPasswordChange(e.target.value)} required
+                <label className="block text-sm font-medium text-gray-200 mb-2">كلمة المرور الحالية</label>
+                <input type="password" value={currentPassword} onChange={(e) => onCurrentPasswordChange(e.target.value)} required
                   className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">كلمة المرور الجديدة</label>
+                <input type="password" value={newPassword} onChange={(e) => onPasswordChange(e.target.value)} required minLength={6}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">تأكيد كلمة المرور</label>
+                <input type="password" value={confirmPassword} onChange={(e) => onConfirmPasswordChange(e.target.value)} required minLength={6}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" />
+              </div>
+              {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-red-400 text-sm">كلمتا المرور غير متطابقتين</p>
+              )}
               <div className="flex gap-4 justify-end mt-6">
                 <button type="button" onClick={onPasswordClose} className="px-6 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg">إلغاء</button>
-                <button type="submit" className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700">حفظ</button>
+                <button type="submit" disabled={!currentPassword || !newPassword || newPassword !== confirmPassword}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50">حفظ</button>
               </div>
             </form>
           </div>

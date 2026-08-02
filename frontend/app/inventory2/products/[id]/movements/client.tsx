@@ -129,41 +129,62 @@ export default function ProductMovementsPage() {
                 <th className="px-6 py-4 text-right text-white font-semibold text-sm">الكمية</th>
                 <th className="px-6 py-4 text-right text-white font-semibold text-sm">المخزن</th>
                 <th className="px-6 py-4 text-right text-white font-semibold text-sm">ملاحظات</th>
+                <th className="px-6 py-4 text-center text-white font-semibold text-sm">الرصيد بعد الحركة</th>
                 <th className="px-6 py-4 text-right text-white font-semibold text-sm">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {movements.map((movement) => (
-                <tr key={movement.id} className="border-t border-white/5 hover:bg-white/5 transition">
-                  <td className="px-6 py-4 text-slate-300 text-sm">
-                    {new Date(movement.date).toLocaleDateString('ar-EG')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                      movement.type === 'IN' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
-                      movement.type === 'OUT' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
-                      'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    }`}>
-                      {movement.type === 'IN' ? 'إدخال' : movement.type === 'OUT' ? 'إخراج' : 'تعديل'}
-                    </span>
-                  </td>
-                  <td className={`px-6 py-4 font-semibold text-sm ${
-                    movement.type === 'IN' ? 'text-emerald-400' :
-                    movement.type === 'OUT' ? 'text-red-400' : 'text-amber-400'
-                  }`}>{Number(movement.quantity).toLocaleString()}</td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">{movement.warehouse?.name || '—'}</td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">{movement.notes || '—'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-1.5">
-                      <button onClick={() => openEditModal(movement)} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Edit3 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDeleteMovement(movement)} className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg transition" title="حذف"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {(() => {
+                const sorted = [...movements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                let netChange = 0;
+                sorted.forEach(m => {
+                  const qty = Number(m.quantity);
+                  if (m.type === 'IN') netChange += qty;
+                  else if (m.type === 'OUT') netChange -= qty;
+                });
+                const currentStock = Number(product?.stock_quantity || 0);
+                let balance = currentStock - netChange;
+                return sorted.map((movement) => {
+                  const qty = Number(movement.quantity);
+                  if (movement.type === 'IN') balance += qty;
+                  else if (movement.type === 'OUT') balance -= qty;
+                  else balance = qty;
+                  return (
+                    <tr key={movement.id} className="border-t border-white/5 hover:bg-white/5 transition">
+                      <td className="px-6 py-4 text-slate-300 text-sm">
+                        {new Date(movement.date).toLocaleDateString('ar-EG')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                          movement.type === 'IN' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                          movement.type === 'OUT' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                          'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        }`}>
+                          {movement.type === 'IN' ? 'إدخال' : movement.type === 'OUT' ? 'إخراج' : 'تعديل'}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 font-semibold text-sm ${
+                        movement.type === 'IN' ? 'text-emerald-400' :
+                        movement.type === 'OUT' ? 'text-red-400' : 'text-amber-400'
+                      }`}>{Number(movement.quantity).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-slate-400 text-sm">{movement.warehouse?.name || '—'}</td>
+                      <td className="px-6 py-4 text-slate-400 text-sm">{movement.notes || '—'}</td>
+                      <td className={`px-6 py-4 text-center font-bold text-sm ${
+                        balance >= 0 ? 'text-white' : 'text-red-400'
+                      }`}>{balance.toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-1.5">
+                          <button onClick={() => openEditModal(movement)} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Edit3 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDeleteMovement(movement)} className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg transition" title="حذف"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
               {movements.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
+                  <td colSpan={7} className="px-6 py-16 text-center text-slate-500">
                     <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                     <p>لا توجد حركات لهذا المنتج</p>
                   </td>

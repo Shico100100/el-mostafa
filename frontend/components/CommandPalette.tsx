@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 
 interface SearchResult {
     id: number | string;
-    type: 'product' | 'customer' | 'supplier' | 'order' | 'employee';
+    type: 'product' | 'customer' | 'supplier' | 'order';
     name: string;
     description?: string;
 }
@@ -74,9 +74,6 @@ export function CommandPalette() {
             case 'order':
                 router.push(`/sales/orders`);
                 break;
-            case 'employee':
-                router.push(`/hr/employees`);
-                break;
             default:
                 break;
         }
@@ -88,7 +85,6 @@ export function CommandPalette() {
             case 'customer': return <Users className="w-4 h-4" />;
             case 'supplier': return <Users className="w-4 h-4" />;
             case 'order': return <ShoppingCart className="w-4 h-4" />;
-            case 'employee': return <Users className="w-4 h-4" />;
             default: return <FileText className="w-4 h-4" />;
         }
     };
@@ -99,7 +95,6 @@ export function CommandPalette() {
             customer: 'عميل',
             supplier: 'مورد',
             order: 'طلب',
-            employee: 'موظف'
         };
         return labels[type] || type;
     };

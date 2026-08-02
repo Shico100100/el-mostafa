@@ -19,7 +19,8 @@ export function useSuppliers() {
   const loadSuppliers = useCallback(async () => {
     try {
       const data = await api.fetchWithAuth('/purchases/suppliers');
-      setSuppliers(data || []);
+      const mapped = (data as any[]).map((s) => ({ ...s, balance: Number(s.balance) }));
+      setSuppliers(mapped);
     } catch (error) {
       console.error('Error loading suppliers:', error);
     } finally {

@@ -36,17 +36,6 @@ export interface Order {
   items?: OrderItem[];
 }
 
-export interface ManufacturingOrder {
-  id: number;
-  sales_order_id: number;
-  product_id: number;
-  quantity_required: number;
-  quantity_produced: number;
-  status: string;
-  priority: string;
-  product?: Product;
-}
-
 export interface NewOrderItem {
   product_id: string;
   quantity: number;

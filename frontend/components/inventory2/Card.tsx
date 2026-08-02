@@ -29,8 +29,8 @@ export default function Card({ icon, label, value, sub, color = 'blue', classNam
       <div className="flex items-center gap-4">
         {icon && <div className={`p-3 ${iconBg[color]} rounded-lg`}>{icon}</div>}
         <div>
-          <div className="text-2xl font-bold">{value}</div>
-          <div className="text-xs opacity-80">{label}</div>
+          <div className="stat-value">{value}</div>
+          <div className="stat-label">{label}</div>
           {sub && <div className="text-[10px] opacity-60 mt-0.5">{sub}</div>}
         </div>
       </div>

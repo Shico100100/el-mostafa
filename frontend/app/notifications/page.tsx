@@ -39,7 +39,7 @@ export default function NotificationsPage() {
 
     const handleMarkAsRead = async (id: number) => {
         try {
-            await api.markNotificationAsRead(id);
+            await api.markNotificationRead(id);
             loadNotifications();
         } catch (error) {
             console.error('Error marking as read:', error);
@@ -58,7 +58,7 @@ export default function NotificationsPage() {
                 await api.fetchWithAuth(`/v1/purchases/orders/${orderId}`, { method: 'DELETE' });
                 toast.success('تم حذف أمر الشراء بنجاح');
             }
-            await api.markNotificationAsRead(notification.id);
+            await api.markNotificationRead(notification.id);
             loadNotifications();
         } catch {
             toast.error('حدث خطأ أثناء التنفيذ');

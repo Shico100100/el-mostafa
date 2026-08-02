@@ -34,7 +34,7 @@ export function useProductionReport() {
     try {
       const token = localStorage.getItem('token');
       if (!token) { router.push('/login'); return; }
-      const response = await fetch(`${API_URL}/manufacturing/production?start_date=${startDate}&end_date=${endDate}`, {
+      const response = await fetch(`${API_URL}/v1/manufacturing/production?start_date=${startDate}&end_date=${endDate}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
       if (response.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('refreshToken'); router.push('/login'); return; }
@@ -60,7 +60,7 @@ export function useProductionReport() {
             toast.dismiss(t);
             try {
               const token = localStorage.getItem('token');
-              const response = await fetch(`${API_URL}/manufacturing/production/${id}`, {
+              const response = await fetch(`${API_URL}/v1/manufacturing/production/${id}`, {
                 method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` },
               });
               if (!response.ok) throw new Error('فشل الحذف');

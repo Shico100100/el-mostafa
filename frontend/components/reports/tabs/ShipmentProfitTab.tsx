@@ -2,6 +2,7 @@
 
 import { Trophy } from 'lucide-react';
 import type { ShipmentProfit } from '../types';
+import { ReportBarChart, ReportPieChart } from '../ReportCharts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ShipmentProfitTab({ shipmentProfit }: { shipmentProfit: { shipments: ShipmentProfit[]; summary: Record<string, any> } }) {
@@ -34,6 +35,25 @@ export function ShipmentProfitTab({ shipmentProfit }: { shipmentProfit: { shipme
             {(summary.overall_margin_percent as number).toFixed(1)}%
           </div>
         </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ReportBarChart
+          title="أرباح الشحنات"
+          data={shipments.map(s => ({
+            name: `شحنة #${s.purchase_order_id}`,
+            value: s.net_profit,
+          }))}
+        />
+        <ReportPieChart
+          title="الإيرادات مقابل التكاليف"
+          data={[
+            { name: 'إيرادات المبيعات', value: shipments.reduce((s, sh) => s + sh.sales_revenue, 0) },
+            { name: 'تكلفة البضاعة', value: shipments.reduce((s, sh) => s + sh.total_cogs, 0) },
+            { name: 'التكاليف الإضافية', value: shipments.reduce((s, sh) => s + sh.total_landed_cost - sh.total_cogs, 0) },
+          ].filter(d => d.value > 0)}
+        />
       </div>
 
       {(summary.highest_margin_items as Array<Record<string, unknown>>)?.length > 0 && (

@@ -1,14 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Truck, RotateCcw, Coins, PackageOpen, Container } from 'lucide-react';
+import { ShoppingBag, Truck, RotateCcw } from 'lucide-react';
 
 const links = [
   { href: '/purchases/suppliers', label: 'الموردين', icon: Truck, desc: 'إدارة الموردين وأرصدة حساباتهم' },
   { href: '/purchases/orders', label: 'أوامر الشراء', icon: ShoppingBag, desc: 'إنشاء ومتابعة أوامر الشراء' },
   { href: '/purchases/returns', label: 'مرتجعات', icon: RotateCcw, desc: 'إدارة مرتجعات المشتريات' },
-  { href: '/purchases/currencies', label: 'العملات', icon: Coins, desc: 'إدارة العملات وأسعار الصرف' },
-  { href: '/purchases/containers', label: 'الحاويات', icon: Container, desc: 'إدارة الحاويات وحساب CBM' },
 ];
 
 export default function PurchasesPage() {

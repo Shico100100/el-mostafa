@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setReady(true);
     }
-  }, [pathname, router]);
+  }, [pathname, router, normalizedPath]);
 
   if (!ready && !PUBLIC_PATHS.includes(normalizedPath)) {
     return (

@@ -1,10 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import AttachmentSection from '@/components/ui/AttachmentSection';
+import { api } from '@/lib/api';
 import type { Order, OrderItem } from '../types';
 
 export function OrderDetailsModal({ order, onClose }: { order: Order | null; onClose: () => void }) {
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const orderId = order?.id;
+
+  useEffect(() => {
+    if (!orderId) return;
+    api.fetchWithAuth(`/sales/orders/${orderId}/items`)
+      .then((data: any) => setItems(data.value || data))
+      .catch(() => setItems([]));
+  }, [orderId]);
   if (!order) return null;
 
   return (
@@ -42,7 +53,7 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
                 <tr><th className="px-4 py-3">الصنف</th><th className="px-4 py-3 text-center">الكمية</th><th className="px-4 py-3 text-center">السعر</th><th className="px-4 py-3 text-center">الإجمالي</th></tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {order.items?.map((item: OrderItem) => (
+                {items.map((item: OrderItem) => (
                   <tr key={item.id} className="text-sm">
                     <td className="px-4 py-3 text-white font-medium">{item.product?.name}</td>
                     <td className="px-4 py-3 text-center text-gray-300">{item.quantity} {item.product?.unit}</td>

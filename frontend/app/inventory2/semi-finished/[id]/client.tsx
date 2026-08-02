@@ -105,8 +105,8 @@ export default function SemiFinishedDetailPage() {
           <InfoCard title="معلومات المنتج" icon={<Package className="w-5 h-5 text-blue-400" />}>
             <DetailRow label="الاسم" value={product.name} />
             <DetailRow label="الوحدة" value={product.unit} />
-            <DetailRow label="متوسط التكلفة" value={`${product.cost_price.toFixed(2)} ج.م`} valueClass="text-green-400" />
-            <DetailRow label="سعر البيع" value={`${product.selling_price.toFixed(2)} ج.م`} valueClass="text-blue-400" />
+            <DetailRow label="متوسط التكلفة" value={`${Number(product.cost_price || 0).toFixed(2)} ج.م`} valueClass="text-green-400" />
+            <DetailRow label="سعر البيع" value={`${Number(product.selling_price || 0).toFixed(2)} ج.م`} valueClass="text-blue-400" />
             <DetailRow label="المخزون الحالي" value={`${product.stock_quantity?.toLocaleString() || 0} ${product.unit || 'قطعة'}`} valueClass="text-amber-400" />
           </InfoCard>
 
@@ -216,7 +216,7 @@ export default function SemiFinishedDetailPage() {
                       = <span className="text-yellow-300 font-bold text-lg">{costBreakdown.totalPerPiece.toFixed(4)} ج.م / قطعة</span>
                     </div>
                     <div className="mt-3 text-slate-500 text-xs">
-                      * ملاحظة: متوسط التكلفة الفعلي للمنتج ({product.cost_price.toFixed(2)} ج.م) هو WAC عبر كل دفعات الإنتاج السابقة، وقد يختلف عن التقدير الحالي.
+                      * ملاحظة: متوسط التكلفة الفعلي للمنتج ({Number(product.cost_price || 0).toFixed(2)} ج.م) هو WAC عبر كل دفعات الإنتاج السابقة، وقد يختلف عن التقدير الحالي.
                     </div>
                   </div>
                 </div>

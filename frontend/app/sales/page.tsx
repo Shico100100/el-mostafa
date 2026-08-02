@@ -1,12 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Users, FileText, RotateCcw } from 'lucide-react';
+import { ShoppingCart, Users, RotateCcw } from 'lucide-react';
 
 const links = [
   { href: '/sales/customers', label: 'العملاء', icon: Users, desc: 'إدارة العملاء وأرصدة حساباتهم' },
   { href: '/sales/orders', label: 'طلبات البيع', icon: ShoppingCart, desc: 'إنشاء ومتابعة أوامر البيع' },
-  { href: '/sales/quotes', label: 'عروض الأسعار', icon: FileText, desc: 'عروض الأسعار للعملاء' },
   { href: '/sales/returns', label: 'مرتجعات', icon: RotateCcw, desc: 'إدارة مرتجعات المبيعات' },
 ];
 

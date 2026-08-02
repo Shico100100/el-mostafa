@@ -8,7 +8,6 @@ describe('Navigation', () => {
     { href: '/purchases', label: 'المشتريات' },
     { href: '/manufacturing', label: 'التصنيع' },
     { href: '/accounting', label: 'المحاسبة' },
-    { href: '/hr', label: 'الموارد البشرية' },
     { href: '/reports', label: 'التقارير' },
     { href: '/inventory2', label: 'المخزون' },
     { href: '/manufacturing/boms', label: 'BOM' },

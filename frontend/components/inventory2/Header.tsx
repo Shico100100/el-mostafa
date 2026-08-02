@@ -19,12 +19,12 @@ export default function Header({ title, subtitle, backHref, actions }: HeaderPro
         <div className="flex items-center gap-4">
           {backHref && (
             <button onClick={() => router.push(backHref)} className="p-2 hover:bg-white/5 rounded-full transition text-white/50 hover:text-white">
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-white">{title}</h1>
-            {subtitle && <p className="text-sm text-gray-400">{subtitle}</p>}
+            <h1 className="page-title">{title}</h1>
+            {subtitle && <p className="page-subtitle">{subtitle}</p>}
           </div>
         </div>
         {actions && <div className="flex items-center gap-3">{actions}</div>}

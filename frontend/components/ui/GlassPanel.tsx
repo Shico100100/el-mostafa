@@ -1,16 +1,33 @@
 import React from 'react';
 
 export function GlassPanel({ children, className = '', title }: { children: React.ReactNode; className?: string; title?: React.ReactNode }) {
-    return (
-        <div className={`backdrop-blur-xl bg-black/40 border border-white/10 rounded-2xl shadow-2xl ${className}`}>
-            {title && (
-                <div className="px-6 py-4 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white">{title}</h2>
-                </div>
-            )}
-            {children}
+  return (
+    <div className={`card ${className}`}>
+      {title && (
+        <div className="card-header">
+          {typeof title === 'string' ? (
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+          ) : (
+            title
+          )}
         </div>
-    );
+      )}
+      <div className={title ? 'card-body' : 'p-6'}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function GlassCard({ children, className = '', onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+  return (
+    <div
+      className={`card p-6 ${onClick ? 'cursor-pointer hover:bg-white/5 transition' : ''} ${className}`}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default GlassPanel;

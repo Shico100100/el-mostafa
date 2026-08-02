@@ -1,8 +1,19 @@
 'use client';
 
 import type { ReportData, Sale } from '../types';
+import { ReportBarChart, ReportPieChart, ReportComparisonChart } from '../ReportCharts';
 
 export function ProfitLossTab({ data }: { data: ReportData }) {
+  const salesByOrder = (data.sales || []).slice(0, 20).map((sale: Sale) => {
+    const saleCOGS = sale.items.reduce((sum: number, item) => sum + (Number(item.quantity) * Number(item.product.cost_price || 0)), 0);
+    return {
+      name: `#${sale.id}`,
+      revenue: Number(sale.total_amount) || 0,
+      cost: saleCOGS,
+      profit: Number(sale.total_amount) - saleCOGS,
+    };
+  });
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -22,6 +33,22 @@ export function ProfitLossTab({ data }: { data: ReportData }) {
           <h3 className={`${(data.netProfit || 0) >= 0 ? 'text-green-200' : 'text-red-200'} mb-2`}>صافي الربح</h3>
           <p className="text-2xl font-bold text-white">{Number(data.netProfit).toLocaleString()} ج.م</p>
         </div>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <ReportPieChart
+          title="توزيع الإيرادات والمصروفات"
+          data={[
+            { name: 'إيرادات المبيعات', value: Number(data.totalSales || 0) },
+            { name: 'تكلفة البضاعة (COGS)', value: Number(data.totalCOGS || 0) },
+            { name: 'المصاريف التشغيلية', value: Number(data.totalFixedCosts || 0) },
+          ].filter(d => d.value > 0)}
+        />
+        <ReportComparisonChart
+          title="الأرباح حسب أمر البيع (آخر 20)"
+          data={salesByOrder}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
