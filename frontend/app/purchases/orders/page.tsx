@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, CloudDownload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePurchaseOrders } from '@/hooks/purchases/usePurchaseOrders';
+import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import PurchaseOrderTable from '@/components/purchases/PurchaseOrderTable';
 import LowStockAlert from '@/components/purchases/LowStockAlert';
 import PrintTemplate from '@/components/purchases/PrintTemplate';
@@ -11,10 +12,12 @@ import PaymentModal from '@/components/purchases/modals/PaymentModal';
 import QuickProductModal from '@/components/purchases/modals/QuickProductModal';
 import LandedCostModal from '@/components/purchases/modals/LandedCostModal';
 import PackingListModal from '@/components/purchases/modals/PackingListModal';
+import { Pagination } from '@/components/Pagination';
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
   const h = usePurchaseOrders();
+  const { syncInvoices, syncing } = usePeachtreeSync();
 
   return (
     <>
@@ -72,6 +75,14 @@ export default function PurchaseOrdersPage() {
               <BarChart3 className="w-4 h-4 inline" /> تصدير Excel
             </button>
             <button
+              onClick={() => syncInvoices(['purchase_invoices', 'invoice_line_items']).finally(h.loadData)}
+              disabled={syncing}
+              className="px-6 py-2 h-[42px] bg-white/10 hover:bg-white/20 text-teal-300 rounded-lg border border-teal-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CloudDownload className="w-4 h-4" />
+              {syncing ? 'جارٍ الاستيراد...' : 'استيراد من Peachtree'}
+            </button>
+            <button
               onClick={() => {
                 h.resetForm();
                 h.setShowModal(true);
@@ -100,28 +111,13 @@ export default function PurchaseOrdersPage() {
           onLandedCost={h.openLandedCost}
           onPackingList={h.openPackingList}
         />
-
-        {h.totalPages > 1 && (
-          <div className="p-4 border-t border-white/10 flex justify-center items-center gap-4">
-            <button
-              onClick={() => h.setFilters({ ...h.filters, page: Math.max(1, h.filters.page - 1) })}
-              disabled={h.filters.page === 1}
-              className="px-4 py-2 bg-white/5 rounded-lg text-white disabled:opacity-30 hover:bg-white/10"
-            >
-              السابق
-            </button>
-            <span className="text-gray-300">
-              صفحة {h.filters.page} من {h.totalPages}
-            </span>
-            <button
-              onClick={() => h.setFilters({ ...h.filters, page: Math.min(h.totalPages, h.filters.page + 1) })}
-              disabled={h.filters.page === h.totalPages}
-              className="px-4 py-2 bg-white/5 rounded-lg text-white disabled:opacity-30 hover:bg-white/10"
-            >
-              التالي
-            </button>
-          </div>
-        )}
+        <Pagination
+          page={h.filters.page}
+          totalPages={h.totalPages}
+          totalItems={h.totalItems}
+          showingItems={h.orders.length}
+          onPageChange={(p) => h.setFilters({ ...h.filters, page: p })}
+        />
       </main>
 
       <PurchaseOrderModal

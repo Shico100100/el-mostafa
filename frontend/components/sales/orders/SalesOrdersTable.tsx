@@ -1,25 +1,22 @@
 'use client';
 
 import { Eye, DollarSign, Printer, ClipboardList } from 'lucide-react';
-import type { Order, ManufacturingOrder, Filters } from './types';
+import type { Order, Filters } from './types';
 
 export function SalesOrdersTable({
   orders, loading, filters, totalPages, totalItems,
-  manufacturingOrdersMap,
-  onPageChange, onOpenDetails, onDuplicate, onOpenPayment, onPrint, onSendToManufacturing,
+  onPageChange, onOpenDetails, onDuplicate, onOpenPayment, onPrint,
 }: {
   orders: Order[];
   loading: boolean;
   filters: Filters;
   totalPages: number;
   totalItems: number;
-  manufacturingOrdersMap: Record<number, ManufacturingOrder[]>;
   onPageChange: (filters: Filters) => void;
   onOpenDetails: (order: Order) => void;
   onDuplicate: (order: Order) => void;
   onOpenPayment: (order: Order) => void;
   onPrint: (order: Order) => void;
-  onSendToManufacturing: (orderId: number) => void;
 }) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
@@ -30,16 +27,15 @@ export function SalesOrdersTable({
               <th className="px-6 py-4 font-semibold text-sm">التاريخ</th>
               <th className="px-6 py-4 font-semibold text-sm">العميل</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">المبلغ</th>
-              <th className="px-6 py-4 font-semibold text-sm text-center">الحالة</th>
-              <th className="px-6 py-4 font-semibold text-sm text-center">التصنيع</th>
+              <th className="px-6 py-4 font-semibold text-sm text-center">رقم الفاتورة</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
+              <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
             ) : orders.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
+              <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
             ) : (
               orders.map((order) => (
                 <tr key={order.id} className="hover:bg-white/5 transition-colors group">
@@ -54,33 +50,12 @@ export function SalesOrdersTable({
                     <span className="text-xs text-gray-500 mr-1">ج.م</span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${order.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' :
-                      'bg-amber-500/20 text-amber-400'
-                    }`}>
-                      {order.status === 'COMPLETED' ? 'مكتمل' : 'قيد الانتظار'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {(() => {
-                      const mos = manufacturingOrdersMap[order.id];
-                      if (!mos || mos.length === 0) {
-                        return (
-                          <button
-                            onClick={() => onSendToManufacturing(order.id)}
-                            className="px-3 py-1 text-xs bg-indigo-500/20 text-indigo-300 rounded-lg hover:bg-indigo-500/30 transition"
-                          >
-                            إرسال للتصنيع
-                          </button>
-                        );
-                      }
-                      const allDone = mos.every((m) => m.status === 'COMPLETED');
-                      const inProgress = mos.some((m) => m.status === 'IN_PROGRESS');
-                      return (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${allDone ? 'bg-emerald-500/20 text-emerald-400' : inProgress ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {allDone ? 'مكتمل' : inProgress ? 'قيد الإنتاج' : 'معلق'}
-                        </span>
-                      );
-                    })()}
+                    <span className="text-white font-bold">#{order.id}</span>
+                    {order.notes?.match(/^\[PQ-/) && (
+                      <span className="mr-2 inline-block px-2 py-0.5 rounded-full bg-teal-600/20 border border-teal-500/30 text-teal-300 text-xs font-semibold align-middle">
+                        Peachtree
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
