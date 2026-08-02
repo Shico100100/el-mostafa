@@ -240,15 +240,6 @@ export async function seedDemoData(dataSource: DataSource) {
     ]);
     logger.log('Daily production seeded');
 
-    await insertIgnore(queryRunner, 'production_schedules', [
-      { id: 1, planned_date: '2026-06-01', shift: 'DAY', machine_id: 1, mold_id: 1, product_id: 6, target_quantity: 400, status: 'PENDING', notes: 'جدولة إنتاج كراسي' },
-      { id: 2, planned_date: '2026-06-01', shift: 'NIGHT', machine_id: 1, mold_id: 4, product_id: 9, target_quantity: 500, status: 'PENDING', notes: 'جدولة إنتاج دلاء' },
-      { id: 3, planned_date: '2026-06-02', shift: 'DAY', machine_id: 3, mold_id: 3, product_id: 8, target_quantity: 300, status: 'PENDING', notes: 'جدولة إنتاج صناديق تخزين' },
-      { id: 4, planned_date: '2026-06-02', shift: 'DAY', machine_id: 2, mold_id: 5, product_id: 11, target_quantity: 5000, status: 'PENDING', notes: 'جدولة إنتاج أغطية' },
-      { id: 5, planned_date: '2026-06-03', shift: 'DAY', machine_id: 1, mold_id: 2, product_id: 7, target_quantity: 150, status: 'PENDING', notes: 'جدولة إنتاج طاولات' },
-    ]);
-    logger.log('Production schedules seeded');
-
     await insertIgnore(queryRunner, 'fixed_costs', [
       { id: 1, month: '2026-05', category: 'ELECTRICITY', amount: 15000, notes: 'فاتورة كهرباء المصنع - مايو' },
       { id: 2, month: '2026-05', category: 'RENT', amount: 25000, notes: 'إيجار المصنع - مايو' },
@@ -280,18 +271,6 @@ export async function seedDemoData(dataSource: DataSource) {
       { id: 3, user_id: 1, date: '2026-05-22', status: 'ABSENT', notes: 'إجازة مرضية' },
     ]);
     logger.log('Attendance seeded');
-
-    await insertIgnore(queryRunner, 'employee_profiles', [
-      { id: 1, user_id: 1, base_salary: 5000, working_hours_per_day: 8, overtime_rate: 1.5, deduction_rate: 1.0 },
-      { id: 2, user_id: 2, base_salary: 4500, working_hours_per_day: 8, overtime_rate: 1.5, deduction_rate: 1.0 },
-    ]);
-    logger.log('Employee profiles seeded');
-
-    await insertIgnore(queryRunner, 'salary_payments', [
-      { id: 1, user_id: 1, month: '2026-05', base_salary: 5000, attendance_days: 22, absent_days: 1, overtime_pay: 300, bonuses: 500, deductions: 200, net_salary: 5600, status: 'PAID', payment_date: '2026-05-31', notes: 'راتب شهر مايو' },
-      { id: 2, user_id: 2, month: '2026-05', base_salary: 4500, attendance_days: 23, absent_days: 0, overtime_pay: 0, bonuses: 200, deductions: 0, net_salary: 4700, status: 'PAID', payment_date: '2026-05-31', notes: 'راتب شهر مايو' },
-    ]);
-    logger.log('Salary payments seeded');
 
     await insertIgnore(queryRunner, 'notifications', [
       { id: 1, title: 'تم إضافة طلب شراء جديد', message: 'تم إنشاء طلب شراء رقم PO-2026-003 لمورد LDPE', isRead: false, userId: 1, actionType: 'create_order', actionData: { orderId: 3 } },

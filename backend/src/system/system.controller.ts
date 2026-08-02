@@ -39,6 +39,10 @@ function getPgDumpPath(): string {
   return 'pg_dump';
 }
 
+function sanitizeDbName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_]/g, '');
+}
+
 function getPsqlPath(): string {
   if (process.platform === 'win32') {
     for (const pgDir of ['18', '17', '16', '15', '14']) {
@@ -68,9 +72,11 @@ export class SystemController {
 
       // Build backup file name
       const date = new Date().toISOString().replace(/[:T]/g, '-').split('.')[0];
+      const rawDbName = process.env.DATABASE_NAME || 'db';
+      const dbName = sanitizeDbName(rawDbName);
       const backupFile = path.join(
         backupDir,
-        `${process.env.DATABASE_NAME || 'db'}-${date}.sql`,
+        `${dbName}-${date}.sql`,
       );
 
       // Construct pg_dump command
@@ -78,7 +84,6 @@ export class SystemController {
       const pgUser = process.env.DATABASE_USERNAME || 'postgres';
       const pgHost = process.env.DATABASE_HOST || 'localhost';
       const pgPort = process.env.DATABASE_PORT || '5432';
-      const dbName = process.env.DATABASE_NAME || 'elmostafa_db';
 
       // Use environment variable for password
       const env = { ...process.env, PGPASSWORD: pgPassword };
@@ -146,7 +151,8 @@ export class SystemController {
       const pgUser = process.env.DATABASE_USERNAME || 'postgres';
       const pgHost = process.env.DATABASE_HOST || 'localhost';
       const pgPort = process.env.DATABASE_PORT || '5432';
-      const dbName = process.env.DATABASE_NAME || 'elmostafa_db';
+      const rawDbName = process.env.DATABASE_NAME || 'elmostafa_db';
+      const dbName = sanitizeDbName(rawDbName);
       const env = { ...process.env, PGPASSWORD: pgPassword };
 
       const psql = getPsqlPath();

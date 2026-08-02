@@ -8,11 +8,16 @@ import { ConfigService } from '@nestjs/config';
 import { UnprocessableEntityException } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 import { AuthProvidersEnum } from './auth-providers.enum';
+import { AuthLoginService } from './auth/auth-login.service';
+import { AuthRegistrationService } from './auth/auth-registration.service';
+import { AuthPasswordService } from './auth/auth-password.service';
 
 jest.mock('bcryptjs');
 
 describe('AuthService', () => {
   let service: AuthService;
+  let authLoginService: AuthLoginService;
+  let authRegistrationService: AuthRegistrationService;
   let jwtService: JwtService;
   let usersService: UsersService;
   let sessionService: SessionService;
@@ -22,6 +27,31 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        {
+          provide: AuthLoginService,
+          useValue: {
+            getPublicUsers: jest.fn(),
+            validateLogin: jest.fn(),
+            validateIdLogin: jest.fn(),
+            validateSocialLogin: jest.fn(),
+            getTokensData: jest.fn(),
+          },
+        },
+        {
+          provide: AuthRegistrationService,
+          useValue: {
+            register: jest.fn(),
+            confirmEmail: jest.fn(),
+            confirmNewEmail: jest.fn(),
+          },
+        },
+        {
+          provide: AuthPasswordService,
+          useValue: {
+            forgotPassword: jest.fn(),
+            resetPassword: jest.fn(),
+          },
+        },
         {
           provide: JwtService,
           useValue: {
@@ -64,6 +94,8 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    authLoginService = module.get<AuthLoginService>(AuthLoginService);
+    authRegistrationService = module.get<AuthRegistrationService>(AuthRegistrationService);
     jwtService = module.get<JwtService>(JwtService);
     usersService = module.get<UsersService>(UsersService);
     sessionService = module.get<SessionService>(SessionService);
@@ -76,7 +108,9 @@ describe('AuthService', () => {
 
   describe('validateLogin', () => {
     it('should throw error if user not found', async () => {
-      (usersService.findByEmail as jest.Mock).mockResolvedValue(null);
+      (authLoginService.validateLogin as jest.Mock).mockRejectedValue(
+        new UnprocessableEntityException(),
+      );
 
       await expect(
         service.validateLogin({
@@ -87,21 +121,8 @@ describe('AuthService', () => {
     });
 
     it('should return tokens if login is valid', async () => {
-      const user = {
-        id: 1,
-        email: 'test@example.com',
-        password: 'hashedPassword',
-        provider: AuthProvidersEnum.email,
-        role: { id: 1 },
-      };
-
-      (usersService.findByEmail as jest.Mock).mockResolvedValue(user);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (sessionService.create as jest.Mock).mockResolvedValue({
-        id: 123,
-        hash: 'session-hash',
-      });
-      (jwtService.signAsync as jest.Mock).mockResolvedValue('jwt-token');
+      const loginResult = { token: 'jwt-token', refreshToken: 'refresh-token', user: { id: 1 } };
+      (authLoginService.validateLogin as jest.Mock).mockResolvedValue(loginResult);
 
       const result = await service.validateLogin({
         email: 'test@example.com',
@@ -109,27 +130,23 @@ describe('AuthService', () => {
       });
 
       expect(result).toHaveProperty('token');
-      expect(result.user).toEqual(user);
+      expect(result.user).toEqual(loginResult.user);
     });
   });
 
   describe('register', () => {
-    it('should create user and send sign up mail', async () => {
+    it('should delegate to AuthRegistrationService.register', async () => {
       const dto = {
         email: 'new@example.com',
         password: 'password',
         firstName: 'New',
         lastName: 'User',
       };
-      (usersService.create as jest.Mock).mockResolvedValue({ id: 2, ...dto });
-      (jwtService.signAsync as jest.Mock).mockResolvedValue('confirm-hash');
+      (authRegistrationService.register as jest.Mock).mockResolvedValue(undefined);
 
       await service.register(dto as any);
 
-      expect(usersService.create).toHaveBeenCalled();
-      expect(mailService.userSignUp).toHaveBeenCalledWith(
-        expect.objectContaining({ to: dto.email }),
-      );
+      expect(authRegistrationService.register).toHaveBeenCalledWith(dto);
     });
   });
 });
