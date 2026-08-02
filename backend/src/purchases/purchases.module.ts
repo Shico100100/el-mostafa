@@ -11,9 +11,6 @@ import { AccountingModule } from '../accounting/accounting.module';
 
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
-import { Currency } from './entities/currency.entity';
-import { FxRate } from './entities/fx-rate.entity';
-import { Container } from './entities/container.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
@@ -21,8 +18,6 @@ import { SupplierService } from './suppliers/supplier.service';
 import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
 import { PaymentService } from './supplier-payments/payment.service';
 import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
-import { CurrencyService } from './currencies/currency.service';
-import { ContainerService } from './containers/container.service';
 import { PackingListService } from './packing-lists/packing-list.service';
 
 @Module({
@@ -34,9 +29,6 @@ import { PackingListService } from './packing-lists/packing-list.service';
       SupplierPayment,
       PurchaseReturn,
       PurchaseReturnItem,
-      Currency,
-      FxRate,
-      Container,
       PackingList,
       Product,
       Stock,
@@ -51,8 +43,6 @@ import { PackingListService } from './packing-lists/packing-list.service';
     PurchaseOrderService,
     PaymentService,
     PurchaseReturnService,
-    CurrencyService,
-    ContainerService,
     PackingListService,
   ],
   controllers: [PurchasesController],

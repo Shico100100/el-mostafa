@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { PurchaseOrder } from '../entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
+import { Product } from '../../inventory/entities/product.entity';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -11,6 +12,7 @@ export class PurchaseOrderService {
     private orderRepo: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderItem)
     private orderItemRepo: Repository<PurchaseOrderItem>,
+    private dataSource: DataSource,
   ) {}
 
   async getAllOrders(
@@ -77,7 +79,7 @@ export class PurchaseOrderService {
       relations: ['items', 'items.product', 'supplier'],
     });
 
-    if (!order) throw new Error('Order not found');
+    if (!order) throw new NotFoundException('طلب الشراء غير موجود');
 
     const fxRate = Number(order.exchange_rate) || 1;
     const freightCost = Number(order.freight_cost) || 0;
@@ -163,6 +165,14 @@ export class PurchaseOrderService {
       await this.orderItemRepo.update(b.item_id, {
         landed_cost: b.unit_landed_cost,
       });
+      const product = await this.dataSource
+        .getRepository(Product)
+        .findOne({ where: { id: b.product_id } });
+      if (product && product.type === 'RAW') {
+        await this.dataSource.getRepository(Product).update(b.product_id, {
+          cost_price: b.unit_landed_cost,
+        });
+      }
     }
 
     await this.orderRepo.update(orderId, {

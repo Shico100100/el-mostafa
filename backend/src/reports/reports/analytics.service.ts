@@ -37,16 +37,21 @@ export class AnalyticsService {
       const productsWithStock = await this.dataSource.query(`
         SELECT
           p.*,
-          COALESCE(SUM(s.quantity), 0) AS quantity
+          COALESCE(mov.current_stock, 0) AS quantity
         FROM products p
-        LEFT JOIN stock s ON s.product_id = p.id
+        LEFT JOIN (
+          SELECT product_id,
+            COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+            COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+          FROM stock_movements
+          GROUP BY product_id
+        ) mov ON mov.product_id = p.id
         WHERE p.deleted_at IS NULL
-        GROUP BY p.id
         ORDER BY p.name ASC
       `);
 
       const totalValue = productsWithStock.reduce(
-        (sum: number, p: Record<string, any>) => sum + Number(p.quantity) * Number(p.selling_price),
+        (sum: number, p: Record<string, any>) => sum + Number(p.quantity) * Number(p.cost_price || 0),
         0,
       );
 
@@ -76,14 +81,28 @@ export class AnalyticsService {
   }
 
   async getInventoryValueByCategory() {
-    const stocks = await this.stockRepo.find({
-      relations: ['product', 'product.category'],
-    });
-    const data = stocks.reduce(
-      (acc: Record<string, unknown>, stock) => {
-        const categoryName = stock.product?.category?.name || 'غير محدد';
-        const value =
-          Number(stock.quantity) * Number(stock.product?.cost_price || 0);
+    const rows = await this.dataSource.query(`
+      SELECT
+        p.name AS product_name,
+        COALESCE(cat.name, 'غير محدد') AS category_name,
+        p.cost_price,
+        COALESCE(mov.current_stock, 0) AS quantity
+      FROM products p
+      LEFT JOIN categories cat ON cat.id = p.category_id
+      LEFT JOIN (
+        SELECT product_id,
+          COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+          COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS current_stock
+        FROM stock_movements
+        GROUP BY product_id
+      ) mov ON mov.product_id = p.id
+      WHERE p.deleted_at IS NULL
+    `);
+
+    const data = rows.reduce(
+      (acc: Record<string, unknown>, row: any) => {
+        const categoryName = row.category_name || 'غير محدد';
+        const value = Number(row.quantity) * Number(row.cost_price || 0);
         acc[categoryName] = ((acc[categoryName] as number) || 0) + value;
         return acc;
       },
@@ -220,7 +239,7 @@ export class AnalyticsService {
     const shipments = await this.purchaseOrderRepo.find({
       where:
         startDate && endDate
-          ? { order_date: Between(new Date(startDate), new Date(endDate)) }
+          ? { order_date: Between(new Date(startDate), new Date(endDate + 'T23:59:59.999Z')) }
           : {},
       relations: ['items', 'items.product', 'supplier'],
     });
@@ -243,9 +262,10 @@ export class AnalyticsService {
       const salesResult = await this.dataSource.query(
         `SELECT soi.product_id, SUM(soi.quantity) AS total_sold_qty, SUM(soi.total) AS total_revenue
          FROM sales_order_items soi
-         WHERE soi.product_id IN (${placeholders})
+         JOIN sales_orders so ON so.id = soi.order_id
+         WHERE soi.product_id IN (${placeholders})${startDate && endDate ? ` AND so.order_date BETWEEN $${ids.length + 1} AND $${ids.length + 2}` : ''}
          GROUP BY soi.product_id`,
-        ids,
+        startDate && endDate ? [...ids, startDate, endDate + 'T23:59:59.999Z'] : ids,
       );
       for (const row of salesResult) {
         salesByProduct.set(row.product_id, {
@@ -258,9 +278,10 @@ export class AnalyticsService {
       const itemSalesResult = await this.dataSource.query(
         `SELECT soi.product_id, COALESCE(SUM(quantity), 0) AS qty, COALESCE(SUM(total), 0) AS revenue
          FROM sales_order_items soi
-         WHERE soi.product_id IN (${placeholders})
+         JOIN sales_orders so ON so.id = soi.order_id
+         WHERE soi.product_id IN (${placeholders})${startDate && endDate ? ` AND so.order_date BETWEEN $${ids.length + 1} AND $${ids.length + 2}` : ''}
          GROUP BY soi.product_id`,
-        ids,
+        startDate && endDate ? [...ids, startDate, endDate + 'T23:59:59.999Z'] : ids,
       );
       for (const row of itemSalesResult) {
         itemSalesByProduct.set(row.product_id, {
@@ -337,7 +358,6 @@ export class AnalyticsService {
         total_weight_kg: totalWeight,
         total_items_purchased: poTotalQty,
         total_items_sold: soldQty,
-        scrap_qty: scrapQty,
         sales_revenue: salesRevenue,
         total_cogs: totalCOGS,
         gross_profit: grossProfit,
@@ -358,6 +378,7 @@ export class AnalyticsService {
         total_revenue: totalRevenue,
         total_cogs: totalCOGSAll,
         total_profit: totalProfit,
+        scrap_qty: scrapQty,
         overall_margin_percent:
           totalRevenue > 0
             ? Math.round((totalProfit / totalRevenue) * 10000) / 100

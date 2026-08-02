@@ -7,7 +7,6 @@ import { PurchaseOrderItem } from './entities/purchase-order-item.entity';
 import { SupplierPayment } from './entities/supplier-payment.entity';
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
-import { Container } from './entities/container.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
@@ -15,13 +14,12 @@ import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
 import { PaymentService } from './supplier-payments/payment.service';
-import { ContainerService } from './containers/container.service';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class PurchasesService {
   constructor(
     private paymentService: PaymentService,
-    private containerService: ContainerService,
     @InjectRepository(Supplier)
     private supplierRepo: Repository<Supplier>,
     @InjectRepository(PurchaseOrder)
@@ -30,8 +28,6 @@ export class PurchasesService {
     private paymentRepo: Repository<SupplierPayment>,
     @InjectRepository(PurchaseReturn)
     private returnRepo: Repository<PurchaseReturn>,
-    @InjectRepository(Container)
-    private containerRepo: Repository<Container>,
     @InjectRepository(PackingList)
     private packingListRepo: Repository<PackingList>,
     @InjectRepository(Product)
@@ -39,12 +35,27 @@ export class PurchasesService {
 
     private inventoryService: InventoryService,
     private accountingService: AccountingService,
+    private cache: CacheService,
     private dataSource: DataSource,
   ) {}
 
   // ---- Supplier Aging / Balance / Statement (cross-repo) ----
 
-  async getSupplierAging() {
+  async getSupplierAging(): Promise<
+    Array<{
+      id: number;
+      name: string;
+      total: number;
+      current: number;
+      days1_30: number;
+      days31_60: number;
+      days61_90: number;
+      over90: number;
+    }>
+  > {
+    const cacheKey = 'reports:supplier-aging';
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
     const suppliers = await this.supplierRepo.find({
       order: { name: 'ASC' },
     });
@@ -80,7 +91,7 @@ export class PurchasesService {
     }
 
     const now = new Date();
-    return suppliers.map((supplier) => {
+    const result = suppliers.map((supplier) => {
       const orders = ordersBySup.get(supplier.id) || [];
       const payments = paymentsBySup.get(supplier.id) || [];
       const returns = returnsBySup.get(supplier.id) || [];
@@ -141,10 +152,16 @@ export class PurchasesService {
       return {
         id: supplier.id,
         name: supplier.name,
-        total,
-        ...buckets,
+        total: Math.round(total * 100) / 100,
+        current: Math.round(buckets.current * 100) / 100,
+        days1_30: Math.round(buckets.days1_30 * 100) / 100,
+        days31_60: Math.round(buckets.days31_60 * 100) / 100,
+        days61_90: Math.round(buckets.days61_90 * 100) / 100,
+        over90: Math.round(buckets.over90 * 100) / 100,
       };
     });
+    await this.cache.set(cacheKey, result, 60);
+    return result;
   }
 
   async getSupplierBalance(supplierId: number) {
@@ -221,7 +238,7 @@ export class PurchasesService {
     let runningBalance = 0;
     return movements.map((m) => {
       runningBalance += m.debit - m.credit;
-      return { ...m, balance: runningBalance };
+      return { ...m, balance: Math.round(runningBalance * 100) / 100 };
     });
   }
 
@@ -316,6 +333,10 @@ export class PurchasesService {
     await queryRunner.startTransaction();
 
     try {
+      const oldOrder = await queryRunner.manager.findOne(PurchaseOrder, {
+        where: { id },
+      });
+
       const updateData: Partial<PurchaseOrder> = {};
       if (data.supplier_id !== undefined)
         updateData.supplier_id = data.supplier_id;
@@ -390,6 +411,21 @@ export class PurchasesService {
 
       await queryRunner.commitTransaction();
 
+      if (data.total_amount !== undefined && oldOrder) {
+        await this.accountingService.postAutomaticEntry({
+          type: 'PURCHASE',
+          amount: -Number(oldOrder.total_amount),
+          reference: `REV-PUR-${id}`,
+          description: `عكس شراء - أمر رقم ${id}`,
+        });
+        await this.accountingService.postAutomaticEntry({
+          type: 'PURCHASE',
+          amount: data.total_amount,
+          reference: `PUR-${id}`,
+          description: `تعديل شراء - فاتورة رقم ${id}`,
+        });
+      }
+
       return this.orderRepo.findOne({
         where: { id },
         relations: ['supplier'],
@@ -408,6 +444,10 @@ export class PurchasesService {
     await queryRunner.startTransaction();
 
     try {
+      const orderToDelete = await queryRunner.manager.findOne(PurchaseOrder, {
+        where: { id },
+      });
+
       const items = await queryRunner.manager.find(PurchaseOrderItem, {
         where: { order_id: id },
       });
@@ -430,6 +470,14 @@ export class PurchasesService {
       await queryRunner.manager.delete(PurchaseOrder, id);
 
       await queryRunner.commitTransaction();
+
+      await this.accountingService.postAutomaticEntry({
+        type: 'PURCHASE',
+        amount: -(orderToDelete ? Number(orderToDelete.total_amount) : 0),
+        reference: `DEL-PUR-${id}`,
+        description: `حذف أمر شراء رقم ${id}`,
+      });
+
       return { success: true };
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -614,76 +662,19 @@ export class PurchasesService {
           }
         : null;
 
-    const cbmResult = await this.containerService.calculateCBM(
-      Number(data.carton_length_cm),
-      Number(data.carton_width_cm),
-      Number(data.carton_height_cm),
-      Number(data.cartons_count),
-    );
+    const cbmResult = {
+      total_cbm: totalCbm,
+      cartons: Number(data.cartons_count),
+      length_cm: Number(data.carton_length_cm),
+      width_cm: Number(data.carton_width_cm),
+      height_cm: Number(data.carton_height_cm),
+    };
 
     return {
       packing_list: packingList,
       cbm_analysis: cbmResult,
       deviation_alert: alert,
     };
-  }
-
-  // ---- Cross-repo Reorder Suggestions ----
-
-  async getReorderSuggestions(containerId: number) {
-    const container = await this.containerRepo.findOne({
-      where: { id: containerId },
-    });
-    if (!container) throw new NotFoundException('Container not found');
-
-    const containers = await this.containerRepo.find();
-    const sameType = containers.filter((c) => c.name === container.name);
-    const usedCbm = await this.packingListRepo
-      .createQueryBuilder('pl')
-      .select('COALESCE(SUM(pl.total_cbm), 0)', 'usedCbm')
-      .where('pl.container_id IN (:...ids)', { ids: sameType.map((c) => c.id) })
-      .getRawOne();
-    const remainingCbm =
-      Number(container.max_cbm) - Number(usedCbm?.usedCbm || 0);
-    if (remainingCbm <= 0) return { remaining_cbm: 0, suggestions: [] };
-
-    const products = await this.productRepo
-      .createQueryBuilder('p')
-      .leftJoin(
-        (qb) =>
-          qb
-            .select('s.product_id', 'pid')
-            .addSelect('SUM(s.quantity)', 'total_qty')
-            .from(Stock, 's')
-            .groupBy('s.product_id'),
-        'stock',
-        'stock.pid = p.id',
-      )
-      .where('p.type IN (:...types)', {
-        types: ['RAW', 'FINISHED', 'SEMI', 'ACCESSORY'],
-      })
-      .andWhere('COALESCE(stock.total_qty, 0) <= COALESCE(p.min_stock, 0)')
-      .getMany();
-
-    const suggestions = products
-      .map((p) => {
-        const estCbmPerUnit = Number(p.weight_grams || 10) / 1000000;
-        const maxFit = Math.floor(remainingCbm / estCbmPerUnit);
-        return {
-          product_id: p.id,
-          product_name: p.name,
-          sku: p.sku,
-          estimated_cbm_per_unit: estCbmPerUnit,
-          max_units_fit: maxFit,
-          suggested_qty: Math.min(maxFit, 10000),
-          type: p.type,
-        };
-      })
-      .filter((s) => s.max_units_fit > 0)
-      .sort((a, b) => b.suggested_qty - a.suggested_qty)
-      .slice(0, 10);
-
-    return { remaining_cbm: remainingCbm, suggestions };
   }
 
   // ---- DataSource Queries ----
@@ -708,7 +699,9 @@ export class PurchasesService {
     if (!row) return { price: 0, date: null };
 
     return {
-      price: Number(row.price) + Number(row.landed_cost || 0),
+      price: Number(row.landed_cost || 0) > 0
+        ? Number(row.landed_cost)
+        : Number(row.price),
       date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
     };
   }
@@ -741,7 +734,9 @@ export class PurchasesService {
       if (!seen.has(row.product_id)) {
         seen.add(row.product_id);
         result[row.product_id] = {
-          price: Number(row.price) + Number(row.landed_cost || 0),
+          price: Number(row.landed_cost || 0) > 0
+            ? Number(row.landed_cost)
+            : Number(row.price),
           date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
         };
       }

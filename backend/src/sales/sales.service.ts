@@ -8,8 +8,6 @@ import { Repository, DataSource } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { SalesOrder } from './entities/sales-order.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
-import { Quote, QuoteStatus } from './entities/quote.entity';
-import { QuoteItem } from './entities/quote-item.entity';
 import { CustomerPayment } from './entities/customer-payment.entity';
 import { SalesReturn } from './entities/sales-return.entity';
 import { SalesReturnItem } from './entities/sales-return-item.entity';
@@ -20,30 +18,43 @@ import {
   MovementType,
 } from '../inventory/entities/stock-movement.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { QuoteService } from './quotes/quote.service';
+import { Product } from '../inventory/entities/product.entity';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class SalesService {
   constructor(
-    private quoteService: QuoteService,
     @InjectRepository(Customer)
     private customerRepo: Repository<Customer>,
     @InjectRepository(SalesOrder)
     private orderRepo: Repository<SalesOrder>,
-    @InjectRepository(Quote)
-    private quoteRepo: Repository<Quote>,
     @InjectRepository(CustomerPayment)
     private paymentRepo: Repository<CustomerPayment>,
     @InjectRepository(SalesReturn)
     private returnRepo: Repository<SalesReturn>,
     private inventoryService: InventoryService,
     private accountingService: AccountingService,
+    private cache: CacheService,
     private dataSource: DataSource,
   ) {}
 
   // ---- Customer Aging / Statement (cross-repo) ----
 
-  async getCustomerAging() {
+  async getCustomerAging(): Promise<
+    Array<{
+      id: number;
+      name: string;
+      total: number;
+      current: number;
+      days1_30: number;
+      days31_60: number;
+      days61_90: number;
+      over90: number;
+    }>
+  > {
+    const cacheKey = 'reports:customer-aging';
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
     const customers = await this.customerRepo.find({
       order: { name: 'ASC' },
     });
@@ -80,7 +91,7 @@ export class SalesService {
     }
 
     const now = new Date();
-    return customers.map((customer) => {
+    const result = customers.map((customer) => {
       const orders = ordersByCust.get(customer.id) || [];
       const payments = paymentsByCust.get(customer.id) || [];
       const returns = returnsByCust.get(customer.id) || [];
@@ -141,10 +152,16 @@ export class SalesService {
       return {
         id: customer.id,
         name: customer.name,
-        total,
-        ...buckets,
+        total: Math.round(total * 100) / 100,
+        current: Math.round(buckets.current * 100) / 100,
+        days1_30: Math.round(buckets.days1_30 * 100) / 100,
+        days31_60: Math.round(buckets.days31_60 * 100) / 100,
+        days61_90: Math.round(buckets.days61_90 * 100) / 100,
+        over90: Math.round(buckets.over90 * 100) / 100,
       };
     });
+    await this.cache.set(cacheKey, result, 60);
+    return result;
   }
 
   async getStatementOfAccount(customerId: number) {
@@ -158,14 +175,27 @@ export class SalesService {
       order: { payment_date: 'ASC' },
     });
 
+    const returns = await this.returnRepo.find({
+      where: { customer_id: customerId },
+      order: { return_date: 'ASC' },
+    });
+
     const movements = [
       ...orders.map((o) => ({
-        date: o.created_at,
+        date: o.order_date || o.created_at,
         description: `بيع - فاتورة رقم ${o.id}`,
         debit: Number(o.total_amount),
         credit: 0,
         type: 'ORDER',
         ref: o.id,
+      })),
+      ...returns.map((r) => ({
+        date: r.return_date,
+        description: `مرتجع مبيعات - رقم ${r.id}`,
+        debit: 0,
+        credit: Number(r.total_amount),
+        type: 'RETURN',
+        ref: r.id,
       })),
       ...payments.map((p) => ({
         date: p.payment_date,
@@ -180,7 +210,7 @@ export class SalesService {
     let runningBalance = 0;
     return movements.map((m) => {
       runningBalance += m.debit - m.credit;
-      return { ...m, balance: runningBalance };
+      return { ...m, balance: Math.round(runningBalance * 100) / 100 };
     });
   }
 
@@ -205,20 +235,29 @@ export class SalesService {
         throw new BadRequestException('السعر غير صالح');
     }
 
+    const calculatedTotal = data.items.reduce(
+      (sum, item) => sum + Number(item.quantity) * Number(item.price),
+      0,
+    );
+    const totalAmount = Math.round(calculatedTotal * 100) / 100;
+
     const savedOrder = await this.dataSource.transaction(async (manager) => {
       const orderRepo = manager.getRepository(SalesOrder);
       const orderItemRepo = manager.getRepository(SalesOrderItem);
       const stockRepo = manager.getRepository(Stock);
       const stockMovementRepo = manager.getRepository(StockMovement);
       const customerRepo = manager.getRepository(Customer);
+      const productRepo = manager.getRepository(Product);
 
       const order = orderRepo.create({
         customer_id: data.customer_id,
-        total_amount: data.total_amount,
+        total_amount: totalAmount,
         notes: data.notes,
         order_date: data.order_date ? new Date(data.order_date) : new Date(),
       });
       const saved = await orderRepo.save(order);
+
+      let cogsTotal = 0;
 
       for (const item of data.items) {
         const orderItem = orderItemRepo.create({
@@ -226,9 +265,12 @@ export class SalesService {
           product_id: item.product_id,
           quantity: item.quantity,
           price: item.price,
-          total: item.total,
+          total: Math.round(Number(item.quantity) * Number(item.price) * 100) / 100,
         });
         await orderItemRepo.save(orderItem);
+
+        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
 
         let itemStock = await stockRepo.findOne({
           where: { product_id: item.product_id },
@@ -266,31 +308,40 @@ export class SalesService {
         where: { id: data.customer_id },
       });
       if (customer) {
-        customer.balance = Number(customer.balance) + Number(data.total_amount);
+        customer.balance = Number(customer.balance) + totalAmount;
         await customerRepo.save(customer);
       }
 
-      return saved;
+      return { order: saved, cogsTotal: Math.round(cogsTotal * 100) / 100 };
     });
 
     await this.accountingService.postAutomaticEntry({
       type: 'SALE',
-      amount: data.total_amount,
-      reference: `ORD-${savedOrder.id}`,
-      description: `بيع - فاتورة رقم ${savedOrder.id}`,
+      amount: totalAmount,
+      cogsAmount: savedOrder.cogsTotal,
+      reference: `ORD-${savedOrder.order.id}`,
+      description: `بيع - فاتورة رقم ${savedOrder.order.id}`,
     });
 
-    return savedOrder;
+    return savedOrder.order;
   }
 
   async deleteOrder(id: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('الفاتورة غير موجودة');
 
+    let cogsTotal = 0;
+
     await this.dataSource.transaction(async (manager) => {
       const items = await manager.find(SalesOrderItem, {
         where: { order: { id: id } },
       });
+
+      const productRepo = manager.getRepository(Product);
+      for (const item of items) {
+        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
+      }
 
       const invService = this.inventoryService;
       const stockRepo = manager.getRepository(Stock);
@@ -329,162 +380,10 @@ export class SalesService {
     await this.accountingService.postAutomaticEntry({
       type: 'SALE',
       amount: -Number(order.total_amount),
+      cogsAmount: -Math.round(cogsTotal * 100) / 100,
       reference: `DEL-ORD-${id}`,
       description: `حذف فاتورة بيع رقم ${id}`,
     });
-  }
-
-  async deleteQuote(id: number) {
-    const quote = await this.quoteRepo.findOne({ where: { id } });
-    if (!quote) throw new NotFoundException('عرض السعر غير موجود');
-    if (quote.status === QuoteStatus.CONVERTED)
-      throw new BadRequestException(
-        'لا يمكن حذف عرض سعر تم تحويله إلى أمر بيع',
-      );
-    return this.quoteService.deleteQuote(id);
-  }
-
-  // ---- Complex Quote Transaction ----
-
-  async createQuote(data: {
-    customer_id: number;
-    total_amount: number;
-    notes?: string;
-    status?: QuoteStatus;
-    items?: Array<{
-      product_id: number;
-      quantity: number;
-      price: number;
-      total: number;
-    }>;
-  }) {
-    const savedQuote = await this.dataSource.transaction(async (manager) => {
-      const quoteRepo = manager.getRepository(Quote);
-      const quoteItemRepo = manager.getRepository(QuoteItem);
-
-      const quote = quoteRepo.create({
-        customer_id: data.customer_id,
-        total_amount: data.total_amount,
-        notes: data.notes,
-        status: data.status || QuoteStatus.DRAFT,
-      });
-      const saved = await quoteRepo.save(quote);
-
-      if (data.items && data.items.length > 0) {
-        const items = data.items.map((item) =>
-          quoteItemRepo.create({ ...item, quote_id: saved.id }),
-        );
-        await quoteItemRepo.save(items);
-      }
-
-      return saved;
-    });
-
-    return this.quoteRepo.findOne({
-      where: { id: savedQuote.id },
-      relations: ['customer', 'items', 'items.product'],
-    });
-  }
-
-  async convertToOrder(id: number) {
-    const quote = await this.quoteRepo.findOne({
-      where: { id },
-      relations: ['customer', 'items', 'items.product'],
-    });
-
-    if (!quote) {
-      throw new NotFoundException('عرض السعر غير موجود');
-    }
-
-    if (quote.status === QuoteStatus.CONVERTED) {
-      throw new BadRequestException('عرض السعر تم تحويله بالفعل إلى طلب');
-    }
-
-    const savedOrder = await this.dataSource.transaction(async (manager) => {
-      const orderRepo = manager.getRepository(SalesOrder);
-      const orderItemRepo = manager.getRepository(SalesOrderItem);
-      const stockRepo = manager.getRepository(Stock);
-      const stockMovementRepo = manager.getRepository(StockMovement);
-      const customerRepo = manager.getRepository(Customer);
-      const quoteRepo = manager.getRepository(Quote);
-
-      const order = orderRepo.create({
-        customer_id: quote.customer_id,
-        total_amount: quote.total_amount,
-        notes: quote.notes,
-      });
-      const saved = await orderRepo.save(order);
-
-      if (quote.items && quote.items.length > 0) {
-        for (const qItem of quote.items) {
-          await orderItemRepo.save(
-            orderItemRepo.create({
-              order_id: saved.id,
-              product_id: qItem.product_id,
-              quantity: qItem.quantity,
-              price: qItem.price,
-              total: qItem.total,
-            }),
-          );
-
-          let itemStock = await stockRepo.findOne({
-            where: { product_id: qItem.product_id },
-          });
-          const whId =
-            itemStock?.warehouse_id ||
-            (await this.inventoryService.getDefaultWarehouseId());
-
-          if (!itemStock) {
-            itemStock = stockRepo.create({
-              product_id: qItem.product_id,
-              warehouse_id: whId,
-              quantity: 0,
-            });
-          }
-
-          if (Number(itemStock.quantity) < Number(qItem.quantity)) {
-            throw new BadRequestException(
-              `رصيد غير كافٍ للمنتج: ${qItem.product?.name || qItem.product_id} (المطلوب: ${qItem.quantity}, المتوفر: ${itemStock.quantity})`,
-            );
-          }
-
-          itemStock.quantity =
-            Number(itemStock.quantity) - Number(qItem.quantity);
-          await stockRepo.save(itemStock);
-
-          await stockMovementRepo.save({
-            product_id: qItem.product_id,
-            warehouse_id: whId,
-            type: MovementType.OUT,
-            quantity: qItem.quantity,
-            date: new Date(),
-            notes: `بيع من عرض سعر #${id}`,
-          });
-        }
-      }
-
-      const customer = await customerRepo.findOne({
-        where: { id: quote.customer_id },
-      });
-      if (customer) {
-        customer.balance =
-          Number(customer.balance) + Number(quote.total_amount);
-        await customerRepo.save(customer);
-      }
-
-      await quoteRepo.update(id, { status: QuoteStatus.CONVERTED });
-
-      return saved;
-    });
-
-    await this.accountingService.postAutomaticEntry({
-      type: 'SALE',
-      amount: quote.total_amount,
-      reference: `ORD-${savedOrder.id}`,
-      description: `بيع من عرض سعر #${id}`,
-    });
-
-    return savedOrder;
   }
 
   // ---- Payment (requires AccountingService) ----
@@ -548,6 +447,12 @@ export class SalesService {
     return_date?: string;
     items: Array<{ product_id: number; quantity: number; unit_price: number; total: number }>;
   }) {
+    const calculatedReturnTotal = data.items.reduce(
+      (sum, item) => sum + Number(item.quantity) * Number(item.unit_price),
+      0,
+    );
+    const returnTotal = Math.round(calculatedReturnTotal * 100) / 100;
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -556,7 +461,7 @@ export class SalesService {
       const salesReturn = queryRunner.manager.create(SalesReturn, {
         customer_id: data.customer_id,
         order_id: data.order_id,
-        total_amount: data.total_amount,
+        total_amount: returnTotal,
         reason: data.reason,
         return_date: data.return_date ? new Date(data.return_date) : new Date(),
       });
@@ -565,7 +470,13 @@ export class SalesService {
         salesReturn,
       );
 
+      let cogsTotal = 0;
+      const productRepo = queryRunner.manager.getRepository(Product);
+
       for (const item of data.items) {
+        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
+
         const returnItem = queryRunner.manager.create(SalesReturnItem, {
           return_id: savedReturn.id,
           product_id: item.product_id,
@@ -596,7 +507,7 @@ export class SalesService {
         where: { id: data.customer_id },
       });
       if (customer) {
-        customer.balance = Number(customer.balance) - Number(data.total_amount);
+        customer.balance = Number(customer.balance) - returnTotal;
         await queryRunner.manager.save(Customer, customer);
       }
 
@@ -604,7 +515,8 @@ export class SalesService {
 
       await this.accountingService.postAutomaticEntry({
         type: 'SALE',
-        amount: -data.total_amount,
+        amount: -returnTotal,
+        cogsAmount: -Math.round(cogsTotal * 100) / 100,
         reference: `RET-SALE-${savedReturn.id}`,
         description: `مرتجع مبيعات - رقم ${savedReturn.id}`,
       });

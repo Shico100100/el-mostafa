@@ -4,18 +4,17 @@ import { DataSource } from 'typeorm';
 import { PurchasesService } from './purchases.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
+import { PaymentService } from './supplier-payments/payment.service';
 import { Supplier } from './entities/supplier.entity';
 import { PurchaseOrder } from './entities/purchase-order.entity';
 import { PurchaseOrderItem } from './entities/purchase-order-item.entity';
 import { SupplierPayment } from './entities/supplier-payment.entity';
 import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
-import { Currency } from './entities/currency.entity';
-import { FxRate } from './entities/fx-rate.entity';
-import { Container } from './entities/container.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
+import { CacheService } from '../cache/cache.service';
 
 
 function daysAgo(n: number): Date {
@@ -35,6 +34,10 @@ describe('PurchasesService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: PaymentService,
+          useValue: {},
+        },
         {
           provide: getRepositoryToken(Supplier),
           useValue: { find: jest.fn() },
@@ -60,18 +63,6 @@ describe('PurchasesService', () => {
           useValue: {},
         },
         {
-          provide: getRepositoryToken(Currency),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(FxRate),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(Container),
-          useValue: {},
-        },
-        {
           provide: getRepositoryToken(PackingList),
           useValue: {},
         },
@@ -90,6 +81,10 @@ describe('PurchasesService', () => {
         {
           provide: AccountingService,
           useValue: {},
+        },
+        {
+          provide: CacheService,
+          useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn() },
         },
         {
           provide: DataSource,

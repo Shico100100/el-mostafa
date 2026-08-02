@@ -15,7 +15,6 @@ import type { Response } from 'express';
 import { SalesService } from './sales.service';
 import { CustomerService } from './customers/customer.service';
 import { SalesOrderService } from './sales-orders/sales-order.service';
-import { QuoteService } from './quotes/quote.service';
 import { CustomerPaymentService } from './customer-payments/customer-payment.service';
 import { SalesReturnService } from './sales-returns/sales-return.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -23,13 +22,11 @@ import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import {
-  CreateQuoteDto,
   CreateOrderDto,
   CreateCustomerDto,
   CreateCustomerPaymentDto,
   CreateSalesReturnDto,
 } from './dto';
-import { QuoteStatus } from './entities/quote.entity';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -40,7 +37,6 @@ export class SalesController {
     private salesService: SalesService,
     private customerService: CustomerService,
     private salesOrderService: SalesOrderService,
-    private quoteService: QuoteService,
     private customerPaymentService: CustomerPaymentService,
     private salesReturnService: SalesReturnService,
   ) {}
@@ -145,50 +141,7 @@ export class SalesController {
     return this.salesService.deleteOrder(+id);
   }
 
-  // Quotes
-  @Get('quotes')
-  @ApiOperation({ summary: 'Get all quotes' })
-  @ApiResponse({ status: 200, description: 'Returns all quotes' })
-  getAllQuotes() {
-    return this.quoteService.getAllQuotes();
-  }
-
-  @Get('quotes/:id')
-  @ApiOperation({ summary: 'Get a quote by ID' })
-  @ApiResponse({ status: 200, description: 'Returns the quote' })
-  getQuote(@Param('id') id: string) {
-    return this.quoteService.getQuote(+id);
-  }
-
-  @Post('quotes')
-  @ApiOperation({ summary: 'Create a quote' })
-  @ApiResponse({ status: 201, description: 'Quote created' })
-  createQuote(@Body() data: CreateQuoteDto) {
-    return this.salesService.createQuote(data);
-  }
-
-  @Put('quotes/:id/status')
-  @ApiOperation({ summary: 'Update quote status' })
-  @ApiResponse({ status: 200, description: 'Quote status updated' })
-  updateQuoteStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.quoteService.updateQuoteStatus(+id, status as QuoteStatus);
-  }
-
-  @Post('quotes/:id/convert')
-  @ApiOperation({ summary: 'Convert quote to order' })
-  @ApiResponse({ status: 201, description: 'Order created from quote' })
-  convertToOrder(@Param('id') id: string) {
-    return this.salesService.convertToOrder(+id);
-  }
-
-  @Delete('quotes/:id')
-  @ApiOperation({ summary: 'Delete a quote' })
-  @ApiResponse({ status: 200, description: 'Quote deleted' })
-  deleteQuote(@Param('id') id: string) {
-    return this.salesService.deleteQuote(+id);
-  }
-
-  // Returns
+// Returns
   @Get('returns')
   @ApiOperation({ summary: 'Get all sales returns' })
   @ApiResponse({ status: 200, description: 'Returns all returns' })

@@ -7,11 +7,11 @@ import { AccountingService } from '../accounting/accounting.service';
 import { Customer } from './entities/customer.entity';
 import { SalesOrder } from './entities/sales-order.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
-import { Quote } from './entities/quote.entity';
 import { CustomerPayment } from './entities/customer-payment.entity';
 import { SalesReturn } from './entities/sales-return.entity';
 import { SalesReturnItem } from './entities/sales-return-item.entity';
 import { Stock } from '../inventory/entities/stock.entity';
+import { CacheService } from '../cache/cache.service';
 
 function daysAgo(n: number): Date {
   const d = new Date();
@@ -43,10 +43,6 @@ describe('SalesService', () => {
           useValue: {},
         },
         {
-          provide: getRepositoryToken(Quote),
-          useValue: {},
-        },
-        {
           provide: getRepositoryToken(CustomerPayment),
           useValue: { find: jest.fn() },
         },
@@ -69,6 +65,10 @@ describe('SalesService', () => {
         {
           provide: AccountingService,
           useValue: {},
+        },
+        {
+          provide: CacheService,
+          useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn() },
         },
         {
           provide: DataSource,

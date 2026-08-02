@@ -43,6 +43,9 @@ export class SalesOrder {
   @Column({ nullable: true, type: 'text' })
   notes: string;
 
+  @Column({ nullable: true })
+  invoice_number: string;
+
   @Column({ type: 'date', nullable: true })
   order_date: Date;
 
