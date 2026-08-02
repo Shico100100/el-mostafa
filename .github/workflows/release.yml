@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: "!contains(github.event.head_commit.message, 'chore: auto-release')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate tag
+        id: tag
+        run: |
+          LATEST=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          if [ -z "$LATEST" ]; then
+            echo "tag=v0.1.0" >> "$GITHUB_OUTPUT"
+          else
+            # Bump patch version
+            BASE=${LATEST#v}
+            MAJOR=${BASE%%.*}
+            REST=${BASE#*.}
+            MINOR=${REST%%.*}
+            PATCH=${REST##*.}
+            echo "tag=v$MAJOR.$MINOR.$((PATCH + 1))" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          if [ -z "$PREVIOUS" ]; then
+            LOG=$(git log --format="- %s" --since="2026-01-01")
+          else
+            LOG=$(git log "$PREVIOUS..HEAD" --format="- %s")
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$LOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          body: ${{ steps.changelog.outputs.notes }}
+          make_latest: true

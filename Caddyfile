@@ -1,0 +1,16 @@
+{$DOMAIN:localhost} {
+    @api {
+        path /api/v1/* /socket.io/*
+    }
+    handle @api {
+        reverse_proxy backend:3001
+    }
+
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    log {
+        output file /data/caddy/access.log
+    }
+}
