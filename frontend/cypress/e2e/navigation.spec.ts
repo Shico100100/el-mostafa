@@ -31,8 +31,10 @@ describe('Navigation', () => {
   it('navigates via sidebar links', () => {
     cy.visit('/dashboard');
     cy.contains('المبيعات').click();
-    cy.url().should('include', '/sales');
+    cy.contains('طلبات البيع').click();
+    cy.url().should('include', '/sales/orders');
     cy.contains('المشتريات').click();
-    cy.url().should('include', '/purchases');
+    cy.contains('أوامر الشراء').click();
+    cy.url().should('include', '/purchases/orders');
   });
 });

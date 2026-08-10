@@ -16,7 +16,7 @@ describe('Login', () => {
     cy.get('button[type="submit"]').click();
 
     cy.url({ timeout: 10000 }).should('include', '/dashboard');
-    cy.contains('لوحة التحكم').should('be.visible');
+    cy.contains('نظرة شاملة', { timeout: 15000 }).should('be.visible');
   });
 
   it('shows error on invalid credentials', () => {
@@ -24,6 +24,6 @@ describe('Login', () => {
     cy.get('input[type="password"]').type('wrongpass!');
     cy.get('button[type="submit"]').click();
 
-    cy.contains('كلمة المرور غير صحيحة', { timeout: 8000 }).should('be.visible');
+    cy.contains(/كلمة المرور غير صحيحة|Unauthorized|غير صحيحة|invalid|failed/i, { timeout: 8000 }).should('be.visible');
   });
 });

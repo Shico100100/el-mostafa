@@ -5,7 +5,7 @@ describe('Dashboard (لوحة المعلومات)', () => {
 
   it('loads the dashboard with Arabic heading', () => {
     cy.visit('/dashboard');
-    cy.contains('لوحة المعلومات', { timeout: 15000 }).should('be.visible');
+    cy.contains('نظرة شاملة', { timeout: 15000 }).should('be.visible');
   });
 
   it('shows the system name in the header', () => {
