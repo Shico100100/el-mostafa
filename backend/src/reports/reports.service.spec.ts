@@ -8,6 +8,7 @@ describe('ReportsService', () => {
   let service: ReportsService;
   let financialReportService: jest.Mocked<FinancialReportService>;
   let analyticsService: jest.Mocked<AnalyticsService>;
+  let cache: jest.Mocked<{ get: jest.Mock; set: jest.Mock }>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,6 +44,7 @@ describe('ReportsService', () => {
     service = module.get<ReportsService>(ReportsService);
     financialReportService = module.get(FinancialReportService);
     analyticsService = module.get(AnalyticsService);
+    cache = module.get(CacheService);
   });
 
   it('should be defined', () => {
@@ -96,6 +98,71 @@ describe('ReportsService', () => {
         30,
         '2024-01-01',
         '2024-02-01',
+      );
+    });
+  });
+
+  describe('getProfitLossReport', () => {
+    const profitLoss = { totalRevenue: 50000, totalExpenses: 30000 };
+
+    it('should return cached result without computing', async () => {
+      cache.get.mockResolvedValue(profitLoss);
+      const result = await service.getProfitLossReport(
+        '2026-01-01',
+        '2026-02-01',
+      );
+
+      expect(result).toEqual(profitLoss);
+      expect(financialReportService.getProfitLossReport).not.toHaveBeenCalled();
+    });
+
+    it('should compute, cache, and return on cache miss', async () => {
+      financialReportService.getProfitLossReport.mockResolvedValue(
+        profitLoss as any,
+      );
+
+      const result = await service.getProfitLossReport(
+        '2026-01-01',
+        '2026-02-01',
+      );
+
+      expect(result).toEqual(profitLoss);
+      expect(financialReportService.getProfitLossReport).toHaveBeenCalledWith(
+        '2026-01-01',
+        '2026-02-01',
+      );
+      expect(cache.set).toHaveBeenCalledWith(
+        'reports:profit-loss:2026-01-01:2026-02-01',
+        profitLoss,
+        60,
+      );
+    });
+  });
+
+  describe('getCashFlowProjection caching', () => {
+    it('should return cached result without computing', async () => {
+      const cached = { startingCash: 1 };
+      cache.get.mockResolvedValue(cached);
+
+      const result = await service.getCashFlowProjection(30);
+
+      expect(result).toEqual(cached);
+      expect(analyticsService.getCashFlowProjection).not.toHaveBeenCalled();
+    });
+
+    it('should cache result on miss', async () => {
+      const projected = { startingCash: 100 };
+      analyticsService.getCashFlowProjection.mockResolvedValue(
+        projected as any,
+      );
+
+      const result = await service.getCashFlowProjection(30);
+
+      expect(result).toEqual(projected);
+      expect(cache.set).toHaveBeenCalledWith(
+        'reports:cash-flow:30:default:default',
+        projected,
+        60,
       );
     });
   });

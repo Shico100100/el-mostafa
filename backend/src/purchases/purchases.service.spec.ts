@@ -30,6 +30,7 @@ describe('PurchasesService', () => {
   let orderRepo: jest.Mocked<{ find: jest.Mock }>;
   let paymentRepo: jest.Mocked<{ find: jest.Mock }>;
   let returnRepo: jest.Mocked<{ find: jest.Mock }>;
+  let cache: jest.Mocked<{ get: jest.Mock; set: jest.Mock }>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -99,6 +100,7 @@ describe('PurchasesService', () => {
     orderRepo = module.get(getRepositoryToken(PurchaseOrder));
     paymentRepo = module.get(getRepositoryToken(SupplierPayment));
     returnRepo = module.get(getRepositoryToken(PurchaseReturn));
+    cache = module.get(CacheService);
   });
 
   it('should be defined', () => {
@@ -168,6 +170,34 @@ describe('PurchasesService', () => {
       expect(result[0].total).toBe(1700);
       expect(result[0].current).toBe(1000);
       expect(result[0].days31_60).toBe(700);
+    });
+
+    it('should return cached result without querying repos', async () => {
+      const cached = [{ id: 1, name: 'Supplier A' }];
+      cache.get.mockResolvedValue(cached);
+
+      const result = await service.getSupplierAging();
+
+      expect(result).toEqual(cached);
+      expect(supplierRepo.find).not.toHaveBeenCalled();
+      expect(orderRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('should compute and cache on miss', async () => {
+      supplierRepo.find.mockResolvedValue([
+        { id: 1, name: 'Supplier A' } as Supplier,
+      ]);
+      orderRepo.find.mockResolvedValue([]);
+      paymentRepo.find.mockResolvedValue([]);
+      returnRepo.find.mockResolvedValue([]);
+
+      await service.getSupplierAging();
+
+      expect(cache.set).toHaveBeenCalledWith(
+        'reports:supplier-aging',
+        expect.any(Array),
+        60,
+      );
     });
   });
 });

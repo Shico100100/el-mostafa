@@ -21,6 +21,7 @@ describe('DashboardService', () => {
   let machineRepo: Repository<Machine>;
   let attendanceRepo: Repository<Attendance>;
   let salesItemRepo: Repository<SalesOrderItem>;
+  let cache: jest.Mocked<{ get: jest.Mock; set: jest.Mock; del: jest.Mock }>;
 
   const mockGetRawOne = jest.fn();
   const mockGetRawMany = jest.fn();
@@ -128,6 +129,7 @@ describe('DashboardService', () => {
     machineRepo = module.get(getRepositoryToken(Machine));
     attendanceRepo = module.get(getRepositoryToken(Attendance));
     salesItemRepo = module.get(getRepositoryToken(SalesOrderItem));
+    cache = module.get(CacheService);
   });
 
   it('should be defined', () => {
@@ -340,6 +342,29 @@ describe('DashboardService', () => {
 
       expect(result.totalSales).toBe(0);
       expect(result.totalPurchases).toBe(0);
+    });
+
+    it('should return cached stats without recomputing', async () => {
+      const cached = { totalSales: 123, totalPurchases: 0 };
+      cache.get.mockResolvedValue(cached);
+
+      const result = await service.getStats();
+
+      expect(result).toEqual(cached);
+      expect(salesRepo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(purchaseRepo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('should cache computed stats with 300s TTL', async () => {
+      setupMocks();
+      const result = await service.getStats();
+
+      expect(cache.set).toHaveBeenCalledWith(
+        'dashboard:stats',
+        expect.objectContaining({ totalSales: 50000 }),
+        300,
+      );
+      expect(result.totalSales).toBe(50000);
     });
   });
 });

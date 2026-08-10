@@ -26,6 +26,7 @@ describe('SalesService', () => {
   let orderRepo: jest.Mocked<{ find: jest.Mock }>;
   let paymentRepo: jest.Mocked<{ find: jest.Mock }>;
   let returnRepo: jest.Mocked<{ find: jest.Mock }>;
+  let cache: jest.Mocked<{ get: jest.Mock; set: jest.Mock }>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -83,6 +84,7 @@ describe('SalesService', () => {
     orderRepo = module.get(getRepositoryToken(SalesOrder));
     paymentRepo = module.get(getRepositoryToken(CustomerPayment));
     returnRepo = module.get(getRepositoryToken(SalesReturn));
+    cache = module.get(CacheService);
   });
 
   it('should be defined', () => {
@@ -190,6 +192,34 @@ describe('SalesService', () => {
       expect(custB!.total).toBe(500);
       // 10 days → current
       expect(custB!.current).toBe(500);
+    });
+
+    it('should return cached result without querying repos', async () => {
+      const cached = [{ id: 1, name: 'Customer A' }];
+      cache.get.mockResolvedValue(cached);
+
+      const result = await service.getCustomerAging();
+
+      expect(result).toEqual(cached);
+      expect(customerRepo.find).not.toHaveBeenCalled();
+      expect(orderRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('should compute and cache on miss', async () => {
+      customerRepo.find.mockResolvedValue([
+        { id: 1, name: 'Customer A' } as Customer,
+      ]);
+      orderRepo.find.mockResolvedValue([]);
+      paymentRepo.find.mockResolvedValue([]);
+      returnRepo.find.mockResolvedValue([]);
+
+      await service.getCustomerAging();
+
+      expect(cache.set).toHaveBeenCalledWith(
+        'reports:customer-aging',
+        expect.any(Array),
+        60,
+      );
     });
   });
 });
