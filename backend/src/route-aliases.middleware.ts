@@ -6,7 +6,6 @@ const aliasMap: Record<string, string> = {
   '/api/v1/inventory/raw-materials': '/api/v1/manufacturing/raw-materials',
   '/api/v1/manufacturing/daily-production': '/api/v1/manufacturing/production',
   '/api/v1/accounting/journal-entries': '/api/v1/accounting/journal',
-  '/api/v1/accessories': '/api/v1/manufacturing/accessories',
   '/api/v1/attendance': '/api/v1/manufacturing/attendance',
   '/api/v1/purchases/payments': '/api/v1/purchases/suppliers',
   '/api/v1/sales/payments': '/api/v1/sales/customers',

@@ -11,5 +11,4 @@ export { RecordConsumptionDto } from './record-consumption.dto';
 export { AddRawMaterialStockDto } from './add-raw-material-stock.dto';
 export { CreateSupplierMaterialDto } from './create-supplier-material.dto';
 export { CreateAttendanceDto } from './create-attendance.dto';
-export { CreateAccessoryDto } from './create-accessory.dto';
 export { CreateManufacturingStockMovementDto } from './create-manufacturing-stock-movement.dto';

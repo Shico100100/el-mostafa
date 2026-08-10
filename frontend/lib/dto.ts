@@ -307,18 +307,6 @@ export interface CreateRawMaterialDto {
   notes?: string;
 }
 
-export interface CreateAccessoryDto {
-  product_id: number;
-  preferred_supplier_id?: number;
-  reorder_point?: number;
-  reorder_quantity?: number;
-  weight_per_piece?: number;
-  last_purchase_price?: number;
-  last_purchase_date?: string;
-  image_path?: string;
-  notes?: string;
-}
-
 export interface CreateSupplierMaterialDto {
   supplier_id: number;
   price: number;

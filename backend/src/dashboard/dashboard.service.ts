@@ -190,7 +190,7 @@ export class DashboardService {
       latestPurchases,
       unreadNotifications,
     };
-    await this.cache.set(cacheKey, result, 60);
+    await this.cache.set(cacheKey, result, 300);
     return result;
   }
 }

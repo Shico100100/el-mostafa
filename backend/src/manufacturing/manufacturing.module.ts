@@ -22,8 +22,6 @@ import { Attendance } from './entities/attendance.entity';
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
 
-import { AccessoriesController } from './accessories.controller';
-import { AccessoriesService } from './accessories.service';
 import { AccountingModule } from '../accounting/accounting.module';
 import { InventoryModule } from '../inventory/inventory.module';
 import { PurchasesModule } from '../purchases/purchases.module';
@@ -57,11 +55,7 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
       UserEntity,
     ]),
   ],
-  controllers: [
-    ManufacturingController,
-    AttendanceController,
-    AccessoriesController,
-  ],
+  controllers: [ManufacturingController, AttendanceController],
   providers: [
     ManufacturingService,
     MachineService,
@@ -72,7 +66,6 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
     DailyProductionService,
     WarehouseHelper,
     AttendanceService,
-    AccessoriesService,
   ],
   exports: [ManufacturingService, AttendanceService],
 })

@@ -393,10 +393,6 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/raw-materials');
     },
 
-    async getAccessories() {
-        return this.fetchWithAuth('/v1/manufacturing/accessories');
-    },
-
     async getRawMaterial(id: number) {
         return this.fetchWithAuth(`/v1/manufacturing/raw-materials/${id}`);
     },
