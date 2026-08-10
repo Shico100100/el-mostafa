@@ -139,7 +139,7 @@ export const api = {
                 Object.assign(headers, options.headers);
             }
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
             try {
                 return await fetch(`${API_URL}${normalizedEndpoint}`, { ...options, headers, signal: controller.signal });
             } finally {

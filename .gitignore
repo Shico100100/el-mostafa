@@ -63,6 +63,8 @@ dist/
 playwright-report/
 test-results/
 .pw_cache/
+cypress/screenshots/
+cypress/videos/
 
 # Local agent/tooling data (not part of the app)
 .superpowers/
