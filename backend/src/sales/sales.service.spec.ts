@@ -218,7 +218,7 @@ describe('SalesService', () => {
       expect(cache.set).toHaveBeenCalledWith(
         'reports:customer-aging',
         expect.any(Array),
-        60,
+        120,
       );
     });
   });

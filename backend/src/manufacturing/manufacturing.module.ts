@@ -29,6 +29,7 @@ import { SalesModule } from '../sales/sales.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { RangeProductionSession } from './entities/range-production-session.entity';
 import { ProductionRecordHistory } from './entities/production-record-history.entity';
+import { ManufacturingOrder } from './entities/manufacturing-order.entity';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Module({
@@ -52,6 +53,7 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
       Attendance,
       RangeProductionSession,
       ProductionRecordHistory,
+      ManufacturingOrder,
       UserEntity,
     ]),
   ],

@@ -14,7 +14,7 @@ foreach ($name in $candidates) {
     try {
         $testConn = "Driver={Pervasive ODBC Client Interface};ServerName=localhost;DBQ=$name;UID=Crystal;PWD=;"
         $conn = New-Object -ComObject "ADODB.Connection"
-        $conn.ConnectionTimeout = 5
+        $conn.ConnectionTimeout = 2
         $conn.Open($testConn)
         $rs = $conn.Execute("SELECT TOP 1 * FROM Chart")
         $rs.Close()

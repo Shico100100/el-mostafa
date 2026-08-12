@@ -44,6 +44,33 @@ export class ManufacturingService {
 
   // ==================== COMPLEX TRANSACTIONS (keep here) ====================
 
+  async getManufacturingOrders() {
+    return this.dataSource.query(
+      `SELECT mo.id, mo.sales_order_id, mo.sales_order_item_id, mo.product_id,
+              p.name AS product_name,
+              mo.quantity_required, mo.quantity_produced, mo.status, mo.priority,
+              mo.due_date, mo.notes, mo.completed_at, mo.created_at
+       FROM manufacturing_orders mo
+       LEFT JOIN products p ON p.id = mo.product_id
+       ORDER BY mo.created_at DESC`,
+    );
+  }
+
+  async getManufacturingOrder(id: number) {
+    const rows = await this.dataSource.query(
+      `SELECT mo.id, mo.sales_order_id, mo.sales_order_item_id, mo.product_id,
+              p.name AS product_name,
+              mo.quantity_required, mo.quantity_produced, mo.status, mo.priority,
+              mo.due_date, mo.notes, mo.completed_at, mo.created_at
+       FROM manufacturing_orders mo
+       LEFT JOIN products p ON p.id = mo.product_id
+       WHERE mo.id = $1`,
+      [id],
+    );
+    if (rows.length === 0) throw new NotFoundException('أمر إنتاج غير موجود');
+    return rows[0];
+  }
+
   async getManufacturingStats() {
     const todayStr = new Date().toISOString().split('T')[0];
     const activeMachines = await this.machineRepo.count({

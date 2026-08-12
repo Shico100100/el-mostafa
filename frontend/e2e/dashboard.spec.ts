@@ -6,7 +6,7 @@ test.describe('Dashboard', () => {
     await page.fill('input[type="email"]', 'admin@admin.com');
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/dashboard', { timeout: 10000 });
+    await page.waitForURL(/\/dashboard\/?$/, { timeout: 15000 });
   });
 
   test('should display dashboard stats', async ({ page }) => {

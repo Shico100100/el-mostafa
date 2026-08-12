@@ -81,9 +81,19 @@ export class ProductCrudService {
       );
     }
     if (lowStock) {
-      query.andWhere(
-        `(SELECT COALESCE(SUM(CASE WHEN sm.type = 'IN' THEN sm.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN sm.type = 'OUT' THEN sm.quantity ELSE 0 END), 0) FROM stock_movements sm WHERE sm.product_id = product.id) <= COALESCE(product.min_stock, 0)`,
-      );
+      query
+        .leftJoin(
+          `(SELECT sm.product_id,
+                  COALESCE(SUM(CASE WHEN sm.type = 'IN' THEN sm.quantity ELSE 0 END), 0) -
+                  COALESCE(SUM(CASE WHEN sm.type = 'OUT' THEN sm.quantity ELSE 0 END), 0) AS stock_total
+           FROM stock_movements sm
+           GROUP BY sm.product_id)`,
+          'stock_totals',
+          'stock_totals.product_id = product.id',
+        )
+        .andWhere(
+          'COALESCE(stock_totals.stock_total, 0) <= COALESCE(product.min_stock, 0)',
+        );
     }
     query.orderBy('product.created_at', 'DESC');
 

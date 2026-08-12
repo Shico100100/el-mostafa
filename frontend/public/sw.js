@@ -1,6 +1,6 @@
-const CACHE_NAME = 'elmostafa-v1';
-const STATIC_CACHE = 'elmostafa-static-v1';
-const PAGE_CACHE = 'elmostafa-pages-v1';
+const CACHE_NAME = 'elmostafa-v2';
+const STATIC_CACHE = 'elmostafa-static-v2';
+const PAGE_CACHE = 'elmostafa-pages-v2';
 
 const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|json)$/;
 

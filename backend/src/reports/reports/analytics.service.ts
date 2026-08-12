@@ -120,26 +120,21 @@ export class AnalyticsService {
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
 
-    const sales = await this.salesOrderRepo.find({
-      where: { order_date: Between(start, end) },
-      relations: ['items', 'items.product', 'items.product.category'],
-    });
-
-    const data = sales.reduce(
-      (acc: Record<string, unknown>, order) => {
-        order.items.forEach((item) => {
-          const categoryName = item.product?.category?.name || 'غير محدد';
-          const amount = Number(item.total);
-          acc[categoryName] = ((acc[categoryName] as number) || 0) + amount;
-        });
-        return acc;
-      },
-      {} as Record<string, unknown>,
+    const rows = await this.dataSource.query(
+      `SELECT COALESCE(cat.name, 'غير محدد') AS category_name,
+              COALESCE(SUM(soi.total), 0) AS total
+       FROM sales_order_items soi
+       JOIN sales_orders so ON so.id = soi.order_id
+       LEFT JOIN products p ON p.id = soi.product_id
+       LEFT JOIN categories cat ON cat.id = p.category_id
+       WHERE so.order_date BETWEEN $1 AND $2
+       GROUP BY 1`,
+      [start, end],
     );
 
-    return Object.keys(data).map((name) => ({
-      name,
-      value: Math.round((data[name] as number) * 100) / 100,
+    return rows.map((row: any) => ({
+      name: row.category_name,
+      value: Math.round(Number(row.total) * 100) / 100,
     }));
   }
 
@@ -291,15 +286,8 @@ export class AnalyticsService {
       }
     }
 
-    // Batch-query: get scrap data once
+    // Batch-query: get scrap data once (daily_production has no scrap column; scrap is not tracked)
     let scrapQty = 0;
-    if (startDate && endDate) {
-      const scrapResult = await this.dataSource.query(
-        `SELECT COALESCE(SUM(pieces_defective), 0) AS scrap FROM daily_production WHERE date BETWEEN $1 AND $2`,
-        [startDate, endDate],
-      );
-      scrapQty = Number(scrapResult[0]?.scrap || 0);
-    }
 
     const result = shipments.map((po) => {
       const landedCost =

@@ -16,6 +16,7 @@ export class PeachtreeConnectionService {
   private cacheEnabled = false;
 
   private readonly defaultDataPath: string;
+  private resolvedDatabaseName: string | null = null;
 
   constructor(private configService: ConfigService) {
     this.defaultDataPath = this.configService.get<string>('PEACHTREE_DATA_PATH', 'mos');
@@ -115,7 +116,7 @@ export class PeachtreeConnectionService {
           return;
         }
         this.logger.log(`Pervasive service "${svc}" found but not running, starting...`);
-        await execFileAsync('net', ['start', svc], { timeout: 30000, encoding: 'utf8' });
+        await execFileAsync('net', ['start', svc], { timeout: 10000, encoding: 'utf8' });
         this.logger.log(`Pervasive service "${svc}" started successfully`);
         return;
       } catch {
@@ -132,10 +133,15 @@ export class PeachtreeConnectionService {
   private async resolveDatabaseName(input: string): Promise<string> {
     const trimmed = input.trim();
     if (!this.isFilePath(trimmed)) return trimmed;
+    if (this.resolvedDatabaseName) {
+      this.logger.log(`Using cached resolved database name: "${this.resolvedDatabaseName}"`);
+      return this.resolvedDatabaseName;
+    }
 
     this.logger.log(`Input "${trimmed}" looks like a file path, resolving Pervasive database name...`);
 
     const psScript = path.join(process.cwd(), 'peachtree-resolve-db.ps1');
+    let resolved = '';
     try {
       const psPath = 'C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe';
       const { stdout } = await execFileAsync(
@@ -143,9 +149,10 @@ export class PeachtreeConnectionService {
         ['-ExecutionPolicy', 'Bypass', '-NoProfile', '-File', psScript, '-DataPath', trimmed],
         { timeout: 30000, encoding: 'utf8' },
       );
-      const resolved = stdout.trim();
+      resolved = stdout.trim();
       if (resolved) {
         this.logger.log(`Resolved Pervasive database name: "${resolved}"`);
+        this.resolvedDatabaseName = resolved;
         return resolved;
       }
     } catch (e: any) {
@@ -153,6 +160,7 @@ export class PeachtreeConnectionService {
     }
 
     this.logger.log(`Falling back to default database name: "${this.defaultDataPath}"`);
+    this.resolvedDatabaseName = this.defaultDataPath;
     return this.defaultDataPath;
   }
 

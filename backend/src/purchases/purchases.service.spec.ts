@@ -196,7 +196,7 @@ describe('PurchasesService', () => {
       expect(cache.set).toHaveBeenCalledWith(
         'reports:supplier-aging',
         expect.any(Array),
-        60,
+        120,
       );
     });
   });

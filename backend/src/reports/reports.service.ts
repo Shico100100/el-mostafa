@@ -12,10 +12,26 @@ export class ReportsService {
   ) {}
 
   async getSalesReport(startDate: string, endDate: string) {
-    return this.financialReportService.getSalesReport(startDate, endDate);
+    const key = `reports:sales:${startDate || 'default'}:${endDate || 'default'}`;
+    const cached = await this.cache.get<any>(key);
+    if (cached) return cached;
+    const result = await this.financialReportService.getSalesReport(
+      startDate,
+      endDate,
+    );
+    await this.cache.set(key, result, 120);
+    return result;
   }
   async getPurchasesReport(startDate: string, endDate: string) {
-    return this.financialReportService.getPurchasesReport(startDate, endDate);
+    const key = `reports:purchases:${startDate || 'default'}:${endDate || 'default'}`;
+    const cached = await this.cache.get<any>(key);
+    if (cached) return cached;
+    const result = await this.financialReportService.getPurchasesReport(
+      startDate,
+      endDate,
+    );
+    await this.cache.set(key, result, 120);
+    return result;
   }
   async getProfitLossReport(startDate: string, endDate: string) {
     const key = `reports:profit-loss:${startDate || 'default'}:${endDate || 'default'}`;
@@ -39,7 +55,15 @@ export class ReportsService {
     return this.analyticsService.getInventoryValueByCategory();
   }
   async getSalesByCategory(startDate: string, endDate: string) {
-    return this.analyticsService.getSalesByCategory(startDate, endDate);
+    const key = `reports:sales-category:${startDate || 'default'}:${endDate || 'default'}`;
+    const cached = await this.cache.get<any>(key);
+    if (cached) return cached;
+    const result = await this.analyticsService.getSalesByCategory(
+      startDate,
+      endDate,
+    );
+    await this.cache.set(key, result, 120);
+    return result;
   }
   async getCashFlowProjection(
     days?: number,

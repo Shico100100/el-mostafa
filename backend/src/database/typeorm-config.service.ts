@@ -32,11 +32,20 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       },
       extra: {
         // based on https://node-postgres.com/apis/pool
-        // max connection pool size
-        max: this.configService.get('database.maxConnections', { infer: true }),
+        // Cap the pool well below PostgreSQL's max_connections so the pool
+        // never starves itself (pool max == server max caused connection
+        // timeouts under load).
+        max: Math.min(
+          this.configService.get('database.maxConnections', { infer: true }) ?? 100,
+          25,
+        ),
         min: 2,
-        idleTimeoutMillis: 60000,
-        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+        statement_timeout: 30000,
+        query_timeout: 30000,
+        keepAlive: true,
+        application_name: 'elmostafa-backend',
         ssl: this.configService.get('database.sslEnabled', { infer: true })
           ? {
               rejectUnauthorized: this.configService.get(

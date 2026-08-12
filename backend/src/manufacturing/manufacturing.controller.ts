@@ -80,6 +80,20 @@ export class ManufacturingController {
     return this.manufacturingService.getManufacturingStats();
   }
 
+  @Get('manufacturing-orders')
+  @ApiOperation({ summary: 'Get all manufacturing orders' })
+  @ApiResponse({ status: 200, description: 'Returns manufacturing orders' })
+  getManufacturingOrders() {
+    return this.manufacturingService.getManufacturingOrders();
+  }
+
+  @Get('manufacturing-orders/:id')
+  @ApiOperation({ summary: 'Get a manufacturing order by ID' })
+  @ApiResponse({ status: 200, description: 'Returns the manufacturing order' })
+  getManufacturingOrder(@Param('id') id: string) {
+    return this.manufacturingService.getManufacturingOrder(+id);
+  }
+
   @Public()
   @Get('export/machines')
   @ApiOperation({ summary: 'Export machines to Excel' })

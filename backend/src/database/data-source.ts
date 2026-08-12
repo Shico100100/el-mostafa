@@ -24,13 +24,18 @@ export const AppDataSource = new DataSource({
   },
   extra: {
     // based on https://node-postgres.com/api/pool
-    // max connection pool size
+    // max connection pool size (capped below PG max_connections to avoid
+    // pool self-starvation / connection timeouts)
     max: process.env.DATABASE_MAX_CONNECTIONS
-      ? parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10)
-      : 100,
+      ? Math.min(parseInt(process.env.DATABASE_MAX_CONNECTIONS, 10), 25)
+      : 25,
     min: 2,
-    idleTimeoutMillis: 60000,
-    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 30000,
+    query_timeout: 30000,
+    keepAlive: true,
+    application_name: 'elmostafa-backend',
     ssl:
       process.env.DATABASE_SSL_ENABLED === 'true'
         ? {

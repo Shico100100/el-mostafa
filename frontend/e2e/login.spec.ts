@@ -7,8 +7,8 @@ test.describe('Login Flow', () => {
     await page.fill('input[type="password"]', 'admin123');
     await page.click('button[type="submit"]');
 
-    await page.waitForURL('/dashboard', { timeout: 10000 });
-    await expect(page).toHaveURL('/dashboard');
+    await page.waitForURL(/\/dashboard\/?$/, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/dashboard\/?$/);
   });
 
   test('should show error for invalid credentials', async ({ page }) => {

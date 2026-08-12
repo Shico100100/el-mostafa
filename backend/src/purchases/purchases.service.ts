@@ -57,18 +57,22 @@ export class PurchasesService {
     const cached = await this.cache.get<any>(cacheKey);
     if (cached) return cached;
     const suppliers = await this.supplierRepo.find({
+      select: ['id', 'name'],
       order: { name: 'ASC' },
     });
 
     const allOrders = await this.orderRepo.find({
+      select: ['supplier_id', 'order_date', 'created_at', 'total_amount'],
       order: { supplier_id: 'ASC', order_date: 'ASC' },
     });
 
     const allPayments = await this.paymentRepo.find({
+      select: ['supplier_id', 'payment_date', 'amount'],
       order: { supplier_id: 'ASC', payment_date: 'ASC' },
     });
 
     const allReturns = await this.returnRepo.find({
+      select: ['supplier_id', 'return_date', 'total_amount'],
       order: { supplier_id: 'ASC', return_date: 'ASC' },
     });
 
@@ -160,7 +164,7 @@ export class PurchasesService {
         over90: Math.round(buckets.over90 * 100) / 100,
       };
     });
-    await this.cache.set(cacheKey, result, 60);
+    await this.cache.set(cacheKey, result, 120);
     return result;
   }
 
