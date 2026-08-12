@@ -64,6 +64,7 @@ async function bootstrap() {
 
   setupSwagger(app);
 
-  await app.listen(configService.getOrThrow('app.port', { infer: true }));
+  const host = process.env.HOST || '0.0.0.0';
+  await app.listen(configService.getOrThrow('app.port', { infer: true }), host);
 }
 void bootstrap();
