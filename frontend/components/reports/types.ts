@@ -43,6 +43,8 @@ export interface ReportData {
   grossProfit?: number;
   totalFixedCosts?: number;
   netProfit?: number;
+  page?: number;
+  totalPages?: number;
 }
 
 export interface AnalyticsData {

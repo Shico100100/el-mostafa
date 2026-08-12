@@ -17,6 +17,7 @@ export default function ReportsPage() {
   const {
     activeTab, setActiveTab, loading, startDate, setStartDate, endDate, setEndDate,
     data, analytics, shipmentProfit, loadReport, exportToExcel,
+    page, limit, setPage, setLimit,
   } = useReports();
 
   return (
@@ -42,8 +43,8 @@ export default function ReportsPage() {
           <div className="text-center text-white py-12">جاري التحميل...</div>
         ) : data ? (
           <div className="space-y-6">
-            {activeTab === 'SALES' && <SalesReportTab data={data} />}
-            {activeTab === 'PURCHASES' && <PurchasesReportTab data={data} />}
+            {activeTab === 'SALES' && <SalesReportTab data={data} page={data?.page || page} totalPages={data?.totalPages || 1} onPageChange={setPage} />}
+            {activeTab === 'PURCHASES' && <PurchasesReportTab data={data} page={data?.page || page} totalPages={data?.totalPages || 1} onPageChange={setPage} />}
             {activeTab === 'STOCK' && <StockReportTab data={data} />}
             {activeTab === 'PROFIT_LOSS' && <ProfitLossTab data={data} />}
           </div>

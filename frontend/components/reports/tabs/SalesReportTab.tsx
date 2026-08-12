@@ -1,8 +1,9 @@
 'use client';
 
 import type { ReportData, Sale } from '../types';
+import { Pagination } from '@/components/Pagination';
 
-export function SalesReportTab({ data }: { data: ReportData }) {
+export function SalesReportTab({ data, page, totalPages, onPageChange }: { data: ReportData; page: number; totalPages: number; onPageChange: (p: number) => void }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -37,6 +38,13 @@ export function SalesReportTab({ data }: { data: ReportData }) {
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={data.salesCount || 0}
+        showingItems={data.sales?.length || 0}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }

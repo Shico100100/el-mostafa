@@ -11,24 +11,28 @@ export class ReportsService {
     private cache: CacheService,
   ) {}
 
-  async getSalesReport(startDate: string, endDate: string) {
-    const key = `reports:sales:${startDate || 'default'}:${endDate || 'default'}`;
+  async getSalesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+    const key = `reports:sales:${startDate || 'default'}:${endDate || 'default'}:${page || 1}:${limit || 20}`;
     const cached = await this.cache.get<any>(key);
     if (cached) return cached;
     const result = await this.financialReportService.getSalesReport(
       startDate,
       endDate,
+      page,
+      limit,
     );
     await this.cache.set(key, result, 120);
     return result;
   }
-  async getPurchasesReport(startDate: string, endDate: string) {
-    const key = `reports:purchases:${startDate || 'default'}:${endDate || 'default'}`;
+  async getPurchasesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+    const key = `reports:purchases:${startDate || 'default'}:${endDate || 'default'}:${page || 1}:${limit || 20}`;
     const cached = await this.cache.get<any>(key);
     if (cached) return cached;
     const result = await this.financialReportService.getPurchasesReport(
       startDate,
       endDate,
+      page,
+      limit,
     );
     await this.cache.set(key, result, 120);
     return result;

@@ -9,16 +9,20 @@ export class ReportsController {
   async getSalesReport(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
   ) {
-    return this.reportsService.getSalesReport(startDate, endDate);
+    return this.reportsService.getSalesReport(startDate, endDate, page, limit);
   }
 
   @Get('purchases')
   async getPurchasesReport(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
   ) {
-    return this.reportsService.getPurchasesReport(startDate, endDate);
+    return this.reportsService.getPurchasesReport(startDate, endDate, page, limit);
   }
 
   @Get('stock')

@@ -168,7 +168,7 @@ describe('ReportsService', () => {
   });
 
   describe('getSalesReport', () => {
-    it('should delegate to financialReportService.getSalesReport', async () => {
+    it('should delegate to financialReportService.getSalesReport with page/limit', async () => {
       financialReportService.getSalesReport.mockResolvedValue({ total: 5000 } as any);
 
       const result = await service.getSalesReport('2024-01-01', '2024-02-01');
@@ -177,6 +177,8 @@ describe('ReportsService', () => {
       expect(financialReportService.getSalesReport).toHaveBeenCalledWith(
         '2024-01-01',
         '2024-02-01',
+        undefined,
+        undefined,
       );
     });
   });

@@ -13,8 +13,20 @@ export function useReports() {
   const [data, setData] = useState<ReportData | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData>({ inventory: [], sales: [] });
   const [shipmentProfit, setShipmentProfit] = useState<{ shipments: ShipmentProfit[]; summary: Record<string, unknown> } | null>(null);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDateState] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDateState] = useState(new Date().toISOString().split('T')[0]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+
+  const setStartDate = useCallback((d: string) => {
+    setStartDateState(d);
+    setPage(1);
+  }, []);
+
+  const setEndDate = useCallback((d: string) => {
+    setEndDateState(d);
+    setPage(1);
+  }, []);
 
   const loadReport = useCallback(async () => {
     setLoading(true);
@@ -22,10 +34,10 @@ export function useReports() {
       let result: ReportData | null = null;
       switch (activeTab) {
         case 'SALES':
-          result = await api.getSalesReport({ startDate, endDate });
+          result = await api.getSalesReport({ startDate, endDate, page, limit });
           break;
         case 'PURCHASES':
-          result = await api.getPurchaseOrders();
+          result = await api.getPurchasesReport({ startDate, endDate, page, limit });
           break;
         case 'STOCK':
           result = await api.getStockReport();
@@ -51,7 +63,7 @@ export function useReports() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, startDate, endDate]);
+  }, [activeTab, startDate, endDate, page, limit]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -146,5 +158,6 @@ export function useReports() {
   return {
     activeTab, setActiveTab, loading, startDate, setStartDate, endDate, setEndDate,
     data, analytics, shipmentProfit, loadReport, exportToExcel,
+    page, limit, setPage, setLimit,
   };
 }

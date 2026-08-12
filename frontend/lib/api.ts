@@ -463,9 +463,24 @@ export const api = {
         return this.fetchWithAuth('/v1/manufacturing/stats');
     },
 
-    async getSalesReport(data: { startDate: string; endDate: string }) {
-        const qs = new URLSearchParams(data).toString();
+    async getSalesReport(data: { startDate: string; endDate: string; page?: number; limit?: number }) {
+        const qs = new URLSearchParams({
+          startDate: data.startDate,
+          endDate: data.endDate,
+          ...(data.page && { page: String(data.page) }),
+          ...(data.limit && { limit: String(data.limit) }),
+        }).toString();
         return this.fetchWithAuth(`/v1/reports/sales?${qs}`);
+    },
+
+    async getPurchasesReport(data: { startDate: string; endDate: string; page?: number; limit?: number }) {
+        const qs = new URLSearchParams({
+          startDate: data.startDate,
+          endDate: data.endDate,
+          ...(data.page && { page: String(data.page) }),
+          ...(data.limit && { limit: String(data.limit) }),
+        }).toString();
+        return this.fetchWithAuth(`/v1/reports/purchases?${qs}`);
     },
 
     async getProfitLossReport(data: { startDate: string; endDate: string }) {

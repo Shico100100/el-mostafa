@@ -185,7 +185,7 @@ describe('usePeachtreeSync', () => {
         await result.current.runSync();
       });
 
-      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/run', { method: 'POST' });
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/run', { method: 'POST', body: JSON.stringify({ mode: 'full' }) });
       expect(mocks.toastSuccess).toHaveBeenCalledWith('Done');
     });
 
