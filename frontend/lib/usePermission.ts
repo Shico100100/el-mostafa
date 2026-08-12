@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 
 export enum UserRole {
@@ -23,30 +24,32 @@ type DecodedToken = {
 export function usePermission() {
     const [role, setRole] = useState<UserRole | null>(null);
     const [roleId, setRoleId] = useState<number | null>(null);
-
-    const parsed = useMemo(() => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        if (!token) return null;
-        try {
-            return jwtDecode<DecodedToken>(token);
-        } catch {
-            // ignore invalid token
-            return null;
-        }
-    }, []);
+    const pathname = usePathname();
 
     useEffect(() => {
-        if (!parsed?.role) return;
-
-        const r = parsed.role;
-        if (typeof r === 'object' && r !== null) {
-            setRole(r.name as UserRole);
-            setRoleId(r.id as number | null);
-        } else {
-            setRole(r as UserRole);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) {
+            setRole(null);
+            setRoleId(null);
+            return;
+        }
+        try {
+            const parsed = jwtDecode<DecodedToken>(token);
+            const r = parsed?.role;
+            if (typeof r === 'object' && r !== null) {
+                setRole(r.name as UserRole);
+                setRoleId(r.id as number | null);
+            } else {
+                setRole(r as UserRole);
+                setRoleId(null);
+            }
+        } catch {
+            setRole(null);
             setRoleId(null);
         }
-    }, [parsed]);
+        // Re-read auth after client-side navigation (login sets the token post-mount,
+        // so a mounted layout would otherwise keep the pre-login null token).
+    }, [pathname]);
 
     const hasRole = (requiredRoles: UserRole[]) => {
         if (!role) return false;

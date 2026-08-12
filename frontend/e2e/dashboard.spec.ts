@@ -13,8 +13,9 @@ test.describe('Dashboard', () => {
     await expect(page.locator('text=المبيعات').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should navigate to inventory', async ({ page }) => {
-    await page.goto('/inventory2');
+  test('should navigate to inventory via sidebar', async ({ page }) => {
+    await page.locator('nav').getByRole('button', { name: 'المخزون', exact: true }).click();
+    await page.locator('nav').getByRole('button', { name: 'لوحة المخزون' }).click();
     await expect(page).toHaveURL(/inventory2/, { timeout: 15000 });
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
   });

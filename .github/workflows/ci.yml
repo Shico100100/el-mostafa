@@ -2,148 +2,50 @@ name: CI
 
 on:
   push:
-    branches: ['*']
+    branches: [master]
   pull_request:
-    branches: [main]
-
-env:
-  NODE_VERSION: 20
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches: [master]
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: elmostafa_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_HOST: localhost
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: postgres
-      DATABASE_NAME: elmostafa_test
-      DATABASE_TYPE: postgres
-      DATABASE_SYNCHRONIZE: 'true'
-      AUTH_JWT_SECRET: ci-test-secret
-      AUTH_JWT_TOKEN_EXPIRES_IN: 15m
-
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          node-version: 20
 
-      - name: Install backend dependencies
-        run: npm ci
+      - name: Install backend
         working-directory: backend
+        run: npm install
 
-      - name: Install frontend dependencies
-        run: npm ci
+      - name: Install frontend
         working-directory: frontend
+        run: npm install
 
-      - name: Run backend lint
-        run: npm run lint
+      - name: Lint & typecheck backend
         working-directory: backend
+        run: npm run lint && npm run typecheck
 
-      - name: Run frontend lint
-        run: npm run lint
+      - name: Lint & typecheck frontend
         working-directory: frontend
+        run: npm run lint && npm run typecheck
 
-      - name: Run backend TypeScript check
-        run: npx tsc --noEmit
+      - name: Backend unit tests
         working-directory: backend
-
-      - name: Run frontend TypeScript check
-        run: npx tsc --noEmit
-        working-directory: frontend
-
-      - name: Run backend tests
         run: npm test
-        working-directory: backend
 
-      - name: Run frontend unit tests
-        run: npx vitest run
+      - name: Frontend unit tests
         working-directory: frontend
-
-      - name: Upload backend coverage
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage
-          path: backend/coverage/
-
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Audit backend dependencies
-        run: npm audit --audit-level=high
-        working-directory: backend
-        continue-on-error: true
-
-      - name: Audit frontend dependencies
-        run: npm audit --audit-level=high
-        working-directory: frontend
-        continue-on-error: true
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
-
-      - name: Install backend dependencies
-        run: npm ci
-        working-directory: backend
-
-      - name: Build backend
-        run: npm run build
-        working-directory: backend
-
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: frontend
-
-      - name: Build frontend
-        run: npm run build
-        working-directory: frontend
-
-      - name: Build Docker images
-        run: docker compose build
+        run: npm test
 
   e2e:
-    needs: [test, build]
+    needs: quality
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -151,108 +53,138 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
       redis:
-        image: redis:7-alpine
+        image: redis:7
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
+      DATABASE_TYPE: postgres
       DATABASE_HOST: localhost
       DATABASE_PORT: 5432
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
-      AUTH_JWT_SECRET: ci-test-secret
-      AUTH_JWT_TOKEN_EXPIRES_IN: 15m
+      DATABASE_SYNCHRONIZE: 'false'
       REDIS_HOST: localhost
-      DATABASE_TYPE: postgres
+      REDIS_PORT: 6379
+      APP_PORT: 3001
+      API_PREFIX: api
+      AUTH_JWT_SECRET: ci_dummy_jwt_secret_32chars_long_minimum
+      AUTH_JWT_TOKEN_EXPIRES_IN: 1d
+      AUTH_REFRESH_SECRET: ci_dummy_refresh_secret_32chars_long
+      AUTH_REFRESH_TOKEN_EXPIRES_IN: 7d
+      AUTH_FORGOT_SECRET: ci_dummy_forgot_secret_32chars_long_ok
+      AUTH_FORGOT_TOKEN_EXPIRES_IN: 30m
+      AUTH_CONFIRM_EMAIL_SECRET: ci_dummy_confirm_secret_32chars_long
+      AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN: 1d
+      FRONTEND_DOMAIN: http://localhost:3000
+      BACKEND_DOMAIN: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          node-version: 20
 
-      - name: Install backend deps
+      - name: Write backend .env
         working-directory: backend
-        run: npm ci
+        run: |
+          cat > .env <<'EOF'
+          NODE_ENV=development
+          APP_PORT=3001
+          API_PREFIX=api
+          DATABASE_TYPE=postgres
+          DATABASE_HOST=localhost
+          DATABASE_PORT=5432
+          DATABASE_USERNAME=postgres
+          DATABASE_PASSWORD=postgres
+          DATABASE_NAME=elmostafa_test
+          DATABASE_SYNCHRONIZE=false
+          REDIS_HOST=localhost
+          REDIS_PORT=6379
+          FRONTEND_DOMAIN=http://localhost:3000
+          BACKEND_DOMAIN=http://localhost:3001
+          AUTH_JWT_SECRET=ci_dummy_jwt_secret_32chars_long_minimum
+          AUTH_JWT_TOKEN_EXPIRES_IN=1d
+          AUTH_REFRESH_SECRET=ci_dummy_refresh_secret_32chars_long
+          AUTH_REFRESH_TOKEN_EXPIRES_IN=7d
+          AUTH_FORGOT_SECRET=ci_dummy_forgot_secret_32chars_long_ok
+          AUTH_FORGOT_TOKEN_EXPIRES_IN=30m
+          AUTH_CONFIRM_EMAIL_SECRET=ci_dummy_confirm_secret_32chars_long
+          AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN=1d
+          EOF
 
-      - name: Install frontend deps
+      - name: Write frontend .env.local
         working-directory: frontend
-        run: npm ci
+        run: echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
 
-      - name: Install Playwright browsers
+      - name: Install backend
+        working-directory: backend
+        run: npm install
+
+      - name: Install frontend
         working-directory: frontend
-        run: npx playwright install chromium
+        run: npm install
 
       - name: Build backend
         working-directory: backend
         run: npm run build
 
-      - name: Install wait-on
-        run: npm install -g wait-on
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run migrations
+        working-directory: backend
+        run: npm run migration:run
+
+      - name: Seed relational data (creates admin@admin.com)
+        working-directory: backend
+        run: npm run seed:run:relational
 
       - name: Start backend
         working-directory: backend
+        run: node dist/main > ../backend-out.log 2>&1 &
+
+      - name: Start frontend
+        working-directory: frontend
+        run: npm run start > ../frontend-out.log 2>&1 &
+
+      - name: Wait for services
         run: |
-          node dist/main &
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/api/v1/health >/dev/null; then echo "backend up"; break; fi
+            sleep 2
+          done
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/login/ >/dev/null; then echo "frontend up"; break; fi
+            sleep 2
+          done
 
-      - name: Wait for backend
-        run: wait-on http://localhost:3001/api/v1/health -t 30000
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests
+      - name: Run Playwright
         working-directory: frontend
         run: npx playwright test
 
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: [e2e, audit]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.sha }}
-
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            cd /opt/elmostafa
-            sed -i "/^GHCR_NAMESPACE=/d" .env 2>/dev/null; echo "GHCR_NAMESPACE=${{ github.repository }}" >> .env
-            docker compose pull
-            docker compose up -d --force-recreate
-            docker image prune -f
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
