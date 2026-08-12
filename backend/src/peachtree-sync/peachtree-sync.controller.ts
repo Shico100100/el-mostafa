@@ -10,15 +10,28 @@ export class PeachtreeSyncController {
   constructor(private syncService: PeachtreeSyncService) {}
 
   @Post('run')
-  async runSync() {
+  async runSync(@Body() body: { mode?: 'full' | 'incremental' }) {
     const current = this.syncService.getCurrentSync();
     if (current && current.status === 'running') {
       return { message: 'Sync already in progress', id: current.id, status: current.status };
     }
-    this.syncService.runSync('manual').catch((err) => {
+    const mode = body?.mode === 'incremental' ? 'incremental' : 'full';
+    this.syncService.runSync('manual', mode).catch((err) => {
       this.logger.error('Background sync crashed', err?.stack || err);
     });
-    return { message: 'Sync started', status: 'running' };
+    return { message: 'Sync started', status: 'running', mode };
+  }
+
+  @Post('run-incremental')
+  async runIncrementalSync() {
+    const current = this.syncService.getCurrentSync();
+    if (current && current.status === 'running') {
+      return { message: 'Sync already in progress', id: current.id, status: current.status };
+    }
+    this.syncService.runSync('manual-incremental', 'incremental').catch((err) => {
+      this.logger.error('Background incremental sync crashed', err?.stack || err);
+    });
+    return { message: 'Incremental sync started', status: 'running', mode: 'incremental' };
   }
 
   @Post('run-partial')

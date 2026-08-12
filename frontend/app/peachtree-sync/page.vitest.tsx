@@ -53,6 +53,7 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     setDsn: vi.fn(),
     testConnection: vi.fn().mockResolvedValue(undefined),
     runSync: vi.fn().mockResolvedValue(undefined),
+    runIncrementalSync: vi.fn().mockResolvedValue(undefined),
     resyncItems: vi.fn().mockResolvedValue(undefined),
     syncInvoices: vi.fn().mockResolvedValue(undefined),
     saveConfig: vi.fn().mockResolvedValue(undefined),

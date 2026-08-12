@@ -120,7 +120,7 @@ export default function PeachtreeSyncPage() {
         {/* Sync Button */}
         <div className="flex justify-center gap-4 mb-8">
           <button
-            onClick={h.runSync}
+            onClick={() => h.runSync('full')}
             disabled={h.syncing || h.connected !== true}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.syncing || h.connected !== true
@@ -148,6 +148,17 @@ export default function PeachtreeSyncPage() {
             ) : (
               <span className="flex items-center gap-2"><Package className="w-5 h-5" />إعادة مزامنة الأصناف</span>
             )}
+          </button>
+          <button
+            onClick={() => h.runIncrementalSync()}
+            disabled={h.syncing || h.connected !== true}
+            className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
+              h.syncing || h.connected !== true
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700'
+            }`}
+          >
+            <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5" />إعادة مزامنة ذكية</span>
           </button>
           <button
             onClick={handleSyncInvoices}

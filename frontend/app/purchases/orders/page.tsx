@@ -17,7 +17,7 @@ import { Pagination } from '@/components/Pagination';
 export default function PurchaseOrdersPage() {
   const router = useRouter();
   const h = usePurchaseOrders();
-  const { syncInvoices, syncing } = usePeachtreeSync();
+  const { syncInvoices, runIncrementalSync, syncing } = usePeachtreeSync();
 
   return (
     <>
@@ -81,6 +81,15 @@ export default function PurchaseOrdersPage() {
             >
               <CloudDownload className="w-4 h-4" />
               {syncing ? 'جارٍ الاستيراد...' : 'استيراد من Peachtree'}
+            </button>
+            <button
+              onClick={() => runIncrementalSync().finally(h.loadData)}
+              disabled={syncing}
+              className="px-6 py-2 h-[42px] bg-white/10 hover:bg-white/20 text-emerald-300 rounded-lg border border-emerald-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="تحديث الفواتير الجديدة فقط دون تكرار المستوردة مسبقاً"
+            >
+              <CloudDownload className="w-4 h-4" />
+              {syncing ? 'جارٍ التحديث...' : 'تحديث من Peachtree'}
             </button>
             <button
               onClick={() => {

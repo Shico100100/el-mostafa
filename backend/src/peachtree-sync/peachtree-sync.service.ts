@@ -40,7 +40,7 @@ export class PeachtreeSyncService {
     @InjectRepository(PurchaseOrderItem) private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
   ) {}
 
-  async runSync(triggeredBy = 'manual'): Promise<SyncStatusResponseDto> {
+  async runSync(triggeredBy = 'manual', mode: 'full' | 'incremental' = 'full'): Promise<SyncStatusResponseDto> {
     const syncId = `sync_${Date.now()}`;
     const syncStatus: SyncStatusResponseDto = {
       id: syncId,
@@ -53,35 +53,39 @@ export class PeachtreeSyncService {
     };
 
     this.currentSync = syncStatus;
-    this.logger.log(`Starting sync ${syncId}`);
+    this.logger.log(`Starting sync ${syncId} (mode: ${mode})`);
 
     this.connectionService.enableCache();
 
-    // Clear existing Peachtree-synced orders so invoice_numbers can be recreated with correct InvNumForThisTrx
-    this.logger.log('Clearing existing Peachtree-synced orders...');
-    const pqSalesItems = await this.salesOrderItemRepo.createQueryBuilder('item')
-      .innerJoin('item.order', 'so', "so.notes LIKE :pq", { pq: '[PQ-%' })
-      .select('item.id').getMany();
-    if (pqSalesItems.length > 0) {
-      await this.salesOrderItemRepo.remove(pqSalesItems);
-      this.logger.log(`Removed ${pqSalesItems.length} sales order items`);
-    }
-    const pqSalesOrders = await this.salesOrderRepo.find({ where: { notes: Like('[PQ-%') } });
-    if (pqSalesOrders.length > 0) {
-      await this.salesOrderRepo.remove(pqSalesOrders);
-      this.logger.log(`Removed ${pqSalesOrders.length} sales orders`);
-    }
-    const pqPurchaseItems = await this.purchaseOrderItemRepo.createQueryBuilder('item')
-      .innerJoin('item.order', 'po', "po.notes LIKE :pq", { pq: '[PQ-%' })
-      .select('item.id').getMany();
-    if (pqPurchaseItems.length > 0) {
-      await this.purchaseOrderItemRepo.remove(pqPurchaseItems);
-      this.logger.log(`Removed ${pqPurchaseItems.length} purchase order items`);
-    }
-    const pqPurchaseOrders = await this.purchaseOrderRepo.find({ where: { notes: Like('[PQ-%') } });
-    if (pqPurchaseOrders.length > 0) {
-      await this.purchaseOrderRepo.remove(pqPurchaseOrders);
-      this.logger.log(`Removed ${pqPurchaseOrders.length} purchase orders`);
+    if (mode === 'full') {
+      // Clear existing Peachtree-synced orders so invoice_numbers can be recreated with correct InvNumForThisTrx
+      this.logger.log('Clearing existing Peachtree-synced orders...');
+      const pqSalesItems = await this.salesOrderItemRepo.createQueryBuilder('item')
+        .innerJoin('item.order', 'so', "so.notes LIKE :pq", { pq: '[PQ-%' })
+        .select('item.id').getMany();
+      if (pqSalesItems.length > 0) {
+        await this.salesOrderItemRepo.remove(pqSalesItems);
+        this.logger.log(`Removed ${pqSalesItems.length} sales order items`);
+      }
+      const pqSalesOrders = await this.salesOrderRepo.find({ where: { notes: Like('[PQ-%') } });
+      if (pqSalesOrders.length > 0) {
+        await this.salesOrderRepo.remove(pqSalesOrders);
+        this.logger.log(`Removed ${pqSalesOrders.length} sales orders`);
+      }
+      const pqPurchaseItems = await this.purchaseOrderItemRepo.createQueryBuilder('item')
+        .innerJoin('item.order', 'po', "po.notes LIKE :pq", { pq: '[PQ-%' })
+        .select('item.id').getMany();
+      if (pqPurchaseItems.length > 0) {
+        await this.purchaseOrderItemRepo.remove(pqPurchaseItems);
+        this.logger.log(`Removed ${pqPurchaseItems.length} purchase order items`);
+      }
+      const pqPurchaseOrders = await this.purchaseOrderRepo.find({ where: { notes: Like('[PQ-%') } });
+      if (pqPurchaseOrders.length > 0) {
+        await this.purchaseOrderRepo.remove(pqPurchaseOrders);
+        this.logger.log(`Removed ${pqPurchaseOrders.length} purchase orders`);
+      }
+    } else {
+      this.logger.log('Incremental mode: keeping existing Peachtree orders, only importing missing records');
     }
 
     const entities = [

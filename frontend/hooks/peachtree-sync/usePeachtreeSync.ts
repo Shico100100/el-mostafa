@@ -52,18 +52,36 @@ export function usePeachtreeSync() {
     finally { setTesting(false); }
   };
 
-  const runSync = async () => {
+  const runSync = async (mode: 'full' | 'incremental' = 'full') => {
     setSyncing(true);
     try {
-      const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/run', { method: 'POST' });
+      const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/run', {
+        method: 'POST',
+        body: JSON.stringify({ mode }),
+      });
       if (start.status === 'running') {
-        toast.info('بدأت المزامنة في الخلفية...');
+        toast.info(mode === 'incremental' ? 'بدأت إعادة المزامنة الذكية في الخلفية...' : 'بدأت المزامنة في الخلفية...');
         await pollSyncProgress();
       } else {
         toast.success(start.message || 'تمت المزامنة بنجاح');
         loadData();
       }
     } catch { toast.error('فشلت المزامنة'); }
+    finally { setSyncing(false); }
+  };
+
+  const runIncrementalSync = async () => {
+    setSyncing(true);
+    try {
+      const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/run-incremental', { method: 'POST' });
+      if (start.status === 'running') {
+        toast.info('بدأت إعادة المزامنة الذكية في الخلفية...');
+        await pollSyncProgress();
+      } else {
+        toast.success(start.message || 'تمت إعادة المزامنة');
+        loadData();
+      }
+    } catch { toast.error('فشلت إعادة المزامنة الذكية'); }
     finally { setSyncing(false); }
   };
 
@@ -128,5 +146,5 @@ export function usePeachtreeSync() {
     } catch { toast.error('حدث خطأ'); }
   };
 
-  return { loading, syncing, resyncing, testing, connected, connectionError, history, tables, dsn, setDsn, testConnection, runSync, resyncItems, syncInvoices, saveConfig };
+  return { loading, syncing, resyncing, testing, connected, connectionError, history, tables, dsn, setDsn, testConnection, runSync, runIncrementalSync, resyncItems, syncInvoices, saveConfig };
 }
