@@ -17,6 +17,7 @@ export class PeachtreeConnectionService {
 
   private readonly defaultDataPath: string;
   private resolvedDatabaseName: string | null = null;
+  private lastTestResult: { connected: boolean; error?: string; at: number } | null = null;
 
   constructor(private configService: ConfigService) {
     this.defaultDataPath = this.configService.get<string>('PEACHTREE_DATA_PATH', 'mos');
@@ -165,6 +166,16 @@ export class PeachtreeConnectionService {
   }
 
   async testConnection(): Promise<{ connected: boolean; error?: string }> {
+    const now = Date.now();
+    if (
+      this.lastTestResult &&
+      this.lastTestResult.connected &&
+      now - this.lastTestResult.at < 60000
+    ) {
+      this.logger.log('Returning cached Peachtree connection test result');
+      return { connected: true };
+    }
+
     await this.ensurePervasiveRunning();
 
     const resolvedDb = await this.resolveDatabaseName(this.dataPath);
@@ -176,10 +187,12 @@ export class PeachtreeConnectionService {
     try {
       const rows = await this.query('Chart', 1);
       this.logger.log(`Peachtree connection test passed - GLAccount rows: ${rows.length}`);
+      this.lastTestResult = { connected: true, at: Date.now() };
       return { connected: true };
     } catch (error: any) {
       const msg = error?.message || String(error);
       this.logger.error('Peachtree connection test failed', msg);
+      this.lastTestResult = { connected: false, error: msg, at: Date.now() };
       return { connected: false, error: msg };
     }
   }
