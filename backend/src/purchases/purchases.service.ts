@@ -312,6 +312,7 @@ export class PurchasesService {
       });
 
       await queryRunner.commitTransaction();
+      await this.cache.delByPattern('reports:*');
       return savedOrder;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -430,6 +431,8 @@ export class PurchasesService {
         });
       }
 
+      await this.cache.delByPattern('reports:*');
+
       return this.orderRepo.findOne({
         where: { id },
         relations: ['supplier'],
@@ -482,6 +485,8 @@ export class PurchasesService {
         description: `حذف أمر شراء رقم ${id}`,
       });
 
+      await this.cache.delByPattern('reports:*');
+
       return { success: true };
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -510,6 +515,8 @@ export class PurchasesService {
       reference: `PAY-SUPP-${savedPayment.id}`,
       description: `دفع لمورد: ${supplier?.name || data.supplier_id}`,
     });
+
+    await this.cache.delByPattern('reports:*');
 
     return savedPayment;
   }
@@ -572,6 +579,7 @@ export class PurchasesService {
       });
 
       await queryRunner.commitTransaction();
+      await this.cache.delByPattern('reports:*');
       return savedReturn;
     } catch (err) {
       await queryRunner.rollbackTransaction();

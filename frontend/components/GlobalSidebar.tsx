@@ -66,6 +66,7 @@ const modules: NavItem[] = [
       { href: '/manufacturing/molds', label: 'القوالب' },
       { href: '/manufacturing/raw-materials', label: 'الخامات' },
       { href: '/manufacturing/daily-production', label: 'إنتاج يومي' },
+      { href: '/manufacturing/manufacturing-orders', label: 'أوامر إنتاج' },
       { href: '/manufacturing/maintenance', label: 'الصيانة' },
       { href: '/manufacturing/fixed-costs', label: 'تكاليف ثابتة' },
     ],

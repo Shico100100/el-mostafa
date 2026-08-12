@@ -327,6 +327,8 @@ export class SalesService {
       description: `بيع - فاتورة رقم ${savedOrder.order.id}`,
     });
 
+    await this.cache.delByPattern('reports:*');
+
     return savedOrder.order;
   }
 
@@ -388,6 +390,8 @@ export class SalesService {
       reference: `DEL-ORD-${id}`,
       description: `حذف فاتورة بيع رقم ${id}`,
     });
+
+    await this.cache.delByPattern('reports:*');
   }
 
   // ---- Payment (requires AccountingService) ----
@@ -431,6 +435,8 @@ export class SalesService {
           partnerId: customer.id,
         });
       }
+
+      await this.cache.delByPattern('reports:*');
 
       return savedPayment;
     } catch (err) {
@@ -524,6 +530,8 @@ export class SalesService {
         reference: `RET-SALE-${savedReturn.id}`,
         description: `مرتجع مبيعات - رقم ${savedReturn.id}`,
       });
+
+      await this.cache.delByPattern('reports:*');
 
       return savedReturn;
     } catch (err) {
