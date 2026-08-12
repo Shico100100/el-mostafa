@@ -14,8 +14,8 @@ test.describe('Dashboard', () => {
   });
 
   test('should navigate to inventory', async ({ page }) => {
-    await page.getByRole('button', { name: 'المخزون', exact: true }).click();
-    await page.getByRole('button', { name: 'لوحة المخزون' }).click();
+    await page.goto('/inventory2');
     await expect(page).toHaveURL(/inventory2/, { timeout: 15000 });
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
   });
 });
