@@ -31,12 +31,17 @@ vi.mock('sonner', () => ({
 }));
 
 import { usePeachtreeSync } from './usePeachtreeSync';
+import type { ReviewEntry, LogEntry } from './usePeachtreeSync';
 
-function mockLoadData(overrides: { tables?: string[] } = {}) {
+function mockLoadData(
+  overrides: { tables?: string[]; review?: any[]; logs?: any[] } = {},
+) {
   mocks.fetchWithAuth
     .mockResolvedValueOnce([{ id: 'sync1', status: 'completed' }])
     .mockResolvedValueOnce({ dsn: 'mos' })
-    .mockResolvedValueOnce(overrides.tables ?? ['Chart', 'Customers']);
+    .mockResolvedValueOnce(overrides.tables ?? ['Chart', 'Customers'])
+    .mockResolvedValueOnce(overrides.review ?? [])
+    .mockResolvedValueOnce(overrides.logs ?? []);
 }
 
 beforeEach(() => {
@@ -429,6 +434,47 @@ describe('usePeachtreeSync', () => {
 
       act(() => { result.current.setDsn('new-dsn'); });
       expect(result.current.dsn).toBe('new-dsn');
+    });
+  });
+
+  describe('review workflow', () => {
+    it('previewSync calls the preview endpoint and reloads', async () => {
+      mockLoadData();
+      mocks.fetchWithAuth.mockResolvedValueOnce({ status: 'running' });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await act(async () => { await result.current.previewSync(); });
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/preview', { method: 'POST' });
+    }, 10000);
+
+    it('applyReview posts selected ids', async () => {
+      mockLoadData();
+      mocks.fetchWithAuth.mockResolvedValueOnce({ applied: 2, errors: [] });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await act(async () => { await result.current.applyReview([1, 2]); });
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/review/apply', { method: 'POST', body: JSON.stringify({ ids: [1, 2] }) });
+      expect(mocks.toastSuccess).toHaveBeenCalledWith('تم تطبيق 2 تغيير');
+    });
+
+    it('skipReview posts selected ids', async () => {
+      mockLoadData();
+      mocks.fetchWithAuth.mockResolvedValueOnce({ skipped: 1 });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await act(async () => { await result.current.skipReview([3]); });
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/review/skip', { method: 'POST', body: JSON.stringify({ ids: [3] }) });
+    });
+
+    it('loads review and logs on mount', async () => {
+      mockLoadData({
+        review: [{ id: 1, entity: 'customers', record_key: 'Acme' }],
+        logs: [{ id: 9, run_id: 'sync_1', entity: 'products', action: 'inserted' }],
+      });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.review).toEqual([{ id: 1, entity: 'customers', record_key: 'Acme' }]);
+      expect(result.current.logs).toEqual([{ id: 9, run_id: 'sync_1', entity: 'products', action: 'inserted' }]);
     });
   });
 });

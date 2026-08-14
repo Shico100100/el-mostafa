@@ -24,6 +24,29 @@ export interface SyncHistoryEntry {
   results?: SyncEntityResult[];
 }
 
+export interface ReviewEntry {
+  id: number;
+  entity: string;
+  record_key: string;
+  change_type: 'update' | 'missing';
+  db_record_id: number | null;
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  status: string;
+  created_at?: string;
+}
+
+export interface LogEntry {
+  id: number;
+  run_id: string;
+  triggered_by: string;
+  entity: string;
+  action: string;
+  record_key: string;
+  changes: Record<string, [unknown, unknown]> | null;
+  created_at?: string;
+}
+
 export function usePeachtreeSync() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -35,17 +58,26 @@ export function usePeachtreeSync() {
   const [tables, setTables] = useState<string[]>([]);
   const [dsn, setDsn] = useState('');
   const [connectionError, setConnectionError] = useState('');
+  const [review, setReview] = useState<ReviewEntry[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [previewing, setPreviewing] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [historyData, configData, tablesData] = await Promise.all([
-        api.fetchWithAuth<SyncHistoryEntry[]>('/peachtree-sync/status'),
-        api.fetchWithAuth<{ dsn: string }>('/peachtree-sync/config'),
-        api.fetchWithAuth<string[]>('/peachtree-sync/tables').catch(() => []),
-      ]);
+      const [historyData, configData, tablesData, reviewData, logData] =
+        await Promise.all([
+          api.fetchWithAuth<SyncHistoryEntry[]>('/peachtree-sync/status'),
+          api.fetchWithAuth<{ dsn: string }>('/peachtree-sync/config'),
+          api.fetchWithAuth<string[]>('/peachtree-sync/tables').catch(() => []),
+          api.fetchWithAuth<ReviewEntry[]>('/peachtree-sync/review'),
+          api.fetchWithAuth<LogEntry[]>('/peachtree-sync/log'),
+        ]);
       setHistory(historyData || []);
       setDsn(configData?.dsn || '');
       setTables(tablesData || []);
+      setReview(reviewData || []);
+      setLogs(logData || []);
     } catch { toast.error('فشل تحميل بيانات المزامنة'); }
     finally { setLoading(false); }
   }, []);
@@ -158,6 +190,65 @@ export function usePeachtreeSync() {
     finally { setSyncing(false); }
   };
 
+  const previewSync = async () => {
+    setPreviewing(true);
+    try {
+      const start = await api.fetchWithAuth<{ message: string; status?: string }>(
+        '/peachtree-sync/preview',
+        { method: 'POST' },
+      );
+      if (start.status === 'running') {
+        toast.info('بدأت المعاينة في الخلفية...');
+        await pollSyncProgress();
+      }
+      await loadData();
+    } catch { toast.error('فشلت المعاينة'); }
+    finally { setPreviewing(false); }
+  };
+
+  const loadReview = async () => {
+    try {
+      const data = await api.fetchWithAuth<ReviewEntry[]>('/peachtree-sync/review');
+      setReview(data || []);
+    } catch { toast.error('فشل تحميل تقرير الفروقات'); }
+  };
+
+  const loadLogs = async () => {
+    try {
+      const data = await api.fetchWithAuth<LogEntry[]>('/peachtree-sync/log');
+      setLogs(data || []);
+    } catch { /* silent */ }
+  };
+
+  const applyReview = async (ids: number[]) => {
+    if (!ids.length) return;
+    setApplying(true);
+    try {
+      const result = await api.fetchWithAuth<{ applied: number; errors: string[] }>(
+        '/peachtree-sync/review/apply',
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      );
+      toast.success(`تم تطبيق ${result.applied} تغيير`);
+      if (result.errors?.length) toast.error(`فشل ${result.errors.length} — ${result.errors[0]}`);
+      await loadData();
+    } catch { toast.error('فشل تطبيق التغييرات'); }
+    finally { setApplying(false); }
+  };
+
+  const skipReview = async (ids: number[]) => {
+    if (!ids.length) return;
+    setApplying(true);
+    try {
+      const result = await api.fetchWithAuth<{ skipped: number }>(
+        '/peachtree-sync/review/skip',
+        { method: 'POST', body: JSON.stringify({ ids }) },
+      );
+      toast.success(`تم تجاهل ${result.skipped} تغيير`);
+      await loadData();
+    } catch { toast.error('فشل تجاهل التغييرات'); }
+    finally { setApplying(false); }
+  };
+
   const saveConfig = async () => {
     try {
       await api.fetchWithAuth('/peachtree-sync/config', { method: 'PUT', body: JSON.stringify({ dsn }) });
@@ -165,5 +256,12 @@ export function usePeachtreeSync() {
     } catch { toast.error('حدث خطأ'); }
   };
 
-  return { loading, syncing, resyncing, testing, connected, connectionError, history, tables, dsn, setDsn, testConnection, runSync, runIncrementalSync, resyncItems, syncInvoices, saveConfig };
+  return {
+    loading, syncing, resyncing, testing, applying, previewing,
+    connected, connectionError, history, tables, dsn,
+    review, logs,
+    setDsn, testConnection, runSync, runIncrementalSync, resyncItems,
+    syncInvoices, saveConfig, previewSync, applyReview, skipReview,
+    loadReview, loadLogs,
+  };
 }
