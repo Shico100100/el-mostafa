@@ -1,5 +1,6 @@
 import { AccountType } from '../src/accounting/entities/account.entity';
 import { PeachtreeMappingService } from '../src/peachtree-sync/peachtree-mapping.service';
+import { PeachtreeReviewService } from '../src/peachtree-sync/peachtree-review.service';
 
 // ─────────────────────────────────────────────────────────
 // 1. PeachtreeMappingService (pure logic, no deps)
@@ -757,6 +758,11 @@ describe('PeachtreeSyncController', () => {
       setDataPath: jest.fn(),
       getCurrentSync: jest.fn(),
       resyncItems: jest.fn(),
+      preview: jest.fn().mockResolvedValue({ id: 'p1' }),
+      getReview: jest.fn().mockResolvedValue([]),
+      applyReview: jest.fn().mockResolvedValue({ applied: 1, errors: [] }),
+      skipReview: jest.fn().mockResolvedValue({ skipped: 2 }),
+      getLog: jest.fn().mockResolvedValue([]),
     } as any;
     controller = new PeachtreeSyncController(syncService);
   });
@@ -928,6 +934,59 @@ describe('PeachtreeSyncController', () => {
       expect(result.status).toBe('running');
       expect(result.message).toContain('already in progress');
       expect(syncService.resyncItems).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /preview', () => {
+    it('starts a preview when not running', async () => {
+      syncService.getCurrentSync.mockReturnValue(null);
+      const result = await controller.preview();
+      expect(result.status).toBe('running');
+      expect(syncService.preview).toHaveBeenCalledWith('manual-preview');
+    });
+
+    it('rejects if sync already running', async () => {
+      syncService.getCurrentSync.mockReturnValue({
+        id: 'x',
+        status: 'running',
+      } as any);
+      const result = await controller.preview();
+      expect(syncService.preview).not.toHaveBeenCalled();
+      expect(result.message).toContain('already in progress');
+    });
+  });
+
+  describe('GET /review', () => {
+    it('returns pending review rows', async () => {
+      syncService.getReview.mockResolvedValue([{ id: 1 }] as any);
+      expect(await controller.getReview({})).toEqual([{ id: 1 }]);
+      expect(syncService.getReview).toHaveBeenCalledWith(undefined);
+    });
+
+    it('filters by entity', async () => {
+      await controller.getReview({ entity: 'customers' });
+      expect(syncService.getReview).toHaveBeenCalledWith('customers');
+    });
+  });
+
+  describe('POST /review/apply', () => {
+    it('applies selected ids', async () => {
+      const result = await controller.applyReview({ ids: [1, 2] });
+      expect(result).toEqual({ applied: 1, errors: [] });
+      expect(syncService.applyReview).toHaveBeenCalledWith([1, 2]);
+    });
+  });
+
+  describe('POST /review/skip', () => {
+    it('skips selected ids', async () => {
+      expect(await controller.skipReview({ ids: [1] })).toEqual({ skipped: 2 });
+    });
+  });
+
+  describe('GET /log', () => {
+    it('returns audit log', async () => {
+      syncService.getLog.mockResolvedValue([{ id: 1 }] as any);
+      expect(await controller.getLog({})).toEqual([{ id: 1 }]);
     });
   });
 });
@@ -1206,5 +1265,65 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
         dbRecordId: 77,
       }),
     );
+  });
+});
+
+describe('PeachtreeSyncService review orchestration', () => {
+  function buildService() {
+    const reviewRow = {
+      id: 1,
+      entity: 'customers',
+      record_key: 'Acme',
+      change_type: 'update',
+      db_record_id: 5,
+      old_values: { phone: '111' },
+      new_values: { phone: '222' },
+      status: 'pending',
+    };
+    const reviewRepo: any = {
+      create: jest.fn((input: any) => input),
+      save: jest.fn(async (r: any) => r),
+      find: jest.fn().mockResolvedValue([reviewRow]),
+    };
+    const logRepo: any = {
+      create: jest.fn((input: any) => input),
+      save: jest.fn(async (r: any) => r),
+    };
+    const reviewService = new PeachtreeReviewService(reviewRepo, logRepo);
+    const customerRepo: any = { update: jest.fn().mockResolvedValue({}) };
+    const service = new PeachtreeSyncService(
+      {} as any,
+      new PeachtreeMappingService(),
+      customerRepo,
+      { update: jest.fn() } as any,
+      { update: jest.fn() } as any,
+      { update: jest.fn() } as any,
+      {} as any,
+      { update: jest.fn() } as any,
+      {} as any,
+      reviewService,
+    );
+    return { service, customerRepo, reviewRepo, logRepo };
+  }
+
+  it('applies an accepted review row and flips its status', async () => {
+    const { service, customerRepo, reviewRepo, logRepo } = buildService();
+    const result = await service.applyReview([1]);
+    expect(result.applied).toBe(1);
+    expect(customerRepo.update).toHaveBeenCalledWith(5, { phone: '222' });
+    expect(reviewRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'accepted' }),
+    );
+    expect(logRepo.save).toHaveBeenCalled();
+  });
+
+  it('skips review rows and logs the decision', async () => {
+    const { service, reviewRepo, logRepo } = buildService();
+    const result = await service.skipReview([1]);
+    expect(result.skipped).toBe(1);
+    expect(reviewRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'skipped' }),
+    );
+    expect(logRepo.save).toHaveBeenCalled();
   });
 });

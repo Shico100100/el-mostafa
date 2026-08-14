@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, Logger } from '@nestjs/common';
 import { PeachtreeSyncService } from './peachtree-sync.service';
 import { SyncEntity } from './dto/sync-status.dto';
 
@@ -125,6 +125,44 @@ export class PeachtreeSyncController {
       this.logger.error('Background resync crashed', err?.stack || err);
     });
     return { message: 'Resync started', status: 'running' };
+  }
+
+  @Post('preview')
+  preview() {
+    const current = this.syncService.getCurrentSync();
+    if (current && current.status === 'running') {
+      return {
+        message: 'Sync already in progress',
+        id: current.id,
+        status: current.status,
+      };
+    }
+    this.syncService.preview('manual-preview').catch((err) => {
+      this.logger.error('Background preview crashed', err?.stack || err);
+    });
+    return { message: 'Preview started', status: 'running' };
+  }
+
+  @Get('review')
+  async getReview(@Query() query: { entity?: string }) {
+    return this.syncService.getReview(
+      (query.entity as SyncEntity) || undefined,
+    );
+  }
+
+  @Post('review/apply')
+  async applyReview(@Body() body: { ids?: number[] }) {
+    return this.syncService.applyReview(body?.ids || []);
+  }
+
+  @Post('review/skip')
+  async skipReview(@Body() body: { ids?: number[] }) {
+    return this.syncService.skipReview(body?.ids || []);
+  }
+
+  @Get('log')
+  async getLog(@Query() query: { runId?: string }) {
+    return this.syncService.getLog(query.runId);
   }
 
   @Get('last')

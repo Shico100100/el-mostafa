@@ -21,6 +21,8 @@ import {
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 import { PeachtreeReviewService } from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
+import { PeachtreeSyncReview } from './entities/peachtree-sync-review.entity';
+import { PeachtreeSyncLog } from './entities/peachtree-sync-log.entity';
 
 const BATCH_SIZE = 500;
 const SKIP_IF_SYNCED_MS = 60 * 60 * 1000; // 1 hour
@@ -1496,6 +1498,139 @@ export class PeachtreeSyncService {
       this.syncHistory.unshift(syncStatus);
       throw error;
     }
+  }
+
+  async preview(triggeredBy = 'manual'): Promise<SyncStatusResponseDto> {
+    return this.runSync(triggeredBy, 'full');
+  }
+
+  async getReview(entity?: SyncEntity): Promise<PeachtreeSyncReview[]> {
+    return this.reviewService.getPendingReview(entity);
+  }
+
+  async getLog(runId?: string): Promise<PeachtreeSyncLog[]> {
+    return this.reviewService.getReviewLog(runId);
+  }
+
+  async skipReview(
+    ids: number[],
+  ): Promise<{ skipped: number }> {
+    const runId = `skip_${Date.now()}`;
+    const skipped = await this.reviewService.markSkipped(ids || []);
+    for (const id of ids || []) {
+      const [row] = await this.reviewService.getPendingByIds([id]);
+      if (!row || row.status !== 'skipped') continue;
+      await this.reviewService.log({
+        runId,
+        triggeredBy: 'skip',
+        entity: row.entity as SyncEntity,
+        action: SyncLogAction.SKIPPED_REVIEW,
+        recordKey: row.record_key,
+      });
+    }
+    return { skipped };
+  }
+
+  async applyReview(
+    ids: number[],
+  ): Promise<{ applied: number; errors: string[] }> {
+    const rows = await this.reviewService.getPendingByIds(ids || []);
+    const runId = `apply_${Date.now()}`;
+    let applied = 0;
+    const errors: string[] = [];
+
+    for (const row of rows) {
+      try {
+        if (row.change_type === 'missing') {
+          await this.reviewService.markAccepted(row);
+          continue;
+        }
+        const nv: any = row.new_values || {};
+        switch (row.entity) {
+          case SyncEntity.CUSTOMERS:
+            await this.customerRepo.update(row.db_record_id!, {
+              phone: nv.phone,
+              email: nv.email,
+              address: nv.address,
+              balance: nv.balance,
+            });
+            break;
+          case SyncEntity.SUPPLIERS:
+            await this.supplierRepo.update(row.db_record_id!, {
+              phone: nv.phone,
+              email: nv.email,
+              address: nv.address,
+              balance: nv.balance,
+            });
+            break;
+          case SyncEntity.PRODUCTS:
+            await this.productRepo.update(row.db_record_id!, {
+              name: nv.name,
+              sku: nv.sku,
+              cost_price: nv.cost_price,
+              selling_price: nv.selling_price,
+              unit: nv.unit,
+              description: nv.description,
+              type: nv.type,
+            });
+            break;
+          case SyncEntity.SALES_INVOICES:
+            await this.salesOrderRepo.update(row.db_record_id!, {
+              total_amount: nv.total_amount,
+              status: nv.status,
+              order_date: nv.order_date || null,
+              notes: nv.notes,
+            });
+            break;
+          case SyncEntity.PURCHASE_INVOICES:
+            await this.purchaseOrderRepo.update(row.db_record_id!, {
+              total_amount: nv.total_amount,
+              status: nv.status,
+              order_date: nv.order_date || null,
+              notes: nv.notes,
+            });
+            break;
+          case SyncEntity.INVOICE_LINE_ITEMS:
+            if (row.db_record_id && Array.isArray(nv.items)) {
+              if (nv.kind === 'purchase') {
+                await this.purchaseOrderItemRepo.delete({
+                  order_id: row.db_record_id,
+                });
+                if (nv.items.length > 0) {
+                  await this.purchaseOrderItemRepo.insert(nv.items);
+                }
+              } else {
+                await this.salesOrderItemRepo.delete({
+                  order_id: row.db_record_id,
+                });
+                if (nv.items.length > 0) {
+                  await this.salesOrderItemRepo.insert(nv.items);
+                }
+              }
+            }
+            break;
+        }
+        await this.reviewService.markAccepted(row);
+        const changes = this.reviewService.computeDiff(
+          row.old_values || {},
+          nv,
+        );
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'apply',
+          entity: row.entity as SyncEntity,
+          action: SyncLogAction.UPDATED,
+          recordKey: row.record_key,
+          changes,
+        });
+        applied++;
+      } catch (error: any) {
+        errors.push(
+          `${row.entity}:${row.record_key} — ${error?.message || String(error)}`,
+        );
+      }
+    }
+    return { applied, errors };
   }
 
   getSyncHistory(): Promise<SyncStatusResponseDto[]> {
