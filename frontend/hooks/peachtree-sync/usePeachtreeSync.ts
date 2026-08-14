@@ -25,26 +25,25 @@ export interface SyncHistoryEntry {
 }
 
 export interface ReviewEntry {
-  id: number;
+  id: string;
   entity: string;
   record_key: string;
-  change_type: 'update' | 'missing';
-  db_record_id: number | null;
+  change_type: string;
   old_values: Record<string, unknown> | null;
   new_values: Record<string, unknown> | null;
-  status: string;
+  status?: string;
   created_at?: string;
 }
 
 export interface LogEntry {
-  id: number;
+  id: string;
   run_id: string;
-  triggered_by: string;
   entity: string;
   action: string;
-  record_key: string;
-  changes: Record<string, [unknown, unknown]> | null;
   created_at?: string;
+  record_key?: string;
+  changes?: Record<string, unknown> | null;
+  triggered_by?: string;
 }
 
 export function usePeachtreeSync() {
@@ -220,7 +219,7 @@ export function usePeachtreeSync() {
     } catch { /* silent */ }
   };
 
-  const applyReview = async (ids: number[]) => {
+  const applyReview = async (ids: (string | number)[]) => {
     if (!ids.length) return;
     setApplying(true);
     try {
@@ -235,7 +234,7 @@ export function usePeachtreeSync() {
     finally { setApplying(false); }
   };
 
-  const skipReview = async (ids: number[]) => {
+  const skipReview = async (ids: (string | number)[]) => {
     if (!ids.length) return;
     setApplying(true);
     try {

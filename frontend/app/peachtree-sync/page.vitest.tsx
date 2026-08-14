@@ -31,11 +31,15 @@ vi.mock('lucide-react', async () => {
     Receipt: (p: LucideProps) => <svg data-testid="icon" {...p} />,
     ChevronDown: (p: LucideProps) => <svg data-testid="icon" {...p} />,
     ChevronUp: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    ListChecks: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    ClipboardList: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Check: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    EyeOff: (p: LucideProps) => <svg data-testid="icon" {...p} />,
   };
 });
 
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
-import type { SyncHistoryEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import type { SyncHistoryEntry, ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import PeachtreeSyncPage from './page';
 import { createElement } from 'react';
 
@@ -59,6 +63,15 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     resyncItems: vi.fn().mockResolvedValue(undefined),
     syncInvoices: vi.fn().mockResolvedValue(undefined),
     saveConfig: vi.fn().mockResolvedValue(undefined),
+    review: [] as ReviewEntry[],
+    logs: [] as LogEntry[],
+    previewing: false,
+    applying: false,
+    loadReview: vi.fn().mockResolvedValue(undefined),
+    loadLogs: vi.fn().mockResolvedValue(undefined),
+    previewSync: vi.fn().mockResolvedValue(undefined),
+    applyReview: vi.fn().mockResolvedValue(undefined),
+    skipReview: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -583,6 +596,135 @@ describe('PeachtreeSyncPage', () => {
       render(createElement(PeachtreeSyncPage));
       await userEvent.click(screen.getByText('1 كيان'));
       expect(screen.getByText('unknown_entity')).toBeDefined();
+    });
+  });
+
+  describe('difference report', () => {
+    it('shows empty state when review is empty', () => {
+      mockedHook.mockReturnValue(makeHookState({ review: [] }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText(/لا توجد فروقات معلقة/)).toBeDefined();
+    });
+
+    it('renders review header with entity and change type', () => {
+      const review: ReviewEntry[] = [
+        {
+          id: 'r1', entity: 'customers', change_type: 'missing',
+          record_key: 'CUST-1',
+          old_values: { name: 'Acme' }, new_values: null,
+        },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ review }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('العملاء')).toBeDefined();
+      expect(screen.getByText('غير موجود في Peachtree')).toBeDefined();
+    });
+
+    it('renders expanded diff for an update entry', async () => {
+      const review: ReviewEntry[] = [
+        {
+          id: 'r2', entity: 'customers', change_type: 'update',
+          record_key: 'CUST-2',
+          old_values: { name: 'Acme', phone: '111' },
+          new_values: { name: 'Acme Corp', phone: '222' },
+        },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ review }));
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByText(/\d+ حقل/));
+      expect(screen.getAllByText('Acme').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Acme Corp').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('phone').closest('tr')?.textContent).toContain('111');
+      expect(screen.getByText('phone').closest('tr')?.textContent).toContain('222');
+    });
+
+    it('shows line item counts for invoice_line_items updates', () => {
+      const review: ReviewEntry[] = [
+        {
+          id: 'r3', entity: 'invoice_line_items', change_type: 'update',
+          record_key: 'LI-3',
+          old_values: { items: [{ sku: 'a' }] },
+          new_values: { items: [{ sku: 'a' }, { sku: 'b' }] },
+        },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ review }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('البنود: 1 ← 2').textContent).toBeDefined();
+    });
+
+    it('calls applyReview/applyReview with row id array on accept/skip', async () => {
+      const review: ReviewEntry[] = [
+        {
+          id: 'r1', entity: 'suppliers', change_type: 'missing',
+          record_key: 'SUPP-1',
+          status: 'pending',
+          old_values: { name: 'Supp' }, new_values: null,
+        },
+      ];
+      const applyReview = vi.fn().mockResolvedValue(undefined);
+      const skipReview = vi.fn().mockResolvedValue(undefined);
+      mockedHook.mockReturnValue(makeHookState({ review, applyReview, skipReview }));
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByRole('button', { name: 'قبول' }));
+      expect(applyReview).toHaveBeenCalledWith(['r1']);
+      await userEvent.click(screen.getByRole('button', { name: 'تجاهل' }));
+      expect(skipReview).toHaveBeenCalledWith(['r1']);
+    });
+
+    it('shows applying spinner when applying is true', () => {
+      mockedHook.mockReturnValue(makeHookState({ applying: true }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('جاري التطبيق...')).toBeDefined();
+    });
+
+    it('shows previewing spinner when previewing is true', () => {
+      mockedHook.mockReturnValue(makeHookState({ previewing: true }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('جارٍ المعاينة...')).toBeDefined();
+    });
+  });
+
+  describe('operation log', () => {
+    it('shows "لا يوجد سجل عمليات" when logs is empty', () => {
+      mockedHook.mockReturnValue(makeHookState({ logs: [] }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText(/لا توجد عمليات مسجلة بعد/)).toBeDefined();
+    });
+
+    it('renders log grouped by run_id', () => {
+      const logs: LogEntry[] = [
+        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
+        { id: 'l2', run_id: 'run-1', entity: 'products', action: 'inserted', record_key: '2', created_at: '2026-08-15T10:00:00Z' },
+        { id: 'l3', run_id: 'run-2', entity: 'suppliers', action: 'inserted', record_key: '3', created_at: '2026-08-15T10:30:00Z' },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ logs }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('run-1').closest('button')).toBeDefined();
+      expect(screen.getAllByText('run-2').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('expands run group to show event rows', async () => {
+      const logs: LogEntry[] = [
+        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ logs }));
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByText('run-1').closest('button')!);
+      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('إضافة جديدة').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('collapses run group on second click', async () => {
+      const logs: LogEntry[] = [
+        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
+      ];
+      mockedHook.mockReturnValue(makeHookState({ logs }));
+      render(createElement(PeachtreeSyncPage));
+      const btn = screen.getByText('run-1').closest('button')!;
+      await userEvent.click(btn);
+      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
+      await userEvent.click(btn);
+      expect(screen.queryByText('العملاء')).toBeNull();
     });
   });
 });

@@ -1,13 +1,14 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import type { ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import {
   Link2, Play, CheckCircle2, XCircle, RefreshCw, Database, Settings,
-  Users, Truck, Package, FileText, ChevronDown, ChevronUp,
+  Users, Truck, Package, FileText, ChevronDown, ChevronUp, ListChecks, ClipboardList,
+  Check, EyeOff,
   type LucideIcon,
 } from 'lucide-react';
-import { useState } from 'react';
 
 const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
   customers: { label: 'العملاء', icon: Users, color: 'text-blue-400' },
@@ -18,10 +19,35 @@ const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: st
   invoice_line_items: { label: 'بنود الفواتير', icon: Package, color: 'text-teal-400' },
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  inserted: 'إضافة جديدة',
+  different: 'اختلاف',
+  skipped: 'مطابق',
+  missing: 'غير موجود في Peachtree',
+  updated: 'تم التحديث',
+  skipped_review: 'تم التجاهل',
+};
+
+function reviewDiff(entry: ReviewEntry): { field: string; old: string; new: string }[] {
+  const oldV = entry.old_values || {};
+  const newV = entry.new_values || {};
+  const keys = new Set([...Object.keys(oldV), ...Object.keys(newV)]);
+  const out: { field: string; old: string; new: string }[] = [];
+  for (const k of keys) {
+    if (k === 'items' || k === 'kind') continue;
+    const o = JSON.stringify(oldV[k] ?? '');
+    const n = JSON.stringify(newV[k] ?? '');
+    if (o !== n) out.push({ field: k, old: String(oldV[k] ?? ''), new: String(newV[k] ?? '') });
+  }
+  return out;
+}
+
 export default function PeachtreeSyncPage() {
   const h = usePeachtreeSync();
   const [expandedSync, setExpandedSync] = useState<string | null>(null);
   const [syncingInvoices, setSyncingInvoices] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<Set<string>>(new Set());
+  const [expandedRun, setExpandedRun] = useState<string | null>(null);
 
   const handleSyncInvoices = async () => {
     setSyncingInvoices(true);
@@ -178,6 +204,210 @@ export default function PeachtreeSyncPage() {
           </button>
         </div>
 
+        {/* Review Differences */}
+        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <ListChecks className="w-5 h-5 text-emerald-400" />تقرير الفروقات
+            </h2>
+            <div className="flex gap-2 md:mr-auto">
+               <button
+                 onClick={h.previewSync}
+                 disabled={h.previewing || h.syncing}
+                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
+               >
+                 <RefreshCw className={`w-4 h-4 ${h.previewing ? 'animate-spin' : ''}`} />
+                 <span>{h.previewing ? 'جارٍ المعاينة...' : 'معاينة الفروقات'}</span>
+               </button>
+               <button
+                 onClick={() => h.applyReview([...selectedReview])}
+                 disabled={h.applying || selectedReview.size === 0}
+                 className="px-4 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition disabled:opacity-50 flex items-center gap-2"
+               >
+                 {h.applying ? (
+                   <span className="flex items-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" />جاري التطبيق...</span>
+                 ) : (
+                   <><Check className="w-4 h-4" />تطبيق المحدد ({selectedReview.size})</>
+                 )}
+               </button>
+              <button
+                onClick={() => h.applyReview(h.review.filter((r) => r.status === 'pending').map((r) => r.id))}
+                disabled={h.applying}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+              >
+                قبول الكل
+              </button>
+              <button
+                onClick={() => h.skipReview(h.review.filter((r) => r.status === 'pending').map((r) => r.id))}
+                disabled={h.applying}
+                className="px-4 py-2 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
+              >
+                <EyeOff className="w-4 h-4" />تجاهل الكل
+              </button>
+            </div>
+          </div>
+
+          {h.review.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              لا توجد فروقات معلقة — اضغط &quot;معاينة الفروقات&quot; للفحص
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-gray-400 border-b border-white/10">
+                    <th className="py-3 px-4 text-right" />
+                    <th className="py-3 px-4 text-right">الكيان</th>
+                    <th className="py-3 px-4 text-right">السجل</th>
+                    <th className="py-3 px-4 text-right">النوع</th>
+                    <th className="py-3 px-4 text-right">التفاصيل</th>
+                    <th className="py-3 px-4 text-right">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {h.review.map((entry) => {
+                    const meta =
+                      ENTITY_LABELS[entry.entity] ||
+                      ({} as { label: string; icon: LucideIcon; color: string });
+                    const Icon = (meta.icon || Package) as LucideIcon;
+                    const diffs = reviewDiff(entry);
+                    const lineItemCount =
+                      entry.change_type === 'update' &&
+                      entry.entity === 'invoice_line_items'
+                        ? [
+                            (entry.old_values?.items as any[] | undefined)?.length ?? 0,
+                            (entry.new_values?.items as any[] | undefined)?.length ?? 0,
+                          ]
+                        : null;
+                    return (
+                      <Fragment key={entry.id}>
+                        <tr className="border-b border-white/5 hover:bg-white/5 transition">
+                          <td className="py-3 px-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedReview.has(entry.id)}
+                              onChange={() => {
+                                const next = new Set(selectedReview);
+                                if (next.has(entry.id)) next.delete(entry.id);
+                                else next.add(entry.id);
+                                setSelectedReview(next);
+                              }}
+                              className="w-4 h-4"
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-white flex items-center gap-2">
+                            <Icon className={`w-5 h-5 ${meta.color || 'text-gray-400'}`} />
+                            {meta.label || entry.entity}
+                          </td>
+                          <td className="py-3 px-4 text-gray-400 font-mono text-xs">
+                            {entry.record_key}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                entry.change_type === 'missing'
+                                  ? 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-sky-500/20 text-sky-400'
+                              }`}
+                            >
+                              {entry.change_type === 'missing'
+                                ? 'غير موجود في Peachtree'
+                                : 'تحديث'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            {lineItemCount ? (
+                              <span className="text-gray-400">
+                                البنود: {lineItemCount[0]} ← {lineItemCount[1]}
+                              </span>
+                            ) : diffs.length > 0 ? (
+                              <button
+                                onClick={() =>
+                                  setExpandedSync(
+                                    expandedSync === `rv-${entry.id}`
+                                      ? null
+                                      : `rv-${entry.id}`,
+                                  )
+                                }
+                                className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                              >
+                                {expandedSync === `rv-${entry.id}` ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
+                                {diffs.length} حقل
+                              </button>
+                            ) : (
+                              <span className="text-gray-500">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => h.applyReview([entry.id])}
+                                disabled={
+                                  h.applying || entry.status !== 'pending'
+                                }
+                                className="px-2 py-1 rounded text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-40"
+                              >
+                                قبول
+                              </button>
+                              <button
+                                onClick={() => h.skipReview([entry.id])}
+                                disabled={
+                                  h.applying || entry.status !== 'pending'
+                                }
+                                className="px-2 py-1 rounded text-xs bg-white/10 text-white hover:bg-white/20 disabled:opacity-40"
+                              >
+                                تجاهل
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        {expandedSync === `rv-${entry.id}` &&
+                          diffs.length > 0 && (
+                            <tr key={`${entry.id}-details`}>
+                              <td colSpan={6} className="px-6 py-4 bg-black/30">
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-gray-500 border-b border-white/10">
+                                      <th className="py-2 text-right">الحقل</th>
+                                      <th className="py-2 text-right">القديم</th>
+                                      <th className="py-2 text-right">الجديد</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {diffs.map((d) => (
+                                      <tr
+                                        key={d.field}
+                                        className="border-b border-white/5"
+                                      >
+                                        <td className="py-2 text-gray-400">
+                                          {d.field}
+                                        </td>
+                                        <td className="py-2 text-gray-300">
+                                          {d.old || '—'}
+                                        </td>
+                                        <td className="py-2 text-green-400">
+                                          {d.new || '—'}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* Sync History */}
         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-white/10">
@@ -267,6 +497,121 @@ export default function PeachtreeSyncPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Audit Log */}
+        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden mt-8">
+          <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-violet-400" />سجل العمليات
+            </h2>
+            <button
+              onClick={h.loadLogs}
+              className="text-sky-400 hover:text-sky-300 text-sm"
+            >
+              تحديث السجل
+            </button>
+          </div>
+          {h.logs.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">
+              لا توجد عمليات مسجلة بعد
+            </p>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {Object.entries(
+                h.logs.reduce<Record<string, LogEntry[]>>((acc, e) => {
+                  ;(acc[e.run_id] ||= []).push(e);
+                  return acc;
+                }, {}),
+              ).map(([runId, events]) => (
+                <Fragment key={runId}>
+                  <button
+                    onClick={() =>
+                      setExpandedRun(
+                        expandedRun === runId ? null : runId,
+                      )
+                    }
+                    className="w-full text-right px-6 py-3 hover:bg-white/5 flex items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="text-white font-mono text-xs">{runId}</p>
+                      <p className="text-gray-500 text-xs">
+                        {events.length} حدث — {events[0].triggered_by}
+                        {events[0].created_at
+                          ? ` — ${new Date(events[0].created_at).toLocaleString('ar-EG')}`
+                          : ''}
+                      </p>
+                    </div>
+                    {expandedRun === runId ? (
+                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                  {expandedRun === runId && (
+                    <div className="px-6 pb-4 bg-black/30">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-gray-500 border-b border-white/10">
+                            <th className="py-2 text-right">الكيان</th>
+                            <th className="py-2 text-right">الإجراء</th>
+                            <th className="py-2 text-right">السجل</th>
+                            <th className="py-2 text-right">التغييرات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {events.map((e) => {
+                            const meta =
+                              ENTITY_LABELS[e.entity] ||
+                              ({} as {
+                                label: string;
+                                icon: LucideIcon;
+                                color: string;
+                              });
+                            const Icon = (meta.icon || Package) as LucideIcon;
+                            return (
+                              <tr
+                                key={e.id}
+                                className="border-b border-white/5"
+                              >
+                                <td className="py-2 text-white flex items-center gap-2">
+                                  <Icon
+                                    className={`w-4 h-4 ${meta.color || 'text-gray-400'}`}
+                                  />
+                                  {meta.label || e.entity}
+                                </td>
+                                <td className="py-2 text-gray-300">
+                                  {ACTION_LABELS[e.action] || e.action}
+                                </td>
+                                <td className="py-2 text-gray-400 font-mono">
+                                  {e.record_key}
+                                </td>
+                                <td className="py-2 text-gray-400">
+                                  {e.changes
+                                    ? (Object.entries(e.changes) as [
+                                        string,
+                                        [unknown, unknown],
+                                      ][]).map(([f, [o, n]]) => (
+                                        <span key={f} className="block">
+                                          <span className="text-gray-500">
+                                            {f}:
+                                          </span>{' '}
+                                          {String(o)} ← {String(n)}
+                                        </span>
+                                      ))
+                                    : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
