@@ -74,7 +74,7 @@ jobs:
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
-      DATABASE_SYNCHRONIZE: 'false'
+      DATABASE_SYNCHRONIZE: 'true'
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       APP_PORT: 3001
@@ -111,7 +111,7 @@ jobs:
           DATABASE_USERNAME=postgres
           DATABASE_PASSWORD=postgres
           DATABASE_NAME=elmostafa_test
-          DATABASE_SYNCHRONIZE=false
+          DATABASE_SYNCHRONIZE=true
           REDIS_HOST=localhost
           REDIS_PORT=6379
           FRONTEND_DOMAIN=http://localhost:3000
@@ -148,7 +148,7 @@ jobs:
 
       - name: Sync entity schema
         working-directory: backend
-        run: npm run typeorm -- schema:sync
+        run: npm run typeorm -- --dataSource=src/database/data-source.ts schema:sync
 
       - name: Run migrations
         working-directory: backend

@@ -2,6 +2,23 @@
 import { useBanking } from '@/hooks/accounting/useBanking';
 import { Building2, Plus } from 'lucide-react';
 
+interface BankAccount {
+  id: number;
+  name: string;
+  bank_name: string;
+  account_number: string;
+  balance: number;
+}
+
+interface BankTransaction {
+  id: number;
+  date: string;
+  description: string;
+  debit?: number;
+  credit?: number;
+  reference?: string;
+}
+
 export default function BankingPage() {
   const h = useBanking();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
@@ -20,7 +37,7 @@ export default function BankingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {h.accounts.map((acc: any) => (
+          {h.accounts.map((acc: BankAccount) => (
             <div key={acc.id} onClick={() => h.selectAccount(acc.id)} className={`bg-black/40 backdrop-blur-xl border rounded-xl p-6 cursor-pointer transition hover:border-blue-500/50 ${h.selectedAccount?.id === acc.id ? 'border-blue-500/50' : 'border-white/10'}`}>
               <h3 className="text-white font-semibold">{acc.name}</h3>
               <p className="text-gray-400 text-sm">{acc.bank_name}</p>
@@ -46,7 +63,7 @@ export default function BankingPage() {
                   <th className="py-3 px-4 text-right">التاريخ</th><th className="py-3 px-4 text-right">الوصف</th><th className="py-3 px-4 text-right">المدين</th><th className="py-3 px-4 text-right">الدائن</th><th className="py-3 px-4 text-right">مرجع</th>
                 </tr></thead>
                 <tbody>
-                  {h.transactions.map((tx: any) => (
+                  {h.transactions.map((tx: BankTransaction) => (
                     <tr key={tx.id} className="border-b border-white/5">
                       <td className="py-3 px-4 text-white">{new Date(tx.date).toLocaleDateString('ar')}</td>
                       <td className="py-3 px-4 text-gray-300">{tx.description}</td>

@@ -3,14 +3,25 @@ import { useState } from 'react';
 import { useFixedAssets } from '@/hooks/accounting/useFixedAssets';
 import { Landmark, Plus } from 'lucide-react';
 
+interface FixedAsset {
+  id: number;
+  asset_code: string;
+  name: string;
+  category?: string;
+  status: string;
+  purchase_cost: number;
+  accumulated_depreciation: number;
+  book_value: number;
+}
+
 export default function FixedAssetsPage() {
   const h = useFixedAssets();
   const [period] = useState(new Date().toISOString().substring(0, 7));
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
-  const totalCost = h.assets.reduce((s: number, a: any) => s + Number(a.purchase_cost), 0);
-  const totalAccumDepr = h.assets.reduce((s: number, a: any) => s + Number(a.accumulated_depreciation), 0);
-  const totalBookValue = h.assets.reduce((s: number, a: any) => s + Number(a.book_value), 0);
+  const totalCost = h.assets.reduce((s: number, a: FixedAsset) => s + Number(a.purchase_cost), 0);
+  const totalAccumDepr = h.assets.reduce((s: number, a: FixedAsset) => s + Number(a.accumulated_depreciation), 0);
+  const totalBookValue = h.assets.reduce((s: number, a: FixedAsset) => s + Number(a.book_value), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
@@ -40,7 +51,7 @@ export default function FixedAssetsPage() {
               <tbody>
                 {h.assets.length === 0 ? (
                   <tr><td colSpan={8} className="py-12 text-center text-gray-500">لا توجد أصول ثابتة</td></tr>
-                ) : h.assets.map((a: any) => (
+                ) : h.assets.map((a: FixedAsset) => (
                   <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition">
                     <td className="py-3 px-4 text-white font-mono">{a.asset_code}</td>
                     <td className="py-3 px-4 text-white">{a.name}</td>

@@ -2,6 +2,35 @@
 import { useBudgets } from '@/hooks/accounting/useBudgets';
 import { Plus, Trash2, PieChart, BarChart3, ArrowLeft } from 'lucide-react';
 
+interface BudgetLine {
+  id: number;
+  account?: { code: string; name: string };
+  budgeted_amount: number;
+}
+
+interface Budget {
+  id: number;
+  name: string;
+  period: string;
+  status: string;
+  lines: BudgetLine[];
+}
+
+interface VarianceLine {
+  account_code: string;
+  account_name: string;
+  budgeted: number;
+  actual: number;
+  variance: number;
+  variancePercent: number;
+}
+
+interface AccountOption {
+  id: number;
+  code: string;
+  name: string;
+}
+
 export default function BudgetsPage() {
   const h = useBudgets();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
@@ -40,7 +69,7 @@ export default function BudgetsPage() {
                   <th className="py-3 px-4 text-right">النسبة</th>
                 </tr></thead>
                 <tbody>
-                  {h.variance.lines?.map((l: any, i: number) => {
+                  {h.variance.lines?.map((l: VarianceLine, i: number) => {
                     const pct = Number(l.variancePercent);
                     const isOver = l.variance > 0;
                     return (
@@ -85,7 +114,7 @@ export default function BudgetsPage() {
         </div>
 
         <div className="space-y-4">
-          {h.budgets.length === 0 ? <p className="text-gray-500 text-center py-12">لا توجد ميزانيات</p> : h.budgets.map((b: any) => (
+          {h.budgets.length === 0 ? <p className="text-gray-500 text-center py-12">لا توجد ميزانيات</p> : h.budgets.map((b: Budget) => (
             <div key={b.id} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -93,7 +122,7 @@ export default function BudgetsPage() {
                   <p className="text-gray-400 text-sm">الفترة: {b.period} | الحالة: {b.status}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-white text-xl font-bold">{b.lines?.reduce((s: number, l: any) => s + Number(l.budgeted_amount), 0).toLocaleString()} ج.م</span>
+                  <span className="text-white text-xl font-bold">{b.lines?.reduce((s: number, l: BudgetLine) => s + Number(l.budgeted_amount), 0).toLocaleString()} ج.م</span>
                   <button onClick={() => h.loadVariance(b.id)} className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg border border-purple-500/30 transition flex items-center gap-2 text-sm">
                     <BarChart3 className="w-4 h-4" /> تقرير الانحرافات
                   </button>
@@ -101,7 +130,7 @@ export default function BudgetsPage() {
               </div>
               {b.lines?.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {b.lines.map((l: any) => (
+                  {b.lines.map((l: BudgetLine) => (
                     <div key={l.id} className="bg-white/5 rounded-lg p-3">
                       <p className="text-gray-400 text-xs">{l.account?.code} - {l.account?.name}</p>
                       <p className="text-white font-semibold">{Number(l.budgeted_amount).toLocaleString()} ج.م</p>
@@ -128,7 +157,7 @@ export default function BudgetsPage() {
                 {h.lines.map((line, i) => (
                   <div key={i} className="flex gap-3 mb-2">
                     <select value={line.account_id} onChange={e => h.updateLine(i, 'account_id', parseInt(e.target.value))} className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white">
-                      {h.accounts.map((a: any) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
+                      {h.accounts.map((a: AccountOption) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
                     </select>
                     <input type="number" placeholder="المبلغ" value={line.budgeted_amount || ''} onChange={e => h.updateLine(i, 'budgeted_amount', parseFloat(e.target.value) || 0)} className="w-40 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white" />
                     <button type="button" onClick={() => h.removeLine(i)} className="text-red-400 hover:text-red-300"><Trash2 className="w-5 h-5" /></button>
