@@ -146,6 +146,10 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Sync entity schema
+        working-directory: backend
+        run: npm run typeorm -- schema:sync
+
       - name: Run migrations
         working-directory: backend
         run: npm run migration:run
