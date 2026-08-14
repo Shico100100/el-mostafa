@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ghcr.io/${GHCR_NAMESPACE:-your-org/el-mostafa}/backend:latest
+    image: ghcr.io/${GHCR_NAMESPACE:-Shico100100/el-mostafa}/backend:latest
     container_name: erp-backend
     pull_policy: always
     environment:
@@ -76,6 +76,9 @@ services:
       MAIL_PORT: ${MAIL_PORT:-1025}
       MAIL_DEFAULT_EMAIL: ${MAIL_DEFAULT_EMAIL:-noreply@elmostafa.com}
       MAIL_DEFAULT_NAME: ELMostafa
+      MAIL_IGNORE_TLS: ${MAIL_IGNORE_TLS:-true}
+      MAIL_SECURE: ${MAIL_SECURE:-false}
+      MAIL_REQUIRE_TLS: ${MAIL_REQUIRE_TLS:-false}
       FILE_DRIVER: ${FILE_DRIVER:-local}
     depends_on:
       postgres:
@@ -85,7 +88,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/${GHCR_NAMESPACE:-your-org/el-mostafa}/frontend:latest
+    image: ghcr.io/${GHCR_NAMESPACE:-Shico100100/el-mostafa}/frontend:latest
     container_name: erp-frontend
     pull_policy: always
     environment:
