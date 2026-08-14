@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createElement } from 'react';
+import { createElement, type SVGProps } from 'react';
 
 const mockGetRawMaterial = vi.fn();
 const mockGetRawMaterialMovements = vi.fn();
@@ -12,20 +12,24 @@ const mockCreateStockMovement = vi.fn();
 const mockRecalculateRawMaterialStock = vi.fn();
 const mockConfirmDialog = vi.fn();
 
+interface ConfirmDialogOpts {
+  onConfirm: () => void | Promise<void>;
+}
+
 vi.mock('@/lib/api', () => ({
   api: {
-    getRawMaterial: (...args: any[]) => mockGetRawMaterial(...args),
-    getRawMaterialMovements: (...args: any[]) => mockGetRawMaterialMovements(...args),
-    deleteStockMovement: (...args: any[]) => mockDeleteStockMovement(...args),
-    updateStockMovement: (...args: any[]) => mockUpdateStockMovement(...args),
-    addRawMaterialStock: (...args: any[]) => mockAddRawMaterialStock(...args),
-    createStockMovement: (...args: any[]) => mockCreateStockMovement(...args),
-    recalculateRawMaterialStock: (...args: any[]) => mockRecalculateRawMaterialStock(...args),
+    getRawMaterial: (...args: Parameters<typeof mockGetRawMaterial>) => mockGetRawMaterial(...args),
+    getRawMaterialMovements: (...args: Parameters<typeof mockGetRawMaterialMovements>) => mockGetRawMaterialMovements(...args),
+    deleteStockMovement: (...args: Parameters<typeof mockDeleteStockMovement>) => mockDeleteStockMovement(...args),
+    updateStockMovement: (...args: Parameters<typeof mockUpdateStockMovement>) => mockUpdateStockMovement(...args),
+    addRawMaterialStock: (...args: Parameters<typeof mockAddRawMaterialStock>) => mockAddRawMaterialStock(...args),
+    createStockMovement: (...args: Parameters<typeof mockCreateStockMovement>) => mockCreateStockMovement(...args),
+    recalculateRawMaterialStock: (...args: Parameters<typeof mockRecalculateRawMaterialStock>) => mockRecalculateRawMaterialStock(...args),
   },
 }));
 
 vi.mock('@/lib/confirm-dialog', () => ({
-  confirmDialog: (...args: any[]) => mockConfirmDialog(...args),
+  confirmDialog: (...args: Parameters<typeof mockConfirmDialog>) => mockConfirmDialog(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -44,12 +48,12 @@ vi.mock('lucide-react', async () => {
   const actual = await vi.importActual('lucide-react');
   return {
     ...actual,
-    FileText: (p: any) => <svg data-testid="icon" {...p} />,
-    BarChart3: (p: any) => <svg data-testid="icon" {...p} />,
-    Plus: (p: any) => <svg data-testid="icon" {...p} />,
-    Pencil: (p: any) => <svg data-testid="icon" {...p} />,
-    Trash2: (p: any) => <svg data-testid="icon" {...p} />,
-    RefreshCw: (p: any) => <svg data-testid="icon" {...p} />,
+    FileText: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
+    BarChart3: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
+    Plus: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
+    Pencil: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
+    Trash2: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
+    RefreshCw: (p: SVGProps<SVGSVGElement>) => <svg data-testid="icon" {...p} />,
   };
 });
 
@@ -345,14 +349,14 @@ describe('RawMaterialDetailsPage', () => {
   describe('recalculate button', () => {
     it('calls recalculate API on confirm and refreshes data', async () => {
       const user = userEvent.setup();
-      let confirmOpts: any;
-      mockConfirmDialog.mockImplementation((opts: any) => { confirmOpts = opts; });
+      let confirmOpts: ConfirmDialogOpts | undefined;
+      mockConfirmDialog.mockImplementation((opts: ConfirmDialogOpts) => { confirmOpts = opts; });
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getByText('150'));
       const refreshBtn = screen.getByTitle('إعادة احتساب الرصيد من السجل');
       await user.click(refreshBtn);
       expect(mockConfirmDialog).toHaveBeenCalledTimes(1);
-      await confirmOpts.onConfirm();
+      await confirmOpts!.onConfirm();
       expect(mockRecalculateRawMaterialStock).toHaveBeenCalledWith(42);
       await waitFor(() => {
         expect(mockGetRawMaterial).toHaveBeenCalledTimes(2);
@@ -372,8 +376,8 @@ describe('RawMaterialDetailsPage', () => {
   describe('delete movement', () => {
     it('calls deleteStockMovement on confirm', async () => {
       const user = userEvent.setup();
-      let confirmOpts: any;
-      mockConfirmDialog.mockImplementation((opts: any) => { confirmOpts = opts; });
+      let confirmOpts: ConfirmDialogOpts | undefined;
+      mockConfirmDialog.mockImplementation((opts: ConfirmDialogOpts) => { confirmOpts = opts; });
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getAllByText('500'));
       const trashButtons = screen.getAllByTestId('icon').filter(el =>
@@ -381,7 +385,7 @@ describe('RawMaterialDetailsPage', () => {
       );
       await user.click(trashButtons[0].closest('button')!);
       expect(mockConfirmDialog).toHaveBeenCalledTimes(1);
-      await confirmOpts.onConfirm();
+      await confirmOpts!.onConfirm();
       expect(mockDeleteStockMovement).toHaveBeenCalledWith(1);
     });
 

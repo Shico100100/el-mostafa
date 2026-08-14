@@ -4,14 +4,22 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
+export interface AccountingPeriod {
+  id: number;
+  period: string;
+  status: string;
+  closed_by?: string | null;
+  closed_at?: string | null;
+}
+
 export function usePeriodClose() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [periods, setPeriods] = useState<any[]>([]);
+  const [periods, setPeriods] = useState<AccountingPeriod[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const data = await api.fetchWithAuth<any[]>('/accounting/period-close');
+      const data = await api.fetchWithAuth<AccountingPeriod[]>('/accounting/period-close');
       setPeriods(data || []);
     } catch { toast.error('فشل تحميل الفترات'); }
     finally { setLoading(false); }

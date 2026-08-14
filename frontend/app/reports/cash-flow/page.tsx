@@ -5,6 +5,28 @@ import { ArrowDownLeft, ArrowUpRight, Wallet, FileDown, ChevronDown, ChevronUp }
 import { exportElementToPdf } from '@/lib/pdf-reports';
 import { useState } from 'react';
 
+interface CashFlowLine {
+  account_code: string | null;
+  account_name: string;
+  type: string;
+  debit: number;
+  credit: number;
+  net: number;
+}
+
+interface CashFlowSection {
+  items: CashFlowLine[];
+  total: number;
+}
+
+interface CashFlowReport {
+  period?: { start?: string; end?: string };
+  operating_activities?: CashFlowSection;
+  investing_activities?: CashFlowSection;
+  financing_activities?: CashFlowSection;
+  net_cash_flow: number;
+}
+
 export default function CashFlowPage() {
   const h = useFinancialReports();
   const [showOperating, setShowOperating] = useState(false);
@@ -13,7 +35,7 @@ export default function CashFlowPage() {
 
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
-  const cf = h.cashFlow;
+  const cf = h.cashFlow as CashFlowReport | null;
   const opTotal = Number(cf?.operating_activities?.total ?? cf?.operating_activities ?? 0);
   const invTotal = Number(cf?.investing_activities?.total ?? cf?.investing_activities ?? 0);
   const finTotal = Number(cf?.financing_activities?.total ?? cf?.financing_activities ?? 0);
@@ -21,11 +43,11 @@ export default function CashFlowPage() {
   const invItems = cf?.investing_activities?.items || [];
   const finItems = cf?.financing_activities?.items || [];
 
-  const renderItems = (items: any[]) => items.length === 0 ? (
+  const renderItems = (items: CashFlowLine[]) => items.length === 0 ? (
     <p className="text-gray-500 text-sm text-center py-2">لا توجد بنود</p>
   ) : (
     <div className="mt-3 space-y-1">
-      {items.map((item: any, i: number) => (
+      {items.map((item: CashFlowLine, i: number) => (
         <div key={i} className="flex justify-between text-sm py-1 border-b border-white/5">
           <span className="text-gray-300">{item.account_code} - {item.account_name}</span>
           <span className={`font-semibold ${item.net >= 0 ? 'text-green-400' : 'text-red-400'}`}>

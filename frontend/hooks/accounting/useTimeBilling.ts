@@ -5,17 +5,28 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
+export interface TimeEntry {
+  id: number;
+  date: string;
+  job?: { id: number; name: string } | null;
+  hours: number;
+  description?: string;
+  is_billable: boolean;
+  is_billed: boolean;
+  billing_rate?: number;
+}
+
 export function useTimeBilling() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<any[]>([]);
-  const [unbilled, setUnbilled] = useState<any[]>([]);
+  const [entries, setEntries] = useState<TimeEntry[]>([]);
+  const [unbilled, setUnbilled] = useState<TimeEntry[]>([]);
 
   const loadData = useCallback(async () => {
     try {
       const [entriesData, unbilledData] = await Promise.all([
-        api.fetchWithAuth<any[]>('/accounting/time-billing/entries'),
-        api.fetchWithAuth<any[]>('/accounting/time-billing/unbilled'),
+        api.fetchWithAuth<TimeEntry[]>('/accounting/time-billing/entries'),
+        api.fetchWithAuth<TimeEntry[]>('/accounting/time-billing/unbilled'),
       ]);
       setEntries(entriesData || []);
       setUnbilled(unbilledData || []);

@@ -21,7 +21,7 @@ export default function PurchaseCreditMemosPage() {
               <tbody>
                 {h.memos.length === 0 ? (
                   <tr><td colSpan={6} className="py-12 text-center text-gray-500">لا توجد إشعارات دائنة</td></tr>
-                ) : h.memos.map((m: any) => (
+                ) : h.memos.map((m) => (
                   <tr key={m.id} className="border-b border-white/5 hover:bg-white/5 transition">
                     <td className="py-3 px-4 text-white font-mono">#{m.id}</td>
                     <td className="py-3 px-4 text-gray-300">{new Date(m.date).toLocaleDateString('ar')}</td>

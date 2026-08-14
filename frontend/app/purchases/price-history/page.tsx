@@ -19,12 +19,17 @@ interface ProductHistory {
   prices: PriceRecord[];
 }
 
+interface Product {
+  id: number;
+  name: string;
+}
+
 export default function PriceHistoryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductHistory[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<number | ''>('');
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   const loadHistory = async (pid?: number) => {
     setLoading(true);
@@ -38,7 +43,7 @@ export default function PriceHistoryPage() {
 
   const loadProducts = async () => {
     try {
-      const result = await api.fetchWithAuth<any[]>('/inventory/products');
+      const result = await api.fetchWithAuth<Product[]>('/inventory/products');
       setAllProducts(result);
     } catch { /* empty */ }
   };
@@ -87,7 +92,7 @@ export default function PriceHistoryPage() {
             <select value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value ? +e.target.value : '')}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
               <option value="" className="bg-slate-800">جميع المنتجات</option>
-              {allProducts.map((p: any) => (
+              {allProducts.map((p) => (
                 <option key={p.id} value={p.id} className="bg-slate-800">{p.name}</option>
               ))}
             </select>

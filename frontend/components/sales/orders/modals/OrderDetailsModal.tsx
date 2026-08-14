@@ -13,7 +13,7 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
   useEffect(() => {
     if (!orderId) return;
     api.fetchWithAuth(`/sales/orders/${orderId}/items`)
-      .then((data: any) => setItems(data.value || data))
+      .then((data: OrderItem[] | { value?: OrderItem[] }) => setItems(Array.isArray(data) ? data : data.value ?? []))
       .catch(() => setItems([]));
   }, [orderId]);
   if (!order) return null;

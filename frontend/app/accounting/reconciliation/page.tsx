@@ -51,8 +51,8 @@ export default function ReconciliationPage() {
       const result = await api.fetchWithAuth<ReconciliationSummary>('/v1/accounting/reconciliation');
       setData(result);
       setError('');
-    } catch (e: any) {
-      setError(e?.message || 'خطأ في تحميل البيانات');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'خطأ في تحميل البيانات');
     } finally {
       setLoading(false);
     }

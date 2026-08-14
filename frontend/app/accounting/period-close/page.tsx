@@ -31,7 +31,7 @@ export default function PeriodClosePage() {
               <tbody>
                 {h.periods.length === 0 ? (
                   <tr><td colSpan={5} className="py-12 text-center text-gray-500">لا توجد فترات مسجلة</td></tr>
-                ) : h.periods.map((p: any) => (
+                ) : h.periods.map((p) => (
                   <tr key={p.id} className="border-b border-white/5">
                     <td className="py-3 px-4 text-white font-semibold">{p.period}</td>
                     <td className="py-3 px-4"><span className={`px-2 py-1 rounded-full text-xs ${p.status === 'CLOSED' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{p.status === 'CLOSED' ? 'مغلقة' : 'مفتوحة'}</span></td>

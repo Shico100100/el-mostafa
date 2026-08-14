@@ -1,4 +1,4 @@
-export function exportToCsv(data: Record<string, any>[], filename: string) {
+export function exportToCsv(data: Record<string, string | number | boolean | null | undefined>[], filename: string) {
   if (!data.length) return;
   const headers = Object.keys(data[0]);
   const csvRows = [
@@ -21,7 +21,7 @@ export function exportToCsv(data: Record<string, any>[], filename: string) {
   URL.revokeObjectURL(link.href);
 }
 
-export function arrayToCsv(rows: any[][], headers: string[], filename: string) {
+export function arrayToCsv(rows: (string | number | boolean | null | undefined)[][], headers: string[], filename: string) {
   const csvRows = [
     '\uFEFF' + headers.join(','),
     ...rows.map(row =>

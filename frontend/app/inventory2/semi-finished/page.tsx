@@ -21,8 +21,8 @@ export default function SemiFinishedPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.fetchWithAuth<SemiProduct[]>('/inventory/products?type=SEMI_FINISHED');
-      setProducts(Array.isArray(data) ? data : (data as any)?.data ?? []);
+      const data = await api.fetchWithAuth<SemiProduct[] | { data?: SemiProduct[] }>('/inventory/products?type=SEMI_FINISHED');
+      setProducts(Array.isArray(data) ? data : data.data ?? []);
     } catch {
       toast.error('فشل تحميل المخزون');
     } finally { setLoading(false); }

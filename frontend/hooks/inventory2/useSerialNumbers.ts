@@ -5,10 +5,21 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
+export interface SerialNumber {
+  id: number;
+  serial_number: string;
+  product_id: number;
+  batch_number?: string;
+  status: string;
+  warehouse_id?: number;
+  warehouse_name?: string;
+  product_name?: string;
+}
+
 export function useSerialNumbers() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<SerialNumber[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ product_id: 0, serial_number: '', batch_number: '', warehouse_id: 0 });
   const [filterStatus, setFilterStatus] = useState('');
@@ -17,7 +28,7 @@ export function useSerialNumbers() {
     try {
       const params = new URLSearchParams();
       if (filterStatus) params.set('status', filterStatus);
-      const data = await api.fetchWithAuth<any[]>(`/inventory/serial-numbers?${params}`);
+      const data = await api.fetchWithAuth<SerialNumber[]>(`/inventory/serial-numbers?${params}`);
       setItems(data || []);
     } catch { toast.error('فشل تحميل البيانات'); }
     finally { setLoading(false); }

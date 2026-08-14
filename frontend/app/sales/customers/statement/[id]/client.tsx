@@ -21,6 +21,17 @@ interface Transaction {
     description?: string;
 }
 
+interface StatementEntry {
+    id: number;
+    ref: number;
+    date: string;
+    description: string;
+    debit: number;
+    credit: number;
+    type: 'ORDER' | 'RETURN' | 'PAYMENT';
+    balance: number;
+}
+
 export default function CustomerStatementPage() {
     const { id } = useParams();
     const [customer, setCustomer] = useState<Customer | null>(null);
@@ -34,8 +45,8 @@ export default function CustomerStatementPage() {
             setCustomer(cust);
 
             if (cust) {
-                const trans = await api.fetchWithAuth(`/sales/customers/${id}/statement`);
-                setTransactions((trans || []).map((t: any) => ({
+                const trans = await api.fetchWithAuth<StatementEntry[]>(`/sales/customers/${id}/statement`);
+                setTransactions((trans || []).map((t) => ({
                   id: t.ref || t.id,
                   type: t.type === 'ORDER' ? 'INVOICE' : t.type,
                   amount: Number(t.debit || t.credit),

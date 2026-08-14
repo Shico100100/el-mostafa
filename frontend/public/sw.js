@@ -4,7 +4,7 @@ const PAGE_CACHE = 'elmostafa-pages-v2';
 
 const STATIC_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|json)$/;
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 

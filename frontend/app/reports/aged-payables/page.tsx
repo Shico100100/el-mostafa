@@ -4,6 +4,16 @@ import { useFinancialReports } from '@/hooks/reports/useFinancialReports';
 import { Building2, FileDown } from 'lucide-react';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
+interface AgedPayableItem {
+  supplier_name?: string;
+  name?: string;
+  current?: number;
+  days_30?: number;
+  days_60?: number;
+  days_90_plus?: number;
+  total?: number;
+}
+
 export default function AgedPayablesPage() {
   const h = useFinancialReports();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
@@ -31,7 +41,7 @@ export default function AgedPayablesPage() {
                 <tbody>
                   {h.agedPayables.length === 0 ? (
                     <tr><td colSpan={6} className="py-12 text-center text-gray-500">لا توجد حسابات دائنة</td></tr>
-                  ) : h.agedPayables.map((p: any, i: number) => (
+                  ) : h.agedPayables.map((p: AgedPayableItem, i: number) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
                       <td className="py-3 px-4 text-white font-semibold">{p.supplier_name || p.name || 'مورد'}</td>
                       <td className="py-3 px-4 text-green-400">{Number(p.current || 0).toLocaleString()}</td>

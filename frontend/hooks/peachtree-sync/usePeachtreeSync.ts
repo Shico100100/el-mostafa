@@ -5,6 +5,25 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
+export interface SyncEntityResult {
+  entity: string;
+  status?: string;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsSkipped: number;
+  errors?: string[];
+}
+
+export interface SyncHistoryEntry {
+  id: string;
+  startedAt?: string;
+  started_at?: string;
+  status?: string;
+  records_synced?: number;
+  duration_ms?: number;
+  results?: SyncEntityResult[];
+}
+
 export function usePeachtreeSync() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -12,7 +31,7 @@ export function usePeachtreeSync() {
   const [resyncing, setResyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   const [connected, setConnected] = useState<boolean | null>(null);
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<SyncHistoryEntry[]>([]);
   const [tables, setTables] = useState<string[]>([]);
   const [dsn, setDsn] = useState('');
   const [connectionError, setConnectionError] = useState('');
@@ -20,7 +39,7 @@ export function usePeachtreeSync() {
   const loadData = useCallback(async () => {
     try {
       const [historyData, configData, tablesData] = await Promise.all([
-        api.fetchWithAuth<any[]>('/peachtree-sync/status'),
+        api.fetchWithAuth<SyncHistoryEntry[]>('/peachtree-sync/status'),
         api.fetchWithAuth<{ dsn: string }>('/peachtree-sync/config'),
         api.fetchWithAuth<string[]>('/peachtree-sync/tables').catch(() => []),
       ]);

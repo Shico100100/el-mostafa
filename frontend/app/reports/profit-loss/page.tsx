@@ -4,11 +4,25 @@ import { useFinancialReports } from '@/hooks/reports/useFinancialReports';
 import { TrendingUp, TrendingDown, DollarSign, FileDown } from 'lucide-react';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
+interface ProfitLossLine {
+  code: string;
+  name: string;
+  balance: number;
+}
+
+interface ProfitLossReport {
+  period?: { start?: string; end?: string };
+  revenue?: { items?: ProfitLossLine[]; total?: number };
+  expenses?: { items?: ProfitLossLine[]; total?: number };
+  net_profit?: number;
+  is_profit?: boolean;
+}
+
 export default function ProfitLossPage() {
   const h = useFinancialReports();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
-  const pl = h.profitLoss;
+  const pl = h.profitLoss as ProfitLossReport | null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
@@ -38,7 +52,7 @@ export default function ProfitLossPage() {
                   <p className="text-gray-500 text-center py-6">لا توجد إيرادات</p>
                 ) : (
                   <div className="space-y-3">
-                    {pl.revenue?.items?.map((r: any, i: number) => (
+                    {pl.revenue?.items?.map((r: ProfitLossLine, i: number) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
                         <span className="text-gray-300">{r.code} - {r.name}</span>
                         <span className="text-green-400 font-bold">{Number(r.balance || 0).toLocaleString()} ج.م</span>
@@ -59,7 +73,7 @@ export default function ProfitLossPage() {
                   <p className="text-gray-500 text-center py-6">لا توجد مصروفات</p>
                 ) : (
                   <div className="space-y-3">
-                    {pl.expenses?.items?.map((e: any, i: number) => (
+                    {pl.expenses?.items?.map((e: ProfitLossLine, i: number) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
                         <span className="text-gray-300">{e.code} - {e.name}</span>
                         <span className="text-red-400 font-bold">{Number(e.balance || 0).toLocaleString()} ج.م</span>

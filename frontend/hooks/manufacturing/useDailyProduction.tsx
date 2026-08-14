@@ -95,12 +95,17 @@ export function useDailyProduction() {
         api.getMolds(),
         api.getRawMaterials(),
       ]);
-      setDailyRecords(Array.isArray(daily) ? daily : (daily as any)?.items ?? []);
-      setWeeklyRecords(Array.isArray(weekly) ? weekly : (weekly as any)?.items ?? []);
-      setMachines(Array.isArray(mach) ? mach.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')) : (mach as any)?.items?.sort((a: Machine, b: Machine) => a.name.localeCompare(b.name, 'ar')) ?? []);
-      setMolds(Array.isArray(mol) ? mol.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) : (mol as any)?.items?.sort((a: Mold, b: Mold) => a.name.localeCompare(b.name, 'ar')) ?? []);
-      setRawMaterials(Array.isArray(mat) ? mat.sort((a: RawMaterial, b: RawMaterial) =>
-        (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')) : (mat as any)?.items?.sort((a: RawMaterial, b: RawMaterial) =>
+      const dailyList = daily as ProductionRecord[] | { items?: ProductionRecord[] };
+      const weeklyList = weekly as ProductionRecord[] | { items?: ProductionRecord[] };
+      const machinesList = mach as Machine[] | { items?: Machine[] };
+      const moldsList = mol as Mold[] | { items?: Mold[] };
+      const rawMaterialsList = mat as RawMaterial[] | { items?: RawMaterial[] };
+      setDailyRecords(Array.isArray(dailyList) ? dailyList : (dailyList.items ?? []));
+      setWeeklyRecords(Array.isArray(weeklyList) ? weeklyList : (weeklyList.items ?? []));
+      setMachines(Array.isArray(machinesList) ? machinesList.sort((a, b) => a.name.localeCompare(b.name, 'ar')) : machinesList.items?.sort((a, b) => a.name.localeCompare(b.name, 'ar')) ?? []);
+      setMolds(Array.isArray(moldsList) ? moldsList.sort((a, b) => a.name.localeCompare(b.name, 'ar')) : moldsList.items?.sort((a, b) => a.name.localeCompare(b.name, 'ar')) ?? []);
+      setRawMaterials(Array.isArray(rawMaterialsList) ? rawMaterialsList.sort((a, b) =>
+        (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')) : rawMaterialsList.items?.sort((a, b) =>
         (a.product?.name || '').localeCompare(b.product?.name || '', 'ar')) ?? []);
     } catch (error) {
       console.error('Failed to fetch data:', error);

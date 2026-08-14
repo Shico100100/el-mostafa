@@ -24,8 +24,10 @@ export function useMolds() {
         api.fetchWithAuth('/manufacturing/molds'),
         api.fetchWithAuth('/inventory/products'),
       ]);
-      setMolds(sortAlphabetically(Array.isArray(moldsData) ? moldsData : (moldsData as any)?.items ?? [], 'name'));
-      setProducts(sortAlphabetically(Array.isArray(productsData) ? productsData : (productsData as any)?.data ?? [], 'name'));
+      const moldsList = moldsData as Mold[] | { items?: Mold[] };
+      const productsList = productsData as Product[] | { data?: Product[] };
+      setMolds(sortAlphabetically(Array.isArray(moldsList) ? moldsList : (moldsList.items ?? []), 'name'));
+      setProducts(sortAlphabetically(Array.isArray(productsList) ? productsList : (productsList.data ?? []), 'name'));
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

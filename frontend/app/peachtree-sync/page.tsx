@@ -5,10 +5,11 @@ import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import {
   Link2, Play, CheckCircle2, XCircle, RefreshCw, Database, Settings,
   Users, Truck, Package, FileText, ChevronDown, ChevronUp,
+  type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 
-const ENTITY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
+const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
   customers: { label: 'العملاء', icon: Users, color: 'text-blue-400' },
   suppliers: { label: 'الموردين', icon: Truck, color: 'text-orange-400' },
   products: { label: 'المنتجات', icon: Package, color: 'text-green-400' },
@@ -200,11 +201,11 @@ export default function PeachtreeSyncPage() {
                       لم تتم أي مزامنة بعد
                     </td>
                   </tr>
-                ) : h.history.map((entry: any) => (
+                ) : h.history.map((entry) => (
                   <Fragment key={entry.id}>
                     <tr className="border-b border-white/5 hover:bg-white/5 transition">
                       <td className="py-3 px-4 text-white">
-                        {new Date(entry.startedAt || entry.started_at).toLocaleString('ar-EG')}
+                        {new Date((entry.startedAt || entry.started_at) as string).toLocaleString('ar-EG')}
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -219,7 +220,7 @@ export default function PeachtreeSyncPage() {
                       </td>
                       <td className="py-3 px-4 text-blue-400 font-semibold">
                         {entry.records_synced ?? entry.results?.reduce?.(
-                          (s: number, r: any) => s + (r.recordsCreated || 0) + (r.recordsUpdated || 0), 0
+                          (s: number, r) => s + (r.recordsCreated || 0) + (r.recordsUpdated || 0), 0
                         ) ?? '-'}
                       </td>
                       <td className="py-3 px-4 text-gray-400">
@@ -241,7 +242,7 @@ export default function PeachtreeSyncPage() {
                       <tr key={`${entry.id}-details`}>
                         <td colSpan={5} className="px-6 py-4 bg-black/30">
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {entry.results.map((r: any) => {
+                            {entry.results.map((r) => {
                               const meta = ENTITY_LABELS[r.entity] || { label: r.entity, icon: Package, color: 'text-gray-400' };
                               const Icon = meta.icon;
                               return (

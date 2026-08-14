@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { LucideProps } from 'lucide-react';
 
 vi.mock('@/hooks/peachtree-sync/usePeachtreeSync', () => ({
   usePeachtreeSync: vi.fn(),
@@ -10,30 +11,31 @@ vi.mock('lucide-react', async () => {
   const actual = await vi.importActual('lucide-react');
   return {
     ...actual,
-    Link2: (p: any) => <svg data-testid="icon" {...p} />,
-    Play: (p: any) => <svg data-testid="icon" {...p} />,
-    CheckCircle2: (p: any) => <svg data-testid="icon" {...p} />,
-    XCircle: (p: any) => <svg data-testid="icon" {...p} />,
-    RefreshCw: (p: any) => <svg data-testid="icon" {...p} />,
-    Database: (p: any) => <svg data-testid="icon" {...p} />,
-    Settings: (p: any) => <svg data-testid="icon" {...p} />,
-    Users: (p: any) => <svg data-testid="icon" {...p} />,
-    Truck: (p: any) => <svg data-testid="icon" {...p} />,
-    Package: (p: any) => <svg data-testid="icon" {...p} />,
-    BookOpen: (p: any) => <svg data-testid="icon" {...p} />,
-    FileText: (p: any) => <svg data-testid="icon" {...p} />,
-    Wallet: (p: any) => <svg data-testid="icon" {...p} />,
-    UserCheck: (p: any) => <svg data-testid="icon" {...p} />,
-    LayoutGrid: (p: any) => <svg data-testid="icon" {...p} />,
-    Building2: (p: any) => <svg data-testid="icon" {...p} />,
-    Briefcase: (p: any) => <svg data-testid="icon" {...p} />,
-    Receipt: (p: any) => <svg data-testid="icon" {...p} />,
-    ChevronDown: (p: any) => <svg data-testid="icon" {...p} />,
-    ChevronUp: (p: any) => <svg data-testid="icon" {...p} />,
+    Link2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Play: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    CheckCircle2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    XCircle: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    RefreshCw: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Database: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Settings: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Users: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Truck: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Package: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    BookOpen: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    FileText: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Wallet: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    UserCheck: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    LayoutGrid: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Building2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Briefcase: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Receipt: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    ChevronDown: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    ChevronUp: (p: LucideProps) => <svg data-testid="icon" {...p} />,
   };
 });
 
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import type { SyncHistoryEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import PeachtreeSyncPage from './page';
 import { createElement } from 'react';
 
@@ -47,7 +49,7 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     testing: false,
     connected: null as boolean | null,
     connectionError: '',
-    history: [] as any[],
+    history: [] as SyncHistoryEntry[],
     tables: [] as string[],
     dsn: '',
     setDsn: vi.fn(),

@@ -20,6 +20,17 @@ interface Transaction {
     description?: string;
 }
 
+interface StatementEntry {
+    id: number;
+    ref: number;
+    date: string;
+    description: string;
+    debit: number;
+    credit: number;
+    type: 'ORDER' | 'RETURN' | 'PAYMENT';
+    balance: number;
+}
+
 export default function SupplierStatementPage() {
     const { id } = useParams();
     const [supplier, setSupplier] = useState<Supplier | null>(null);
@@ -33,8 +44,8 @@ export default function SupplierStatementPage() {
             setSupplier(supp);
 
             if (supp) {
-                const trans = await api.fetchWithAuth(`/purchases/suppliers/${id}/statement`);
-                setTransactions((trans || []).map((t: any) => ({
+                const trans = await api.fetchWithAuth<StatementEntry[]>(`/purchases/suppliers/${id}/statement`);
+                setTransactions((trans || []).map((t) => ({
                   id: t.ref || t.id,
                   type: t.type === 'ORDER' ? 'INVOICE' : t.type,
                   amount: Number(t.debit || t.credit),

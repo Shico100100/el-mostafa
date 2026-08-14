@@ -4,11 +4,27 @@ import { useFinancialReports } from '@/hooks/reports/useFinancialReports';
 import { Landmark, TrendingUp, TrendingDown, FileDown } from 'lucide-react';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
+interface BalanceSheetLine {
+  account_name?: string;
+  name?: string;
+  balance?: number;
+  amount?: number;
+}
+
+interface BalanceSheetReport {
+  assets?: BalanceSheetLine[];
+  liabilities?: BalanceSheetLine[];
+  equity?: BalanceSheetLine[];
+  total_assets?: number;
+  total_liabilities?: number;
+  total_equity?: number;
+}
+
 export default function BalanceSheetPage() {
   const h = useFinancialReports();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
-  const bs = h.balanceSheet;
+  const bs = h.balanceSheet as BalanceSheetReport | null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
@@ -30,7 +46,7 @@ export default function BalanceSheetPage() {
                   <p className="text-gray-500 text-center py-6">لا توجد أصول</p>
                 ) : (
                   <div className="space-y-3">
-                    {bs.assets?.map((a: any, i: number) => (
+                    {bs.assets?.map((a: BalanceSheetLine, i: number) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
                         <span className="text-gray-300">{a.account_name || a.name}</span>
                         <span className="text-green-400 font-bold">{Number(a.balance || a.amount).toLocaleString()} ج.م</span>
@@ -51,13 +67,13 @@ export default function BalanceSheetPage() {
                   <p className="text-gray-500 text-center py-6">لا توجد بيانات</p>
                 ) : (
                   <div className="space-y-3">
-                    {bs.liabilities?.map((l: any, i: number) => (
+                    {bs.liabilities?.map((l: BalanceSheetLine, i: number) => (
                       <div key={`l-${i}`} className="flex justify-between items-center py-2 border-b border-white/5">
                         <span className="text-gray-300">{l.account_name || l.name}</span>
                         <span className="text-red-400 font-bold">{Number(l.balance || l.amount).toLocaleString()} ج.م</span>
                       </div>
                     ))}
-                    {bs.equity?.map((e: any, i: number) => (
+                    {bs.equity?.map((e: BalanceSheetLine, i: number) => (
                       <div key={`e-${i}`} className="flex justify-between items-center py-2 border-b border-white/5">
                         <span className="text-gray-300">{e.account_name || e.name}</span>
                         <span className="text-amber-400 font-bold">{Number(e.balance || e.amount).toLocaleString()} ج.م</span>

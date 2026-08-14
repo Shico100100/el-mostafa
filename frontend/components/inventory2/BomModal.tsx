@@ -87,8 +87,8 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
       }
       onSaved();
       onClose();
-    } catch (e: any) {
-      toast.error(e.message || 'فشل حفظ المكونات');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'فشل حفظ المكونات');
     } finally {
       setSaving(false);
     }

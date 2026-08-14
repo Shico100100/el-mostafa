@@ -8,6 +8,12 @@ import type { Product } from '@/components/inventory2/types';
 
 interface Warehouse { id: number; name: string; }
 interface ProductResponse { data: Product[]; total: number; totalPages: number; page: number; limit: number; }
+interface ProductData {
+  id?: number; name: string; type: string; unit: string;
+  selling_price: number; stock_quantity: number;
+  min_stock?: number | null; warehouse_id?: number; description?: string | null;
+  weight_grams?: number | null; image_path?: string | null;
+}
 
 export function useProducts() {
   const router = useRouter();
@@ -143,7 +149,7 @@ export function useProducts() {
     e.target.value = '';
   };
 
-  const handleSaveProduct = async (data: any) => {
+  const handleSaveProduct = async (data: ProductData) => {
     try {
       const { stock_quantity, ...clean } = data;
       if (editingProduct) {
@@ -156,11 +162,11 @@ export function useProducts() {
       setShowModal(false);
       setEditingProduct(null);
       loadData();
-    } catch (e: any) { toast.error(e.message || 'فشل الحفظ'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'فشل الحفظ'); }
   };
 
   const handleDelete = (id: number) => {
-    toast.custom((t: any) => (
+    toast.custom((t: number | string) => (
       <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
         <p className="text-white text-lg font-semibold mb-4">هل أنت متأكد من الحذف؟</p>
         <div className="flex gap-3 justify-end">
@@ -218,7 +224,7 @@ export function useProducts() {
   };
 
   const handleMarkDormant = async (productId: number) => {
-    toast.custom((t: any) => (
+    toast.custom((t: number | string) => (
       <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
         <p className="text-white text-lg font-semibold mb-4">نقل المنتج إلى المخزن الخامل؟</p>
         <p className="text-slate-400 text-sm mb-4">سيتم نقل المخزون الحالي إلى المخزن الخامل وإخفاء المنتج من القائمة الافتراضية</p>
@@ -238,7 +244,7 @@ export function useProducts() {
   };
 
   const handleRestoreProduct = async (productId: number) => {
-    toast.custom((t: any) => (
+    toast.custom((t: number | string) => (
       <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
         <p className="text-white text-lg font-semibold mb-4">استرجاع المنتج من الخامل؟</p>
         <p className="text-slate-400 text-sm mb-4">سيتم نقل المخزون إلى مخزن المنتج التام وإعادة المنتج للقائمة</p>
@@ -262,7 +268,7 @@ export function useProducts() {
       const result = await api.fetchWithAuth<{ message: string }>('/inventory/products/smart-assign', { method: 'POST' });
       toast.success(result.message || 'تم التوزيع');
       loadData();
-    } catch (e: any) { toast.error(e.message || 'فشل التوزيع'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'فشل التوزيع'); }
   };
 
   const margin = (p: Product) => {

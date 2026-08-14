@@ -13,7 +13,7 @@ vi.mock('@/hooks/peachtree-sync/usePeachtreeSync', () => ({
 }));
 
 vi.mock('@/components/BackButton', () => ({
-  useSetBackButton: (...args: any[]) => mocks.useSetBackButton(...args),
+  useSetBackButton: (...args: Parameters<typeof mocks.useSetBackButton>) => mocks.useSetBackButton(...args),
 }));
 
 vi.mock('@/hooks/sales/useSalesOrders', () => ({

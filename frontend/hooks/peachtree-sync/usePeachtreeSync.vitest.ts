@@ -18,15 +18,15 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api', () => ({
   api: {
-    fetchWithAuth: (...args: any[]) => mocks.fetchWithAuth(...args),
+    fetchWithAuth: (...args: Parameters<typeof mocks.fetchWithAuth>) => mocks.fetchWithAuth(...args),
   },
 }));
 
 vi.mock('sonner', () => ({
   toast: {
-    success: (...args: any[]) => mocks.toastSuccess(...args),
-    error: (...args: any[]) => mocks.toastError(...args),
-    info: (...args: any[]) => mocks.toastInfo(...args),
+    success: (...args: Parameters<typeof mocks.toastSuccess>) => mocks.toastSuccess(...args),
+    error: (...args: Parameters<typeof mocks.toastError>) => mocks.toastError(...args),
+    info: (...args: Parameters<typeof mocks.toastInfo>) => mocks.toastInfo(...args),
   },
 }));
 

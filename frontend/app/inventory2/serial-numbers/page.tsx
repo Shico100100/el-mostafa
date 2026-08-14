@@ -49,7 +49,7 @@ export default function SerialNumbersPage() {
               <tbody>
                 {h.items.length === 0 ? (
                   <tr><td colSpan={5} className="py-12 text-center text-gray-500">لا توجد أرقام تسلسلية</td></tr>
-                ) : h.items.map((item: any) => {
+                ) : h.items.map((item) => {
                   const st = STATUS_MAP[item.status] || { label: item.status, color: 'bg-gray-500/20 text-gray-400' };
                   return (
                     <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition">

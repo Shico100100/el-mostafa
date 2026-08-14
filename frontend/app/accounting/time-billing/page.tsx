@@ -7,8 +7,8 @@ export default function TimeBillingPage() {
   const h = useTimeBilling();
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
-  const totalUnbilledHours = h.unbilled.reduce((s: number, e: any) => s + Number(e.hours), 0);
-  const totalUnbilledValue = h.unbilled.reduce((s: number, e: any) => s + Number(e.hours) * Number(e.billing_rate), 0);
+  const totalUnbilledHours = h.unbilled.reduce((s: number, e) => s + Number(e.hours), 0);
+  const totalUnbilledValue = h.unbilled.reduce((s: number, e) => s + Number(e.hours) * Number(e.billing_rate), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
@@ -31,7 +31,7 @@ export default function TimeBillingPage() {
               <tbody>
                 {h.entries.length === 0 ? (
                   <tr><td colSpan={6} className="py-12 text-center text-gray-500">لا توجد سجلات وقت</td></tr>
-                ) : h.entries.map((e: any) => (
+                ) : h.entries.map((e) => (
                   <tr key={e.id} className="border-b border-white/5 hover:bg-white/5 transition">
                     <td className="py-3 px-4 text-white">{new Date(e.date).toLocaleDateString('ar')}</td>
                     <td className="py-3 px-4 text-gray-300">{e.job?.name || '-'}</td>

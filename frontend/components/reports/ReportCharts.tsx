@@ -4,7 +4,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts';
-
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 export function ReportBarChart({ data, title, xKey = 'name', yKey = 'value', color = '#3b82f6' }: {
@@ -25,7 +24,7 @@ export function ReportBarChart({ data, title, xKey = 'name', yKey = 'value', col
           <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
           <Tooltip
             contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
-            formatter={(value: any) => [`${Number(value).toLocaleString()} ج.م`]}
+            formatter={(value) => [`${Number(value).toLocaleString()} ج.م`]}
           />
           <Bar dataKey={yKey} fill={color} radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -45,14 +44,14 @@ export function ReportPieChart({ data, title }: {
       <ResponsiveContainer width="100%" height={260}>
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={50}
-            label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
+            label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
             labelLine={{ stroke: '#64748b' }}
           >
             {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
           </Pie>
           <Tooltip
             contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
-            formatter={(value: any) => [`${Number(value).toLocaleString()} ج.م`]}
+            formatter={(value) => [`${Number(value).toLocaleString()} ج.م`]}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -61,7 +60,7 @@ export function ReportPieChart({ data, title }: {
 }
 
 export function ReportLineChart({ data, title, xKey = 'date', lines }: {
-  data: Record<string, any>[];
+  data: Record<string, string | number | null | undefined>[];
   title: string;
   xKey?: string;
   lines: { key: string; color: string; name: string }[];
@@ -77,7 +76,7 @@ export function ReportLineChart({ data, title, xKey = 'date', lines }: {
           <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
           <Tooltip
             contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
-            formatter={(value: any) => [`${Number(value).toLocaleString()} ج.م`]}
+            formatter={(value) => [`${Number(value).toLocaleString()} ج.م`]}
           />
           <Legend />
           {lines.map(l => (
@@ -104,7 +103,7 @@ export function ReportComparisonChart({ data, title }: {
           <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} />
           <Tooltip
             contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
-            formatter={(value: any) => [`${Number(value).toLocaleString()} ج.م`]}
+            formatter={(value) => [`${Number(value).toLocaleString()} ج.م`]}
           />
           <Legend />
           <Bar dataKey="revenue" name="الإيراد" fill="#10b981" radius={[4, 4, 0, 0]} />

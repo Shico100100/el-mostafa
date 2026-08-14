@@ -1,12 +1,23 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { useManufacturingDashboard } from '@/hooks/manufacturing/useManufacturingDashboard';
 import { ManufacturingHeader } from '@/components/manufacturing/dashboard/ManufacturingHeader';
 import { NavCard, NavButton } from '@/components/manufacturing/dashboard/NavCard';
 import { SummarySection } from '@/components/manufacturing/dashboard/SummarySection';
 import { AlertSection } from '@/components/manufacturing/dashboard/AlertSection';
 import { BarChart3, Box, DollarSign, FileText, Search, Wrench, Factory, Settings, Link } from 'lucide-react';
+
+interface GradientCard {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  gradient: string;
+  borderClass?: string;
+  onClick: () => void;
+  badge?: string;
+}
 
 export default function ManufacturingDashboard() {
   const router = useRouter();
@@ -18,7 +29,7 @@ export default function ManufacturingDashboard() {
     { icon: <DollarSign />, title: 'التكاليف الثابتة', description: 'إيجار، كهرباء، ومصروفات أخرى', onClick: () => router.push('/manufacturing/fixed-costs') },
   ];
 
-  const gradientCards = [
+  const gradientCards: GradientCard[] = [
     { icon: <FileText />, title: 'قائمة المكونات BOM', description: 'تفجير المكونات وحساب الأوزان والتكاليف', gradient: 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10', borderClass: 'border-emerald-500/20', onClick: () => router.push('/bom') },
     { icon: <Search />, title: 'المخزون', description: 'لوحة المخزون وحركاته', gradient: 'bg-gradient-to-br from-cyan-500/10 to-blue-500/10', borderClass: 'border-cyan-500/20', onClick: () => router.push('/inventory2') },
     { icon: <Wrench />, title: 'إدارة الصيانة', description: 'متابعة ومواعيد صيانة الماكينات', gradient: 'bg-gradient-to-br from-red-500/10 to-amber-500/10', badge: 'عاجل', onClick: () => router.push('/manufacturing/maintenance') },
@@ -36,7 +47,7 @@ export default function ManufacturingDashboard() {
       <main className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {navCards.map(c => <NavCard key={c.title} {...c} />)}
-          {gradientCards.map(c => <NavCard key={c.title} {...c} gradient={c.gradient} badge={(c as any).badge} />)}
+          {gradientCards.map(c => <NavCard key={c.title} {...c} gradient={c.gradient} badge={c.badge} />)}
           {navButtons.map(c => <NavButton key={c.title} {...c} />)}
         </div>
 

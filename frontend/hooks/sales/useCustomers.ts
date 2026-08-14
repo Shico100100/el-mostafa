@@ -33,8 +33,8 @@ export function useCustomers() {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchWithAuth('/sales/customers');
-      const mapped = (data as any[]).map((c) => ({ ...c, balance: Number(c.balance) }));
+      const data = await api.fetchWithAuth<Customer[]>('/sales/customers');
+      const mapped = data.map((c) => ({ ...c, balance: Number(c.balance) }));
       setCustomers(mapped);
     } catch {
       toast.error('حدث خطأ أثناء تحميل العملاء');

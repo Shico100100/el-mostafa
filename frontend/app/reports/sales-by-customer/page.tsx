@@ -6,10 +6,25 @@ import { ArrowLeft, Users, FileDown, Download } from 'lucide-react';
 import { api } from '@/lib/api';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
+interface SalesByCustomerRow {
+  customer_id: number;
+  customer_name: string;
+  order_count: number;
+  total_amount: number;
+  first_order: string | null;
+  last_order: string | null;
+}
+
+interface SalesByCustomerReport {
+  period: { start: string; end: string };
+  customers: SalesByCustomerRow[];
+  grand_total: number;
+}
+
 export default function SalesByCustomerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<SalesByCustomerReport | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -19,7 +34,7 @@ export default function SalesByCustomerPage() {
       const params = new URLSearchParams();
       if (sd) params.set('startDate', sd);
       if (ed) params.set('endDate', ed);
-      const result = await api.fetchWithAuth<any>(`/reports/sales-by-customer?${params}`);
+      const result = await api.fetchWithAuth<SalesByCustomerReport>(`/reports/sales-by-customer?${params}`);
       setData(result);
     } catch { /* empty */ }
     setLoading(false);
@@ -34,7 +49,7 @@ export default function SalesByCustomerPage() {
   const exportCsv = () => {
     if (!data?.customers?.length) return;
     const header = 'العميل,عدد الطلبات,الإجمالي,أول طلب,آخر طلب\n';
-    const rows = data.customers.map((c: any) =>
+    const rows = data.customers.map((c: SalesByCustomerRow) =>
       `${c.customer_name},${c.order_count},${c.total_amount},${c.first_order || ''},${c.last_order || ''}`
     ).join('\n');
     const bom = '\uFEFF';
@@ -116,7 +131,7 @@ export default function SalesByCustomerPage() {
                       <tr><td colSpan={5} className="py-12 text-center text-gray-500">لا توجد بيانات مبيعات</td></tr>
                     ) : (
                       <>
-                        {data.customers.map((c: any, i: number) => (
+                        {data.customers.map((c: SalesByCustomerRow, i: number) => (
                           <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
                             <td className="py-3 px-4 text-white font-semibold">{c.customer_name}</td>
                             <td className="py-3 px-4 text-blue-400">{c.order_count}</td>
@@ -127,7 +142,7 @@ export default function SalesByCustomerPage() {
                         ))}
                         <tr className="bg-white/5 border-t border-white/20">
                           <td className="py-3 px-4 text-white font-bold">الإجمالي</td>
-                          <td className="py-3 px-4 text-blue-400 font-bold">{data.customers.reduce((s: number, c: any) => s + c.order_count, 0)}</td>
+                          <td className="py-3 px-4 text-blue-400 font-bold">{data.customers.reduce((s: number, c: SalesByCustomerRow) => s + c.order_count, 0)}</td>
                           <td className="py-3 px-4 text-green-400 font-bold text-lg">{Number(data.grand_total).toLocaleString()} ج.م</td>
                           <td className="py-3 px-4"></td>
                           <td className="py-3 px-4"></td>

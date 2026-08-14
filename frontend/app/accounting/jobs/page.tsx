@@ -23,7 +23,7 @@ export default function JobsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {h.jobs.length === 0 ? (
             <div className="col-span-full text-center text-gray-500 py-12">لا توجد مشاريع</div>
-          ) : h.jobs.map((j: any) => {
+          ) : h.jobs.map((j) => {
             const profit = Number(j.estimated_revenue) - Number(j.actual_cost);
             return (
               <div key={j.id} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:border-cyan-500/30 transition">
