@@ -91,6 +91,13 @@ jobs:
       FRONTEND_DOMAIN: http://localhost:3000
       BACKEND_DOMAIN: http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      FILE_DRIVER: local
+      MAIL_HOST: localhost
+      MAIL_DEFAULT_EMAIL: noreply@example.com
+      MAIL_DEFAULT_NAME: CI
+      MAIL_IGNORE_TLS: 'true'
+      MAIL_SECURE: 'false'
+      MAIL_REQUIRE_TLS: 'false'
 
     steps:
       - uses: actions/checkout@v5
@@ -126,6 +133,13 @@ jobs:
           AUTH_FORGOT_TOKEN_EXPIRES_IN=30m
           AUTH_CONFIRM_EMAIL_SECRET=ci_dummy_confirm_secret_32chars_long
           AUTH_CONFIRM_EMAIL_TOKEN_EXPIRES_IN=1d
+          FILE_DRIVER=local
+          MAIL_HOST=localhost
+          MAIL_DEFAULT_EMAIL=noreply@example.com
+          MAIL_DEFAULT_NAME=CI
+          MAIL_IGNORE_TLS=true
+          MAIL_SECURE=false
+          MAIL_REQUIRE_TLS=false
           EOF
 
       - name: Write frontend .env.local
