@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { BankingService } from './banking.service';
 import { BankAccount } from './entities/bank-account.entity';
 import { BankTransaction } from './entities/bank-transaction.entity';
@@ -65,10 +65,17 @@ describe('BankingService', () => {
       const account = { id: 1, name: 'Primary', balance: 10000 };
       (bankAccountRepo.findOne as jest.Mock).mockResolvedValue(account);
       (bankTxRepo.create as jest.Mock).mockImplementation((d) => d);
-      (bankTxRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (bankTxRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
       (bankAccountRepo.save as jest.Mock).mockResolvedValue({});
 
-      await service.addTransaction(1, { debit: 5000, credit: 0, description: 'deposit' });
+      await service.addTransaction(1, {
+        debit: 5000,
+        credit: 0,
+        description: 'deposit',
+      });
 
       const savedAccount = (bankAccountRepo.save as jest.Mock).mock.calls[0][0];
       expect(savedAccount.balance).toBe(15000);
@@ -78,10 +85,17 @@ describe('BankingService', () => {
       const account = { id: 1, name: 'Primary', balance: 10000 };
       (bankAccountRepo.findOne as jest.Mock).mockResolvedValue(account);
       (bankTxRepo.create as jest.Mock).mockImplementation((d) => d);
-      (bankTxRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (bankTxRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
       (bankAccountRepo.save as jest.Mock).mockResolvedValue({});
 
-      await service.addTransaction(1, { debit: 0, credit: 3000, description: 'payment' });
+      await service.addTransaction(1, {
+        debit: 0,
+        credit: 3000,
+        description: 'payment',
+      });
 
       const savedAccount = (bankAccountRepo.save as jest.Mock).mock.calls[0][0];
       expect(savedAccount.balance).toBe(7000);
@@ -100,9 +114,16 @@ describe('BankingService', () => {
       const account = { id: 1, name: 'Primary', balance: 50000 };
       (bankAccountRepo.findOne as jest.Mock).mockResolvedValue(account);
       (reconRepo.create as jest.Mock).mockImplementation((d) => d);
-      (reconRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (reconRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
 
-      const result = await service.startReconciliation(1, new Date('2026-07-01'), 52000);
+      const result = await service.startReconciliation(
+        1,
+        new Date('2026-07-01'),
+        52000,
+      );
 
       expect(result.difference).toBe(2000);
       expect(result.status).toBe('PENDING');
@@ -157,9 +178,9 @@ describe('BankingService', () => {
 
     it('should throw NotFoundException for invalid reconciliation', async () => {
       (reconRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(
-        service.completeReconciliation(999, []),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.completeReconciliation(999, [])).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

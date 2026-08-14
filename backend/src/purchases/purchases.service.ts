@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Supplier } from './entities/supplier.entity';
@@ -9,7 +9,6 @@ import { PurchaseReturn } from './entities/purchase-return.entity';
 import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
 import { PackingList } from './entities/packing-list.entity';
 import { Product } from '../inventory/entities/product.entity';
-import { Stock } from '../inventory/entities/stock.entity';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
@@ -254,7 +253,12 @@ export class PurchasesService {
     notes?: string;
     order_date?: string;
     invoice_number?: string;
-    items: Array<{ product_id: number; quantity: number; price: number; total: number }>;
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      price: number;
+      total: number;
+    }>;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -330,7 +334,12 @@ export class PurchasesService {
       notes?: string;
       order_date?: string;
       invoice_number?: string;
-      items?: Array<{ product_id: number; quantity: number; price: number; total: number }>;
+      items?: Array<{
+        product_id: number;
+        quantity: number;
+        price: number;
+        total: number;
+      }>;
     },
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -529,7 +538,12 @@ export class PurchasesService {
     total_amount: number;
     reason?: string;
     return_date?: string;
-    items: Array<{ product_id: number; quantity: number; unit_price: number; total: number }>;
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      unit_price: number;
+      total: number;
+    }>;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -711,9 +725,10 @@ export class PurchasesService {
     if (!row) return { price: 0, date: null };
 
     return {
-      price: Number(row.landed_cost || 0) > 0
-        ? Number(row.landed_cost)
-        : Number(row.price),
+      price:
+        Number(row.landed_cost || 0) > 0
+          ? Number(row.landed_cost)
+          : Number(row.price),
       date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
     };
   }
@@ -746,9 +761,10 @@ export class PurchasesService {
       if (!seen.has(row.product_id)) {
         seen.add(row.product_id);
         result[row.product_id] = {
-          price: Number(row.landed_cost || 0) > 0
-            ? Number(row.landed_cost)
-            : Number(row.price),
+          price:
+            Number(row.landed_cost || 0) > 0
+              ? Number(row.landed_cost)
+              : Number(row.price),
           date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
         };
       }

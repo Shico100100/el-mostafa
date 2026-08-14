@@ -19,7 +19,9 @@ export class CurrencyService {
 
   async getExchangeRate(from: string, to: string) {
     if (from === to) return 1;
-    const rate = await this.rateRepo.findOne({ where: { fromCurrency: from, toCurrency: to } });
+    const rate = await this.rateRepo.findOne({
+      where: { fromCurrency: from, toCurrency: to },
+    });
     return rate?.rate || 1;
   }
 

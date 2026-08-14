@@ -17,7 +17,11 @@ export class CurrencyController {
   }
 
   @Get('convert/:amount/:from/:to')
-  convert(@Param('amount') amount: number, @Param('from') from: string, @Param('to') to: string) {
+  convert(
+    @Param('amount') amount: number,
+    @Param('from') from: string,
+    @Param('to') to: string,
+  ) {
     return this.service.convert(amount, from, to);
   }
 }

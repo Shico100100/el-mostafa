@@ -7,21 +7,24 @@ import { Account, AccountType } from '../../accounting/entities/account.entity';
 @Injectable()
 export class CashFlowStatementService {
   constructor(
-    @InjectRepository(JournalEntry) private journalRepo: Repository<JournalEntry>,
+    @InjectRepository(JournalEntry)
+    private journalRepo: Repository<JournalEntry>,
     @InjectRepository(Account) private accountRepo: Repository<Account>,
   ) {}
 
   async generate(startDate?: string, endDate?: string): Promise<any> {
-    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const end = endDate ? new Date(endDate) : new Date();
 
     const accounts = await this.accountRepo.find();
     const accountMap = new Map<number, Account>();
-    accounts.forEach(a => accountMap.set(a.id, a));
+    accounts.forEach((a) => accountMap.set(a.id, a));
 
     // Exclude cash account (1103) — the cash flow statement explains changes IN cash
     const cashAccountIds = new Set(
-      accounts.filter(a => a.code?.startsWith('1103')).map(a => a.id),
+      accounts.filter((a) => a.code?.startsWith('1103')).map((a) => a.id),
     );
 
     const entries = await this.journalRepo.find({
@@ -32,7 +35,10 @@ export class CashFlowStatementService {
     const investing = { items: [] as any[], total: 0 };
     const financing = { items: [] as any[], total: 0 };
 
-    const grouped = new Map<number, { debit: number; credit: number; description: string }>();
+    const grouped = new Map<
+      number,
+      { debit: number; credit: number; description: string }
+    >();
 
     for (const entry of entries) {
       if (cashAccountIds.has(entry.account_id)) continue;
@@ -105,12 +111,21 @@ export class CashFlowStatementService {
       }
     }
 
-    operating.items.sort((a, b) => a.account_code?.localeCompare(b.account_code));
-    investing.items.sort((a, b) => a.account_code?.localeCompare(b.account_code));
-    financing.items.sort((a, b) => a.account_code?.localeCompare(b.account_code));
+    operating.items.sort((a, b) =>
+      a.account_code?.localeCompare(b.account_code),
+    );
+    investing.items.sort((a, b) =>
+      a.account_code?.localeCompare(b.account_code),
+    );
+    financing.items.sort((a, b) =>
+      a.account_code?.localeCompare(b.account_code),
+    );
 
     return {
-      period: { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] },
+      period: {
+        start: start.toISOString().split('T')[0],
+        end: end.toISOString().split('T')[0],
+      },
       operating_activities: operating,
       investing_activities: investing,
       financing_activities: financing,

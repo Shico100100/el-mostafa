@@ -5,7 +5,10 @@ import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { BadRequestException } from '@nestjs/common';
 import { Stock } from '../inventory/entities/stock.entity';
 import { Product } from '../inventory/entities/product.entity';
-import { StockMovement, MovementType } from '../inventory/entities/stock-movement.entity';
+import {
+  StockMovement,
+  MovementType,
+} from '../inventory/entities/stock-movement.entity';
 
 @Injectable()
 export class WarehouseHelper {
@@ -69,7 +72,9 @@ export class WarehouseHelper {
     const stockRepo = manager.getRepository(Stock);
     const stock = await stockRepo.findOne({ where: { product_id: productId } });
     if (!stock || Number(stock.quantity) < quantity) {
-      const product = await this.productRepo.findOne({ where: { id: productId } });
+      const product = await this.productRepo.findOne({
+        where: { id: productId },
+      });
       throw new BadRequestException(
         `رصيد غير كافٍ للمادة الخام: ${product?.name || 'غير معروف'} (المطلوب: ${quantity}, المتوفر: ${stock ? Number(stock.quantity) : 0})`,
       );

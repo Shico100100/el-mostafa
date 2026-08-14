@@ -31,7 +31,9 @@ async function bootstrap() {
   const frontendDomain = process.env.FRONTEND_DOMAIN;
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: {
-      origin: frontendDomain ? frontendDomain.split(',') : ['http://localhost:3000'],
+      origin: frontendDomain
+        ? frontendDomain.split(',')
+        : ['http://localhost:3000'],
       credentials: true,
     },
     logger: ['error', 'warn'],

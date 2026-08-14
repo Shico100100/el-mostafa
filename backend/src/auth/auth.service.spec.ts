@@ -6,8 +6,6 @@ import { SessionService } from '../session/session.service';
 import { MailService } from '../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 import { UnprocessableEntityException } from '@nestjs/common';
-import bcrypt from 'bcryptjs';
-import { AuthProvidersEnum } from './auth-providers.enum';
 import { AuthLoginService } from './auth/auth-login.service';
 import { AuthRegistrationService } from './auth/auth-registration.service';
 import { AuthPasswordService } from './auth/auth-password.service';
@@ -18,10 +16,6 @@ describe('AuthService', () => {
   let service: AuthService;
   let authLoginService: AuthLoginService;
   let authRegistrationService: AuthRegistrationService;
-  let jwtService: JwtService;
-  let usersService: UsersService;
-  let sessionService: SessionService;
-  let mailService: MailService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -95,11 +89,9 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     authLoginService = module.get<AuthLoginService>(AuthLoginService);
-    authRegistrationService = module.get<AuthRegistrationService>(AuthRegistrationService);
-    jwtService = module.get<JwtService>(JwtService);
-    usersService = module.get<UsersService>(UsersService);
-    sessionService = module.get<SessionService>(SessionService);
-    mailService = module.get<MailService>(MailService);
+    authRegistrationService = module.get<AuthRegistrationService>(
+      AuthRegistrationService,
+    );
   });
 
   it('should be defined', () => {
@@ -121,8 +113,14 @@ describe('AuthService', () => {
     });
 
     it('should return tokens if login is valid', async () => {
-      const loginResult = { token: 'jwt-token', refreshToken: 'refresh-token', user: { id: 1 } };
-      (authLoginService.validateLogin as jest.Mock).mockResolvedValue(loginResult);
+      const loginResult = {
+        token: 'jwt-token',
+        refreshToken: 'refresh-token',
+        user: { id: 1 },
+      };
+      (authLoginService.validateLogin as jest.Mock).mockResolvedValue(
+        loginResult,
+      );
 
       const result = await service.validateLogin({
         email: 'test@example.com',
@@ -142,7 +140,9 @@ describe('AuthService', () => {
         firstName: 'New',
         lastName: 'User',
       };
-      (authRegistrationService.register as jest.Mock).mockResolvedValue(undefined);
+      (authRegistrationService.register as jest.Mock).mockResolvedValue(
+        undefined,
+      );
 
       await service.register(dto as any);
 

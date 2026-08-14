@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { DepreciationEntry } from './depreciation-entry.entity';
 
 export enum DepreciationMethod {
@@ -37,7 +44,11 @@ export class FixedAsset {
   @Column({ type: 'int' })
   useful_life_years: number;
 
-  @Column({ type: 'enum', enum: DepreciationMethod, default: DepreciationMethod.STRAIGHT_LINE })
+  @Column({
+    type: 'enum',
+    enum: DepreciationMethod,
+    default: DepreciationMethod.STRAIGHT_LINE,
+  })
   depreciation_method: DepreciationMethod;
 
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })

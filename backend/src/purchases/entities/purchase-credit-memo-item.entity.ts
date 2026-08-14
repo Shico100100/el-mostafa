@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { PurchaseCreditMemo } from './purchase-credit-memo.entity';
 import { Product } from '../../inventory/entities/product.entity';
 
@@ -10,7 +16,9 @@ export class PurchaseCreditMemoItem {
   @Column({ type: 'int' })
   credit_memo_id: number;
 
-  @ManyToOne(() => PurchaseCreditMemo, (cm) => cm.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => PurchaseCreditMemo, (cm) => cm.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'credit_memo_id' })
   credit_memo: PurchaseCreditMemo;
 

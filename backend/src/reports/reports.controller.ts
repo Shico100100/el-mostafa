@@ -22,7 +22,12 @@ export class ReportsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.reportsService.getPurchasesReport(startDate, endDate, page, limit);
+    return this.reportsService.getPurchasesReport(
+      startDate,
+      endDate,
+      page,
+      limit,
+    );
   }
 
   @Get('stock')

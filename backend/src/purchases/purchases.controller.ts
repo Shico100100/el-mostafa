@@ -139,8 +139,14 @@ export class PurchasesController {
   @Post('suppliers/:id/payments')
   @ApiOperation({ summary: 'Add a supplier payment' })
   @ApiResponse({ status: 201, description: 'Payment added' })
-  addPayment(@Param('id') id: string, @Body() createSupplierPaymentDto: CreateSupplierPaymentDto) {
-    return this.purchasesService.addPayment({ supplier_id: +id, ...createSupplierPaymentDto });
+  addPayment(
+    @Param('id') id: string,
+    @Body() createSupplierPaymentDto: CreateSupplierPaymentDto,
+  ) {
+    return this.purchasesService.addPayment({
+      supplier_id: +id,
+      ...createSupplierPaymentDto,
+    });
   }
 
   @Get('suppliers/:id/payments')
@@ -198,7 +204,10 @@ export class PurchasesController {
   @Put('orders/:id/landed-cost')
   @ApiOperation({ summary: 'Update landed cost' })
   @ApiResponse({ status: 200, description: 'Landed cost updated' })
-  updateLandedCost(@Param('id') id: string, @Body() updateLandedCostDto: UpdateLandedCostDto) {
+  updateLandedCost(
+    @Param('id') id: string,
+    @Body() updateLandedCostDto: UpdateLandedCostDto,
+  ) {
     return this.purchaseOrderService.updateLandedCost(+id, updateLandedCostDto);
   }
 
@@ -214,7 +223,10 @@ export class PurchasesController {
   @Post('orders/:id/packing-list')
   @ApiOperation({ summary: 'Create or update packing list for an order' })
   @ApiResponse({ status: 201, description: 'Packing list saved' })
-  savePackingList(@Param('id') id: string, @Body() createPackingListDto: CreatePackingListDto) {
+  savePackingList(
+    @Param('id') id: string,
+    @Body() createPackingListDto: CreatePackingListDto,
+  ) {
     return this.packingListService.savePackingList(+id, createPackingListDto);
   }
 

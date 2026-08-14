@@ -9,18 +9,35 @@ export class SerialNumberService {
     @InjectRepository(SerialNumber) private snRepo: Repository<SerialNumber>,
   ) {}
 
-  async findAll(filters?: { product_id?: number; status?: string }): Promise<SerialNumber[]> {
+  async findAll(filters?: {
+    product_id?: number;
+    status?: string;
+  }): Promise<SerialNumber[]> {
     const where: any = {};
     if (filters?.product_id) where.product_id = filters.product_id;
     if (filters?.status) where.status = filters.status;
-    return this.snRepo.find({ where, relations: ['product'], order: { created_at: 'DESC' } });
+    return this.snRepo.find({
+      where,
+      relations: ['product'],
+      order: { created_at: 'DESC' },
+    });
   }
 
-  async create(data: { product_id: number; serial_number: string; batch_number?: string; warehouse_id?: number }): Promise<SerialNumber> {
+  async create(data: {
+    product_id: number;
+    serial_number: string;
+    batch_number?: string;
+    warehouse_id?: number;
+  }): Promise<SerialNumber> {
     return this.snRepo.save(this.snRepo.create(data));
   }
 
-  async updateStatus(id: number, status: string, reference_type?: string, reference_id?: number): Promise<SerialNumber> {
+  async updateStatus(
+    id: number,
+    status: string,
+    reference_type?: string,
+    reference_id?: number,
+  ): Promise<SerialNumber> {
     const sn = await this.snRepo.findOne({ where: { id } });
     if (!sn) throw new NotFoundException(`Serial number #${id} not found`);
     sn.status = status;

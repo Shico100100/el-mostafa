@@ -13,14 +13,22 @@ describe('HealthController', () => {
         {
           provide: HealthCheckService,
           useValue: {
-            check: jest.fn().mockImplementation((indicators: (() => Promise<unknown>)[]) =>
-              Promise.all(indicators.map((fn) => fn())).then(() => ({ status: 'ok' })),
-            ),
+            check: jest
+              .fn()
+              .mockImplementation((indicators: (() => Promise<unknown>)[]) =>
+                Promise.all(indicators.map((fn) => fn())).then(() => ({
+                  status: 'ok',
+                })),
+              ),
           },
         },
         {
           provide: TypeOrmHealthIndicator,
-          useValue: { pingCheck: jest.fn().mockResolvedValue({ database: { status: 'up' } }) },
+          useValue: {
+            pingCheck: jest
+              .fn()
+              .mockResolvedValue({ database: { status: 'up' } }),
+          },
         },
       ],
     }).compile();

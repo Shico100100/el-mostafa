@@ -20,7 +20,8 @@ export class ReconciliationService {
 
   constructor(
     @InjectRepository(Account) private accountRepo: Repository<Account>,
-    @InjectRepository(JournalEntry) private journalRepo: Repository<JournalEntry>,
+    @InjectRepository(JournalEntry)
+    private journalRepo: Repository<JournalEntry>,
   ) {}
 
   async reconcile(): Promise<ReconciliationItem[]> {
@@ -76,7 +77,9 @@ export class ReconciliationService {
   async getSummary() {
     const items = await this.reconcile();
     const matched = items.filter((i) => i.status === 'MATCHED').length;
-    const discrepancies = items.filter((i) => i.status === 'DISCREPANCY').length;
+    const discrepancies = items.filter(
+      (i) => i.status === 'DISCREPANCY',
+    ).length;
     const noJournal = items.filter((i) => i.status === 'NO_JOURNAL').length;
     const totalDifference = items.reduce(
       (sum, i) => sum + Math.abs(i.difference),

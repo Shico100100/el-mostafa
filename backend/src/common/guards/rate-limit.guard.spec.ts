@@ -79,8 +79,16 @@ describe('RateLimitGuard', () => {
       const ip2Context = createMockContext('192.168.1.2');
 
       mockThrottlerStorage.increment
-        .mockResolvedValueOnce({ totalHits: 1, timeToExpire: 60000, isBlocked: false })
-        .mockResolvedValueOnce({ totalHits: 1, timeToExpire: 60000, isBlocked: false });
+        .mockResolvedValueOnce({
+          totalHits: 1,
+          timeToExpire: 60000,
+          isBlocked: false,
+        })
+        .mockResolvedValueOnce({
+          totalHits: 1,
+          timeToExpire: 60000,
+          isBlocked: false,
+        });
 
       const result1 = await guard.canActivate(ip1Context);
       const result2 = await guard.canActivate(ip2Context);

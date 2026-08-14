@@ -7,7 +7,13 @@ import { BankTransaction } from './entities/bank-transaction.entity';
 import { BankReconciliation } from './entities/bank-reconciliation.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BankAccount, BankTransaction, BankReconciliation])],
+  imports: [
+    TypeOrmModule.forFeature([
+      BankAccount,
+      BankTransaction,
+      BankReconciliation,
+    ]),
+  ],
   controllers: [BankingController],
   providers: [BankingService],
   exports: [BankingService],

@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
-import { SalesOrder, OrderStatus } from '../../sales/entities/sales-order.entity';
+import {
+  SalesOrder,
+  OrderStatus,
+} from '../../sales/entities/sales-order.entity';
 import { Customer } from '../../sales/entities/customer.entity';
 
 @Injectable()
 export class AgedReceivablesService {
   constructor(
-    @InjectRepository(SalesOrder) private salesOrderRepo: Repository<SalesOrder>,
+    @InjectRepository(SalesOrder)
+    private salesOrderRepo: Repository<SalesOrder>,
     @InjectRepository(Customer) private customerRepo: Repository<Customer>,
   ) {}
 
@@ -24,7 +28,17 @@ export class AgedReceivablesService {
     });
 
     const today = new Date();
-    const customerBuckets = new Map<number, { current: number; days_30: number; days_60: number; days_90: number; days_120: number; total: number }>();
+    const customerBuckets = new Map<
+      number,
+      {
+        current: number;
+        days_30: number;
+        days_60: number;
+        days_90: number;
+        days_120: number;
+        total: number;
+      }
+    >();
 
     for (const order of orders) {
       if (!order.customer_id) continue;
@@ -32,10 +46,19 @@ export class AgedReceivablesService {
       if (outstanding <= 0) continue;
 
       const orderDate = new Date(order.order_date);
-      const daysDiff = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.floor(
+        (today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       if (!customerBuckets.has(order.customer_id)) {
-        customerBuckets.set(order.customer_id, { current: 0, days_30: 0, days_60: 0, days_90: 0, days_120: 0, total: 0 });
+        customerBuckets.set(order.customer_id, {
+          current: 0,
+          days_30: 0,
+          days_60: 0,
+          days_90: 0,
+          days_120: 0,
+          total: 0,
+        });
       }
 
       const buckets = customerBuckets.get(order.customer_id)!;
@@ -54,7 +77,13 @@ export class AgedReceivablesService {
       }
     }
 
-    const summary = { current: 0, days_30: 0, days_60: 0, days_90: 0, days_120: 0 };
+    const summary = {
+      current: 0,
+      days_30: 0,
+      days_60: 0,
+      days_90: 0,
+      days_120: 0,
+    };
     const items = [];
 
     for (const [customerId, buckets] of customerBuckets) {

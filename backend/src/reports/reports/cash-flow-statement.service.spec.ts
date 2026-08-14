@@ -37,11 +37,29 @@ describe('CashFlowStatementService', () => {
   describe('generate', () => {
     it('should exclude cash account (1103) from cash flow', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1103', name: 'Treasury', type: AccountType.ASSET, balance: 50000 },
-        { id: 2, code: '4101', name: 'Sales', type: AccountType.REVENUE, balance: 0 },
+        {
+          id: 1,
+          code: '1103',
+          name: 'Treasury',
+          type: AccountType.ASSET,
+          balance: 50000,
+        },
+        {
+          id: 2,
+          code: '4101',
+          name: 'Sales',
+          type: AccountType.REVENUE,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, account_id: 1, debit: 10000, credit: 0, description: 'Cash received' },
+        {
+          id: 1,
+          account_id: 1,
+          debit: 10000,
+          credit: 0,
+          description: 'Cash received',
+        },
         { id: 2, account_id: 2, debit: 0, credit: 10000, description: 'Sale' },
       ]);
 
@@ -53,7 +71,13 @@ describe('CashFlowStatementService', () => {
 
     it('should classify revenue as operating', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '4101', name: 'Sales', type: AccountType.REVENUE, balance: 0 },
+        {
+          id: 1,
+          code: '4101',
+          name: 'Sales',
+          type: AccountType.REVENUE,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, account_id: 1, debit: 0, credit: 50000, description: 'Sale' },
@@ -67,7 +91,13 @@ describe('CashFlowStatementService', () => {
 
     it('should classify expense as operating', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '5101', name: 'COGS', type: AccountType.EXPENSE, balance: 0 },
+        {
+          id: 1,
+          code: '5101',
+          name: 'COGS',
+          type: AccountType.EXPENSE,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, account_id: 1, debit: 20000, credit: 0, description: 'COGS' },
@@ -81,12 +111,30 @@ describe('CashFlowStatementService', () => {
 
     it('should classify current assets (1101, 1102) as operating', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1101', name: 'Inventory', type: AccountType.ASSET, balance: 0 },
-        { id: 2, code: '1102', name: 'Customer Debt', type: AccountType.ASSET, balance: 0 },
+        {
+          id: 1,
+          code: '1101',
+          name: 'Inventory',
+          type: AccountType.ASSET,
+          balance: 0,
+        },
+        {
+          id: 2,
+          code: '1102',
+          name: 'Customer Debt',
+          type: AccountType.ASSET,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, account_id: 1, debit: 5000, credit: 2000, description: 'Inv' },
-        { id: 2, account_id: 2, debit: 3000, credit: 1000, description: 'Debt' },
+        {
+          id: 2,
+          account_id: 2,
+          debit: 3000,
+          credit: 1000,
+          description: 'Debt',
+        },
       ]);
 
       const result = await service.generate('2026-01-01', '2026-06-30');
@@ -97,10 +145,22 @@ describe('CashFlowStatementService', () => {
 
     it('should classify non-current assets as investing', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1201', name: 'Machines', type: AccountType.ASSET, balance: 0 },
+        {
+          id: 1,
+          code: '1201',
+          name: 'Machines',
+          type: AccountType.ASSET,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, account_id: 1, debit: 50000, credit: 0, description: 'Machine purchase' },
+        {
+          id: 1,
+          account_id: 1,
+          debit: 50000,
+          credit: 0,
+          description: 'Machine purchase',
+        },
       ]);
 
       const result = await service.generate('2026-01-01', '2026-06-30');
@@ -111,10 +171,22 @@ describe('CashFlowStatementService', () => {
 
     it('should classify equity as financing', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '3101', name: 'Equity', type: AccountType.EQUITY, balance: 0 },
+        {
+          id: 1,
+          code: '3101',
+          name: 'Equity',
+          type: AccountType.EQUITY,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, account_id: 1, debit: 0, credit: 100000, description: 'Capital' },
+        {
+          id: 1,
+          account_id: 1,
+          debit: 0,
+          credit: 100000,
+          description: 'Capital',
+        },
       ]);
 
       const result = await service.generate('2026-01-01', '2026-06-30');
@@ -125,28 +197,58 @@ describe('CashFlowStatementService', () => {
 
     it('should calculate net_cash_flow as sum of all sections', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '4101', name: 'Sales', type: AccountType.REVENUE, balance: 0 },
-        { id: 2, code: '5101', name: 'COGS', type: AccountType.EXPENSE, balance: 0 },
-        { id: 3, code: '3101', name: 'Equity', type: AccountType.EQUITY, balance: 0 },
+        {
+          id: 1,
+          code: '4101',
+          name: 'Sales',
+          type: AccountType.REVENUE,
+          balance: 0,
+        },
+        {
+          id: 2,
+          code: '5101',
+          name: 'COGS',
+          type: AccountType.EXPENSE,
+          balance: 0,
+        },
+        {
+          id: 3,
+          code: '3101',
+          name: 'Equity',
+          type: AccountType.EQUITY,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([
         { id: 1, account_id: 1, debit: 0, credit: 50000, description: 'Sale' },
         { id: 2, account_id: 2, debit: 20000, credit: 0, description: 'COGS' },
-        { id: 3, account_id: 3, debit: 0, credit: 30000, description: 'Capital' },
+        {
+          id: 3,
+          account_id: 3,
+          debit: 0,
+          credit: 30000,
+          description: 'Capital',
+        },
       ]);
 
       const result = await service.generate('2026-01-01', '2026-06-30');
 
       expect(result.net_cash_flow).toBe(
         result.operating_activities.total +
-        result.investing_activities.total +
-        result.financing_activities.total,
+          result.investing_activities.total +
+          result.financing_activities.total,
       );
     });
 
     it('should handle empty journal entries', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '4101', name: 'Sales', type: AccountType.REVENUE, balance: 0 },
+        {
+          id: 1,
+          code: '4101',
+          name: 'Sales',
+          type: AccountType.REVENUE,
+          balance: 0,
+        },
       ]);
       (journalRepo.find as jest.Mock).mockResolvedValue([]);
 

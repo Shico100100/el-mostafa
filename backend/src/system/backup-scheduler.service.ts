@@ -37,24 +37,32 @@ export class BackupSchedulerService {
     }
 
     const date = new Date().toISOString().replace(/[:T]/g, '-').split('.')[0];
-    const dbName = this.configService.getOrThrow('database.name', { infer: true });
+    const dbName = this.configService.getOrThrow('database.name', {
+      infer: true,
+    });
     const backupFile = path.join(this.backupDir, `${dbName}-${date}.sql`);
 
     const containerName = 'backend-postgres-1';
-    const dbUser = this.configService.getOrThrow('database.username', { infer: true });
-    const dbPass = this.configService.getOrThrow('database.password', { infer: true });
+    const dbUser = this.configService.getOrThrow('database.username', {
+      infer: true,
+    });
+    const dbPass = this.configService.getOrThrow('database.password', {
+      infer: true,
+    });
 
     // Use docker exec for pg_dump (no host pg_dump needed)
     const dumpCommand = `docker exec ${containerName} pg_dump -U ${dbUser} ${dbName}`;
     const env = { ...process.env, PGPASSWORD: dbPass };
 
-    const { stdout, stderr } = await execPromise(dumpCommand, {
+    const { stdout } = await execPromise(dumpCommand, {
       maxBuffer: 50 * 1024 * 1024,
       env,
     });
 
     fs.writeFileSync(backupFile, stdout, 'utf-8');
-    this.logger.log(`Backup saved: ${backupFile} (${(stdout.length / 1024 / 1024).toFixed(2)} MB)`);
+    this.logger.log(
+      `Backup saved: ${backupFile} (${(stdout.length / 1024 / 1024).toFixed(2)} MB)`,
+    );
   }
 
   private cleanupOldBackups() {
@@ -62,7 +70,9 @@ export class BackupSchedulerService {
 
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - this.retentionDays);
-    const dbName = this.configService.getOrThrow('database.name', { infer: true });
+    const dbName = this.configService.getOrThrow('database.name', {
+      infer: true,
+    });
     let deleted = 0;
 
     for (const file of fs.readdirSync(this.backupDir)) {
@@ -76,7 +86,9 @@ export class BackupSchedulerService {
     }
 
     if (deleted > 0) {
-      this.logger.log(`Cleaned up ${deleted} old backup(s) (retention: ${this.retentionDays} days)`);
+      this.logger.log(
+        `Cleaned up ${deleted} old backup(s) (retention: ${this.retentionDays} days)`,
+      );
     }
   }
 }

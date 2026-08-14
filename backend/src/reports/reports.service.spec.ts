@@ -61,7 +61,9 @@ describe('ReportsService', () => {
         projectedBalance: 14000,
         dailyProjection: [],
       };
-      analyticsService.getCashFlowProjection.mockResolvedValue(mockResult as any);
+      analyticsService.getCashFlowProjection.mockResolvedValue(
+        mockResult as any,
+      );
 
       const result = await service.getCashFlowProjection();
 
@@ -169,7 +171,9 @@ describe('ReportsService', () => {
 
   describe('getSalesReport', () => {
     it('should delegate to financialReportService.getSalesReport with page/limit', async () => {
-      financialReportService.getSalesReport.mockResolvedValue({ total: 5000 } as any);
+      financialReportService.getSalesReport.mockResolvedValue({
+        total: 5000,
+      } as any);
 
       const result = await service.getSalesReport('2024-01-01', '2024-02-01');
 

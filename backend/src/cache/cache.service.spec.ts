@@ -31,7 +31,12 @@ describe('CacheService', () => {
     await service.set('test-key', { value: 123 }, 60);
     const result = await service.get('test-key');
 
-    expect(mockRedis.set).toHaveBeenCalledWith('test-key', JSON.stringify({ value: 123 }), 'EX', 60);
+    expect(mockRedis.set).toHaveBeenCalledWith(
+      'test-key',
+      JSON.stringify({ value: 123 }),
+      'EX',
+      60,
+    );
     expect(result).toEqual({ value: 123 });
   });
 

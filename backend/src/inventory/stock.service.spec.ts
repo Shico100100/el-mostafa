@@ -10,19 +10,9 @@ import { Warehouse } from './entities/warehouse.entity';
 describe('StockService', () => {
   let service: StockService;
   let stockRepo: Repository<Stock>;
-  let movementRepo: Repository<StockMovement>;
-  let warehouseRepo: Repository<Warehouse>;
-
-  let emFindOne: jest.Mock;
-  let emCreate: jest.Mock;
-  let emSave: jest.Mock;
 
   beforeEach(async () => {
     jest.clearAllMocks();
-
-    emFindOne = jest.fn();
-    emCreate = jest.fn();
-    emSave = jest.fn();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,8 +49,6 @@ describe('StockService', () => {
 
     service = module.get<StockService>(StockService);
     stockRepo = module.get(getRepositoryToken(Stock));
-    movementRepo = module.get(getRepositoryToken(StockMovement));
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
   });
 
   it('should be defined', () => {
@@ -69,7 +57,12 @@ describe('StockService', () => {
 
   describe('addStockMovement - IN', () => {
     it('should increase stock quantity for IN movements', async () => {
-      const existingStock = { id: 1, product_id: 1, warehouse_id: 1, quantity: 50 };
+      const existingStock = {
+        id: 1,
+        product_id: 1,
+        warehouse_id: 1,
+        quantity: 50,
+      };
       const mockManager = {
         create: jest.fn().mockImplementation((_entity, data) => ({ ...data })),
         save: jest.fn().mockResolvedValue({}),
@@ -87,12 +80,15 @@ describe('StockService', () => {
         mockManager as any,
       );
 
-      expect(mockManager.create).toHaveBeenCalledWith(StockMovement, expect.objectContaining({
-        product_id: 1,
-        warehouse_id: 1,
-        type: MovementType.IN,
-        quantity: 30,
-      }));
+      expect(mockManager.create).toHaveBeenCalledWith(
+        StockMovement,
+        expect.objectContaining({
+          product_id: 1,
+          warehouse_id: 1,
+          type: MovementType.IN,
+          quantity: 30,
+        }),
+      );
       const stockSaveCall = mockManager.save.mock.calls.find(
         (call) => call[0] === Stock,
       );
@@ -103,7 +99,12 @@ describe('StockService', () => {
 
   describe('addStockMovement - OUT', () => {
     it('should decrease stock quantity for OUT movements', async () => {
-      const existingStock = { id: 1, product_id: 1, warehouse_id: 1, quantity: 100 };
+      const existingStock = {
+        id: 1,
+        product_id: 1,
+        warehouse_id: 1,
+        quantity: 100,
+      };
       const mockManager = {
         create: jest.fn().mockImplementation((_entity, data) => ({ ...data })),
         save: jest.fn().mockResolvedValue({}),
@@ -128,7 +129,12 @@ describe('StockService', () => {
     });
 
     it('should throw BadRequestException when stock is insufficient', async () => {
-      const existingStock = { id: 1, product_id: 1, warehouse_id: 1, quantity: 10 };
+      const existingStock = {
+        id: 1,
+        product_id: 1,
+        warehouse_id: 1,
+        quantity: 10,
+      };
       const mockManager = {
         create: jest.fn().mockImplementation((_entity, data) => ({ ...data })),
         save: jest.fn().mockResolvedValue({}),
@@ -149,7 +155,12 @@ describe('StockService', () => {
     });
 
     it('should skip stock check when skipStockCheck is true', async () => {
-      const existingStock = { id: 1, product_id: 1, warehouse_id: 1, quantity: 5 };
+      const existingStock = {
+        id: 1,
+        product_id: 1,
+        warehouse_id: 1,
+        quantity: 5,
+      };
       const mockManager = {
         create: jest.fn().mockImplementation((_entity, data) => ({ ...data })),
         save: jest.fn().mockResolvedValue({}),
@@ -178,7 +189,12 @@ describe('StockService', () => {
 
   describe('addStockMovement - ADJUST', () => {
     it('should set stock quantity to exact value for ADJUST', async () => {
-      const existingStock = { id: 1, product_id: 1, warehouse_id: 1, quantity: 500 };
+      const existingStock = {
+        id: 1,
+        product_id: 1,
+        warehouse_id: 1,
+        quantity: 500,
+      };
       const mockManager = {
         create: jest.fn().mockImplementation((_entity, data) => ({ ...data })),
         save: jest.fn().mockResolvedValue({}),

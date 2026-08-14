@@ -12,7 +12,9 @@ export class SalesByCustomerService {
   ) {}
 
   async generate(startDate?: string, endDate?: string) {
-    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const end = endDate ? new Date(endDate) : new Date();
 
     const data = await this.salesRepo
@@ -32,8 +34,11 @@ export class SalesByCustomerService {
       .getRawMany();
 
     return {
-      period: { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] },
-      customers: data.map(d => ({
+      period: {
+        start: start.toISOString().split('T')[0],
+        end: end.toISOString().split('T')[0],
+      },
+      customers: data.map((d) => ({
         customer_id: d.customer_id,
         customer_name: d.customer_name,
         order_count: Number(d.order_count),

@@ -32,7 +32,6 @@ import { PackingListService } from './packing-lists/packing-list.service';
       PackingList,
       Product,
       Stock,
-
     ]),
     InventoryModule,
     AccountingModule,

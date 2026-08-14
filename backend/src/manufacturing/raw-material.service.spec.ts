@@ -6,7 +6,10 @@ import { RawMaterialService } from './raw-material.service';
 import { WarehouseHelper } from './warehouse.helper';
 import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
-import { StockMovement, MovementType } from '../inventory/entities/stock-movement.entity';
+import {
+  StockMovement,
+  MovementType,
+} from '../inventory/entities/stock-movement.entity';
 import { RawMaterialConsumption } from './entities/raw-material-consumption.entity';
 import { SupplierMaterial } from './entities/supplier-material.entity';
 
@@ -17,8 +20,6 @@ describe('RawMaterialService', () => {
   let supplierMaterialRepo: Repository<SupplierMaterial>;
   let stockRepo: Repository<Stock>;
   let stockMovementRepo: Repository<StockMovement>;
-  let warehouseHelper: WarehouseHelper;
-  let dataSource: DataSource;
 
   const mockQuery = jest.fn();
   const mockGetRawOne = jest.fn();
@@ -107,8 +108,6 @@ describe('RawMaterialService', () => {
     supplierMaterialRepo = module.get(getRepositoryToken(SupplierMaterial));
     stockRepo = module.get(getRepositoryToken(Stock));
     stockMovementRepo = module.get(getRepositoryToken(StockMovement));
-    warehouseHelper = module.get(WarehouseHelper);
-    dataSource = module.get(DataSource);
   });
 
   it('should be defined', () => {
@@ -155,13 +154,43 @@ describe('RawMaterialService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].product_name).toBe('Plastic Granules');
       expect(result[0].current_stock).toBe(100);
-      expect(result[0].preferred_supplier).toEqual({ id: 10, name: 'Supplier A' });
+      expect(result[0].preferred_supplier).toEqual({
+        id: 10,
+        name: 'Supplier A',
+      });
     });
 
     it('should aggregate stock across multiple warehouses', async () => {
       mockQuery
         .mockResolvedValueOnce([
-          { id: 1, product_id: 1, product_name: 'Resin', preferred_supplier_id: null, reorder_point: 10, reorder_quantity: 20, avg_consumption_rate: 1, last_purchase_price: 5, last_purchase_date: null, notes: null, created_at: new Date(), updated_at: new Date(), sku: null, barcode: null, cost_price: 5, selling_price: 0, unit: 'kg', type: 'RAW', description: null, min_stock: null, weight_grams: null, image_path: null, raw_material_type: null, weight_per_piece: null, is_active: true, current_stock: 50 },
+          {
+            id: 1,
+            product_id: 1,
+            product_name: 'Resin',
+            preferred_supplier_id: null,
+            reorder_point: 10,
+            reorder_quantity: 20,
+            avg_consumption_rate: 1,
+            last_purchase_price: 5,
+            last_purchase_date: null,
+            notes: null,
+            created_at: new Date(),
+            updated_at: new Date(),
+            sku: null,
+            barcode: null,
+            cost_price: 5,
+            selling_price: 0,
+            unit: 'kg',
+            type: 'RAW',
+            description: null,
+            min_stock: null,
+            weight_grams: null,
+            image_path: null,
+            raw_material_type: null,
+            weight_per_piece: null,
+            is_active: true,
+            current_stock: 50,
+          },
         ])
         .mockResolvedValueOnce([]);
 
@@ -188,11 +217,17 @@ describe('RawMaterialService', () => {
       };
       (productRepo.findOne as jest.Mock).mockResolvedValue(product);
       (supplierMaterialRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, supplier_id: 10, product_id: 1, price: 12.5, supplier: { id: 10, name: 'Supplier A' } },
+        {
+          id: 1,
+          supplier_id: 10,
+          product_id: 1,
+          price: 12.5,
+          supplier: { id: 10, name: 'Supplier A' },
+        },
       ]);
       mockQuery.mockResolvedValueOnce([{ total_in: 100, total_out: 25 }]);
 
-      const result = await service.getRawMaterial(1) as any;
+      const result = (await service.getRawMaterial(1)) as any;
 
       expect(result.product.name).toBe('Plastic Granules');
       expect(result.current_stock).toBe(75);
@@ -202,15 +237,23 @@ describe('RawMaterialService', () => {
 
     it('should throw NotFoundException when product not found', async () => {
       (productRepo.findOne as jest.Mock).mockResolvedValue(null);
-      await expect(service.getRawMaterial(999)).rejects.toThrow(NotFoundException);
+      await expect(service.getRawMaterial(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return 0 current stock when no stock record exists', async () => {
-      (productRepo.findOne as jest.Mock).mockResolvedValue({ id: 1, type: 'RAW', name: 'Resin', preferred_supplier_id: null, preferred_supplier: null });
+      (productRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        type: 'RAW',
+        name: 'Resin',
+        preferred_supplier_id: null,
+        preferred_supplier: null,
+      });
       (supplierMaterialRepo.find as jest.Mock).mockResolvedValue([]);
       mockQuery.mockResolvedValueOnce([{ total_in: 0, total_out: 0 }]);
 
-      const result = await service.getRawMaterial(1) as any;
+      const result = (await service.getRawMaterial(1)) as any;
       expect(result.current_stock).toBe(0);
     });
   });
@@ -276,11 +319,24 @@ describe('RawMaterialService', () => {
 
   describe('recordConsumption', () => {
     it('should deduct stock and create a consumption record', async () => {
-      const product = { id: 1, type: 'RAW', name: 'Plastic', last_purchase_price: 10, cost_price: 8 };
+      const product = {
+        id: 1,
+        type: 'RAW',
+        name: 'Plastic',
+        last_purchase_price: 10,
+        cost_price: 8,
+      };
       (productRepo.findOne as jest.Mock).mockResolvedValue(product);
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 1, quantity: 100, warehouse_id: 1 });
+      (stockRepo.findOne as jest.Mock).mockResolvedValue({
+        product_id: 1,
+        quantity: 100,
+        warehouse_id: 1,
+      });
       (consumptionRepo.create as jest.Mock).mockImplementation((d) => d);
-      (consumptionRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (consumptionRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
       (stockRepo.save as jest.Mock).mockResolvedValue({});
       (stockMovementRepo.save as jest.Mock).mockResolvedValue({});
 
@@ -299,9 +355,19 @@ describe('RawMaterialService', () => {
     });
 
     it('should throw BadRequestException when stock is insufficient', async () => {
-      const product = { id: 1, type: 'RAW', name: 'Plastic', last_purchase_price: 10, cost_price: 8 };
+      const product = {
+        id: 1,
+        type: 'RAW',
+        name: 'Plastic',
+        last_purchase_price: 10,
+        cost_price: 8,
+      };
       (productRepo.findOne as jest.Mock).mockResolvedValue(product);
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 1, quantity: 5, warehouse_id: 1 });
+      (stockRepo.findOne as jest.Mock).mockResolvedValue({
+        product_id: 1,
+        quantity: 5,
+        warehouse_id: 1,
+      });
 
       await expect(
         service.recordConsumption({ product_id: 1, quantity: 20 }),
@@ -309,15 +375,31 @@ describe('RawMaterialService', () => {
     });
 
     it('should use cost_price when last_purchase_price is not set', async () => {
-      const product = { id: 1, type: 'RAW', name: 'Resin', last_purchase_price: null, cost_price: 8 };
+      const product = {
+        id: 1,
+        type: 'RAW',
+        name: 'Resin',
+        last_purchase_price: null,
+        cost_price: 8,
+      };
       (productRepo.findOne as jest.Mock).mockResolvedValue(product);
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 1, quantity: 50, warehouse_id: 1 });
+      (stockRepo.findOne as jest.Mock).mockResolvedValue({
+        product_id: 1,
+        quantity: 50,
+        warehouse_id: 1,
+      });
       (consumptionRepo.create as jest.Mock).mockImplementation((d) => d);
-      (consumptionRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (consumptionRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
       (stockRepo.save as jest.Mock).mockResolvedValue({});
       (stockMovementRepo.save as jest.Mock).mockResolvedValue({});
 
-      const result = await service.recordConsumption({ product_id: 1, quantity: 10 });
+      const result = await service.recordConsumption({
+        product_id: 1,
+        quantity: 10,
+      });
       expect(result.cost_per_unit).toBe(8);
       expect(result.total_cost).toBe(80);
     });
@@ -328,10 +410,17 @@ describe('RawMaterialService', () => {
       const product = { id: 1, type: 'RAW', name: 'Plastic' };
       (productRepo.findOne as jest.Mock).mockResolvedValue(product);
       (productRepo.update as jest.Mock).mockResolvedValue({});
-      (stockRepo.findOne as jest.Mock).mockResolvedValue({ product_id: 1, quantity: 50, warehouse_id: 1 });
+      (stockRepo.findOne as jest.Mock).mockResolvedValue({
+        product_id: 1,
+        quantity: 50,
+        warehouse_id: 1,
+      });
       (stockRepo.save as jest.Mock).mockResolvedValue({});
       (stockMovementRepo.create as jest.Mock).mockImplementation((d) => d);
-      (stockMovementRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (stockMovementRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
 
       const result = await service.addRawMaterialStock({
         product_id: 1,
@@ -358,7 +447,10 @@ describe('RawMaterialService', () => {
       (stockRepo.create as jest.Mock).mockImplementation((d) => d);
       (stockRepo.save as jest.Mock).mockResolvedValue({});
       (stockMovementRepo.create as jest.Mock).mockImplementation((d) => d);
-      (stockMovementRepo.save as jest.Mock).mockImplementation((d) => ({ id: 1, ...d }));
+      (stockMovementRepo.save as jest.Mock).mockImplementation((d) => ({
+        id: 1,
+        ...d,
+      }));
 
       await service.addRawMaterialStock({
         product_id: 1,
@@ -374,7 +466,11 @@ describe('RawMaterialService', () => {
     it('should throw NotFoundException when raw material not found', async () => {
       (productRepo.findOne as jest.Mock).mockResolvedValue(null);
       await expect(
-        service.addRawMaterialStock({ product_id: 999, quantity: 10, date: new Date() }),
+        service.addRawMaterialStock({
+          product_id: 999,
+          quantity: 10,
+          date: new Date(),
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });

@@ -13,7 +13,6 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  InternalServerErrorException,
   Req,
   Logger,
 } from '@nestjs/common';
@@ -215,14 +214,8 @@ export class ManufacturingController {
   @Get('boms')
   @ApiOperation({ summary: 'Get all BOMs' })
   @ApiResponse({ status: 200, description: 'Returns paginated BOMs' })
-  getBOMs(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.bomService.getBOMs(
-      page ? +page : 1,
-      limit ? +limit : 50,
-    );
+  getBOMs(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.bomService.getBOMs(page ? +page : 1, limit ? +limit : 50);
   }
 
   @Post('boms')
@@ -264,10 +257,7 @@ export class ManufacturingController {
   @Get('machines')
   @ApiOperation({ summary: 'Get all machines' })
   @ApiResponse({ status: 200, description: 'Returns paginated machines' })
-  getAllMachines(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
+  getAllMachines(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.machineService.getAllMachines(
       page ? +page : 1,
       limit ? +limit : 50,
@@ -344,14 +334,8 @@ export class ManufacturingController {
   @Get('molds')
   @ApiOperation({ summary: 'Get all molds' })
   @ApiResponse({ status: 200, description: 'Returns paginated molds' })
-  getAllMolds(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.moldService.getAllMolds(
-      page ? +page : 1,
-      limit ? +limit : 50,
-    );
+  getAllMolds(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.moldService.getAllMolds(page ? +page : 1, limit ? +limit : 50);
   }
 
   @Post('molds')
@@ -386,9 +370,7 @@ export class ManufacturingController {
   // Mold Issues
   @Get('mold-issues')
   getMoldIssues(@Query('mold_id') moldId?: string) {
-    return this.moldService.getMoldIssues(
-      moldId ? +moldId : undefined,
-    );
+    return this.moldService.getMoldIssues(moldId ? +moldId : undefined);
   }
 
   @Post('mold-issues')
@@ -484,7 +466,10 @@ export class ManufacturingController {
 
   @Get('production/:id/history')
   @ApiOperation({ summary: 'Get change history for a production record' })
-  @ApiResponse({ status: 200, description: 'Returns production record history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns production record history',
+  })
   getProductionRecordHistory(@Param('id') id: string) {
     return this.dailyProductionService.getRecordHistory(+id);
   }

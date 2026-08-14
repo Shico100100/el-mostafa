@@ -18,7 +18,11 @@ export class DocumentsService {
     }
   }
 
-  async upload(file: Express.Multer.File, entityType?: string, entityId?: number) {
+  async upload(
+    file: Express.Multer.File,
+    entityType?: string,
+    entityId?: number,
+  ) {
     const doc = this.repo.create({
       filename: file.filename,
       originalName: file.originalname,

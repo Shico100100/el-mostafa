@@ -13,7 +13,11 @@ export class AddJournalEntryIndexes1748000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_journal_entries_date_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_journal_entries_created_at"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_journal_entries_date_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_journal_entries_created_at"`,
+    );
   }
 }

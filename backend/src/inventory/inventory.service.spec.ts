@@ -17,13 +17,10 @@ describe('InventoryService', () => {
   let service: InventoryService;
   let categoryService: CategoryService;
   let productService: ProductService;
-  let warehouseService: WarehouseService;
   let stockService: StockService;
   let transactionHelper: TransactionHelper;
   let productRepo: Repository<Product>;
   let stockRepo: Repository<Stock>;
-  let warehouseRepo: Repository<Warehouse>;
-  let dataSource: DataSource;
 
   const mockQueryBuilder = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -49,7 +46,9 @@ describe('InventoryService', () => {
     release: jest.fn(),
     manager: {
       create: jest.fn().mockImplementation((entity, data) => data),
-      save: jest.fn().mockImplementation((entity, data) => ({ id: 1, ...data })),
+      save: jest
+        .fn()
+        .mockImplementation((entity, data) => ({ id: 1, ...data })),
       findOne: jest.fn(),
       delete: jest.fn(),
       update: jest.fn(),
@@ -68,7 +67,9 @@ describe('InventoryService', () => {
             runInTransaction: jest.fn().mockImplementation((fn) =>
               fn({
                 create: jest.fn().mockImplementation((entity, data) => data),
-                save: jest.fn().mockImplementation((entity, data) => ({ id: 1, ...data })),
+                save: jest
+                  .fn()
+                  .mockImplementation((entity, data) => ({ id: 1, ...data })),
                 delete: jest.fn().mockResolvedValue(undefined),
                 update: jest.fn().mockResolvedValue(undefined),
               }),
@@ -78,7 +79,9 @@ describe('InventoryService', () => {
         {
           provide: CategoryService,
           useValue: {
-            getAllCategories: jest.fn().mockResolvedValue([{ id: 1, name: 'Raw' }]),
+            getAllCategories: jest
+              .fn()
+              .mockResolvedValue([{ id: 1, name: 'Raw' }]),
             createCategory: jest.fn(),
             updateCategory: jest.fn(),
             deleteCategory: jest.fn(),
@@ -137,7 +140,9 @@ describe('InventoryService', () => {
           provide: getRepositoryToken(Product),
           useValue: {
             find: jest.fn(),
-            findOne: jest.fn().mockResolvedValue({ id: 1, name: 'Test Product', sku: 'SKU1' }),
+            findOne: jest
+              .fn()
+              .mockResolvedValue({ id: 1, name: 'Test Product', sku: 'SKU1' }),
             create: jest.fn(),
             save: jest.fn(),
             update: jest.fn(),
@@ -188,13 +193,10 @@ describe('InventoryService', () => {
     service = module.get<InventoryService>(InventoryService);
     categoryService = module.get(CategoryService);
     productService = module.get(ProductService);
-    warehouseService = module.get(WarehouseService);
     stockService = module.get(StockService);
     transactionHelper = module.get(TransactionHelper);
     productRepo = module.get(getRepositoryToken(Product));
     stockRepo = module.get(getRepositoryToken(Stock));
-    warehouseRepo = module.get(getRepositoryToken(Warehouse));
-    dataSource = module.get(DataSource);
   });
 
   it('should be defined', () => {
@@ -204,7 +206,9 @@ describe('InventoryService', () => {
   describe('getAllCategories', () => {
     it('should delegate to categoryService.getAllCategories', async () => {
       const categories = [{ id: 1, name: 'Raw' }];
-      (categoryService.getAllCategories as jest.Mock).mockResolvedValue(categories);
+      (categoryService.getAllCategories as jest.Mock).mockResolvedValue(
+        categories,
+      );
       const result = await service.getAllCategories();
       expect(result).toEqual(categories);
       expect(categoryService.getAllCategories).toHaveBeenCalled();
@@ -223,12 +227,17 @@ describe('InventoryService', () => {
         limit: 20,
         totalPages: 1,
       };
-      (productService.getAllProducts as jest.Mock).mockResolvedValue(paginatedResult);
+      (productService.getAllProducts as jest.Mock).mockResolvedValue(
+        paginatedResult,
+      );
 
       const result = await service.getAllProducts({ page: 1, limit: 20 });
 
       expect(result).toEqual(paginatedResult);
-      expect(productService.getAllProducts).toHaveBeenCalledWith({ page: 1, limit: 20 });
+      expect(productService.getAllProducts).toHaveBeenCalledWith({
+        page: 1,
+        limit: 20,
+      });
     });
 
     it('should return array results when no pagination', async () => {
@@ -247,21 +256,30 @@ describe('InventoryService', () => {
     it('should pass type filter to productService', async () => {
       (productService.getAllProducts as jest.Mock).mockResolvedValue([]);
       await service.getAllProducts({ type: 'RAW' });
-      expect(productService.getAllProducts).toHaveBeenCalledWith({ type: 'RAW' });
+      expect(productService.getAllProducts).toHaveBeenCalledWith({
+        type: 'RAW',
+      });
     });
 
     it('should pass search filter to productService', async () => {
       (productService.getAllProducts as jest.Mock).mockResolvedValue([]);
       await service.getAllProducts({ search: 'zipper' });
-      expect(productService.getAllProducts).toHaveBeenCalledWith({ search: 'zipper' });
+      expect(productService.getAllProducts).toHaveBeenCalledWith({
+        search: 'zipper',
+      });
     });
   });
 
   describe('createProduct', () => {
     it('should create with correct type via transaction', async () => {
-      (productRepo.findOne as jest.Mock).mockResolvedValue({ id: 1, name: 'New Product', category: null, warehouse: null });
+      (productRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        name: 'New Product',
+        category: null,
+        warehouse: null,
+      });
 
-      const result = await service.createProduct({
+      await service.createProduct({
         name: 'New Product',
         type: 'FINISHED',
         initial_stock: 100,
@@ -269,10 +287,13 @@ describe('InventoryService', () => {
 
       expect(transactionHelper.runInTransaction).toHaveBeenCalled();
     });
-
     it('should rollback transaction on error', async () => {
-      (transactionHelper.runInTransaction as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
-      (productRepo.findOne as jest.Mock).mockRejectedValue(new Error('DB error'));
+      (transactionHelper.runInTransaction as jest.Mock).mockRejectedValueOnce(
+        new Error('DB error'),
+      );
+      (productRepo.findOne as jest.Mock).mockRejectedValue(
+        new Error('DB error'),
+      );
 
       await expect(
         service.createProduct({ name: 'Fail Product', type: 'RAW' } as any),
@@ -289,8 +310,16 @@ describe('InventoryService', () => {
         quantity: 10,
       };
 
-      const mockResult = { id: 42, product_id: 1, warehouse_id: 1, type: MovementType.IN, quantity: 10 };
-      (stockService.addStockMovement as jest.Mock).mockResolvedValue(mockResult);
+      const mockResult = {
+        id: 42,
+        product_id: 1,
+        warehouse_id: 1,
+        type: MovementType.IN,
+        quantity: 10,
+      };
+      (stockService.addStockMovement as jest.Mock).mockResolvedValue(
+        mockResult,
+      );
 
       const result = await service.addStockMovement(movementData);
 
@@ -344,7 +373,10 @@ describe('InventoryService', () => {
 
   describe('transferStock', () => {
     it('should transfer stock between warehouses', async () => {
-      (productRepo.findOne as jest.Mock).mockResolvedValue({ id: 1, name: 'Product' });
+      (productRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 1,
+        name: 'Product',
+      });
       (stockRepo.findOne as jest.Mock).mockResolvedValue({
         product_id: 1,
         warehouse_id: 1,
@@ -365,7 +397,11 @@ describe('InventoryService', () => {
     it('should throw NotFoundException when product not found', async () => {
       (productRepo.findOne as jest.Mock).mockResolvedValue(null);
       await expect(
-        service.transferStock({ product_id: 999, from_warehouse_id: 1, to_warehouse_id: 2 }),
+        service.transferStock({
+          product_id: 999,
+          from_warehouse_id: 1,
+          to_warehouse_id: 2,
+        }),
       ).rejects.toThrow('المنتج غير موجود');
     });
   });
@@ -390,7 +426,11 @@ describe('InventoryService', () => {
     it('should throw NotFoundException when stock not found', async () => {
       (stockRepo.findOne as jest.Mock).mockResolvedValue(null);
       await expect(
-        service.adjustStock({ product_id: 999, warehouse_id: 1, new_quantity: 10 }),
+        service.adjustStock({
+          product_id: 999,
+          warehouse_id: 1,
+          new_quantity: 10,
+        }),
       ).rejects.toThrow('المخزون غير موجود لهذا المنتج');
     });
   });

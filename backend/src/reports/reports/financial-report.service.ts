@@ -5,7 +5,12 @@ import { DataSource } from 'typeorm';
 export class FinancialReportService {
   constructor(private readonly dataSource: DataSource) {}
 
-  async getSalesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+  async getSalesReport(
+    startDate: string,
+    endDate: string,
+    page?: number,
+    limit?: number,
+  ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
@@ -20,7 +25,8 @@ export class FinancialReportService {
 
     const effectiveLimit = limit && limit > 0 ? Math.min(limit, 500) : 0;
     const effectivePage = page && page > 0 ? page : 1;
-    const offset = effectiveLimit > 0 ? (effectivePage - 1) * effectiveLimit : 0;
+    const offset =
+      effectiveLimit > 0 ? (effectivePage - 1) * effectiveLimit : 0;
 
     const sales = await this.dataSource.query(
       `SELECT so.id, so.order_date, so.created_at, so.total_amount, so.status,
@@ -48,12 +54,22 @@ export class FinancialReportService {
       limit: effectiveLimit,
       totalPages:
         effectiveLimit > 0
-          ? Math.max(1, Math.ceil((Number(summary[0]?.sales_count) || 0) / effectiveLimit))
+          ? Math.max(
+              1,
+              Math.ceil(
+                (Number(summary[0]?.sales_count) || 0) / effectiveLimit,
+              ),
+            )
           : 1,
     };
   }
 
-  async getPurchasesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+  async getPurchasesReport(
+    startDate: string,
+    endDate: string,
+    page?: number,
+    limit?: number,
+  ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
@@ -68,7 +84,8 @@ export class FinancialReportService {
 
     const effectiveLimit = limit && limit > 0 ? Math.min(limit, 500) : 0;
     const effectivePage = page && page > 0 ? page : 1;
-    const offset = effectiveLimit > 0 ? (effectivePage - 1) * effectiveLimit : 0;
+    const offset =
+      effectiveLimit > 0 ? (effectivePage - 1) * effectiveLimit : 0;
 
     const purchases = await this.dataSource.query(
       `SELECT po.id, po.order_date, po.created_at, po.total_amount, po.status,
@@ -95,7 +112,12 @@ export class FinancialReportService {
       limit: effectiveLimit,
       totalPages:
         effectiveLimit > 0
-          ? Math.max(1, Math.ceil((Number(summary[0]?.purchases_count) || 0) / effectiveLimit))
+          ? Math.max(
+              1,
+              Math.ceil(
+                (Number(summary[0]?.purchases_count) || 0) / effectiveLimit,
+              ),
+            )
           : 1,
     };
   }
@@ -149,7 +171,10 @@ export class FinancialReportService {
       [start, end],
     );
 
-    const itemsByOrder = new Map<number, Array<{ quantity: number; product: { cost_price: number } }>>();
+    const itemsByOrder = new Map<
+      number,
+      Array<{ quantity: number; product: { cost_price: number } }>
+    >();
     for (const item of saleItems) {
       if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
       itemsByOrder.get(item.order_id)!.push({

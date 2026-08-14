@@ -13,7 +13,9 @@ export class FixManufacturingOrders1740960000004 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "manufacturing_orders" DROP CONSTRAINT "FK_manufacturing_orders_product"`);
+    await queryRunner.query(
+      `ALTER TABLE "manufacturing_orders" DROP CONSTRAINT "FK_manufacturing_orders_product"`,
+    );
     await queryRunner.query(`DROP TABLE "manufacturing_orders"`);
   }
 }

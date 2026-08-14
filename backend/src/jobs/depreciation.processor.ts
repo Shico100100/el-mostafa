@@ -20,7 +20,8 @@ export class DepreciationProcessor extends WorkerHost {
     const salvageValue = job.data.salvageValue || 0;
 
     const annualDepreciation = (purchasePrice - salvageValue) / usefulLife;
-    const depreciationAmount = Math.round(annualDepreciation * years * 100) / 100;
+    const depreciationAmount =
+      Math.round(annualDepreciation * years * 100) / 100;
 
     await job.updateProgress(50);
 
@@ -37,7 +38,9 @@ export class DepreciationProcessor extends WorkerHost {
     };
 
     await job.updateProgress(100);
-    this.logger.log(`اكتمل حساب إهلاك ${machineName || machineId}: ${depreciationAmount}`);
+    this.logger.log(
+      `اكتمل حساب إهلاك ${machineName || machineId}: ${depreciationAmount}`,
+    );
     return result;
   }
 }

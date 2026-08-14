@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FixCurrenciesFxRatesContainers1740960000003 implements MigrationInterface {
+export class FixCurrenciesFxRatesContainers1740960000003
+  implements MigrationInterface
+{
   name = 'FixCurrenciesFxRatesContainers1740960000003';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -19,7 +21,9 @@ export class FixCurrenciesFxRatesContainers1740960000003 implements MigrationInt
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "fx_rates" DROP CONSTRAINT "FK_fx_rates_currency"`);
+    await queryRunner.query(
+      `ALTER TABLE "fx_rates" DROP CONSTRAINT "FK_fx_rates_currency"`,
+    );
     await queryRunner.query(`DROP TABLE "containers"`);
     await queryRunner.query(`DROP TABLE "fx_rates"`);
     await queryRunner.query(`DROP TABLE "currencies"`);

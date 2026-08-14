@@ -8,7 +8,6 @@ import { JournalEntry } from '../../accounting/entities/journal-entry.entity';
 describe('BalanceSheetService', () => {
   let service: BalanceSheetService;
   let accountRepo: Repository<Account>;
-  let journalRepo: Repository<JournalEntry>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,7 +26,6 @@ describe('BalanceSheetService', () => {
 
     service = module.get<BalanceSheetService>(BalanceSheetService);
     accountRepo = module.get(getRepositoryToken(Account));
-    journalRepo = module.get(getRepositoryToken(JournalEntry));
   });
 
   it('should be defined', () => {
@@ -37,10 +35,34 @@ describe('BalanceSheetService', () => {
   describe('generate', () => {
     it('should return balanced sheet when assets = liabilities + equity', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1101', name: 'Inventory', type: AccountType.ASSET, balance: 50000 },
-        { id: 2, code: '1103', name: 'Treasury', type: AccountType.ASSET, balance: 30000 },
-        { id: 3, code: '2101', name: 'Suppliers', type: AccountType.LIABILITY, balance: 40000 },
-        { id: 4, code: '3101', name: 'Equity', type: AccountType.EQUITY, balance: 40000 },
+        {
+          id: 1,
+          code: '1101',
+          name: 'Inventory',
+          type: AccountType.ASSET,
+          balance: 50000,
+        },
+        {
+          id: 2,
+          code: '1103',
+          name: 'Treasury',
+          type: AccountType.ASSET,
+          balance: 30000,
+        },
+        {
+          id: 3,
+          code: '2101',
+          name: 'Suppliers',
+          type: AccountType.LIABILITY,
+          balance: 40000,
+        },
+        {
+          id: 4,
+          code: '3101',
+          name: 'Equity',
+          type: AccountType.EQUITY,
+          balance: 40000,
+        },
       ]);
 
       const result = await service.generate();
@@ -52,9 +74,27 @@ describe('BalanceSheetService', () => {
 
     it('should not flip sign on liabilities/equity', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1101', name: 'Inventory', type: AccountType.ASSET, balance: 100000 },
-        { id: 2, code: '2101', name: 'Suppliers', type: AccountType.LIABILITY, balance: 60000 },
-        { id: 3, code: '3101', name: 'Equity', type: AccountType.EQUITY, balance: 40000 },
+        {
+          id: 1,
+          code: '1101',
+          name: 'Inventory',
+          type: AccountType.ASSET,
+          balance: 100000,
+        },
+        {
+          id: 2,
+          code: '2101',
+          name: 'Suppliers',
+          type: AccountType.LIABILITY,
+          balance: 60000,
+        },
+        {
+          id: 3,
+          code: '3101',
+          name: 'Equity',
+          type: AccountType.EQUITY,
+          balance: 40000,
+        },
       ]);
 
       const result = await service.generate();
@@ -66,9 +106,27 @@ describe('BalanceSheetService', () => {
 
     it('should filter out zero-balance items', async () => {
       (accountRepo.find as jest.Mock).mockResolvedValue([
-        { id: 1, code: '1101', name: 'Inventory', type: AccountType.ASSET, balance: 50000 },
-        { id: 2, code: '1102', name: 'Customer Debt', type: AccountType.ASSET, balance: 0 },
-        { id: 3, code: '2101', name: 'Suppliers', type: AccountType.LIABILITY, balance: 50000 },
+        {
+          id: 1,
+          code: '1101',
+          name: 'Inventory',
+          type: AccountType.ASSET,
+          balance: 50000,
+        },
+        {
+          id: 2,
+          code: '1102',
+          name: 'Customer Debt',
+          type: AccountType.ASSET,
+          balance: 0,
+        },
+        {
+          id: 3,
+          code: '2101',
+          name: 'Suppliers',
+          type: AccountType.LIABILITY,
+          balance: 50000,
+        },
       ]);
 
       const result = await service.generate();

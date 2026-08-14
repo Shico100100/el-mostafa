@@ -86,7 +86,9 @@ export class RawMaterialService {
     const productIds = rows.map((r: any) => r.id);
     let suppliers: any[] = [];
     if (productIds.length > 0) {
-      const placeholders = productIds.map((_: any, i: number) => `$${i + 1}`).join(',');
+      const placeholders = productIds
+        .map((_: any, i: number) => `$${i + 1}`)
+        .join(',');
       suppliers = await this.dataSource.query(
         `SELECT * FROM suppliers WHERE id IN (SELECT preferred_supplier_id FROM products WHERE id IN (${placeholders}) AND preferred_supplier_id IS NOT NULL)`,
         productIds,
@@ -100,7 +102,11 @@ export class RawMaterialService {
       return {
         id: p.id,
         product_id: p.id,
-        product: { ...p, preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null, name: p.product_name },
+        product: {
+          ...p,
+          preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null,
+          name: p.product_name,
+        },
         product_name: p.product_name,
         preferred_supplier_id: p.preferred_supplier_id,
         preferred_supplier: supplierMap.get(p.preferred_supplier_id) || null,
@@ -140,7 +146,9 @@ export class RawMaterialService {
       FROM stock_movements WHERE product_id = $1`,
       [id],
     );
-    const currentStock = Number(movementAgg[0]?.total_in || 0) - Number(movementAgg[0]?.total_out || 0);
+    const currentStock =
+      Number(movementAgg[0]?.total_in || 0) -
+      Number(movementAgg[0]?.total_out || 0);
     return {
       id: product.id,
       product_id: product.id,
@@ -158,7 +166,13 @@ export class RawMaterialService {
     };
   }
 
-  async createRawMaterial(data: { product_id: number; reorder_point?: number; reorder_quantity?: number; avg_consumption_rate?: number; notes?: string }) {
+  async createRawMaterial(data: {
+    product_id: number;
+    reorder_point?: number;
+    reorder_quantity?: number;
+    avg_consumption_rate?: number;
+    notes?: string;
+  }) {
     const product = await this.productRepo.findOne({
       where: { id: data.product_id },
     });
@@ -174,7 +188,15 @@ export class RawMaterialService {
     return this.getRawMaterial(data.product_id);
   }
 
-  async updateRawMaterial(id: number, data: { reorder_point?: number; reorder_quantity?: number; avg_consumption_rate?: number; notes?: string }) {
+  async updateRawMaterial(
+    id: number,
+    data: {
+      reorder_point?: number;
+      reorder_quantity?: number;
+      avg_consumption_rate?: number;
+      notes?: string;
+    },
+  ) {
     await this.findRawProduct(id);
     await this.productRepo.update(id, data);
     return this.getRawMaterial(id);
@@ -240,8 +262,7 @@ export class RawMaterialService {
     const take = Math.min(Math.max(limit, 1), 200);
     const skip = (Math.max(page, 1) - 1) * take;
     const where: any = {};
-    if (filters?.product_id)
-      where.product_id = filters.product_id;
+    if (filters?.product_id) where.product_id = filters.product_id;
     if (filters?.start_date && filters?.end_date)
       where.consumed_at = Between(filters.start_date, filters.end_date);
     const [items, total] = await this.consumptionRepo.findAndCount({
@@ -304,9 +325,7 @@ export class RawMaterialService {
       notes: p.notes,
       current_stock: Number(p.current_stock),
       stock_status:
-        Number(p.current_stock) === 0
-          ? 'OUT_OF_STOCK'
-          : 'LOW_STOCK',
+        Number(p.current_stock) === 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK',
       created_at: p.created_at,
       updated_at: p.updated_at,
     }));
@@ -448,7 +467,10 @@ export class RawMaterialService {
     return this.stockMovementRepo.delete(id);
   }
 
-  async updateStockMovement(id: number, data: { quantity?: number; price?: number; date?: Date; notes?: string }) {
+  async updateStockMovement(
+    id: number,
+    data: { quantity?: number; price?: number; date?: Date; notes?: string },
+  ) {
     const movement = await this.stockMovementRepo.findOne({ where: { id } });
     if (!movement) throw new NotFoundException('حركة المخزون غير موجودة');
 
@@ -458,7 +480,10 @@ export class RawMaterialService {
 
     if (diff !== 0) {
       const stock = await this.stockRepo.findOne({
-        where: { product_id: movement.product_id, warehouse_id: movement.warehouse_id },
+        where: {
+          product_id: movement.product_id,
+          warehouse_id: movement.warehouse_id,
+        },
       });
       if (stock) {
         if (movement.type === MovementType.IN) {
@@ -466,7 +491,8 @@ export class RawMaterialService {
         } else {
           stock.quantity = Number(stock.quantity) - diff;
         }
-        if (Number(stock.quantity) < 0) throw new BadRequestException('الرصيد غير كافٍ للتحديث');
+        if (Number(stock.quantity) < 0)
+          throw new BadRequestException('الرصيد غير كافٍ للتحديث');
         await this.stockRepo.save(stock);
       }
     }

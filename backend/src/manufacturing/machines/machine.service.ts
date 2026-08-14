@@ -234,7 +234,9 @@ export class MachineService {
   }
 
   async queueDepreciationCalculation(machineId: number) {
-    const machine = await this.machineRepo.findOne({ where: { id: machineId } });
+    const machine = await this.machineRepo.findOne({
+      where: { id: machineId },
+    });
     if (!machine) throw new NotFoundException('الماكينة غير موجودة');
     const job = await this.depreciationQueue.add('calculate', {
       machineId: machine.id,
@@ -242,7 +244,8 @@ export class MachineService {
       purchasePrice: machine.price || 0,
       usefulLife: machine.useful_life_years || 10,
       salvageValue: 0,
-      startDate: machine.purchase_date?.toISOString() || new Date().toISOString(),
+      startDate:
+        machine.purchase_date?.toISOString() || new Date().toISOString(),
       endDate: new Date().toISOString(),
     });
     return { jobId: job.id, message: 'جاري حساب الإهلاك في الخلفية' };
@@ -263,6 +266,9 @@ export class MachineService {
         }),
       ),
     );
-    return { count: jobs.length, message: `جاري حساب إهلاك ${jobs.length} ماكينة في الخلفية` };
+    return {
+      count: jobs.length,
+      message: `جاري حساب إهلاك ${jobs.length} ماكينة في الخلفية`,
+    };
   }
 }

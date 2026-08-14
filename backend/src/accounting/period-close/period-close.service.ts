@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PeriodClose } from './entities/period-close.entity';
@@ -33,7 +37,8 @@ export class PeriodCloseService {
   async reopenPeriod(period: string): Promise<PeriodClose> {
     const existing = await this.findByPeriod(period);
     if (!existing) throw new NotFoundException(`Period ${period} not found`);
-    if (existing.status === 'OPEN') throw new BadRequestException(`Period ${period} is already open`);
+    if (existing.status === 'OPEN')
+      throw new BadRequestException(`Period ${period} is already open`);
 
     existing.status = 'OPEN';
     existing.closed_by = null;

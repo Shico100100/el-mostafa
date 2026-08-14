@@ -16,7 +16,6 @@ import { Product } from '../inventory/entities/product.entity';
 import { Stock } from '../inventory/entities/stock.entity';
 import { CacheService } from '../cache/cache.service';
 
-
 function daysAgo(n: number): Date {
   const d = new Date();
   d.setDate(d.getDate() - n);

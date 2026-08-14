@@ -15,11 +15,17 @@ export class JobService {
   ) {}
 
   async findAll(): Promise<Job[]> {
-    return this.jobRepo.find({ relations: ['customer', 'phases', 'costs'], order: { created_at: 'DESC' } });
+    return this.jobRepo.find({
+      relations: ['customer', 'phases', 'costs'],
+      order: { created_at: 'DESC' },
+    });
   }
 
   async findOne(id: number): Promise<Job> {
-    const job = await this.jobRepo.findOne({ where: { id }, relations: ['customer', 'phases', 'phases.costs', 'costs'] });
+    const job = await this.jobRepo.findOne({
+      where: { id },
+      relations: ['customer', 'phases', 'phases.costs', 'costs'],
+    });
     if (!job) throw new NotFoundException(`Job #${id} not found`);
     return job;
   }
@@ -36,11 +42,13 @@ export class JobService {
       status: dto.status || JobStatus.ACTIVE,
       description: dto.description,
     });
-    const saved = await this.jobRepo.save(job) as Job;
+    const saved = (await this.jobRepo.save(job)) as Job;
 
     if (dto.phases) {
       for (const phase of dto.phases) {
-        await this.phaseRepo.save(this.phaseRepo.create({ job_id: saved.id, ...phase }));
+        await this.phaseRepo.save(
+          this.phaseRepo.create({ job_id: saved.id, ...phase }),
+        );
       }
     }
     return this.findOne(saved.id);
@@ -53,8 +61,10 @@ export class JobService {
     if (dto.customer_id !== undefined) job.customer_id = dto.customer_id;
     if (dto.start_date) job.start_date = new Date(dto.start_date);
     if (dto.end_date) job.end_date = new Date(dto.end_date);
-    if (dto.estimated_cost !== undefined) job.estimated_cost = dto.estimated_cost;
-    if (dto.estimated_revenue !== undefined) job.estimated_revenue = dto.estimated_revenue;
+    if (dto.estimated_cost !== undefined)
+      job.estimated_cost = dto.estimated_cost;
+    if (dto.estimated_revenue !== undefined)
+      job.estimated_revenue = dto.estimated_revenue;
     if (dto.status) job.status = dto.status;
     if (dto.description !== undefined) job.description = dto.description;
     return this.jobRepo.save(job);
@@ -67,7 +77,9 @@ export class JobService {
     });
     const saved = await this.costRepo.save(cost);
 
-    const allCosts = await this.costRepo.find({ where: { job_id: dto.job_id } });
+    const allCosts = await this.costRepo.find({
+      where: { job_id: dto.job_id },
+    });
     const totalCost = allCosts.reduce((sum, c) => sum + Number(c.amount), 0);
     await this.jobRepo.update(dto.job_id, { actual_cost: totalCost });
 
@@ -77,10 +89,13 @@ export class JobService {
   async getProfitability(id: number): Promise<any> {
     const job = await this.findOne(id);
     const costs = await this.costRepo.find({ where: { job_id: id } });
-    const byType = costs.reduce((acc, c) => {
-      acc[c.type] = (acc[c.type] || 0) + Number(c.amount);
-      return acc;
-    }, {} as Record<string, number>);
+    const byType = costs.reduce(
+      (acc, c) => {
+        acc[c.type] = (acc[c.type] || 0) + Number(c.amount);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       job_id: job.id,
@@ -88,7 +103,8 @@ export class JobService {
       estimated_cost: job.estimated_cost,
       actual_cost: job.actual_cost,
       estimated_revenue: job.estimated_revenue,
-      estimated_profit: Number(job.estimated_revenue) - Number(job.estimated_cost),
+      estimated_profit:
+        Number(job.estimated_revenue) - Number(job.estimated_cost),
       actual_profit: Number(job.estimated_revenue) - Number(job.actual_cost),
       cost_breakdown: byType,
     };
@@ -96,7 +112,7 @@ export class JobService {
 
   async getSummary(): Promise<any[]> {
     const jobs = await this.jobRepo.find({ order: { created_at: 'DESC' } });
-    return jobs.map(j => ({
+    return jobs.map((j) => ({
       id: j.id,
       name: j.name,
       code: j.code,

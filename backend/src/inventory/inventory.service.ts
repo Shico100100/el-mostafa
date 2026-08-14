@@ -274,11 +274,16 @@ export class InventoryService {
   }
 
   async markProductAsDormant(productId: number) {
-    const product = await this.productRepo.findOne({ where: { id: productId } });
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+    });
     if (!product) throw new NotFoundException('المنتج غير موجود');
-    if (product.type === 'DORMANT') throw new BadRequestException('المنتج خامل بالفعل');
+    if (product.type === 'DORMANT')
+      throw new BadRequestException('المنتج خامل بالفعل');
 
-    let dormantWarehouse = await this.warehouseRepo.findOne({ where: { name: 'خامل' } });
+    let dormantWarehouse = await this.warehouseRepo.findOne({
+      where: { name: 'خامل' },
+    });
     if (!dormantWarehouse) {
       dormantWarehouse = await this.warehouseRepo.save(
         this.warehouseRepo.create({ name: 'خامل', is_active: true }),
@@ -292,14 +297,19 @@ export class InventoryService {
   }
 
   async restoreProduct(productId: number) {
-    const product = await this.productRepo.findOne({ where: { id: productId } });
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+    });
     if (!product) throw new NotFoundException('المنتج غير موجود');
-    if (product.type !== 'DORMANT') throw new BadRequestException('المنتج ليس خاملاً');
+    if (product.type !== 'DORMANT')
+      throw new BadRequestException('المنتج ليس خاملاً');
 
-    const defaultWarehouse = await this.warehouseRepo.findOne({ where: { name: 'منتج تام' } });
+    const defaultWarehouse = await this.warehouseRepo.findOne({
+      where: { name: 'منتج تام' },
+    });
     const targetWarehouseId = defaultWarehouse
       ? defaultWarehouse.id
-      : (await this.getDefaultWarehouseId());
+      : await this.getDefaultWarehouseId();
 
     return this.updateProduct(productId, {
       type: 'FINISHED',

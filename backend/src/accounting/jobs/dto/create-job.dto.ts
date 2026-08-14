@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsOptional, IsDateString, IsEnum, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { JobStatus } from '../entities/job.entity';
 
@@ -18,7 +26,11 @@ export class CreateJobDto {
   @IsOptional() @IsNumber() estimated_revenue?: number;
   @IsOptional() @IsEnum(JobStatus) status?: JobStatus;
   @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => JobPhaseDto) phases?: JobPhaseDto[];
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => JobPhaseDto)
+  phases?: JobPhaseDto[];
 }
 
 export class CreateJobCostDto {

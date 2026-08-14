@@ -6,7 +6,8 @@ import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
 @Injectable()
 export class PriceHistoryService {
   constructor(
-    @InjectRepository(PurchaseOrderItem) private poItemRepo: Repository<PurchaseOrderItem>,
+    @InjectRepository(PurchaseOrderItem)
+    private poItemRepo: Repository<PurchaseOrderItem>,
   ) {}
 
   async getHistory(productId?: number) {

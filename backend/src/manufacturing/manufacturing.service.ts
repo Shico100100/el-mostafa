@@ -11,11 +11,6 @@ import { Mold } from './entities/mold.entity';
 import { DailyProduction } from './entities/daily-production.entity';
 import { RangeProductionSession } from './entities/range-production-session.entity';
 import { Product } from '../inventory/entities/product.entity';
-import { Stock } from '../inventory/entities/stock.entity';
-import {
-  StockMovement,
-  MovementType,
-} from '../inventory/entities/stock-movement.entity';
 import { AccountingService } from '../accounting/accounting.service';
 import { FixedCostService } from './fixed-cost.service';
 import { WarehouseHelper } from './warehouse.helper';
@@ -101,11 +96,8 @@ export class ManufacturingService {
         const prod = await this.productRepo.findOne({
           where: { id: data.product_id, type: 'RAW' },
         });
-        if (!prod)
-          throw new NotFoundException('المادة الخام غير موجودة');
-        const rawMaterialPrice =
-          Number(prod.cost_price) ||
-          0;
+        if (!prod) throw new NotFoundException('المادة الخام غير موجودة');
+        const rawMaterialPrice = Number(prod.cost_price) || 0;
         const prodDate = data.date ? new Date(data.date) : new Date();
         const monthStr = `${prodDate.getFullYear()}-${String(prodDate.getMonth() + 1).padStart(2, '0')}`;
         const hourlyCost = await this.fixedCostService.calculateHourlyCost(
@@ -263,9 +255,10 @@ export class ManufacturingService {
       let remainingKg = totalKg;
       for (let i = 0; i < workingDays.length; i++) {
         const day = workingDays[i];
-        const dayKg = i === workingDays.length - 1
-          ? Math.round(remainingKg * 100) / 100
-          : dailyKg;
+        const dayKg =
+          i === workingDays.length - 1
+            ? Math.round(remainingKg * 100) / 100
+            : dailyKg;
         remainingKg -= dailyKg;
         try {
           const record = await this.createProduction({
@@ -341,8 +334,7 @@ export class ManufacturingService {
       }
 
       if (production.mold && production.pieces_produced) {
-        const plasticWhId =
-          await this.warehouseHelper.getPlasticWarehouseId();
+        const plasticWhId = await this.warehouseHelper.getPlasticWarehouseId();
         await this.warehouseHelper.reverseSemiFinishedStock(
           production.mold.name,
           production.pieces_produced,
@@ -494,7 +486,9 @@ export class ManufacturingService {
         results.success++;
       } catch (err) {
         results.failed++;
-        results.errors.push(`Row ${JSON.stringify(row)}: ${(err as Error).message}`);
+        results.errors.push(
+          `Row ${JSON.stringify(row)}: ${(err as Error).message}`,
+        );
       }
     }
     return results;

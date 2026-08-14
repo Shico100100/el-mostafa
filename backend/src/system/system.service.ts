@@ -29,7 +29,9 @@ export class SystemService {
       const entities = this.dataSource.entityMetadatas;
       for (const entity of entities) {
         if (!existingSet.has(entity.tableName)) {
-          this.logger.warn(`Skipping table "${entity.tableName}" — does not exist`);
+          this.logger.warn(
+            `Skipping table "${entity.tableName}" — does not exist`,
+          );
           continue;
         }
         await queryRunner.manager.query(

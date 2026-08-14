@@ -1,5 +1,9 @@
 import { Controller, Get, Logger } from '@nestjs/common';
-import { HealthCheckService, HealthCheck, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import {
+  HealthCheckService,
+  HealthCheck,
+  TypeOrmHealthIndicator,
+} from '@nestjs/terminus';
 import Redis from 'ioredis';
 
 @Controller('health')
@@ -38,8 +42,6 @@ export class HealthController {
   @Get('ready')
   @HealthCheck()
   readiness() {
-    return this.health.check([
-      () => this.db.pingCheck('database'),
-    ]);
+    return this.health.check([() => this.db.pingCheck('database')]);
   }
 }

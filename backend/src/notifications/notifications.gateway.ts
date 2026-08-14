@@ -61,8 +61,7 @@ export class NotificationsGateway
   constructor(private configService: ConfigService<AllConfigType>) {}
 
   handleConnection(client: Socket) {
-    const token =
-      client.handshake.auth?.token || client.handshake.query?.token;
+    const token = client.handshake.auth?.token || client.handshake.query?.token;
     if (!token) {
       client.disconnect();
       return;
@@ -72,7 +71,11 @@ export class NotificationsGateway
       const secret = this.configService.getOrThrow('auth.secret', {
         infer: true,
       });
-      const payload = jwt.verify(token, secret) as { id: number; role: number; sessionId: string };
+      const payload = jwt.verify(token, secret) as {
+        id: number;
+        role: number;
+        sessionId: string;
+      };
       this.connectedClients.set(client.id, {
         socket: client,
         userId: payload.id,
@@ -99,7 +102,9 @@ export class NotificationsGateway
     createdAt: Date;
   }) {
     if (notification.userId) {
-      this.server.to(`user:${notification.userId}`).emit('notification', notification);
+      this.server
+        .to(`user:${notification.userId}`)
+        .emit('notification', notification);
     }
     this.server.to('all').emit('notification', notification);
   }

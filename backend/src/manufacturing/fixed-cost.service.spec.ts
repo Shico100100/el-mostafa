@@ -13,7 +13,6 @@ describe('FixedCostService', () => {
   let service: FixedCostService;
   let fixedCostRepo: Repository<FixedCost>;
   let productionRepo: Repository<DailyProduction>;
-  let machineRepo: Repository<Machine>;
   let purchaseOrderItemRepo: Repository<PurchaseOrderItem>;
 
   const mockGetRawOne = jest.fn();
@@ -87,7 +86,6 @@ describe('FixedCostService', () => {
     service = module.get<FixedCostService>(FixedCostService);
     fixedCostRepo = module.get(getRepositoryToken(FixedCost));
     productionRepo = module.get(getRepositoryToken(DailyProduction));
-    machineRepo = module.get(getRepositoryToken(Machine));
     purchaseOrderItemRepo = module.get(getRepositoryToken(PurchaseOrderItem));
   });
 
@@ -175,9 +173,7 @@ describe('FixedCostService', () => {
     });
 
     it('should return 0 when no production exists', async () => {
-      (fixedCostRepo.find as jest.Mock).mockResolvedValue([
-        { amount: 10000 },
-      ]);
+      (fixedCostRepo.find as jest.Mock).mockResolvedValue([{ amount: 10000 }]);
       (productionRepo.find as jest.Mock).mockResolvedValue([]);
       const result = await service.calculateOverheadRate('2026-07');
       expect(result).toBe(0);
@@ -200,7 +196,9 @@ describe('FixedCostService', () => {
 
   describe('getLastPurchasePrice', () => {
     it('should return price when item exists', async () => {
-      (purchaseOrderItemRepo.findOne as jest.Mock).mockResolvedValue({ price: 25.5 });
+      (purchaseOrderItemRepo.findOne as jest.Mock).mockResolvedValue({
+        price: 25.5,
+      });
       const result = await service.getLastPurchasePrice(1);
       expect(result).toBe(25.5);
     });

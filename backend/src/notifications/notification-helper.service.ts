@@ -29,7 +29,9 @@ export class NotificationHelperService {
       });
     } catch (e) {
       // Don't let notification creation break the request, but log for observability
-      this.logger.warn(`Failed to create notification: ${e instanceof Error ? e.message : e}`);
+      this.logger.warn(
+        `Failed to create notification: ${e instanceof Error ? e.message : e}`,
+      );
     }
   }
 

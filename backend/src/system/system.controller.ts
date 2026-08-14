@@ -22,13 +22,6 @@ import * as fs from 'fs';
 const execPromise = util.promisify(exec);
 
 function getPgDumpPath(): string {
-  const candidates = [
-    'pg_dump',
-    '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump"',
-    '"C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump"',
-    '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump"',
-    '/usr/bin/pg_dump',
-  ];
   // On Windows, check common install paths
   if (process.platform === 'win32') {
     for (const pgDir of ['18', '17', '16', '15', '14']) {
@@ -74,10 +67,7 @@ export class SystemController {
       const date = new Date().toISOString().replace(/[:T]/g, '-').split('.')[0];
       const rawDbName = process.env.DATABASE_NAME || 'db';
       const dbName = sanitizeDbName(rawDbName);
-      const backupFile = path.join(
-        backupDir,
-        `${dbName}-${date}.sql`,
-      );
+      const backupFile = path.join(backupDir, `${dbName}-${date}.sql`);
 
       // Construct pg_dump command
       const pgPassword = process.env.DATABASE_PASSWORD || '';

@@ -120,6 +120,6 @@ export class DailyProductionService {
           'Created At': s.created_at,
         })),
       },
-      ]);
+    ]);
   }
 }

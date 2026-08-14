@@ -51,15 +51,18 @@ export class AnalyticsService {
       `);
 
       const totalValue = productsWithStock.reduce(
-        (sum: number, p: Record<string, any>) => sum + Number(p.quantity) * Number(p.cost_price || 0),
+        (sum: number, p: Record<string, any>) =>
+          sum + Number(p.quantity) * Number(p.cost_price || 0),
         0,
       );
 
-      const lowStockItems = productsWithStock.filter((p: Record<string, any>) => {
-        const qty = Number(p.quantity);
-        const min = Number(p.min_stock || 0);
-        return qty <= min;
-      });
+      const lowStockItems = productsWithStock.filter(
+        (p: Record<string, any>) => {
+          const qty = Number(p.quantity);
+          const min = Number(p.min_stock || 0);
+          return qty <= min;
+        },
+      );
 
       if (lowStockItems.length > 0) {
         await this.notificationsService.create(
@@ -234,7 +237,12 @@ export class AnalyticsService {
     const shipments = await this.purchaseOrderRepo.find({
       where:
         startDate && endDate
-          ? { order_date: Between(new Date(startDate), new Date(endDate + 'T23:59:59.999Z')) }
+          ? {
+              order_date: Between(
+                new Date(startDate),
+                new Date(endDate + 'T23:59:59.999Z'),
+              ),
+            }
           : {},
       relations: ['items', 'items.product', 'supplier'],
     });
@@ -248,8 +256,11 @@ export class AnalyticsService {
     }
 
     // Batch-query: get all sales data for all products in one query
-    let salesByProduct = new Map<number, { qty: number; revenue: number }>();
-    let itemSalesByProduct = new Map<number, { qty: number; revenue: number }>();
+    const salesByProduct = new Map<number, { qty: number; revenue: number }>();
+    const itemSalesByProduct = new Map<
+      number,
+      { qty: number; revenue: number }
+    >();
     if (allProductIds.size > 0) {
       const ids = [...allProductIds];
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
@@ -260,7 +271,9 @@ export class AnalyticsService {
          JOIN sales_orders so ON so.id = soi.order_id
          WHERE soi.product_id IN (${placeholders})${startDate && endDate ? ` AND so.order_date BETWEEN $${ids.length + 1} AND $${ids.length + 2}` : ''}
          GROUP BY soi.product_id`,
-        startDate && endDate ? [...ids, startDate, endDate + 'T23:59:59.999Z'] : ids,
+        startDate && endDate
+          ? [...ids, startDate, endDate + 'T23:59:59.999Z']
+          : ids,
       );
       for (const row of salesResult) {
         salesByProduct.set(row.product_id, {
@@ -276,7 +289,9 @@ export class AnalyticsService {
          JOIN sales_orders so ON so.id = soi.order_id
          WHERE soi.product_id IN (${placeholders})${startDate && endDate ? ` AND so.order_date BETWEEN $${ids.length + 1} AND $${ids.length + 2}` : ''}
          GROUP BY soi.product_id`,
-        startDate && endDate ? [...ids, startDate, endDate + 'T23:59:59.999Z'] : ids,
+        startDate && endDate
+          ? [...ids, startDate, endDate + 'T23:59:59.999Z']
+          : ids,
       );
       for (const row of itemSalesResult) {
         itemSalesByProduct.set(row.product_id, {
@@ -287,7 +302,7 @@ export class AnalyticsService {
     }
 
     // Batch-query: get scrap data once (daily_production has no scrap column; scrap is not tracked)
-    let scrapQty = 0;
+    const scrapQty = 0;
 
     const result = shipments.map((po) => {
       const landedCost =
@@ -317,7 +332,10 @@ export class AnalyticsService {
       const margin = salesRevenue > 0 ? (netProfit / salesRevenue) * 100 : 0;
 
       const itemMargins = po.items.map((item) => {
-        const itemSale = itemSalesByProduct.get(item.product_id) || { qty: 0, revenue: 0 };
+        const itemSale = itemSalesByProduct.get(item.product_id) || {
+          qty: 0,
+          revenue: 0,
+        };
         const sq = itemSale.qty;
         const rev = itemSale.revenue;
         const cogs = (Number(item.product?.cost_price) || 0) * sq;

@@ -7,7 +7,7 @@ export class PdfGenerationProcessor extends WorkerHost {
   private readonly logger = new Logger(PdfGenerationProcessor.name);
 
   async process(job: Job) {
-    const { type, data, title } = job.data;
+    const { type, title } = job.data;
     this.logger.log(`بدء توليد PDF: ${title || type}`);
 
     await job.updateProgress(30);

@@ -36,7 +36,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         // never starves itself (pool max == server max caused connection
         // timeouts under load).
         max: Math.min(
-          this.configService.get('database.maxConnections', { infer: true }) ?? 100,
+          this.configService.get('database.maxConnections', { infer: true }) ??
+            100,
           25,
         ),
         min: 2,

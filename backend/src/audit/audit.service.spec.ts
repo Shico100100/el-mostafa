@@ -32,7 +32,12 @@ describe('AuditService', () => {
 
   describe('log', () => {
     it('should create and save an audit entry', async () => {
-      const data = { entity: 'User', entityId: '1', action: 'CREATE', userId: 5 };
+      const data = {
+        entity: 'User',
+        entityId: '1',
+        action: 'CREATE',
+        userId: 5,
+      };
       const entry = { id: 1, ...data };
       repo.create.mockReturnValue(entry);
       repo.save.mockResolvedValue(entry);
@@ -49,14 +54,20 @@ describe('AuditService', () => {
     it('should return recent entries with default limit 100', async () => {
       repo.find.mockResolvedValue([{ id: 1 }, { id: 2 }]);
       const result = await service.findAll();
-      expect(repo.find).toHaveBeenCalledWith({ order: { createdAt: 'DESC' }, take: 100 });
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+        take: 100,
+      });
       expect(result).toHaveLength(2);
     });
 
     it('should respect custom limit', async () => {
       repo.find.mockResolvedValue([]);
       await service.findAll(5);
-      expect(repo.find).toHaveBeenCalledWith({ order: { createdAt: 'DESC' }, take: 5 });
+      expect(repo.find).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+        take: 5,
+      });
     });
   });
 
@@ -65,7 +76,10 @@ describe('AuditService', () => {
       const logs = [{ id: 1, entity: 'User', entityId: '42' }];
       repo.find.mockResolvedValue(logs);
       const result = await service.findByEntity('User', 42);
-      expect(repo.find).toHaveBeenCalledWith({ where: { entityId: '42' }, order: { createdAt: 'DESC' } });
+      expect(repo.find).toHaveBeenCalledWith({
+        where: { entityId: '42' },
+        order: { createdAt: 'DESC' },
+      });
       expect(result).toEqual(logs);
     });
   });

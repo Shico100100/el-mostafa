@@ -10,10 +10,7 @@ import { RelationalUserPersistenceModule } from './infrastructure/persistence/re
 import { FilesModule } from '../files/files.module';
 
 @Module({
-  imports: [
-    RelationalUserPersistenceModule,
-    FilesModule,
-  ],
+  imports: [RelationalUserPersistenceModule, FilesModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService, RelationalUserPersistenceModule],

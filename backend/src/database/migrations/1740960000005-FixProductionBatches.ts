@@ -25,10 +25,18 @@ export class FixProductionBatches1740960000005 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_accessory"`);
-    await queryRunner.query(`ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_raw_material"`);
-    await queryRunner.query(`ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_batch"`);
-    await queryRunner.query(`ALTER TABLE "production_batches" DROP CONSTRAINT IF EXISTS "FK_production_batches_product"`);
+    await queryRunner.query(
+      `ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_accessory"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_raw_material"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "batch_components" DROP CONSTRAINT IF EXISTS "FK_batch_components_batch"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "production_batches" DROP CONSTRAINT IF EXISTS "FK_production_batches_product"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "batch_components"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "production_batches"`);
   }

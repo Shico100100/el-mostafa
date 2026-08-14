@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BankAccount } from './entities/bank-account.entity';
@@ -8,9 +8,12 @@ import { BankReconciliation } from './entities/bank-reconciliation.entity';
 @Injectable()
 export class BankingService {
   constructor(
-    @InjectRepository(BankAccount) private bankAccountRepo: Repository<BankAccount>,
-    @InjectRepository(BankTransaction) private bankTxRepo: Repository<BankTransaction>,
-    @InjectRepository(BankReconciliation) private reconRepo: Repository<BankReconciliation>,
+    @InjectRepository(BankAccount)
+    private bankAccountRepo: Repository<BankAccount>,
+    @InjectRepository(BankTransaction)
+    private bankTxRepo: Repository<BankTransaction>,
+    @InjectRepository(BankReconciliation)
+    private reconRepo: Repository<BankReconciliation>,
   ) {}
 
   async findAllAccounts(): Promise<BankAccount[]> {
@@ -27,19 +30,31 @@ export class BankingService {
     return this.bankAccountRepo.save(this.bankAccountRepo.create(data));
   }
 
-  async updateAccount(id: number, data: Partial<BankAccount>): Promise<BankAccount> {
+  async updateAccount(
+    id: number,
+    data: Partial<BankAccount>,
+  ): Promise<BankAccount> {
     const acc = await this.findOneAccount(id);
     Object.assign(acc, data);
     return this.bankAccountRepo.save(acc);
   }
 
   async getTransactions(bankAccountId: number): Promise<BankTransaction[]> {
-    return this.bankTxRepo.find({ where: { bank_account_id: bankAccountId }, order: { date: 'DESC', id: 'DESC' } });
+    return this.bankTxRepo.find({
+      where: { bank_account_id: bankAccountId },
+      order: { date: 'DESC', id: 'DESC' },
+    });
   }
 
-  async addTransaction(bankAccountId: number, data: Partial<BankTransaction>): Promise<BankTransaction> {
+  async addTransaction(
+    bankAccountId: number,
+    data: Partial<BankTransaction>,
+  ): Promise<BankTransaction> {
     const account = await this.findOneAccount(bankAccountId);
-    const tx = this.bankTxRepo.create({ ...data, bank_account_id: bankAccountId });
+    const tx = this.bankTxRepo.create({
+      ...data,
+      bank_account_id: bankAccountId,
+    });
     const saved = await this.bankTxRepo.save(tx);
 
     const delta = Number(saved.debit) - Number(saved.credit);
@@ -49,7 +64,11 @@ export class BankingService {
     return saved;
   }
 
-  async startReconciliation(bankAccountId: number, statementDate: Date, statementBalance: number): Promise<BankReconciliation> {
+  async startReconciliation(
+    bankAccountId: number,
+    statementDate: Date,
+    statementBalance: number,
+  ): Promise<BankReconciliation> {
     const account = await this.findOneAccount(bankAccountId);
     const recon = this.reconRepo.create({
       bank_account_id: bankAccountId,
@@ -62,22 +81,32 @@ export class BankingService {
     return this.reconRepo.save(recon);
   }
 
-  async completeReconciliation(reconciliationId: number, reconciledTxIds: number[]): Promise<BankReconciliation> {
-    const recon = await this.reconRepo.findOne({ where: { id: reconciliationId } });
-    if (!recon) throw new NotFoundException(`Reconciliation #${reconciliationId} not found`);
+  async completeReconciliation(
+    reconciliationId: number,
+    reconciledTxIds: number[],
+  ): Promise<BankReconciliation> {
+    const recon = await this.reconRepo.findOne({
+      where: { id: reconciliationId },
+    });
+    if (!recon)
+      throw new NotFoundException(
+        `Reconciliation #${reconciliationId} not found`,
+      );
 
     for (const txId of reconciledTxIds) {
-      await this.bankTxRepo.update(txId, { is_reconciled: true, reconciliation_id: reconciliationId });
+      await this.bankTxRepo.update(txId, {
+        is_reconciled: true,
+        reconciliation_id: reconciliationId,
+      });
     }
-
-    const reconciledTxs = await this.bankTxRepo.find({ where: { reconciliation_id: reconciliationId } });
-    const reconciledTotal = reconciledTxs.reduce((sum, tx) => sum + Number(tx.debit) - Number(tx.credit), 0);
 
     const account = await this.findOneAccount(recon.bank_account_id);
     const reconciledBalance = Number(account.balance);
 
     recon.reconciled_balance = reconciledBalance;
-    recon.difference = Math.round((Number(recon.statement_balance) - reconciledBalance) * 100) / 100;
+    recon.difference =
+      Math.round((Number(recon.statement_balance) - reconciledBalance) * 100) /
+      100;
     recon.status = 'COMPLETED';
     return this.reconRepo.save(recon);
   }
@@ -87,6 +116,12 @@ export class BankingService {
     const transactions = await this.getTransactions(bankAccountId);
     const totalDebits = transactions.reduce((s, t) => s + Number(t.debit), 0);
     const totalCredits = transactions.reduce((s, t) => s + Number(t.credit), 0);
-    return { account, transactions, totalDebits, totalCredits, currentBalance: account.balance };
+    return {
+      account,
+      transactions,
+      totalDebits,
+      totalCredits,
+      currentBalance: account.balance,
+    };
   }
 }

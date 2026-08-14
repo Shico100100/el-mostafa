@@ -1,4 +1,10 @@
-import { IsNumber, IsDateString, IsString, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsNumber,
+  IsDateString,
+  IsString,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateTimeEntryDto {
   @IsNumber() user_id: number;

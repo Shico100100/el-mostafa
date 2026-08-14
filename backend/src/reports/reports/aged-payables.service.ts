@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
-import { PurchaseOrder, PurchaseOrderStatus } from '../../purchases/entities/purchase-order.entity';
+import {
+  PurchaseOrder,
+  PurchaseOrderStatus,
+} from '../../purchases/entities/purchase-order.entity';
 import { Supplier } from '../../purchases/entities/supplier.entity';
 
 @Injectable()
 export class AgedPayablesService {
   constructor(
-    @InjectRepository(PurchaseOrder) private purchaseOrderRepo: Repository<PurchaseOrder>,
+    @InjectRepository(PurchaseOrder)
+    private purchaseOrderRepo: Repository<PurchaseOrder>,
     @InjectRepository(Supplier) private supplierRepo: Repository<Supplier>,
   ) {}
 
@@ -24,7 +28,17 @@ export class AgedPayablesService {
     });
 
     const today = new Date();
-    const supplierBuckets = new Map<number, { current: number; days_30: number; days_60: number; days_90: number; days_120: number; total: number }>();
+    const supplierBuckets = new Map<
+      number,
+      {
+        current: number;
+        days_30: number;
+        days_60: number;
+        days_90: number;
+        days_120: number;
+        total: number;
+      }
+    >();
 
     for (const order of orders) {
       if (!order.supplier_id) continue;
@@ -32,10 +46,19 @@ export class AgedPayablesService {
       if (outstanding <= 0) continue;
 
       const orderDate = new Date(order.order_date);
-      const daysDiff = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDiff = Math.floor(
+        (today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       if (!supplierBuckets.has(order.supplier_id)) {
-        supplierBuckets.set(order.supplier_id, { current: 0, days_30: 0, days_60: 0, days_90: 0, days_120: 0, total: 0 });
+        supplierBuckets.set(order.supplier_id, {
+          current: 0,
+          days_30: 0,
+          days_60: 0,
+          days_90: 0,
+          days_120: 0,
+          total: 0,
+        });
       }
 
       const buckets = supplierBuckets.get(order.supplier_id)!;
@@ -54,7 +77,13 @@ export class AgedPayablesService {
       }
     }
 
-    const summary = { current: 0, days_30: 0, days_60: 0, days_90: 0, days_120: 0 };
+    const summary = {
+      current: 0,
+      days_30: 0,
+      days_60: 0,
+      days_90: 0,
+      days_120: 0,
+    };
     const items = [];
 
     for (const [supplierId, buckets] of supplierBuckets) {

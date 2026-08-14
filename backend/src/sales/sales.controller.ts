@@ -141,7 +141,7 @@ export class SalesController {
     return this.salesService.deleteOrder(+id);
   }
 
-// Returns
+  // Returns
   @Get('returns')
   @ApiOperation({ summary: 'Get all sales returns' })
   @ApiResponse({ status: 200, description: 'Returns all returns' })

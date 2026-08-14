@@ -182,9 +182,6 @@ describe('DashboardService', () => {
 
       let salesQBIdx = 0;
       let purchaseQBIdx = 0;
-      let productionQBIdx = 0;
-      let attendanceQBIdx = 0;
-      let salesItemQBIdx = 0;
 
       (salesRepo.createQueryBuilder as jest.Mock).mockImplementation(() => {
         salesQBIdx++;
@@ -223,19 +220,25 @@ describe('DashboardService', () => {
 
       mockQuery.mockResolvedValue([{ total_value: defaults.stockValue }]);
 
-      (productionRepo.createQueryBuilder as jest.Mock).mockImplementation(() => {
-        const qb = createMockQB();
-        qb.getRawOne.mockResolvedValue({ total: defaults.productionTotal });
-        return qb;
-      });
+      (productionRepo.createQueryBuilder as jest.Mock).mockImplementation(
+        () => {
+          const qb = createMockQB();
+          qb.getRawOne.mockResolvedValue({ total: defaults.productionTotal });
+          return qb;
+        },
+      );
 
-      (machineRepo.count as jest.Mock).mockResolvedValue(defaults.maintenanceCount);
+      (machineRepo.count as jest.Mock).mockResolvedValue(
+        defaults.maintenanceCount,
+      );
 
-      (attendanceRepo.createQueryBuilder as jest.Mock).mockImplementation(() => {
-        const qb = createMockQB();
-        qb.getRawOne.mockResolvedValue(defaults.attendanceSummary);
-        return qb;
-      });
+      (attendanceRepo.createQueryBuilder as jest.Mock).mockImplementation(
+        () => {
+          const qb = createMockQB();
+          qb.getRawOne.mockResolvedValue(defaults.attendanceSummary);
+          return qb;
+        },
+      );
 
       (salesItemRepo.createQueryBuilder as jest.Mock).mockImplementation(() => {
         const qb = createMockQB();

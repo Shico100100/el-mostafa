@@ -67,13 +67,31 @@ export class Product {
   @Column({ nullable: true })
   raw_material_type: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
   reorder_point: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
   reorder_quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4, default: 0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 4,
+    default: 0,
+    nullable: true,
+  })
   avg_consumption_rate: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })

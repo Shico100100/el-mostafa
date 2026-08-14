@@ -225,7 +225,13 @@ export class SalesService {
     total_amount: number;
     notes?: string;
     order_date?: string;
-    items: Array<{ product_id: number; quantity: number; price: number; total: number; warehouse_id?: number }>;
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      price: number;
+      total: number;
+      warehouse_id?: number;
+    }>;
   }) {
     if (!data.customer_id) throw new BadRequestException('معرف العميل مطلوب');
     if (!data.items || data.items.length === 0)
@@ -269,11 +275,14 @@ export class SalesService {
           product_id: item.product_id,
           quantity: item.quantity,
           price: item.price,
-          total: Math.round(Number(item.quantity) * Number(item.price) * 100) / 100,
+          total:
+            Math.round(Number(item.quantity) * Number(item.price) * 100) / 100,
         });
         await orderItemRepo.save(orderItem);
 
-        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
         cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
 
         let itemStock = await stockRepo.findOne({
@@ -345,7 +354,9 @@ export class SalesService {
 
       const productRepo = manager.getRepository(Product);
       for (const item of items) {
-        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
         cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
       }
 
@@ -455,7 +466,12 @@ export class SalesService {
     total_amount: number;
     reason?: string;
     return_date?: string;
-    items: Array<{ product_id: number; quantity: number; unit_price: number; total: number }>;
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      unit_price: number;
+      total: number;
+    }>;
   }) {
     const calculatedReturnTotal = data.items.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.unit_price),
@@ -484,7 +500,9 @@ export class SalesService {
       const productRepo = queryRunner.manager.getRepository(Product);
 
       for (const item of data.items) {
-        const product = await productRepo.findOne({ where: { id: item.product_id } });
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
         cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
 
         const returnItem = queryRunner.manager.create(SalesReturnItem, {

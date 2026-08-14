@@ -28,12 +28,26 @@ export class AddCompositeIndexes1747000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_daily_production_machine_date"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_stock_product_warehouse"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_stock_movements_product_date"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_sales_orders_customer_date"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_purchase_orders_supplier_date"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_journal_entries_account_date"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_notifications_user_read"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_daily_production_machine_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_stock_product_warehouse"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_stock_movements_product_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_sales_orders_customer_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_purchase_orders_supplier_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_journal_entries_account_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_notifications_user_read"`,
+    );
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Account, AccountType } from '../../accounting/entities/account.entity';
 import { JournalEntry } from '../../accounting/entities/journal-entry.entity';
 
@@ -8,19 +8,29 @@ import { JournalEntry } from '../../accounting/entities/journal-entry.entity';
 export class ProfitLossService {
   constructor(
     @InjectRepository(Account) private accountRepo: Repository<Account>,
-    @InjectRepository(JournalEntry) private journalRepo: Repository<JournalEntry>,
+    @InjectRepository(JournalEntry)
+    private journalRepo: Repository<JournalEntry>,
   ) {}
 
   async generate(startDate?: string, endDate?: string): Promise<any> {
-    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const end = endDate ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 
     const accounts = await this.accountRepo.find({ order: { code: 'ASC' } });
-    const revenueAccounts = accounts.filter(a => a.type === AccountType.REVENUE);
-    const expenseAccounts = accounts.filter(a => a.type === AccountType.EXPENSE);
+    const revenueAccounts = accounts.filter(
+      (a) => a.type === AccountType.REVENUE,
+    );
+    const expenseAccounts = accounts.filter(
+      (a) => a.type === AccountType.EXPENSE,
+    );
 
-    const accountMap = new Map<number, { code: string; name: string; type: AccountType }>();
+    const accountMap = new Map<
+      number,
+      { code: string; name: string; type: AccountType }
+    >();
     for (const a of accounts) {
       accountMap.set(a.id, { code: a.code, name: a.name, type: a.type });
     }
@@ -43,8 +53,12 @@ export class ProfitLossService {
       const totalDebit = Number(row.total_debit);
       const totalCredit = Number(row.total_credit);
 
-      const isDebitNormal = [AccountType.ASSET, AccountType.EXPENSE].includes(info.type);
-      const balance = isDebitNormal ? totalDebit - totalCredit : totalCredit - totalDebit;
+      const isDebitNormal = [AccountType.ASSET, AccountType.EXPENSE].includes(
+        info.type,
+      );
+      const balance = isDebitNormal
+        ? totalDebit - totalCredit
+        : totalCredit - totalDebit;
       accountBalances.set(accountId, balance);
     }
 
@@ -57,8 +71,8 @@ export class ProfitLossService {
       };
     };
 
-    const revenue = revenueAccounts.map(a => mapAccount(a.id));
-    const expenses = expenseAccounts.map(a => mapAccount(a.id));
+    const revenue = revenueAccounts.map((a) => mapAccount(a.id));
+    const expenses = expenseAccounts.map((a) => mapAccount(a.id));
 
     const totalRevenue = revenue.reduce((s, r) => s + r.balance, 0);
     const totalExpenses = expenses.reduce((s, e) => s + Math.abs(e.balance), 0);

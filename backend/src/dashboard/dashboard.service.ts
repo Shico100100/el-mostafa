@@ -46,18 +46,27 @@ export class DashboardService {
       this.salesRepo
         .createQueryBuilder('order')
         .select('COALESCE(SUM(order.total_amount), 0)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .where('order.order_date BETWEEN :start AND :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
         .getRawOne(),
       this.purchaseRepo
         .createQueryBuilder('order')
         .select('COALESCE(SUM(order.total_amount), 0)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .where('order.order_date BETWEEN :start AND :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
         .getRawOne(),
       this.accountRepo.findOne({ where: { code: '1103' } }),
       this.productionRepo
         .createQueryBuilder('dp')
         .select('COALESCE(SUM(dp.pieces_produced), 0)', 'total')
-        .where('dp.date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .where('dp.date BETWEEN :start AND :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
         .getRawOne(),
     ]);
 
@@ -103,7 +112,10 @@ export class DashboardService {
         .leftJoin('order.customer', 'customer')
         .select('customer.name', 'name')
         .addSelect('SUM(order.total_amount)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .where('order.order_date BETWEEN :start AND :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
         .andWhere('customer.id IS NOT NULL')
         .groupBy('customer.id')
         .addGroupBy('customer.name')
@@ -116,7 +128,10 @@ export class DashboardService {
         .innerJoin('item.product', 'product')
         .select('product.name', 'name')
         .addSelect('SUM(item.quantity)', 'total')
-        .where('order.order_date BETWEEN :start AND :end', { start: monthStart, end: monthEnd })
+        .where('order.order_date BETWEEN :start AND :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
         .groupBy('product.id')
         .addGroupBy('product.name')
         .orderBy('total', 'DESC')
@@ -147,7 +162,8 @@ export class DashboardService {
     ]);
 
     const [salesResult, purchasesResult, treasury, productionSum] = batch1;
-    const [stockValueQuery, maintenanceOverdueCount, attendanceSummary] = batch2;
+    const [stockValueQuery, maintenanceOverdueCount, attendanceSummary] =
+      batch2;
     const [topCustomers, topProducts, salesTrend, latestSales] = batch3;
 
     const batch4 = await Promise.all([

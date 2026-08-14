@@ -11,7 +11,12 @@ export class ReportsService {
     private cache: CacheService,
   ) {}
 
-  async getSalesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+  async getSalesReport(
+    startDate: string,
+    endDate: string,
+    page?: number,
+    limit?: number,
+  ) {
     const key = `reports:sales:${startDate || 'default'}:${endDate || 'default'}:${page || 1}:${limit || 20}`;
     const cached = await this.cache.get<any>(key);
     if (cached) return cached;
@@ -24,7 +29,12 @@ export class ReportsService {
     await this.cache.set(key, result, 120);
     return result;
   }
-  async getPurchasesReport(startDate: string, endDate: string, page?: number, limit?: number) {
+  async getPurchasesReport(
+    startDate: string,
+    endDate: string,
+    page?: number,
+    limit?: number,
+  ) {
     const key = `reports:purchases:${startDate || 'default'}:${endDate || 'default'}:${page || 1}:${limit || 20}`;
     const cached = await this.cache.get<any>(key);
     if (cached) return cached;

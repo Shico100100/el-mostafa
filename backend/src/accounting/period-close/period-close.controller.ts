@@ -6,7 +6,9 @@ export class PeriodCloseController {
   constructor(private service: PeriodCloseService) {}
 
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll() {
+    return this.service.findAll();
+  }
 
   @Get(':period/status')
   async checkStatus(@Param('period') period: string) {

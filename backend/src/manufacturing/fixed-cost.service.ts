@@ -137,7 +137,8 @@ export class FixedCostService {
         end: monthEndDate,
       })
       .getRawOne();
-    const machineCount = Number(activeMachines?.cnt) || (await this.machineRepo.count()) || 1;
+    const machineCount =
+      Number(activeMachines?.cnt) || (await this.machineRepo.count()) || 1;
 
     const nonElectricHourly =
       (avgTotalFixedCost - avgTotalElectricity) /
@@ -170,7 +171,8 @@ export class FixedCostService {
       const currentMonthElectric = currentMonthCosts
         .filter((c) => c.category === 'ELECTRICITY')
         .reduce((sum, c) => sum + Number(c.amount), 0);
-      const electricBill = currentMonthElectric > 0 ? currentMonthElectric : avgTotalElectricity;
+      const electricBill =
+        currentMonthElectric > 0 ? currentMonthElectric : avgTotalElectricity;
 
       const monthProductions = await this.productionRepo.find({
         where: {
@@ -184,8 +186,7 @@ export class FixedCostService {
         (sum, p) => sum + (Number(p.hours_worked) || 0),
         0,
       );
-      if (totalHours > 0)
-        machineElectricHourly = electricBill / totalHours;
+      if (totalHours > 0) machineElectricHourly = electricBill / totalHours;
     }
     return (
       nonElectricHourly + machineElectricHourly + machineDepreciationHourly
