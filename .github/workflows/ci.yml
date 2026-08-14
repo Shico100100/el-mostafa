@@ -152,33 +152,33 @@ jobs:
         working-directory: backend
         run: npm run typeorm -- --dataSource=src/database/data-source.ts schema:sync
 
-      - name: Start backend
+      - name: Start services & wait for health
         working-directory: backend
-        run: node dist/main > ../backend-out.log 2>&1 &
-
-      - name: Start frontend
-        working-directory: frontend
-        run: npm run start > ../frontend-out.log 2>&1 &
-
-      - name: Wait for services
         run: |
+          node dist/main > ../backend-out.log 2>&1 &
+          (cd ../frontend && npm run start > ../frontend-out.log 2>&1) &
+
           backend_ok=0
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3001/api/v1/health >/dev/null; then backend_ok=1; echo "backend up"; break; fi
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3001/api/v1/health >/dev/null 2>&1; then backend_ok=1; echo "backend up"; break; fi
             sleep 2
           done
-          if [ "$backend_ok" != "1" ]; then
-            echo "::error::Backend did not become healthy"
-            cat ../backend-out.log 2>/dev/null || true
-            exit 1
-          fi
+
           frontend_ok=0
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/login/ >/dev/null; then frontend_ok=1; echo "frontend up"; break; fi
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/login/ >/dev/null 2>&1; then frontend_ok=1; echo "frontend up"; break; fi
             sleep 2
           done
-          if [ "$frontend_ok" != "1" ]; then
-            echo "::error::Frontend did not come up"
+
+          if [ "$backend_ok" != "1" ] || [ "$frontend_ok" != "1" ]; then
+            [ "$backend_ok" != "1" ] && echo "::error::Backend did not become healthy"
+            [ "$frontend_ok" != "1" ] && echo "::error::Frontend did not come up"
+            echo "===== backend-out.log ====="
+            cat ../backend-out.log 2>/dev/null || true
+            echo "===== frontend-out.log ====="
             cat ../frontend-out.log 2>/dev/null || true
+            echo "===== health probe ====="
+            curl -sS -i http://localhost:3001/api/v1/health || true
+            echo
             exit 1
           fi
