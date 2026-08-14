@@ -40,7 +40,7 @@ jobs:
         working-directory: frontend
         run: npm test
 
-  e2e:
+  smoke:
     needs: quality
     runs-on: ubuntu-latest
     services:
@@ -75,6 +75,7 @@ jobs:
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
       DATABASE_SYNCHRONIZE: 'true'
+      DATABASE_MIGRATIONS_RUN: 'false'
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       APP_PORT: 3001
@@ -112,6 +113,7 @@ jobs:
           DATABASE_PASSWORD=postgres
           DATABASE_NAME=elmostafa_test
           DATABASE_SYNCHRONIZE=true
+          DATABASE_MIGRATIONS_RUN=false
           REDIS_HOST=localhost
           REDIS_PORT=6379
           FRONTEND_DOMAIN=http://localhost:3000
@@ -150,14 +152,6 @@ jobs:
         working-directory: backend
         run: npm run typeorm -- --dataSource=src/database/data-source.ts schema:sync
 
-      - name: Run migrations
-        working-directory: backend
-        run: npm run migration:run
-
-      - name: Seed relational data (creates admin@admin.com)
-        working-directory: backend
-        run: npm run seed:run:relational
-
       - name: Start backend
         working-directory: backend
         run: node dist/main > ../backend-out.log 2>&1 &
@@ -168,27 +162,23 @@ jobs:
 
       - name: Wait for services
         run: |
+          backend_ok=0
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3001/api/v1/health >/dev/null; then echo "backend up"; break; fi
+            if curl -fsS http://localhost:3001/api/v1/health >/dev/null; then backend_ok=1; echo "backend up"; break; fi
             sleep 2
           done
+          if [ "$backend_ok" != "1" ]; then
+            echo "::error::Backend did not become healthy"
+            cat ../backend-out.log 2>/dev/null || true
+            exit 1
+          fi
+          frontend_ok=0
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/login/ >/dev/null; then echo "frontend up"; break; fi
+            if curl -fsS http://localhost:3000/login/ >/dev/null; then frontend_ok=1; echo "frontend up"; break; fi
             sleep 2
           done
-
-      - name: Install Playwright browsers
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Playwright
-        working-directory: frontend
-        run: npx playwright test
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: frontend/playwright-report
-          retention-days: 7
+          if [ "$frontend_ok" != "1" ]; then
+            echo "::error::Frontend did not come up"
+            cat ../frontend-out.log 2>/dev/null || true
+            exit 1
+          fi

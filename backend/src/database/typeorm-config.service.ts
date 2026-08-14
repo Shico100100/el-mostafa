@@ -19,7 +19,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       synchronize: this.configService.get('database.synchronize', {
         infer: true,
       }),
-      migrationsRun: true,
+      migrationsRun: process.env.DATABASE_MIGRATIONS_RUN !== 'false',
       dropSchema: false,
       keepConnectionAlive: true,
       logging: this.configService.get('database.logging', { infer: true }),
