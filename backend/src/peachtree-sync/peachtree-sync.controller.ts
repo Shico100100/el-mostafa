@@ -10,10 +10,14 @@ export class PeachtreeSyncController {
   constructor(private syncService: PeachtreeSyncService) {}
 
   @Post('run')
-  async runSync(@Body() body: { mode?: 'full' | 'incremental' }) {
+  runSync(@Body() body: { mode?: 'full' | 'incremental' }) {
     const current = this.syncService.getCurrentSync();
     if (current && current.status === 'running') {
-      return { message: 'Sync already in progress', id: current.id, status: current.status };
+      return {
+        message: 'Sync already in progress',
+        id: current.id,
+        status: current.status,
+      };
     }
     const mode = body?.mode === 'incremental' ? 'incremental' : 'full';
     this.syncService.runSync('manual', mode).catch((err) => {
@@ -23,42 +27,71 @@ export class PeachtreeSyncController {
   }
 
   @Post('run-incremental')
-  async runIncrementalSync() {
+  runIncrementalSync() {
     const current = this.syncService.getCurrentSync();
     if (current && current.status === 'running') {
-      return { message: 'Sync already in progress', id: current.id, status: current.status };
+      return {
+        message: 'Sync already in progress',
+        id: current.id,
+        status: current.status,
+      };
     }
-    this.syncService.runSync('manual-incremental', 'incremental').catch((err) => {
-      this.logger.error('Background incremental sync crashed', err?.stack || err);
-    });
-    return { message: 'Incremental sync started', status: 'running', mode: 'incremental' };
+    this.syncService
+      .runSync('manual-incremental', 'incremental')
+      .catch((err) => {
+        this.logger.error(
+          'Background incremental sync crashed',
+          err?.stack || err,
+        );
+      });
+    return {
+      message: 'Incremental sync started',
+      status: 'running',
+      mode: 'incremental',
+    };
   }
 
   @Post('run-partial')
-  async runPartial(@Body() body: { entities?: string[] }) {
+  runPartial(@Body() body: { entities?: string[] }) {
     const current = this.syncService.getCurrentSync();
     if (current && current.status === 'running') {
-      return { message: 'Sync already in progress', id: current.id, status: current.status };
+      return {
+        message: 'Sync already in progress',
+        id: current.id,
+        status: current.status,
+      };
     }
-    const requested = (body.entities || []).filter((e) => VALID_ENTITIES.has(e as SyncEntity));
+    const requested = (body.entities || []).filter((e) =>
+      VALID_ENTITIES.has(e as SyncEntity),
+    );
     if (requested.length === 0) {
       return { message: 'No valid entities provided', status: 'error' };
     }
-    this.syncService.runSyncPartial(requested as SyncEntity[], 'manual-partial').catch((err) => {
-      this.logger.error('Background partial sync crashed', err?.stack || err);
-    });
-    return { message: 'Partial sync started', status: 'running', entities: requested };
+    this.syncService
+      .runSyncPartial(requested as SyncEntity[], 'manual-partial')
+      .catch((err) => {
+        this.logger.error('Background partial sync crashed', err?.stack || err);
+      });
+    return {
+      message: 'Partial sync started',
+      status: 'running',
+      entities: requested,
+    };
   }
 
   @Get('status')
-  async getSyncHistory() {
+  getSyncHistory() {
     return this.syncService.getSyncHistory();
   }
 
   @Post('test')
   async testConnection() {
     const result = await this.syncService.testConnection();
-    return { connected: result.connected, error: result.error, dataPath: this.syncService.getDataPath() };
+    return {
+      connected: result.connected,
+      error: result.error,
+      dataPath: this.syncService.getDataPath(),
+    };
   }
 
   @Get('tables')
@@ -67,22 +100,26 @@ export class PeachtreeSyncController {
   }
 
   @Get('config')
-  async getConfig() {
+  getConfig() {
     return { dsn: this.syncService.getDataPath() };
   }
 
   @Put('config')
-  async updateConfig(@Body() body: { dsn?: string; dataPath?: string }) {
+  updateConfig(@Body() body: { dsn?: string; dataPath?: string }) {
     const dsn = body.dsn || body.dataPath;
     if (dsn) this.syncService.setDataPath(dsn);
     return { dsn: this.syncService.getDataPath(), message: 'Config updated.' };
   }
 
   @Post('resync-items')
-  async resyncItems() {
+  resyncItems() {
     const current = this.syncService.getCurrentSync();
     if (current && current.status === 'running') {
-      return { message: 'Sync already in progress', id: current.id, status: current.status };
+      return {
+        message: 'Sync already in progress',
+        id: current.id,
+        status: current.status,
+      };
     }
     this.syncService.resyncItems().catch((err) => {
       this.logger.error('Background resync crashed', err?.stack || err);

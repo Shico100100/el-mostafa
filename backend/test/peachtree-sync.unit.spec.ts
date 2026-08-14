@@ -51,8 +51,12 @@ describe('PeachtreeMappingService', () => {
   describe('mapSupplier', () => {
     it('should map a full supplier row', () => {
       const result = service.mapSupplier({
-        Name: 'Supplier One', VendorID: 'V001', PhoneNumber: '111',
-        PhoneNumber2: '222', Email: 's@test.com', Balance: '500',
+        Name: 'Supplier One',
+        VendorID: 'V001',
+        PhoneNumber: '111',
+        PhoneNumber2: '222',
+        Email: 's@test.com',
+        Balance: '500',
       });
       expect(result.name).toBe('Supplier One');
       expect(result.phone).toBe('111');
@@ -73,9 +77,14 @@ describe('PeachtreeMappingService', () => {
   describe('mapProduct', () => {
     it('should map a full product row', () => {
       const result = service.mapProduct({
-        ItemDescription: 'Widget', ItemID: 'I001', UPC_SKU: 'SKU-123',
-        LaborCost: '10.50', PriceLevel1Amount: '25.00', SalesAmt1: '20.00',
-        StockingUM: 'kg', SalesDescription: 'A widget',
+        ItemDescription: 'Widget',
+        ItemID: 'I001',
+        UPC_SKU: 'SKU-123',
+        LaborCost: '10.50',
+        PriceLevel1Amount: '25.00',
+        SalesAmt1: '20.00',
+        StockingUM: 'kg',
+        SalesDescription: 'A widget',
       });
       expect(result.name).toBe('Widget');
       expect(result.sku).toBe('SKU-123');
@@ -100,35 +109,100 @@ describe('PeachtreeMappingService', () => {
 
   describe('mapGLAccount', () => {
     it('should map ASSET type (0-6)', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 0 }).type).toBe(AccountType.ASSET);
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 6 }).type).toBe(AccountType.ASSET);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 0,
+        }).type,
+      ).toBe(AccountType.ASSET);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 6,
+        }).type,
+      ).toBe(AccountType.ASSET);
     });
 
     it('should map LIABILITY type (10-14)', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 10 }).type).toBe(AccountType.LIABILITY);
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 14 }).type).toBe(AccountType.LIABILITY);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 10,
+        }).type,
+      ).toBe(AccountType.LIABILITY);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 14,
+        }).type,
+      ).toBe(AccountType.LIABILITY);
     });
 
     it('should map EQUITY type (16-19)', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 16 }).type).toBe(AccountType.EQUITY);
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 19 }).type).toBe(AccountType.EQUITY);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 16,
+        }).type,
+      ).toBe(AccountType.EQUITY);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 19,
+        }).type,
+      ).toBe(AccountType.EQUITY);
     });
 
     it('should map REVENUE type (21)', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 21 }).type).toBe(AccountType.REVENUE);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 21,
+        }).type,
+      ).toBe(AccountType.REVENUE);
     });
 
     it('should map EXPENSE type (23-24)', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 23 }).type).toBe(AccountType.EXPENSE);
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 24 }).type).toBe(AccountType.EXPENSE);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 23,
+        }).type,
+      ).toBe(AccountType.EXPENSE);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 24,
+        }).type,
+      ).toBe(AccountType.EXPENSE);
     });
 
     it('should default unknown types to EXPENSE', () => {
-      expect(service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 99 }).type).toBe(AccountType.EXPENSE);
+      expect(
+        service.mapGLAccount({
+          GLAcntNumber: '1',
+          AccountDescription: 'A',
+          AccountType: 99,
+        }).type,
+      ).toBe(AccountType.EXPENSE);
     });
 
     it('should parse Balance0Net', () => {
-      const result = service.mapGLAccount({ GLAcntNumber: '1', AccountDescription: 'A', AccountType: 0, Balance0Net: '1234.56' });
+      const result = service.mapGLAccount({
+        GLAcntNumber: '1',
+        AccountDescription: 'A',
+        AccountType: 0,
+        Balance0Net: '1234.56',
+      });
       expect(result.balance).toBe(1234.56);
     });
   });
@@ -136,8 +210,11 @@ describe('PeachtreeMappingService', () => {
   describe('mapJournalEntry', () => {
     it('should map positive amount as debit', () => {
       const result = service.mapJournalEntry({
-        RowDate: '/Date(1700000000000)/', RowDescription: 'Test',
-        DistNumber: 'D001', GLAcntNumber: '100', Amount: '500.00',
+        RowDate: '/Date(1700000000000)/',
+        RowDescription: 'Test',
+        DistNumber: 'D001',
+        GLAcntNumber: '100',
+        Amount: '500.00',
       });
       expect(result.debit).toBe(500);
       expect(result.credit).toBe(0);
@@ -158,13 +235,18 @@ describe('PeachtreeMappingService', () => {
     });
 
     it('should handle missing date', () => {
-      expect(service.mapJournalEntry({ Amount: '100' }).date).toBeInstanceOf(Date);
+      expect(service.mapJournalEntry({ Amount: '100' }).date).toBeInstanceOf(
+        Date,
+      );
     });
   });
 
   describe('mapBudget / mapBudgetLine', () => {
     it('should map budget row', () => {
-      const result = service.mapBudget({ BudgetID: 'Q1-2026', BudgetDescription: 'First quarter' });
+      const result = service.mapBudget({
+        BudgetID: 'Q1-2026',
+        BudgetDescription: 'First quarter',
+      });
       expect(result.name).toBe('Q1-2026');
       expect(result.period).toBe('Q1-2026');
       expect(result.status).toBe('ACTIVE');
@@ -185,8 +267,10 @@ describe('PeachtreeMappingService', () => {
   describe('mapEmployee', () => {
     it('should map a full employee row', () => {
       const result = service.mapEmployee({
-        Employee_FirstName: 'Ahmed', Employee_LastName: 'Ali',
-        Email: 'ahmed@test.com', PhoneNumber: '123',
+        Employee_FirstName: 'Ahmed',
+        Employee_LastName: 'Ali',
+        Email: 'ahmed@test.com',
+        PhoneNumber: '123',
       });
       expect(result.firstName).toBe('Ahmed');
       expect(result.lastName).toBe('Ali');
@@ -195,17 +279,25 @@ describe('PeachtreeMappingService', () => {
     });
 
     it('should generate email when missing', () => {
-      expect(service.mapEmployee({ Employee_FirstName: 'John Smith' }).email).toBe('john.smith@peachtree.local');
+      expect(
+        service.mapEmployee({ Employee_FirstName: 'John Smith' }).email,
+      ).toBe('john.smith@peachtree.local');
     });
 
     it('should use EmployeeName fallback', () => {
-      expect(service.mapEmployee({ EmployeeName: 'Bob' }).firstName).toBe('Bob');
+      expect(service.mapEmployee({ EmployeeName: 'Bob' }).firstName).toBe(
+        'Bob',
+      );
     });
   });
 
   describe('mapBOMItem', () => {
     it('should map BOM fields', () => {
-      const result = service.mapBOMItem({ AssemblyRecordNo: '100', ComponentRecordNo: '200', QtyRequired: '5.5' });
+      const result = service.mapBOMItem({
+        AssemblyRecordNo: '100',
+        ComponentRecordNo: '200',
+        QtyRequired: '5.5',
+      });
       expect(result.parent_item).toBe('100');
       expect(result.component_item).toBe('200');
       expect(result.quantity).toBe(5.5);
@@ -214,7 +306,10 @@ describe('PeachtreeMappingService', () => {
 
   describe('mapBankAccount', () => {
     it('should map bank account', () => {
-      const result = service.mapBankAccount({ BankAccount: '12345', EndingBalance1: '9999.99' });
+      const result = service.mapBankAccount({
+        BankAccount: '12345',
+        EndingBalance1: '9999.99',
+      });
       expect(result.name).toBe('12345');
       expect(result.account_number).toBe('12345');
       expect(result.balance).toBe(9999.99);
@@ -223,7 +318,11 @@ describe('PeachtreeMappingService', () => {
 
   describe('mapJob / mapJobPhase', () => {
     it('should map active job', () => {
-      const result = service.mapJob({ JobDescription: 'Project A', JobID: 'J001', JobIsInactive: 0 });
+      const result = service.mapJob({
+        JobDescription: 'Project A',
+        JobID: 'J001',
+        JobIsInactive: 0,
+      });
       expect(result.code).toBe('J001');
       expect(result.status).toBe('ACTIVE');
     });
@@ -233,7 +332,11 @@ describe('PeachtreeMappingService', () => {
     });
 
     it('should map job phase', () => {
-      const result = service.mapJobPhase({ PhaseDescription: 'Phase 1', PhaseID: 'P001', PhaseIsInactive: 0 });
+      const result = service.mapJobPhase({
+        PhaseDescription: 'Phase 1',
+        PhaseID: 'P001',
+        PhaseIsInactive: 0,
+      });
       expect(result.code).toBe('P001');
       expect(result.status).toBe('ACTIVE');
     });
@@ -242,7 +345,10 @@ describe('PeachtreeMappingService', () => {
   describe('mapTaxConfig', () => {
     it('should map tax config', () => {
       const result = service.mapTaxConfig({
-        GrossMoreThan0: '10000', GrossMoreThan1: '20000', Withhold0: '0.10', State: 'EG',
+        GrossMoreThan0: '10000',
+        GrossMoreThan1: '20000',
+        Withhold0: '0.10',
+        State: 'EG',
       });
       expect(result.bracket_min).toBe(10000);
       expect(result.bracket_max).toBe(20000);
@@ -255,9 +361,15 @@ describe('PeachtreeMappingService', () => {
   describe('mapSalesInvoice / mapPurchaseInvoice', () => {
     it('should map posted sales invoice', () => {
       const result = service.mapSalesInvoice({
-        MainAmount: '5000', TrxIsPosted: 1, TransactionDate: '/Date(1700000000000)/',
-        Description: 'Sale #1', Reference: 'INV-001', PaymentMethod: 'Cash',
-        AmountPaid: '5000', CustVendId: '42', CustomerInvoiceNo: 'CI-001',
+        MainAmount: '5000',
+        TrxIsPosted: 1,
+        TransactionDate: '/Date(1700000000000)/',
+        Description: 'Sale #1',
+        Reference: 'INV-001',
+        PaymentMethod: 'Cash',
+        AmountPaid: '5000',
+        CustVendId: '42',
+        CustomerInvoiceNo: 'CI-001',
       });
       expect(result.total_amount).toBe(5000);
       expect(result.status).toBe('COMPLETED');
@@ -268,7 +380,11 @@ describe('PeachtreeMappingService', () => {
 
     it('should map unposted purchase invoice', () => {
       const result = service.mapPurchaseInvoice({
-        MainAmount: '1000', TrxIsPosted: 0, Description: 'Purchase', Reference: 'PO-001', CustVendId: '7',
+        MainAmount: '1000',
+        TrxIsPosted: 0,
+        Description: 'Purchase',
+        Reference: 'PO-001',
+        CustVendId: '7',
       });
       expect(result.status).toBe('PENDING');
       expect(result.invoice_number).toBe('PO-001');
@@ -278,8 +394,12 @@ describe('PeachtreeMappingService', () => {
   describe('mapSalesInvoiceItem / mapPurchaseInvoiceItem', () => {
     it('should map invoice line items', () => {
       const salesItem = service.mapSalesInvoiceItem({
-        Quantity: '10', UnitCost: '5.5', Amount: '55',
-        ItemRecordNumber: '1001', GLAcntNumber: '3', RowDescription: 'Widget',
+        Quantity: '10',
+        UnitCost: '5.5',
+        Amount: '55',
+        ItemRecordNumber: '1001',
+        GLAcntNumber: '3',
+        RowDescription: 'Widget',
       });
       expect(salesItem.quantity).toBe(10);
       expect(salesItem.price).toBe(5.5);
@@ -288,7 +408,11 @@ describe('PeachtreeMappingService', () => {
     });
 
     it('should handle negative values (returns)', () => {
-      const result = service.mapSalesInvoiceItem({ Quantity: '-3', UnitCost: '-10', Amount: '-30' });
+      const result = service.mapSalesInvoiceItem({
+        Quantity: '-3',
+        UnitCost: '-10',
+        Amount: '-30',
+      });
       expect(result.quantity).toBe(3);
       expect(result.price).toBe(10);
       expect(result.total).toBe(30);
@@ -297,13 +421,17 @@ describe('PeachtreeMappingService', () => {
 
   describe('parsePeachtreeDate (private)', () => {
     it('should parse .NET /Date(ms)/ format', () => {
-      const result = (service as any).parsePeachtreeDate('/Date(1700000000000)/');
+      const result = (service as any).parsePeachtreeDate(
+        '/Date(1700000000000)/',
+      );
       expect(result).toBeInstanceOf(Date);
       expect(result.getTime()).toBe(1700000000000);
     });
 
     it('should parse ISO date strings', () => {
-      expect((service as any).parsePeachtreeDate('2024-01-15')).toBeInstanceOf(Date);
+      expect((service as any).parsePeachtreeDate('2024-01-15')).toBeInstanceOf(
+        Date,
+      );
     });
 
     it('should return null for null/undefined/empty', () => {
@@ -332,7 +460,8 @@ jest.mock('child_process', () => ({
     if (typeof cb === 'function') {
       const p = mockExec(...args.slice(0, args.length - 1));
       Promise.resolve(p).then(
-        (r: any) => cb(null, { stdout: r?.stdout ?? '', stderr: r?.stderr ?? '' }),
+        (r: any) =>
+          cb(null, { stdout: r?.stdout ?? '', stderr: r?.stderr ?? '' }),
         (e: any) => cb(e, '', e?.stderr ?? ''),
       );
     }
@@ -364,7 +493,9 @@ describe('PeachtreeConnectionService', () => {
     });
 
     it('should use fallback when env missing', () => {
-      configService.get.mockImplementation((_key: string, fallback?: string) => fallback);
+      configService.get.mockImplementation(
+        (_key: string, fallback?: string) => fallback,
+      );
       const svc = new PeachtreeConnectionService(configService);
       expect(svc.getDataPath()).toBe('mos');
       expect(svc.getServerName()).toBe('localhost');
@@ -395,7 +526,9 @@ describe('PeachtreeConnectionService', () => {
 
   describe('isFilePath (private)', () => {
     it('should detect Windows paths', () => {
-      expect((service as any).isFilePath('D:\\OneDrive\\Mostafaapp')).toBe(true);
+      expect((service as any).isFilePath('D:\\OneDrive\\Mostafaapp')).toBe(
+        true,
+      );
       expect((service as any).isFilePath('C:\\data')).toBe(true);
       expect((service as any).isFilePath('c:\\temp')).toBe(true);
     });
@@ -423,7 +556,9 @@ describe('PeachtreeConnectionService', () => {
   describe('getCacheKey (private)', () => {
     it('should generate correct keys', () => {
       expect((service as any).getCacheKey('Chart', 1)).toBe('Chart|1||');
-      expect((service as any).getCacheKey('Chart', 0, '*', 'id=1')).toBe('Chart|0|*|id=1');
+      expect((service as any).getCacheKey('Chart', 0, '*', 'id=1')).toBe(
+        'Chart|0|*|id=1',
+      );
     });
   });
 
@@ -442,13 +577,19 @@ describe('PeachtreeConnectionService', () => {
 
   describe('query', () => {
     it('should return parsed JSON array', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: JSON.stringify([{ id: 1, name: 'Cash' }]), stderr: '' });
+      mockExec.mockResolvedValueOnce({
+        stdout: JSON.stringify([{ id: 1, name: 'Cash' }]),
+        stderr: '',
+      });
       const result = await service.query('Chart', 1);
       expect(result).toEqual([{ id: 1, name: 'Cash' }]);
     });
 
     it('should wrap single object in array', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: JSON.stringify({ id: 1 }), stderr: '' });
+      mockExec.mockResolvedValueOnce({
+        stdout: JSON.stringify({ id: 1 }),
+        stderr: '',
+      });
       const result = await service.query('Chart', 1);
       expect(result).toEqual([{ id: 1 }]);
     });
@@ -461,7 +602,9 @@ describe('PeachtreeConnectionService', () => {
 
     it('should throw on invalid JSON', async () => {
       mockExec.mockResolvedValueOnce({ stdout: 'not json', stderr: '' });
-      await expect(service.query('Chart')).rejects.toThrow('Peachtree query failed for table Chart');
+      await expect(service.query('Chart')).rejects.toThrow(
+        'Peachtree query failed for table Chart',
+      );
     });
 
     it('should include limit, fields, where args', async () => {
@@ -509,11 +652,16 @@ describe('PeachtreeConnectionService', () => {
 
   describe('testConnection', () => {
     beforeEach(() => {
-      jest.spyOn(service as any, 'ensurePervasiveRunning').mockResolvedValue(undefined);
+      jest
+        .spyOn(service as any, 'ensurePervasiveRunning')
+        .mockResolvedValue(undefined);
     });
 
     it('should return connected: true on success', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: '[{"GLAcntNumber":1}]', stderr: '' });
+      mockExec.mockResolvedValueOnce({
+        stdout: '[{"GLAcntNumber":1}]',
+        stderr: '',
+      });
 
       const result = await service.testConnection();
       expect(result.connected).toBe(true);
@@ -555,7 +703,9 @@ describe('PeachtreeConnectionService', () => {
       });
       await (service as any).ensurePervasiveRunning();
       expect(mockExec.mock.calls[0]).toEqual([
-        'sc', ['query', 'psqlWGE'], expect.objectContaining({ timeout: 10000 }),
+        'sc',
+        ['query', 'psqlWGE'],
+        expect.objectContaining({ timeout: 10000 }),
       ]);
     });
 
@@ -566,7 +716,9 @@ describe('PeachtreeConnectionService', () => {
 
       await (service as any).ensurePervasiveRunning();
       expect(mockExec).toHaveBeenCalledWith(
-        'net', ['start', 'psqlWGE'], expect.objectContaining({ timeout: 30000 }),
+        'net',
+        ['start', 'psqlWGE'],
+        expect.objectContaining({ timeout: 10000 }),
       );
     });
 
@@ -574,7 +726,9 @@ describe('PeachtreeConnectionService', () => {
       mockExec.mockRejectedValue(new Error('not found'));
       const warnSpy = jest.spyOn((service as any).logger, 'warn');
       await (service as any).ensurePervasiveRunning();
-      expect(warnSpy).toHaveBeenCalledWith('No known Pervasive PSQL service found — it may not be installed');
+      expect(warnSpy).toHaveBeenCalledWith(
+        'No known Pervasive PSQL service found — it may not be installed',
+      );
     });
   });
 });
@@ -584,7 +738,10 @@ describe('PeachtreeConnectionService', () => {
 // ─────────────────────────────────────────────────────────
 import { PeachtreeSyncController } from '../src/peachtree-sync/peachtree-sync.controller';
 import { PeachtreeSyncService } from '../src/peachtree-sync/peachtree-sync.service';
-import { SyncEntity, SyncStatus } from '../src/peachtree-sync/dto/sync-status.dto';
+import {
+  SyncEntity,
+  SyncStatus,
+} from '../src/peachtree-sync/dto/sync-status.dto';
 
 describe('PeachtreeSyncController', () => {
   let controller: PeachtreeSyncController;
@@ -632,11 +789,18 @@ describe('PeachtreeSyncController', () => {
     it('should return connection result', async () => {
       syncService.testConnection.mockResolvedValue({ connected: true });
       const result = await controller.testConnection();
-      expect(result).toEqual({ connected: true, error: undefined, dataPath: 'mos' });
+      expect(result).toEqual({
+        connected: true,
+        error: undefined,
+        dataPath: 'mos',
+      });
     });
 
     it('should return error when fails', async () => {
-      syncService.testConnection.mockResolvedValue({ connected: false, error: 'ODB Error' });
+      syncService.testConnection.mockResolvedValue({
+        connected: false,
+        error: 'ODB Error',
+      });
       const result = await controller.testConnection();
       expect(result.connected).toBe(false);
       expect(result.error).toBe('ODB Error');
@@ -653,16 +817,23 @@ describe('PeachtreeSyncController', () => {
   describe('POST /run', () => {
     it('should fire-and-forget sync when not running', async () => {
       syncService.getCurrentSync.mockReturnValue(null);
-      syncService.runSync.mockResolvedValue({ id: 'sync_1', status: 'completed', results: [] } as any);
-      const result = await controller.runSync();
+      syncService.runSync.mockResolvedValue({
+        id: 'sync_1',
+        status: 'completed',
+        results: [],
+      } as any);
+      const result = await controller.runSync({});
       expect(result.status).toBe('running');
       expect(result.message).toBe('Sync started');
       expect(syncService.runSync).toHaveBeenCalled();
     });
 
     it('should reject if sync already running', async () => {
-      syncService.getCurrentSync.mockReturnValue({ id: 'sync1', status: 'running' } as any);
-      const result = await controller.runSync();
+      syncService.getCurrentSync.mockReturnValue({
+        id: 'sync1',
+        status: 'running',
+      } as any);
+      const result = await controller.runSync({});
       expect(result.status).toBe('running');
       expect(result.message).toContain('already in progress');
       expect(syncService.runSync).not.toHaveBeenCalled();
@@ -681,7 +852,10 @@ describe('PeachtreeSyncController', () => {
 
   describe('GET /last', () => {
     it('should return current sync if running', async () => {
-      syncService.getCurrentSync.mockReturnValue({ id: 'current', status: 'running' } as any);
+      syncService.getCurrentSync.mockReturnValue({
+        id: 'current',
+        status: 'running',
+      } as any);
       expect((await controller.getLastSync())?.id).toBe('current');
     });
 
@@ -701,7 +875,10 @@ describe('PeachtreeSyncController', () => {
   describe('GET /progress', () => {
     it('should return progress of current sync', async () => {
       syncService.getCurrentSync.mockReturnValue({
-        id: 's1', status: 'running', percentComplete: 45, currentEntity: 'customers',
+        id: 's1',
+        status: 'running',
+        percentComplete: 45,
+        currentEntity: 'customers',
       } as any);
       const result = await controller.getProgress();
       expect(result.running).toBe(true);
@@ -720,7 +897,9 @@ describe('PeachtreeSyncController', () => {
 
     it('should return 100% when history exists', async () => {
       syncService.getCurrentSync.mockReturnValue(null);
-      syncService.getSyncHistory.mockResolvedValue([{ id: 'h1', status: 'completed' }] as any);
+      syncService.getSyncHistory.mockResolvedValue([
+        { id: 'h1', status: 'completed' },
+      ] as any);
       const result = await controller.getProgress();
       expect(result.percentComplete).toBe(100);
     });
@@ -729,7 +908,11 @@ describe('PeachtreeSyncController', () => {
   describe('POST /resync-items', () => {
     it('should fire-and-forget resyncItems when not running', async () => {
       syncService.getCurrentSync.mockReturnValue(null);
-      syncService.resyncItems.mockResolvedValue({ salesCreated: 5, purchaseCreated: 3, message: 'Done' });
+      syncService.resyncItems.mockResolvedValue({
+        salesCreated: 5,
+        purchaseCreated: 3,
+        message: 'Done',
+      });
       const result = await controller.resyncItems();
       expect(result.status).toBe('running');
       expect(result.message).toBe('Resync started');
@@ -737,7 +920,10 @@ describe('PeachtreeSyncController', () => {
     });
 
     it('should reject if sync already running', async () => {
-      syncService.getCurrentSync.mockReturnValue({ id: 'sync1', status: 'running' } as any);
+      syncService.getCurrentSync.mockReturnValue({
+        id: 'sync1',
+        status: 'running',
+      } as any);
       const result = await controller.resyncItems();
       expect(result.status).toBe('running');
       expect(result.message).toContain('already in progress');
@@ -777,36 +963,65 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     const insertedSalesItems: any[] = [];
 
     const connectionService: any = {
-      query: jest.fn(async (table: string, _limit: number, _fields?: string, where?: string) => {
-        if (table === 'JrnlHdr') {
-          // New sales invoice header (Module='R')
-          return [{
-            JrnlKey_TrxNumber: '90001', JrnlKey_Per: '202607', JrnlKey_Journal: '1',
-            TransactionDate: '/Date(1750000000000)/', Description: 'Acme Corp',
-            MainAmount: '1250.50', Reference: 'INV-90001', TrxIsPosted: 1,
-            CustVendId: '5', PaymentMethod: 'Cash', AmountPaid: '1250.50',
-            TrxName: 'Sale', PostOrder: '501', Module: 'R',
-          }];
-        }
-        if (table === 'Customers') {
-          return [{ CustomerRecordNumber: '5', Customer_Bill_Name: 'Acme Corp', CustomerID: 'ACME' }];
-        }
-        if (table === 'LineItem') {
-          return [{ ItemRecordNumber: '77', ItemDescription: 'Widget', ItemID: 'WIDGET-1', UPC_SKU: 'SKU-WIDGET' }];
-        }
-        if (table === 'JrnlRow') {
-          return [{
-            PostOrder: '501', ItemRecordNumber: '77', GLAcntNumber: '3',
-            Quantity: '10', UnitCost: '120', Amount: '1200',
-          }];
-        }
-        return [];
+      query: jest.fn((table: string) => {
+        const rows =
+          table === 'JrnlHdr'
+            ? [
+                {
+                  JrnlKey_TrxNumber: '90001',
+                  JrnlKey_Per: '202607',
+                  JrnlKey_Journal: '1',
+                  TransactionDate: '/Date(1750000000000)/',
+                  Description: 'Acme Corp',
+                  MainAmount: '1250.50',
+                  Reference: 'INV-90001',
+                  TrxIsPosted: 1,
+                  CustVendId: '5',
+                  PaymentMethod: 'Cash',
+                  AmountPaid: '1250.50',
+                  TrxName: 'Sale',
+                  PostOrder: '501',
+                  Module: 'R',
+                },
+              ]
+            : table === 'Customers'
+              ? [
+                  {
+                    CustomerRecordNumber: '5',
+                    Customer_Bill_Name: 'Acme Corp',
+                    CustomerID: 'ACME',
+                  },
+                ]
+              : table === 'LineItem'
+                ? [
+                    {
+                      ItemRecordNumber: '77',
+                      ItemDescription: 'Widget',
+                      ItemID: 'WIDGET-1',
+                      UPC_SKU: 'SKU-WIDGET',
+                    },
+                  ]
+                : table === 'JrnlRow'
+                  ? [
+                      {
+                        PostOrder: '501',
+                        ItemRecordNumber: '77',
+                        GLAcntNumber: '3',
+                        Quantity: '10',
+                        UnitCost: '120',
+                        Amount: '1200',
+                      },
+                    ]
+                  : [];
+        return Promise.resolve(rows);
       }),
       enableCache: jest.fn(),
       disableCache: jest.fn(),
     };
 
-    const customerRepo: any = { find: jest.fn().mockResolvedValue([{ id: 5, name: 'Acme Corp' }]) };
+    const customerRepo: any = {
+      find: jest.fn().mockResolvedValue([{ id: 5, name: 'Acme Corp' }]),
+    };
     const supplierRepo: any = { find: jest.fn().mockResolvedValue([]) };
     const productRepo: any = {
       find: jest.fn().mockResolvedValue([
@@ -843,12 +1058,21 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       purchaseOrderItemRepo,
     );
 
-    return { service, insertedSalesOrders, insertedSalesItems, salesOrderRepo, salesOrderItemRepo };
+    return {
+      service,
+      insertedSalesOrders,
+      insertedSalesItems,
+      salesOrderRepo,
+      salesOrderItemRepo,
+    };
   }
 
-  it('creates a new sales order header for a brand-new Peachtree invoice', async () => {
+  it('should create a new sales order header for a brand-new Peachtree invoice', async () => {
     const { service, insertedSalesOrders } = buildService();
-    const status = await service.runSyncPartial([SyncEntity.SALES_INVOICES], 'test');
+    const status = await service.runSyncPartial(
+      [SyncEntity.SALES_INVOICES],
+      'test',
+    );
 
     const salesResult = status.results[0];
     expect(status.status).toBe(SyncStatus.COMPLETED);
@@ -864,32 +1088,41 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     expect(inserted.notes).toContain('[PQ-90001_202607_1]');
   });
 
-  it('does not duplicate an invoice that already exists in the system', async () => {
+  it('should not duplicate an invoice that already exists in the system', async () => {
     const { service, insertedSalesOrders, salesOrderRepo } = buildService();
     // Simulate the invoice already imported: connection query returns a header whose
     // invoice_number already exists in the sales orders table.
     salesOrderRepo.find.mockResolvedValue([{ invoice_number: 'INV-90001' }]);
 
-    const status = await service.runSyncPartial([SyncEntity.SALES_INVOICES], 'test');
+    const status = await service.runSyncPartial(
+      [SyncEntity.SALES_INVOICES],
+      'test',
+    );
     const salesResult = status.results[0];
     expect(salesResult.recordsCreated).toBe(0);
     expect(salesResult.recordsSkipped).toBe(1);
     expect(insertedSalesOrders).toHaveLength(0);
   });
 
-  it('links a new invoice line item to the created order (order_id resolved via PQ notes)', async () => {
-    const { service, insertedSalesItems, salesOrderRepo, salesOrderItemRepo } = buildService();
+  it('should link a new invoice line item to the created order (order_id resolved via PQ notes)', async () => {
+    const { service, insertedSalesItems, salesOrderRepo, salesOrderItemRepo } =
+      buildService();
 
     // The header was already imported in a previous step with a PQ note:
-    salesOrderRepo.find.mockImplementation(async (opts: any) => {
+    salesOrderRepo.find.mockImplementation((opts: any) => {
       if (opts?.select?.includes('notes')) {
-        return [{ id: 77, notes: '[PQ-90001_202607_1] INV-90001' }];
+        return Promise.resolve([
+          { id: 77, notes: '[PQ-90001_202607_1] INV-90001' },
+        ]);
       }
-      return [];
+      return Promise.resolve([]);
     });
     salesOrderItemRepo.find.mockResolvedValue([]);
 
-    const status = await service.runSyncPartial([SyncEntity.INVOICE_LINE_ITEMS], 'test');
+    const status = await service.runSyncPartial(
+      [SyncEntity.INVOICE_LINE_ITEMS],
+      'test',
+    );
     const itemsResult = status.results[0];
     expect(status.status).toBe(SyncStatus.COMPLETED);
     expect(itemsResult.recordsCreated).toBe(1);

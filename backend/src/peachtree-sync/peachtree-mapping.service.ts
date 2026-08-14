@@ -3,7 +3,6 @@ import { AccountType } from '../accounting/entities/account.entity';
 
 @Injectable()
 export class PeachtreeMappingService {
-
   private parsePeachtreeDate(dateStr: string | null | undefined): Date | null {
     if (!dateStr) return null;
     const dotNetMatch = dateStr.match(/\/Date\((\d+)\)\//);
@@ -40,9 +39,11 @@ export class PeachtreeMappingService {
       sku: ptRow.UPC_SKU || ptRow.ItemID || '',
       barcode: ptRow.UPC_SKU || '',
       cost_price: parseFloat(ptRow.LaborCost || '0') || 0,
-      selling_price: parseFloat(ptRow.PriceLevel1Amount || ptRow.SalesAmt1 || '0') || 0,
+      selling_price:
+        parseFloat(ptRow.PriceLevel1Amount || ptRow.SalesAmt1 || '0') || 0,
       unit: ptRow.StockingUM || 'piece',
-      description: ptRow.SalesDescription || ptRow.PurchaseDescription || ptRow.Note || '',
+      description:
+        ptRow.SalesDescription || ptRow.PurchaseDescription || ptRow.Note || '',
       type: 'RAW',
     };
   }
@@ -79,8 +80,14 @@ export class PeachtreeMappingService {
       description: ptRow.RowDescription || '',
       reference: String(ptRow.DistNumber || ''),
       account_code: String(ptRow.GLAcntNumber || ''),
-      debit: parseFloat(ptRow.Amount || '0') >= 0 ? parseFloat(ptRow.Amount || '0') : 0,
-      credit: parseFloat(ptRow.Amount || '0') < 0 ? Math.abs(parseFloat(ptRow.Amount || '0')) : 0,
+      debit:
+        parseFloat(ptRow.Amount || '0') >= 0
+          ? parseFloat(ptRow.Amount || '0')
+          : 0,
+      credit:
+        parseFloat(ptRow.Amount || '0') < 0
+          ? Math.abs(parseFloat(ptRow.Amount || '0'))
+          : 0,
     };
   }
 
@@ -105,7 +112,9 @@ export class PeachtreeMappingService {
     return {
       firstName: ptRow.Employee_FirstName || ptRow.EmployeeName || '',
       lastName: ptRow.Employee_LastName || '',
-      email: ptRow.Email || `${(ptRow.Employee_FirstName || 'emp').toLowerCase().replace(/\s+/g, '.')}@peachtree.local`,
+      email:
+        ptRow.Email ||
+        `${(ptRow.Employee_FirstName || 'emp').toLowerCase().replace(/\s+/g, '.')}@peachtree.local`,
       phone: ptRow.PhoneNumber || '',
     };
   }
@@ -186,8 +195,12 @@ export class PeachtreeMappingService {
 
   mapSalesInvoiceItem(ptRow: any) {
     return {
-      quantity: Math.abs(parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0),
-      price: Math.abs(parseFloat(ptRow.UnitCost || ptRow.StockingUnitCost || '0') || 0),
+      quantity: Math.abs(
+        parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0,
+      ),
+      price: Math.abs(
+        parseFloat(ptRow.UnitCost || ptRow.StockingUnitCost || '0') || 0,
+      ),
       total: Math.abs(parseFloat(ptRow.Amount || '0') || 0),
       item_record_number: parseInt(ptRow.ItemRecordNumber || '0', 10),
       gl_acnt_number: parseInt(ptRow.GLAcntNumber || '0', 10),
@@ -197,8 +210,12 @@ export class PeachtreeMappingService {
 
   mapPurchaseInvoiceItem(ptRow: any) {
     return {
-      quantity: Math.abs(parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0),
-      price: Math.abs(parseFloat(ptRow.UnitCost || ptRow.StockingUnitCost || '0') || 0),
+      quantity: Math.abs(
+        parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0,
+      ),
+      price: Math.abs(
+        parseFloat(ptRow.UnitCost || ptRow.StockingUnitCost || '0') || 0,
+      ),
       total: Math.abs(parseFloat(ptRow.Amount || '0') || 0),
       item_record_number: parseInt(ptRow.ItemRecordNumber || '0', 10),
       gl_acnt_number: parseInt(ptRow.GLAcntNumber || '0', 10),
