@@ -1046,6 +1046,24 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       createQueryBuilder: jest.fn(() => mockQueryBuilder([])),
     };
 
+    const reviewService: any = {
+      clearPendingForEntity: jest.fn().mockResolvedValue(undefined),
+      createReview: jest.fn().mockResolvedValue({ id: 1 }),
+      log: jest.fn().mockResolvedValue({ id: 1 }),
+      computeDiff: (oldObj: any, newObj: any) => {
+        const changes: any[] = [];
+        for (const k of new Set([
+          ...Object.keys(oldObj),
+          ...Object.keys(newObj),
+        ])) {
+          if (JSON.stringify(oldObj[k]) !== JSON.stringify(newObj[k])) {
+            changes.push({ field: k, old: oldObj[k], new: newObj[k] });
+          }
+        }
+        return changes;
+      },
+    };
+
     const service = new PeachtreeSyncService(
       connectionService,
       new PeachtreeMappingService(),
@@ -1056,6 +1074,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       salesOrderItemRepo,
       purchaseOrderRepo,
       purchaseOrderItemRepo,
+      reviewService,
     );
 
     return {
@@ -1064,6 +1083,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       insertedSalesItems,
       salesOrderRepo,
       salesOrderItemRepo,
+      reviewService,
     };
   }
 
@@ -1092,7 +1112,16 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     const { service, insertedSalesOrders, salesOrderRepo } = buildService();
     // Simulate the invoice already imported: connection query returns a header whose
     // invoice_number already exists in the sales orders table.
-    salesOrderRepo.find.mockResolvedValue([{ invoice_number: 'INV-90001' }]);
+    salesOrderRepo.find.mockResolvedValue([
+      {
+        id: 77,
+        invoice_number: 'INV-90001',
+        total_amount: 1250.5,
+        status: 'COMPLETED',
+        order_date: new Date(1750000000000),
+        notes: '[PQ-90001_202607_1] Acme Corp',
+      },
+    ]);
 
     const status = await service.runSyncPartial(
       [SyncEntity.SALES_INVOICES],
@@ -1133,5 +1162,49 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     expect(item.quantity).toBe(10);
     expect(item.price).toBe(120);
     expect(item.total).toBe(1200);
+  });
+
+  it('should NOT delete existing PQ orders during a full sync', async () => {
+    const { service, salesOrderRepo } = buildService();
+    salesOrderRepo.remove = jest.fn();
+    salesOrderRepo.find.mockResolvedValue([{ id: 77, notes: '[PQ-1_2_3] x' }]);
+    await service.runSync('manual', 'full');
+    expect(salesOrderRepo.remove).not.toHaveBeenCalled();
+  });
+
+  it('should create a review row when an existing invoice total differs', async () => {
+    const { service, salesOrderRepo } = buildService();
+    salesOrderRepo.find.mockImplementation((opts: any) => {
+      if (opts?.select?.includes('invoice_number')) {
+        return Promise.resolve([
+          {
+            id: 77,
+            invoice_number: 'INV-90001',
+            total_amount: 999,
+            status: 'PENDING',
+            order_date: null,
+            notes: '[PQ-90001_202607_1] INV-90001',
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+    const reviewService: any = (service as any).reviewService;
+    reviewService.clearPendingForEntity.mockResolvedValue(undefined);
+
+    const status = await service.runSyncPartial(
+      [SyncEntity.SALES_INVOICES],
+      'test',
+    );
+    const salesResult = status.results[0];
+    expect(salesResult.recordsCreated).toBe(0);
+    expect(salesResult.recordsUpdated).toBe(1);
+    expect(reviewService.createReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity: 'sales_invoices',
+        changeType: 'update',
+        dbRecordId: 77,
+      }),
+    );
   });
 });

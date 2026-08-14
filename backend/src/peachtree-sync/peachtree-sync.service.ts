@@ -19,6 +19,8 @@ import {
   PurchaseOrderStatus,
 } from '../purchases/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
+import { PeachtreeReviewService } from './peachtree-review.service';
+import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
 const BATCH_SIZE = 500;
 const SKIP_IF_SYNCED_MS = 60 * 60 * 1000; // 1 hour
@@ -45,6 +47,7 @@ export class PeachtreeSyncService {
     private purchaseOrderRepo: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderItem)
     private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
+    private reviewService: PeachtreeReviewService,
   ) {}
 
   async runSync(
@@ -67,48 +70,9 @@ export class PeachtreeSyncService {
 
     this.connectionService.enableCache();
 
-    if (mode === 'full') {
-      // Clear existing Peachtree-synced orders so invoice_numbers can be recreated with correct InvNumForThisTrx
-      this.logger.log('Clearing existing Peachtree-synced orders...');
-      const pqSalesItems = await this.salesOrderItemRepo
-        .createQueryBuilder('item')
-        .innerJoin('item.order', 'so', 'so.notes LIKE :pq', { pq: '[PQ-%' })
-        .select('item.id')
-        .getMany();
-      if (pqSalesItems.length > 0) {
-        await this.salesOrderItemRepo.remove(pqSalesItems);
-        this.logger.log(`Removed ${pqSalesItems.length} sales order items`);
-      }
-      const pqSalesOrders = await this.salesOrderRepo.find({
-        where: { notes: Like('[PQ-%') },
-      });
-      if (pqSalesOrders.length > 0) {
-        await this.salesOrderRepo.remove(pqSalesOrders);
-        this.logger.log(`Removed ${pqSalesOrders.length} sales orders`);
-      }
-      const pqPurchaseItems = await this.purchaseOrderItemRepo
-        .createQueryBuilder('item')
-        .innerJoin('item.order', 'po', 'po.notes LIKE :pq', { pq: '[PQ-%' })
-        .select('item.id')
-        .getMany();
-      if (pqPurchaseItems.length > 0) {
-        await this.purchaseOrderItemRepo.remove(pqPurchaseItems);
-        this.logger.log(
-          `Removed ${pqPurchaseItems.length} purchase order items`,
-        );
-      }
-      const pqPurchaseOrders = await this.purchaseOrderRepo.find({
-        where: { notes: Like('[PQ-%') },
-      });
-      if (pqPurchaseOrders.length > 0) {
-        await this.purchaseOrderRepo.remove(pqPurchaseOrders);
-        this.logger.log(`Removed ${pqPurchaseOrders.length} purchase orders`);
-      }
-    } else {
-      this.logger.log(
-        'Incremental mode: keeping existing Peachtree orders, only importing missing records',
-      );
-    }
+    this.logger.log(
+      `Sync ${syncId} started (mode: ${mode}) — no deletions, differences routed to review`,
+    );
 
     const entities = [
       SyncEntity.CUSTOMERS,
@@ -125,7 +89,7 @@ export class PeachtreeSyncService {
       syncStatus.percentComplete = Math.round((i / entities.length) * 100);
 
       try {
-        const result = await this.syncEntity(entity);
+        const result = await this.syncEntity(entity, syncId);
         syncStatus.results.push(result);
       } catch (error) {
         syncStatus.results.push({
@@ -195,7 +159,7 @@ export class PeachtreeSyncService {
       syncStatus.percentComplete = Math.round((i / entities.length) * 100);
 
       try {
-        const result = await this.syncEntity(entity);
+        const result = await this.syncEntity(entity, syncId);
         syncStatus.results.push(result);
       } catch (error) {
         syncStatus.results.push({
@@ -237,7 +201,10 @@ export class PeachtreeSyncService {
     return syncStatus;
   }
 
-  private async syncEntity(entity: SyncEntity): Promise<SyncResultDto> {
+  private async syncEntity(
+    entity: SyncEntity,
+    runId: string,
+  ): Promise<SyncResultDto> {
     const result: SyncResultDto = {
       entity,
       status: SyncStatus.RUNNING,
@@ -251,22 +218,22 @@ export class PeachtreeSyncService {
     try {
       switch (entity) {
         case SyncEntity.CUSTOMERS:
-          await this.syncCustomers(result);
+          await this.syncCustomers(result, runId);
           break;
         case SyncEntity.SUPPLIERS:
-          await this.syncSuppliers(result);
+          await this.syncSuppliers(result, runId);
           break;
         case SyncEntity.PRODUCTS:
-          await this.syncProducts(result);
+          await this.syncProducts(result, runId);
           break;
         case SyncEntity.SALES_INVOICES:
-          await this.syncSalesInvoices(result);
+          await this.syncSalesInvoices(result, runId);
           break;
         case SyncEntity.PURCHASE_INVOICES:
-          await this.syncPurchaseInvoices(result);
+          await this.syncPurchaseInvoices(result, runId);
           break;
         case SyncEntity.INVOICE_LINE_ITEMS:
-          await this.syncInvoiceLineItems(result);
+          await this.syncInvoiceLineItems(result, runId);
           break;
       }
       result.status = SyncStatus.COMPLETED;
@@ -297,7 +264,178 @@ export class PeachtreeSyncService {
     this.lastSyncCounts.set(entity, count);
   }
 
-  private async syncCustomers(result: SyncResultDto): Promise<void> {
+  private async compareOrderToReview(
+    entity: SyncEntity,
+    existing: {
+      id: number;
+      total_amount: number;
+      status: string;
+      order_date: Date | null;
+      notes?: string | null;
+    },
+    newOrder: {
+      total_amount: number;
+      status: string;
+      order_date?: Date | null;
+      notes?: string;
+    },
+    recordKey: string,
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    const oldObj = {
+      total_amount: Number(existing.total_amount) || 0,
+      status: existing.status,
+      order_date: existing.order_date
+        ? existing.order_date.toISOString()
+        : '',
+      notes: existing.notes || '',
+    };
+    const newObj = {
+      total_amount: newOrder.total_amount,
+      status: newOrder.status,
+      order_date: newOrder.order_date
+        ? newOrder.order_date.toISOString()
+        : '',
+      notes: newOrder.notes || '',
+    };
+    const changes = this.reviewService.computeDiff(oldObj, newObj);
+    if (changes.length === 0) {
+      await this.reviewService.log({
+        runId,
+        triggeredBy: 'manual',
+        entity,
+        action: SyncLogAction.SKIPPED,
+        recordKey,
+      });
+      result.recordsSkipped++;
+    } else {
+      await this.reviewService.createReview({
+        entity,
+        recordKey,
+        changeType: 'update',
+        dbRecordId: existing.id,
+        oldValues: oldObj,
+        newValues: newObj,
+      });
+      await this.reviewService.log({
+        runId,
+        triggeredBy: 'manual',
+        entity,
+        action: SyncLogAction.DIFFERENT,
+        recordKey,
+        changes,
+      });
+      result.recordsUpdated++;
+    }
+  }
+
+  private async flagMissingOrders(
+    entity: SyncEntity,
+    module: string,
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    const repo =
+      entity === SyncEntity.SALES_INVOICES
+        ? this.salesOrderRepo
+        : this.purchaseOrderRepo;
+    const pqOrders = await repo.find({
+      where: { notes: Like('[PQ-%') },
+      select: ['id', 'notes'],
+    });
+    const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
+    const headers = await this.connectionService
+      .query(
+        'JrnlHdr',
+        0,
+        'JrnlKey_TrxNumber, JrnlKey_Per, JrnlKey_Journal, Module',
+      )
+      .catch((e) => {
+        this.logger.warn(`JrnlHdr missing-check (${module}): ${e.message}`);
+        return [];
+      });
+    const keys = new Set<string>();
+    for (const h of headers) {
+      if (String(h.Module).trim() === module) {
+        keys.add(
+          `${h.JrnlKey_TrxNumber}_${h.JrnlKey_Per}_${h.JrnlKey_Journal}`,
+        );
+      }
+    }
+    for (const o of pqOrders) {
+      const m = (o.notes || '').match(pqNoteRegex);
+      if (!m) continue;
+      const key = `${m[1]}_${m[2]}_${m[3]}`;
+      if (keys.has(key)) continue;
+      await this.reviewService.createReview({
+        entity,
+        recordKey: o.notes,
+        changeType: 'missing',
+        dbRecordId: o.id,
+        oldValues: { notes: o.notes },
+        newValues: {},
+      });
+      await this.reviewService.log({
+        runId,
+        triggeredBy: 'manual',
+        entity,
+        action: SyncLogAction.MISSING,
+        recordKey: o.notes,
+      });
+      result.recordsSkipped++;
+    }
+  }
+
+  private buildExpectedItems(
+    rows: any[],
+    orderId: number,
+    recordToProduct: Map<number, number>,
+  ): any[] {
+    const items: any[] = [];
+    for (const row of rows) {
+      const recNo = parseInt(row.ItemRecordNumber, 10);
+      const productId = recordToProduct.get(recNo) || 0;
+      if (!productId) continue;
+      const qty = Math.abs(parseFloat(row.Quantity || '0') || 1);
+      const price = Math.abs(parseFloat(row.UnitCost || '0') || 0);
+      const amt = Math.abs(parseFloat(row.Amount || '0') || 0);
+      if (qty <= 0 && price <= 0 && amt <= 0) continue;
+      items.push({
+        order_id: orderId,
+        product_id: productId,
+        quantity: qty || 1,
+        price: price || 0,
+        total: amt || qty * price,
+      });
+    }
+    return items;
+  }
+
+  private itemsEqual(a: any[], b: any[]): boolean {
+    const norm = (list: any[]) =>
+      list
+        .map((i) => ({
+          product_id: i.product_id,
+          quantity: Number(i.quantity) || 0,
+          price: Number(i.price) || 0,
+          total: Number(i.total) || 0,
+        }))
+        .sort(
+          (x, y) =>
+            x.product_id - y.product_id ||
+            x.quantity - y.quantity ||
+            x.price - y.price,
+        );
+    return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+  }
+
+  private async syncCustomers(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(SyncEntity.CUSTOMERS);
+
     const rows = await this.connectionService.query('Customers');
     if (this.shouldSkip(SyncEntity.CUSTOMERS, rows.length)) {
       result.recordsSkipped = rows.length;
@@ -312,19 +450,64 @@ export class PeachtreeSyncService {
     const names = mapped.map((m) => m.name);
     const existing = await this.customerRepo.find({
       where: { name: In(names) },
-      select: ['id', 'name'],
+      select: ['id', 'name', 'phone', 'email', 'address', 'balance'],
     });
-    const existingMap = new Map(existing.map((e) => [e.name, e.id]));
+    const existingMap = new Map(existing.map((e) => [e.name, e]));
 
     const toInsert: any[] = [];
-    const toUpdate: { id: number; data: any }[] = [];
-
     for (const m of mapped) {
-      const existingId = existingMap.get(m.name);
-      if (existingId) {
-        toUpdate.push({ id: existingId, data: m });
-      } else {
+      const existingRec = existingMap.get(m.name);
+      if (!existingRec) {
         toInsert.push(m);
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.CUSTOMERS,
+          action: SyncLogAction.INSERTED,
+          recordKey: m.name,
+        });
+        continue;
+      }
+      const oldObj = {
+        phone: existingRec.phone || '',
+        email: existingRec.email || '',
+        address: existingRec.address || '',
+        balance: Number(existingRec.balance) || 0,
+      };
+      const newObj = {
+        phone: m.phone || '',
+        email: m.email || '',
+        address: m.address || '',
+        balance: m.balance,
+      };
+      const changes = this.reviewService.computeDiff(oldObj, newObj);
+      if (changes.length === 0) {
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.CUSTOMERS,
+          action: SyncLogAction.SKIPPED,
+          recordKey: m.name,
+        });
+        result.recordsSkipped++;
+      } else {
+        await this.reviewService.createReview({
+          entity: SyncEntity.CUSTOMERS,
+          recordKey: m.name,
+          changeType: 'update',
+          dbRecordId: existingRec.id,
+          oldValues: oldObj,
+          newValues: newObj,
+        });
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.CUSTOMERS,
+          action: SyncLogAction.DIFFERENT,
+          recordKey: m.name,
+          changes,
+        });
+        result.recordsUpdated++;
       }
     }
 
@@ -339,19 +522,16 @@ export class PeachtreeSyncService {
         .execute();
     }
     result.recordsCreated = toInsert.length;
-
-    for (let i = 0; i < toUpdate.length; i += BATCH_SIZE) {
-      const chunk = toUpdate.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        chunk.map((u) => this.customerRepo.update(u.id, u.data)),
-      );
-    }
-    result.recordsUpdated = toUpdate.length;
     result.recordsProcessed = rows.length;
     this.markSynced(SyncEntity.CUSTOMERS, rows.length);
   }
 
-  private async syncSuppliers(result: SyncResultDto): Promise<void> {
+  private async syncSuppliers(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(SyncEntity.SUPPLIERS);
+
     const rows = await this.connectionService.query('Vendors');
     if (this.shouldSkip(SyncEntity.SUPPLIERS, rows.length)) {
       result.recordsSkipped = rows.length;
@@ -366,19 +546,64 @@ export class PeachtreeSyncService {
     const names = mapped.map((m) => m.name);
     const existing = await this.supplierRepo.find({
       where: { name: In(names) },
-      select: ['id', 'name'],
+      select: ['id', 'name', 'phone', 'email', 'address', 'balance'],
     });
-    const existingMap = new Map(existing.map((e) => [e.name, e.id]));
+    const existingMap = new Map(existing.map((e) => [e.name, e]));
 
     const toInsert: any[] = [];
-    const toUpdate: { id: number; data: any }[] = [];
-
     for (const m of mapped) {
-      const existingId = existingMap.get(m.name);
-      if (existingId) {
-        toUpdate.push({ id: existingId, data: m });
-      } else {
+      const existingRec = existingMap.get(m.name);
+      if (!existingRec) {
         toInsert.push(m);
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.SUPPLIERS,
+          action: SyncLogAction.INSERTED,
+          recordKey: m.name,
+        });
+        continue;
+      }
+      const oldObj = {
+        phone: existingRec.phone || '',
+        email: existingRec.email || '',
+        address: existingRec.address || '',
+        balance: Number(existingRec.balance) || 0,
+      };
+      const newObj = {
+        phone: m.phone || '',
+        email: m.email || '',
+        address: m.address || '',
+        balance: m.balance,
+      };
+      const changes = this.reviewService.computeDiff(oldObj, newObj);
+      if (changes.length === 0) {
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.SUPPLIERS,
+          action: SyncLogAction.SKIPPED,
+          recordKey: m.name,
+        });
+        result.recordsSkipped++;
+      } else {
+        await this.reviewService.createReview({
+          entity: SyncEntity.SUPPLIERS,
+          recordKey: m.name,
+          changeType: 'update',
+          dbRecordId: existingRec.id,
+          oldValues: oldObj,
+          newValues: newObj,
+        });
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.SUPPLIERS,
+          action: SyncLogAction.DIFFERENT,
+          recordKey: m.name,
+          changes,
+        });
+        result.recordsUpdated++;
       }
     }
 
@@ -393,19 +618,16 @@ export class PeachtreeSyncService {
         .execute();
     }
     result.recordsCreated = toInsert.length;
-
-    for (let i = 0; i < toUpdate.length; i += BATCH_SIZE) {
-      const chunk = toUpdate.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        chunk.map((u) => this.supplierRepo.update(u.id, u.data)),
-      );
-    }
-    result.recordsUpdated = toUpdate.length;
     result.recordsProcessed = rows.length;
     this.markSynced(SyncEntity.SUPPLIERS, rows.length);
   }
 
-  private async syncProducts(result: SyncResultDto): Promise<void> {
+  private async syncProducts(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(SyncEntity.PRODUCTS);
+
     const rows = await this.connectionService.query('LineItem');
     if (this.shouldSkip(SyncEntity.PRODUCTS, rows.length)) {
       result.recordsSkipped = rows.length;
@@ -419,25 +641,86 @@ export class PeachtreeSyncService {
 
     const skus = mapped.map((m) => m.sku).filter(Boolean);
     const names = mapped.map((m) => m.name);
-    const existingBySku = await this.productRepo.find({
-      where: { sku: In(skus) },
-      select: ['id', 'sku'],
+    const existing = await this.productRepo.find({
+      where: [{ sku: In(skus) }, { name: In(names) }],
+      select: [
+        'id',
+        'name',
+        'sku',
+        'cost_price',
+        'selling_price',
+        'unit',
+        'description',
+        'type',
+      ],
     });
-    const existingByName = await this.productRepo.find({
-      where: { name: In(names) },
-      select: ['id', 'name'],
-    });
-    const skuMap = new Map(existingBySku.map((e) => [e.sku, e.id]));
-    const nameMap = new Map(existingByName.map((e) => [e.name, e.id]));
+    const bySku = new Map<string, Product>();
+    const byName = new Map<string, Product>();
+    for (const p of existing) {
+      if (p.sku && !bySku.has(p.sku)) bySku.set(p.sku, p);
+      if (p.name && !byName.has(p.name)) byName.set(p.name, p);
+    }
 
     const toInsert: any[] = [];
-
     for (const m of mapped) {
-      const existingId = skuMap.get(m.sku) || nameMap.get(m.name);
-      if (existingId) {
+      const existingRec = (m.sku && bySku.get(m.sku)) || byName.get(m.name);
+      if (!existingRec) {
+        toInsert.push(m);
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.PRODUCTS,
+          action: SyncLogAction.INSERTED,
+          recordKey: m.sku || m.name,
+        });
+        continue;
+      }
+      const oldObj = {
+        name: existingRec.name,
+        sku: existingRec.sku || '',
+        cost_price: Number(existingRec.cost_price) || 0,
+        selling_price: Number(existingRec.selling_price) || 0,
+        unit: existingRec.unit || '',
+        description: existingRec.description || '',
+        type: existingRec.type || '',
+      };
+      const newObj = {
+        name: m.name,
+        sku: m.sku || '',
+        cost_price: m.cost_price,
+        selling_price: m.selling_price,
+        unit: m.unit || '',
+        description: m.description || '',
+        type: m.type || '',
+      };
+      const changes = this.reviewService.computeDiff(oldObj, newObj);
+      if (changes.length === 0) {
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.PRODUCTS,
+          action: SyncLogAction.SKIPPED,
+          recordKey: m.sku || m.name,
+        });
         result.recordsSkipped++;
       } else {
-        toInsert.push(m);
+        await this.reviewService.createReview({
+          entity: SyncEntity.PRODUCTS,
+          recordKey: m.sku || m.name,
+          changeType: 'update',
+          dbRecordId: existingRec.id,
+          oldValues: oldObj,
+          newValues: newObj,
+        });
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.PRODUCTS,
+          action: SyncLogAction.DIFFERENT,
+          recordKey: m.sku || m.name,
+          changes,
+        });
+        result.recordsUpdated++;
       }
     }
 
@@ -452,12 +735,16 @@ export class PeachtreeSyncService {
         .execute();
     }
     result.recordsCreated = toInsert.length;
-
     result.recordsProcessed = rows.length;
     this.markSynced(SyncEntity.PRODUCTS, rows.length);
   }
 
-  private async syncSalesInvoices(result: SyncResultDto): Promise<void> {
+  private async syncSalesInvoices(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(SyncEntity.SALES_INVOICES);
+
     const rows = await this.connectionService
       .query(
         'JrnlHdr',
@@ -475,7 +762,9 @@ export class PeachtreeSyncService {
       return;
     }
 
-    const customers = await this.customerRepo.find({ select: ['id', 'name'] });
+    const customers = await this.customerRepo.find({
+      select: ['id', 'name'],
+    });
     const customerByName = new Map<string, number>();
     for (const c of customers) customerByName.set(c.name, c.id);
 
@@ -500,7 +789,11 @@ export class PeachtreeSyncService {
       `Customer mapping: ${custVendToCustomer.size} Peachtree→DB links, ${rows.length} sales headers`,
     );
 
-    const toInsert: any[] = [];
+    const toCompare: {
+      key: string;
+      invNum: string;
+      data: any;
+    }[] = [];
     for (const hdr of rows) {
       const mapped = this.mappingService.mapSalesInvoice(hdr);
       const custRecNo = mapped.customer_vend_id;
@@ -518,52 +811,95 @@ export class PeachtreeSyncService {
       const invNum = String(
         mapped.invoice_number || hdr.JrnlKey_TrxNumber || '',
       );
-      toInsert.push({
-        customer_id: customerId,
-        total_amount: mapped.total_amount,
-        status:
-          mapped.status === 'COMPLETED'
-            ? OrderStatus.COMPLETED
-            : OrderStatus.PENDING,
-        order_date: mapped.order_date || undefined,
-        notes: `[PQ-${uniqueKey}] ${mapped.notes}`,
-        invoice_number: invNum,
+      toCompare.push({
+        key: uniqueKey,
+        invNum,
+        data: {
+          customer_id: customerId,
+          total_amount: mapped.total_amount,
+          status:
+            mapped.status === 'COMPLETED'
+              ? OrderStatus.COMPLETED
+              : OrderStatus.PENDING,
+          order_date: mapped.order_date || undefined,
+          notes: `[PQ-${uniqueKey}] ${mapped.notes}`,
+          invoice_number: invNum,
+        },
       });
-      result.recordsProcessed++;
     }
 
-    // Dedup: find existing invoice numbers and skip
-    const invNumbers = toInsert.map((i) => i.invoice_number).filter(Boolean);
+    const invNumbers = toCompare
+      .map((c) => c.invNum)
+      .filter(Boolean);
+    const existingByInv = new Map<string, SalesOrder>();
     if (invNumbers.length > 0) {
-      const existingOrders = await this.salesOrderRepo.find({
+      const existing = await this.salesOrderRepo.find({
         where: { invoice_number: In(invNumbers) },
-        select: ['invoice_number'],
+        select: ['id', 'invoice_number', 'total_amount', 'status', 'order_date', 'notes'],
       });
-      const existingSet = new Set(existingOrders.map((o) => o.invoice_number));
-      const filtered = toInsert.filter(
-        (i) => !existingSet.has(i.invoice_number),
-      );
-      result.recordsSkipped += toInsert.length - filtered.length;
-
-      for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
-        const chunk = filtered.slice(i, i + BATCH_SIZE);
-        await this.salesOrderRepo
-          .createQueryBuilder()
-          .insert()
-          .into(SalesOrder)
-          .values(chunk)
-          .orIgnore()
-          .execute();
-      }
-      result.recordsCreated = filtered.length;
+      for (const o of existing) existingByInv.set(o.invoice_number!, o);
     }
+    const pqOrders = await this.salesOrderRepo.find({
+      where: { notes: Like('[PQ-%') },
+      select: ['id', 'invoice_number', 'notes', 'total_amount', 'status', 'order_date'],
+    });
+    const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
+    const existingByPq = new Map<string, SalesOrder>();
+    for (const o of pqOrders) {
+      const m = (o.notes || '').match(pqNoteRegex);
+      if (m) existingByPq.set(`${m[1]}_${m[2]}_${m[3]}`, o);
+    }
+
+    const toInsert: any[] = [];
+    for (const c of toCompare) {
+      const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
+      if (!existing) {
+        toInsert.push(c.data);
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.SALES_INVOICES,
+          action: SyncLogAction.INSERTED,
+          recordKey: c.invNum || c.key,
+        });
+        result.recordsProcessed++;
+      } else {
+        await this.compareOrderToReview(
+          SyncEntity.SALES_INVOICES,
+          existing,
+          c.data,
+          c.invNum || c.key,
+          result,
+          runId,
+        );
+      }
+    }
+
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const chunk = toInsert.slice(i, i + BATCH_SIZE);
+      await this.salesOrderRepo
+        .createQueryBuilder()
+        .insert()
+        .into(SalesOrder)
+        .values(chunk)
+        .orIgnore()
+        .execute();
+    }
+    result.recordsCreated = toInsert.length;
+
+    await this.flagMissingOrders(SyncEntity.SALES_INVOICES, 'R', result, runId);
 
     this.logger.log(
-      `Sales invoices: ${result.recordsCreated} created, ${result.recordsSkipped} skipped`,
+      `Sales invoices: ${result.recordsCreated} created, ${result.recordsUpdated} differences, ${result.recordsSkipped} skipped`,
     );
   }
 
-  private async syncPurchaseInvoices(result: SyncResultDto): Promise<void> {
+  private async syncPurchaseInvoices(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(SyncEntity.PURCHASE_INVOICES);
+
     const rows = await this.connectionService
       .query(
         'JrnlHdr',
@@ -581,7 +917,9 @@ export class PeachtreeSyncService {
       return;
     }
 
-    const suppliers = await this.supplierRepo.find({ select: ['id', 'name'] });
+    const suppliers = await this.supplierRepo.find({
+      select: ['id', 'name'],
+    });
     const supplierByName = new Map<string, number>();
     for (const s of suppliers) supplierByName.set(s.name, s.id);
 
@@ -602,7 +940,11 @@ export class PeachtreeSyncService {
       `Supplier mapping: ${custVendToSupplier.size} Peachtree→DB links, ${rows.length} purchase headers`,
     );
 
-    const toInsert: any[] = [];
+    const toCompare: {
+      key: string;
+      invNum: string;
+      data: any;
+    }[] = [];
     for (const hdr of rows) {
       const mapped = this.mappingService.mapPurchaseInvoice(hdr);
       const vendRecNo = mapped.customer_vend_id;
@@ -620,51 +962,102 @@ export class PeachtreeSyncService {
       const invNum = String(
         mapped.invoice_number || hdr.JrnlKey_TrxNumber || '',
       );
-      toInsert.push({
-        supplier_id: supplierId,
-        total_amount: mapped.total_amount,
-        status:
-          mapped.status === 'COMPLETED'
-            ? PurchaseOrderStatus.COMPLETED
-            : PurchaseOrderStatus.PENDING,
-        order_date: mapped.order_date || undefined,
-        notes: `[PQ-${uniqueKey}] ${mapped.notes}`,
-        invoice_number: invNum,
+      toCompare.push({
+        key: uniqueKey,
+        invNum,
+        data: {
+          supplier_id: supplierId,
+          total_amount: mapped.total_amount,
+          status:
+            mapped.status === 'COMPLETED'
+              ? PurchaseOrderStatus.COMPLETED
+              : PurchaseOrderStatus.PENDING,
+          order_date: mapped.order_date || undefined,
+          notes: `[PQ-${uniqueKey}] ${mapped.notes}`,
+          invoice_number: invNum,
+        },
       });
-      result.recordsProcessed++;
     }
 
-    const invNumbers = toInsert.map((i) => i.invoice_number).filter(Boolean);
+    const invNumbers = toCompare
+      .map((c) => c.invNum)
+      .filter(Boolean);
+    const existingByInv = new Map<string, PurchaseOrder>();
     if (invNumbers.length > 0) {
-      const existingOrders = await this.purchaseOrderRepo.find({
+      const existing = await this.purchaseOrderRepo.find({
         where: { invoice_number: In(invNumbers) },
-        select: ['invoice_number'],
+        select: ['id', 'invoice_number', 'total_amount', 'status', 'order_date', 'notes'],
       });
-      const existingSet = new Set(existingOrders.map((o) => o.invoice_number));
-      const filtered = toInsert.filter(
-        (i) => !existingSet.has(i.invoice_number),
-      );
-      result.recordsSkipped += toInsert.length - filtered.length;
-
-      for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
-        const chunk = filtered.slice(i, i + BATCH_SIZE);
-        await this.purchaseOrderRepo
-          .createQueryBuilder()
-          .insert()
-          .into(PurchaseOrder)
-          .values(chunk)
-          .orIgnore()
-          .execute();
-      }
-      result.recordsCreated = filtered.length;
+      for (const o of existing) existingByInv.set(o.invoice_number!, o);
     }
+    const pqOrders = await this.purchaseOrderRepo.find({
+      where: { notes: Like('[PQ-%') },
+      select: ['id', 'invoice_number', 'notes', 'total_amount', 'status', 'order_date'],
+    });
+    const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
+    const existingByPq = new Map<string, PurchaseOrder>();
+    for (const o of pqOrders) {
+      const m = (o.notes || '').match(pqNoteRegex);
+      if (m) existingByPq.set(`${m[1]}_${m[2]}_${m[3]}`, o);
+    }
+
+    const toInsert: any[] = [];
+    for (const c of toCompare) {
+      const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
+      if (!existing) {
+        toInsert.push(c.data);
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'manual',
+          entity: SyncEntity.PURCHASE_INVOICES,
+          action: SyncLogAction.INSERTED,
+          recordKey: c.invNum || c.key,
+        });
+        result.recordsProcessed++;
+      } else {
+        await this.compareOrderToReview(
+          SyncEntity.PURCHASE_INVOICES,
+          existing,
+          c.data,
+          c.invNum || c.key,
+          result,
+          runId,
+        );
+      }
+    }
+
+    for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+      const chunk = toInsert.slice(i, i + BATCH_SIZE);
+      await this.purchaseOrderRepo
+        .createQueryBuilder()
+        .insert()
+        .into(PurchaseOrder)
+        .values(chunk)
+        .orIgnore()
+        .execute();
+    }
+    result.recordsCreated = toInsert.length;
+
+    await this.flagMissingOrders(
+      SyncEntity.PURCHASE_INVOICES,
+      'P',
+      result,
+      runId,
+    );
 
     this.logger.log(
-      `Purchase invoices: ${result.recordsCreated} created, ${result.recordsSkipped} skipped`,
+      `Purchase invoices: ${result.recordsCreated} created, ${result.recordsUpdated} differences, ${result.recordsSkipped} skipped`,
     );
   }
 
-  private async syncInvoiceLineItems(result: SyncResultDto): Promise<void> {
+  private async syncInvoiceLineItems(
+    result: SyncResultDto,
+    runId: string,
+  ): Promise<void> {
+    await this.reviewService.clearPendingForEntity(
+      SyncEntity.INVOICE_LINE_ITEMS,
+    );
+
     const jrnlRowFields =
       'PostOrder, CustomerRecordNumber, VendorRecordNumber, ItemRecordNumber, Quantity, UnitCost, Amount, GLAcntNumber, RowDescription';
 
@@ -840,10 +1233,10 @@ export class PeachtreeSyncService {
     );
 
     const existingSalesItems = await this.salesOrderItemRepo.find({
-      select: ['order_id'],
+      select: ['order_id', 'product_id', 'quantity', 'price', 'total'],
     });
     const existingPurchaseItems = await this.purchaseOrderItemRepo.find({
-      select: ['order_id'],
+      select: ['order_id', 'product_id', 'quantity', 'price', 'total'],
     });
     const salesOrderHasItems = new Set<number>(
       existingSalesItems.map((i) => i.order_id),
@@ -885,68 +1278,85 @@ export class PeachtreeSyncService {
 
     const salesBatch: any[] = [];
     const purchaseBatch: any[] = [];
-    let salesLinksFound = 0;
-    let purchaseLinksFound = 0;
-    let productMissCount = 0;
 
     for (const [postOrder, rows] of rowsByPostOrder) {
       const salesOrderId = postOrderToSalesOrderId.get(postOrder);
-      if (salesOrderId && !salesOrderHasItems.has(salesOrderId)) {
-        for (const row of rows) {
-          const recNo = parseInt(row.ItemRecordNumber, 10);
-          const productId = recordToProduct.get(recNo) || 0;
-          if (!productId) {
-            productMissCount++;
-            continue;
+      if (salesOrderId) {
+        const expected = this.buildExpectedItems(
+          rows,
+          salesOrderId,
+          recordToProduct,
+        );
+        if (salesOrderHasItems.has(salesOrderId)) {
+          const existing = existingSalesItems.filter(
+            (i) => i.order_id === salesOrderId,
+          );
+          if (!this.itemsEqual(existing, expected)) {
+            await this.reviewService.createReview({
+              entity: SyncEntity.INVOICE_LINE_ITEMS,
+              recordKey: `sales-order-${salesOrderId}`,
+              changeType: 'update',
+              dbRecordId: salesOrderId,
+              oldValues: { kind: 'sales', items: existing },
+              newValues: { kind: 'sales', items: expected },
+            });
+            await this.reviewService.log({
+              runId,
+              triggeredBy: 'manual',
+              entity: SyncEntity.INVOICE_LINE_ITEMS,
+              action: SyncLogAction.DIFFERENT,
+              recordKey: `sales-order-${salesOrderId}`,
+            });
+            result.recordsUpdated++;
+          } else {
+            result.recordsSkipped++;
           }
-          const qty = Math.abs(parseFloat(row.Quantity || '0') || 1);
-          const price = Math.abs(parseFloat(row.UnitCost || '0') || 0);
-          const amt = Math.abs(parseFloat(row.Amount || '0') || 0);
-          if (qty <= 0 && price <= 0 && amt <= 0) continue;
-          salesBatch.push({
-            order_id: salesOrderId,
-            product_id: productId,
-            quantity: qty || 1,
-            price: price || 0,
-            total: amt || qty * price,
-          });
-          result.recordsProcessed++;
+        } else {
+          salesBatch.push(...expected);
+          result.recordsProcessed += expected.length;
+          salesOrderHasItems.add(salesOrderId);
         }
-        salesOrderHasItems.add(salesOrderId);
-        salesLinksFound++;
         continue;
       }
 
       const purchaseOrderId = postOrderToPurchaseOrderId.get(postOrder);
-      if (purchaseOrderId && !purchaseOrderHasItems.has(purchaseOrderId)) {
-        for (const row of rows) {
-          const recNo = parseInt(row.ItemRecordNumber, 10);
-          const productId = recordToProduct.get(recNo) || 0;
-          if (!productId) {
-            productMissCount++;
-            continue;
+      if (purchaseOrderId) {
+        const expected = this.buildExpectedItems(
+          rows,
+          purchaseOrderId,
+          recordToProduct,
+        );
+        if (purchaseOrderHasItems.has(purchaseOrderId)) {
+          const existing = existingPurchaseItems.filter(
+            (i) => i.order_id === purchaseOrderId,
+          );
+          if (!this.itemsEqual(existing, expected)) {
+            await this.reviewService.createReview({
+              entity: SyncEntity.INVOICE_LINE_ITEMS,
+              recordKey: `purchase-order-${purchaseOrderId}`,
+              changeType: 'update',
+              dbRecordId: purchaseOrderId,
+              oldValues: { kind: 'purchase', items: existing },
+              newValues: { kind: 'purchase', items: expected },
+            });
+            await this.reviewService.log({
+              runId,
+              triggeredBy: 'manual',
+              entity: SyncEntity.INVOICE_LINE_ITEMS,
+              action: SyncLogAction.DIFFERENT,
+              recordKey: `purchase-order-${purchaseOrderId}`,
+            });
+            result.recordsUpdated++;
+          } else {
+            result.recordsSkipped++;
           }
-          const qty = Math.abs(parseFloat(row.Quantity || '0') || 1);
-          const price = Math.abs(parseFloat(row.UnitCost || '0') || 0);
-          const amt = Math.abs(parseFloat(row.Amount || '0') || 0);
-          if (qty <= 0 && price <= 0 && amt <= 0) continue;
-          purchaseBatch.push({
-            order_id: purchaseOrderId,
-            product_id: productId,
-            quantity: qty || 1,
-            price: price || 0,
-            total: amt || qty * price,
-          });
-          result.recordsProcessed++;
+        } else {
+          purchaseBatch.push(...expected);
+          result.recordsProcessed += expected.length;
+          purchaseOrderHasItems.add(purchaseOrderId);
         }
-        purchaseOrderHasItems.add(purchaseOrderId);
-        purchaseLinksFound++;
       }
     }
-
-    this.logger.log(
-      `PostOrder links: ${salesLinksFound} sales, ${purchaseLinksFound} purchase, ${productMissCount} product misses`,
-    );
 
     for (let i = 0; i < salesBatch.length; i += BATCH_SIZE) {
       const chunk = salesBatch.slice(i, i + BATCH_SIZE);
@@ -1046,7 +1456,7 @@ export class PeachtreeSyncService {
         errors: [],
       };
 
-      await this.syncInvoiceLineItems(result);
+      await this.syncInvoiceLineItems(result, syncId);
       syncStatus.percentComplete = 90;
 
       const finalSales = await this.salesOrderItemRepo
