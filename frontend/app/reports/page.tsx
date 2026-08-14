@@ -17,7 +17,7 @@ export default function ReportsPage() {
   const {
     activeTab, setActiveTab, loading, startDate, setStartDate, endDate, setEndDate,
     data, analytics, shipmentProfit, loadReport, exportToExcel,
-    page, limit, setPage, setLimit,
+    page, setPage,
   } = useReports();
 
   return (

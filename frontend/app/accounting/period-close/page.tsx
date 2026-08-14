@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { usePeriodClose } from '@/hooks/accounting/usePeriodClose';
-import { Lock, Unlock, Calendar } from 'lucide-react';
+import { Lock, Unlock } from 'lucide-react';
 
 export default function PeriodClosePage() {
   const h = usePeriodClose();

@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Factory, Package, Target, Cpu, DollarSign, ArrowLeft, Scale } from 'lucide-react';
-import PageShell from '@/components/inventory2/PageShell';
+import { Factory, Package, Target, Cpu, DollarSign, ArrowLeft } from 'lucide-react';
 import InfoCard, { DetailRow } from '@/components/inventory2/InfoCard';
 
 interface ProductInfo {

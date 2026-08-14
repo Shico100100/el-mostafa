@@ -1,6 +1,6 @@
 'use client';
 import { useSalesCreditMemos } from '@/hooks/sales/useSalesCreditMemos';
-import { Receipt, FileText } from 'lucide-react';
+import { Receipt } from 'lucide-react';
 
 export default function SalesCreditMemosPage() {
   const h = useSalesCreditMemos();

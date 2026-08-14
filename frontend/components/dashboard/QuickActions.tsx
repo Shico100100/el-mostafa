@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Package, Box, BarChart3, Wrench, Users, Receipt, Undo2, Factory, ShoppingCart, Building2, Cog, DollarSign, Banknote, TrendingUp, Radar, Bot, User, ScrollText } from 'lucide-react';
+import { Package, Box, BarChart3, Wrench, Users, Receipt, Undo2, Factory, ShoppingCart, Building2, Cog, DollarSign, Radar, Bot, User, ScrollText } from 'lucide-react';
 
 interface ActionItem {
   icon: React.ReactNode;

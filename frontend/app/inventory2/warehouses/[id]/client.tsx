@@ -4,10 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Package, ShoppingCart, Truck, ArrowRightLeft, Search, X } from 'lucide-react';
+import { Package, ShoppingCart, Truck, ArrowRightLeft, Search } from 'lucide-react';
 import StatCards from '@/components/inventory2/StatCards';
 import { TypeBadge } from '@/components/inventory2/Badge';
-import { Modal } from '@/components/inventory2/Modal';
 
 interface StockItem {
   product_id: number;

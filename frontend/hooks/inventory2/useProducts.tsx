@@ -145,7 +145,7 @@ export function useProducts() {
 
   const handleSaveProduct = async (data: any) => {
     try {
-      const { id, stock_quantity, ...clean } = data;
+      const { stock_quantity, ...clean } = data;
       if (editingProduct) {
         await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(clean) });
         toast.success('تم التحديث');

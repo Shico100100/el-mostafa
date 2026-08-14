@@ -30,7 +30,7 @@ export function ARAgingPanel() {
         if (!Array.isArray(data)) { if (!cancelled) setState('empty'); return; }
         setCustomers(data);
         setState(data.length === 0 ? 'empty' : 'ready');
-      } catch (err) {
+      } catch {
         if (!cancelled) setState('empty');
       }
     })();

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Machine, Mold, RawMaterial, BulkProductionItem } from '@/components/manufacturing/types';
+import type { Mold, RawMaterial, BulkProductionItem } from '@/components/manufacturing/types';
 import { X } from 'lucide-react';
 
 interface BulkProductionModalProps {

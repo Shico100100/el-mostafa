@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
@@ -11,7 +10,6 @@ import type {
 } from '@/components/manufacturing/types';
 
 export function useDailyProduction() {
-  const router = useRouter();
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dailyRecords, setDailyRecords] = useState<ProductionRecord[]>([]);
   const [weeklyRecords, setWeeklyRecords] = useState<ProductionRecord[]>([]);
@@ -54,7 +52,6 @@ export function useDailyProduction() {
   } | null>(null);
   const [showStockDialog, setShowStockDialog] = useState(false);
   const [showSubstitutePicker, setShowSubstitutePicker] = useState(false);
-  const [pendingSubstituteIds, setPendingSubstituteIds] = useState<number[]>([]);
 
   const fetchedMoldIds = useRef<Set<number>>(new Set());
 

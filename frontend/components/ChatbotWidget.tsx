@@ -77,7 +77,7 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
+  const [, setSpeaking] = useState(false);
   const [autoTts, setAutoTts] = useState(true);
   const [micAvailable, setMicAvailable] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -239,11 +239,6 @@ export default function ChatbotWidget() {
   const toggleRecording = () => {
     if (recording) stopRecording();
     else startRecording();
-  };
-
-  const playLastBotMessage = () => {
-    const last = [...messages].reverse().find((m) => m.sender === 'bot');
-    if (last) speakReply(last.text);
   };
 
   return (

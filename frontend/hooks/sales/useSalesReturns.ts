@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import type { SalesReturn, Customer, Order, ReturnItem, NewReturnForm } from '@/components/sales/returns/types';
+import type { SalesReturn, Customer, Order, NewReturnForm } from '@/components/sales/returns/types';
 
 const emptyForm = (): NewReturnForm => ({
   customer_id: '',

@@ -38,7 +38,7 @@ interface NavButtonProps {
   iconBg?: string;
 }
 
-export function NavButton({ icon, title, description, onClick, gradient, borderClass, iconBg }: NavButtonProps) {
+export function NavButton({ icon, title, description, onClick, gradient, borderClass }: NavButtonProps) {
   return (
     <button onClick={onClick}
       className={`${gradient} hover:opacity-80 backdrop-blur-lg p-8 rounded-2xl border ${borderClass || 'border-white/10'} flex flex-col items-center gap-4 transition group`}>

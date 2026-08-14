@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -16,7 +15,6 @@ export interface WarehouseForm {
 }
 
 export function useWarehouses() {
-  const router = useRouter();
   const [items, setItems] = useState<WH[]>([]);
   const [stockCounts, setStockCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);

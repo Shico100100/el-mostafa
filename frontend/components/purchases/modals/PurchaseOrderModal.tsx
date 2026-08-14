@@ -220,10 +220,7 @@ export default function PurchaseOrderModal({
                       <input
                         type="number"
                         value={typingValues[`${index}-total`] ?? (item.quantity && item.price ? (Number(item.quantity) * Number(item.price)) : '')}
-                        onChange={(e) => {}}
-                        onFocus={(e) => {
-                          const val = e.target.value;
-                        }}
+                        onChange={() => {}}
                         onBlur={(e) => onItemTotalChange(index, e.target.value)}
                         required
                         min="0"

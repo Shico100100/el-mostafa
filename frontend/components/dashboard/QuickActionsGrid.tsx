@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import {
   Package, Users, Receipt, ShoppingCart, Building2,
-  DollarSign, BarChart3, Bot, Radar, User, ScrollText, Cog,
+  DollarSign, BarChart3, Radar, User, ScrollText, Cog,
 } from 'lucide-react';
 
 interface Action {

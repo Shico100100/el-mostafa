@@ -1,6 +1,6 @@
 'use client';
 
-import { Warehouse, MapPin, Package, Edit3, Trash2, Wrench, Puzzle, CheckCircle, Factory } from 'lucide-react';
+import { MapPin, Package, Edit3, Trash2, Wrench, Puzzle, CheckCircle, Factory } from 'lucide-react';
 import type { WH } from '@/hooks/inventory2/useWarehouses';
 
 const typeIcon = (name: string) => {

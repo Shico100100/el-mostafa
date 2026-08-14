@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReportData, Sale } from '../types';
-import { ReportBarChart, ReportPieChart, ReportComparisonChart } from '../ReportCharts';
+import { ReportPieChart, ReportComparisonChart } from '../ReportCharts';
 
 export function ProfitLossTab({ data }: { data: ReportData }) {
   const salesByOrder = (data.sales || []).slice(0, 20).map((sale: Sale) => {

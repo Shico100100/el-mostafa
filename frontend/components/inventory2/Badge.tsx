@@ -1,4 +1,3 @@
-import type { ProductType } from './types';
 import { productTypeLabel } from './types';
 
 const typeConfig: Record<string, { class: string }> = {

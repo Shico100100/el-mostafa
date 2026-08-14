@@ -31,7 +31,7 @@ export function DashboardPageContent() {
   const { isAdmin } = usePermission();
   const { visiblePanels, isCustomizing } = useDashboard();
   const { debouncedDate } = useDate();
-  const { stats, lastRefresh, refresh } = useDashboardStats();
+  const { stats, refresh } = useDashboardStats();
 
   const handleLogout = () => {
     api.clearAuth();

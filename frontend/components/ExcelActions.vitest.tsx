@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import ExcelActions from './ExcelActions';
 
 describe('ExcelActions', () => {
@@ -18,7 +17,6 @@ describe('ExcelActions', () => {
   });
 
   it('disables import button while importing', async () => {
-    const user = userEvent.setup();
     render(<ExcelActions {...defaultProps} />);
 
     const importBtn = screen.getByText('استيراد Excel');

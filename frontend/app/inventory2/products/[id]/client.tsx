@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Package, DollarSign, BarChart3, Warehouse, Tag } from 'lucide-react';
@@ -81,7 +82,9 @@ export default function ProductDetailPage() {
         {product.image_path && (
           <div className="lg:col-span-3">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl flex justify-center">
-              <img src={product.image_path} alt={product.name} className="max-h-48 object-contain rounded-xl" />
+              <div className="relative h-48 w-full max-w-md">
+                <Image src={product.image_path} alt={product.name} fill className="object-contain rounded-xl" sizes="(max-width: 768px) 100vw, 33vw" />
+              </div>
             </div>
           </div>
         )}

@@ -36,7 +36,7 @@ export function useCustomers() {
       const data = await api.fetchWithAuth('/sales/customers');
       const mapped = (data as any[]).map((c) => ({ ...c, balance: Number(c.balance) }));
       setCustomers(mapped);
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء تحميل العملاء');
     } finally {
       setLoading(false);
@@ -54,7 +54,7 @@ export function useCustomers() {
       
       const data = await api.fetchWithAuth(url);
       setStatement(data);
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء تحميل كشف الحساب');
     } finally {
       setStatementLoading(false);
@@ -79,7 +79,7 @@ export function useCustomers() {
       await loadCustomers();
       setShowModal(false);
       setEditingCustomer(null);
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء حفظ العميل');
     }
   };
@@ -92,7 +92,7 @@ export function useCustomers() {
       await loadCustomers();
       setShowPaymentModal(false);
       setSelectedCustomer(null);
-    } catch (error) {
+    } catch {
       toast.error('حدث خطأ أثناء تسجيل السند');
     }
   };

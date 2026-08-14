@@ -1,6 +1,5 @@
 'use client';
 
-import { Package, DollarSign } from 'lucide-react';
 import type { AnalyticsData } from '../types';
 import { ReportBarChart, ReportPieChart } from '../ReportCharts';
 

@@ -2,8 +2,6 @@
 
 import { Customer, CustomerStats } from './types';
 
-const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
-
 interface CustomerChartsProps {
   stats: CustomerStats;
   customers: Customer[];

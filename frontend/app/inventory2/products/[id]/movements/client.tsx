@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { BarChart3, Package, TrendingUp, ArrowLeft, Edit3, Trash2, X } from 'lucide-react';
+import { BarChart3, Package, TrendingUp, ArrowLeft, Edit3, Trash2 } from 'lucide-react';
 import StatCards from '@/components/inventory2/StatCards';
 import { Modal } from '@/components/inventory2/Modal';
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Upload } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -131,7 +132,7 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
               <div className="flex items-center gap-4">
                 {imagePath ? (
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 bg-slate-900/50">
-                    <img src={imagePath} alt="" className="w-full h-full object-cover" />
+                    <Image src={imagePath} alt="" fill className="object-cover" sizes="80px" />
                     <button type="button" onClick={() => setImagePath('')} className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500/80 text-white rounded-full text-xs flex items-center justify-center"><X className="w-3 h-3" /></button>
                   </div>
                 ) : (

@@ -1,11 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useFixedAssets } from '@/hooks/accounting/useFixedAssets';
-import { Landmark, Plus, TrendingDown } from 'lucide-react';
+import { Landmark, Plus } from 'lucide-react';
 
 export default function FixedAssetsPage() {
   const h = useFixedAssets();
-  const [period, setPeriod] = useState(new Date().toISOString().substring(0, 7));
+  const [period] = useState(new Date().toISOString().substring(0, 7));
   if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
   const totalCost = h.assets.reduce((s: number, a: any) => s + Number(a.purchase_cost), 0);
