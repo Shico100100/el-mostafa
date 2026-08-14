@@ -5,6 +5,9 @@ import { PeachtreeMappingService } from './peachtree-mapping.service';
 import { PeachtreeSyncService } from './peachtree-sync.service';
 import { PeachtreeSyncScheduler } from './peachtree-sync.scheduler';
 import { PeachtreeSyncController } from './peachtree-sync.controller';
+import { PeachtreeReviewService } from './peachtree-review.service';
+import { PeachtreeSyncReview } from './entities/peachtree-sync-review.entity';
+import { PeachtreeSyncLog } from './entities/peachtree-sync-log.entity';
 import { Customer } from '../sales/entities/customer.entity';
 import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';
@@ -23,6 +26,8 @@ import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.ent
       SalesOrderItem,
       PurchaseOrder,
       PurchaseOrderItem,
+      PeachtreeSyncReview,
+      PeachtreeSyncLog,
     ]),
   ],
   controllers: [PeachtreeSyncController],
@@ -31,6 +36,7 @@ import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.ent
     PeachtreeMappingService,
     PeachtreeSyncService,
     PeachtreeSyncScheduler,
+    PeachtreeReviewService,
   ],
   exports: [PeachtreeSyncService],
 })
