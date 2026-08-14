@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
+import { confirmDialog } from '@/lib/confirm-dialog';
 
 interface Product {
     id: number;
@@ -49,16 +51,20 @@ export default function SemiFinishedInventoryPage() {
                     </h1>
                     <div className="flex gap-4">
                         <button
-                            onClick={async () => {
-                                if (!confirm('هل تريد إعادة حساب تكاليف جميع المنتجات البلاستيكية بالمعادلة الجديدة؟')) return;
-                                try {
-                                    const res = await api.fetchWithAuth('/v1/manufacturing/recalculate-semi-finished-costs', { method: 'POST' });
-                                    alert(`✅ تم إعادة الحساب: ${res.processed_products} منتج`);
-                                    window.location.reload();
-                                } catch (err) {
-                                    console.error(err);
-                                    alert('❌ فشل');
-                                }
+                            onClick={() => {
+                                confirmDialog({
+                                    message: 'هل تريد إعادة حساب تكاليف جميع المنتجات البلاستيكية بالمعادلة الجديدة؟',
+                                    onConfirm: async () => {
+                                        try {
+                                            const res = await api.fetchWithAuth('/v1/manufacturing/recalculate-semi-finished-costs', { method: 'POST' });
+                                            toast.success(`تم إعادة الحساب: ${res.processed_products} منتج`);
+                                            window.location.reload();
+                                        } catch (err) {
+                                            console.error(err);
+                                            toast.error('فشل إعادة الحساب');
+                                        }
+                                    },
+                                });
                             }}
                             className="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 rounded-lg border border-amber-500/30 transition text-sm"
                             title="إعادة حساب التكاليف"
@@ -122,18 +128,22 @@ export default function SemiFinishedInventoryPage() {
                                         </td>
                                         <td className="p-4">
                                             <button
-                                                onClick={async () => {
-                                                    if (!confirm('هل تريد إعادة حساب المخزون لهذا المنتج؟ 🔄')) return;
-                                                    try {
-                                                        const data = await api.fetchWithAuth(`/v1/inventory/products/${product.id}/recalculate`, {
-                                                            method: 'POST',
-                                                        });
-                                                        alert(`تم التحديث: ${data.calculated_stock}`);
-                                                        fetchProducts();
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                        alert('فشل');
-                                                    }
+                                                onClick={() => {
+                                                    confirmDialog({
+                                                        message: 'هل تريد إعادة حساب المخزون لهذا المنتج؟',
+                                                        onConfirm: async () => {
+                                                            try {
+                                                                const data = await api.fetchWithAuth(`/v1/inventory/products/${product.id}/recalculate`, {
+                                                                    method: 'POST',
+                                                                });
+                                                                toast.success(`تم التحديث: ${data.calculated_stock}`);
+                                                                fetchProducts();
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                toast.error('فشل إعادة حساب المخزون');
+                                                            }
+                                                        },
+                                                    });
                                                 }}
                                                 className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition"
                                                 title="تصحيح الرصيد"

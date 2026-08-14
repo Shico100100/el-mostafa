@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
+import { confirmDialog } from '@/lib/confirm-dialog';
 
 interface Product {
     id: number;
@@ -87,35 +89,40 @@ export default function ProductMovementsPage() {
                 message: `تم طلب تعديل حركة المخزون رقم ${editingMovement.id} للمنتج ${product?.name}`
             });
 
-            alert('تم إرسال طلب التعديل للمدير');
+            toast.success('تم إرسال طلب التعديل للمدير');
             setShowEditModal(false);
             loadData();
         } catch (error) {
             console.error('Error updating movement:', error);
-            alert('حدث خطأ أثناء التعديل');
+            toast.error('حدث خطأ أثناء التعديل');
         }
     };
 
     const handleDeleteMovement = async (movement: Movement) => {
-        if (!confirm(`هل أنت متأكد من حذف حركة المخزون؟\nالنوع: ${movement.type === 'IN' ? 'إدخال' : movement.type === 'OUT' ? 'إخراج' : 'تعديل'}\nالكمية: ${movement.quantity}`)) {
-            return;
-        }
+        const typeLabel = movement.type === 'IN' ? 'إدخال' : movement.type === 'OUT' ? 'إخراج' : 'تعديل';
+        confirmDialog({
+            message: 'هل أنت متأكد من حذف حركة المخزون؟',
+            description: `النوع: ${typeLabel}\nالكمية: ${movement.quantity}`,
+            confirmLabel: 'حذف',
+            danger: true,
+            onConfirm: async () => {
+                try {
+                    if (!product) return;
+                    // Send notification to admin for approval
+                    await api.createNotification({
+                        title: 'طلب حذف حركة مخزون',
+                        message: `تم طلب حذف حركة المخزون رقم ${movement.id} للمنتج ${product.name} - الكمية: ${movement.quantity}`,
+                        actionType: 'delete_movement',
+                        actionData: { movementId: movement.id, productId: product.id }
+                    });
 
-        try {
-            if (!product) return;
-            // Send notification to admin for approval
-            await api.createNotification({
-                title: 'طلب حذف حركة مخزون',
-                message: `تم طلب حذف حركة المخزون رقم ${movement.id} للمنتج ${product.name} - الكمية: ${movement.quantity}`,
-                actionType: 'delete_movement',
-                actionData: { movementId: movement.id, productId: product.id }
-            });
-
-            alert('تم إرسال طلب الحذف للمدير للموافقة عليه');
-        } catch (error) {
-            console.error('Error requesting deletion:', error);
-            alert('حدث خطأ أثناء إرسال الطلب');
-        }
+                    toast.success('تم إرسال طلب الحذف للمدير للموافقة عليه');
+                } catch (error) {
+                    console.error('Error requesting deletion:', error);
+                    toast.error('حدث خطأ أثناء إرسال الطلب');
+                }
+            },
+        });
     };
 
     if (loading) {

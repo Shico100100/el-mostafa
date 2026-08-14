@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import { Home, AlertTriangle, Save, Thermometer, Wrench, Zap, FileText } from 'lucide-react';
 
 interface Machine {
@@ -48,7 +49,7 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
 
     const handleProductionSubmit = async () => {
         if (!mold) {
-            alert('الرجاء اختيار القالب أولاً (من لوحة الإدارة)');
+            toast.error('الرجاء اختيار القالب أولاً (من لوحة الإدارة)');
             return;
         }
 
@@ -69,12 +70,12 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                 setTimeout(() => btn.style.transform = 'scale(1)', 100);
             }
 
-            alert(`تم تسجيل ${cycleCount} دورة (${cycleCount * (mold.cavities || 1)} قطعة) بنجاح!`);
+            toast.success(`تم تسجيل ${cycleCount} دورة (${cycleCount * (mold.cavities || 1)} قطعة) بنجاح!`);
             setCycleCount(0);
             router.refresh();
         } catch (error) {
             console.error('Production error:', error);
-            alert('خطأ في التسجيل');
+            toast.error('خطأ في التسجيل');
         }
     };
 
@@ -193,8 +194,8 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'HIGH_TEMP', date: new Date().toISOString(), description: 'حرارة عالية', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                         alert('تم تسجيل بلاغ حرارة عالية');
-                                     } catch { alert('فشل تسجيل البلاغ'); }
+                                         toast.success('تم تسجيل بلاغ حرارة عالية');
+                                     } catch { toast.error('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-2xl text-rose-400 font-bold transition"
                             >
@@ -207,8 +208,8 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'MECHANICAL', date: new Date().toISOString(), description: 'عطل ميكانيكي', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                         alert('تم تسجيل بلاغ عطل ميكانيكي');
-                                     } catch { alert('فشل تسجيل البلاغ'); }
+                                         toast.success('تم تسجيل بلاغ عطل ميكانيكي');
+                                     } catch { toast.error('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-2xl text-amber-400 font-bold transition"
                             >
@@ -221,8 +222,8 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'ELECTRICAL', date: new Date().toISOString(), description: 'مشكلة كهرباء', cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                         alert('تم تسجيل بلاغ مشكلة كهرباء');
-                                     } catch { alert('فشل تسجيل البلاغ'); }
+                                         toast.success('تم تسجيل بلاغ مشكلة كهرباء');
+                                     } catch { toast.error('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 rounded-2xl text-orange-400 font-bold transition"
                             >
@@ -237,8 +238,8 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                                             method: 'POST',
                                             body: JSON.stringify({ machine_id: Number(machineId), type: 'OTHER', date: new Date().toISOString(), description: desc, cost: 0, status: 'OPEN', notes: 'تم الإبلاغ من الكشك الذكي' }),
                                         });
-                                         alert('تم تسجيل البلاغ');
-                                     } catch { alert('فشل تسجيل البلاغ'); }
+                                         toast.success('تم تسجيل البلاغ');
+                                     } catch { toast.error('فشل تسجيل البلاغ'); }
                                 }}
                                 className="p-6 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-2xl text-white font-bold transition"
                             >

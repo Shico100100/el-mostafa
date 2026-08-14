@@ -10,6 +10,7 @@ const mockUpdateStockMovement = vi.fn();
 const mockAddRawMaterialStock = vi.fn();
 const mockCreateStockMovement = vi.fn();
 const mockRecalculateRawMaterialStock = vi.fn();
+const mockConfirmDialog = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -20,6 +21,17 @@ vi.mock('@/lib/api', () => ({
     addRawMaterialStock: (...args: any[]) => mockAddRawMaterialStock(...args),
     createStockMovement: (...args: any[]) => mockCreateStockMovement(...args),
     recalculateRawMaterialStock: (...args: any[]) => mockRecalculateRawMaterialStock(...args),
+  },
+}));
+
+vi.mock('@/lib/confirm-dialog', () => ({
+  confirmDialog: (...args: any[]) => mockConfirmDialog(...args),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
   },
 }));
 
@@ -52,8 +64,7 @@ const mockRawMaterial = {
   product: { id: 10, name: 'PP ابيض', unit: 'كجم', cost_price: 22.0 },
 };
 
-function makeMovements(overrides?: { current_stock?: number }) {
-  const current_stock = overrides?.current_stock ?? 150;
+function makeMovements() {
   return [
     { id: 1, date: '2026-01-10', type: 'IN', quantity: 500, price: 20, reference: 'PO-1', notes: '' },
     { id: 2, date: '2026-02-15', type: 'OUT', quantity: 200, reference: '', notes: 'production' },
@@ -334,49 +345,48 @@ describe('RawMaterialDetailsPage', () => {
   describe('recalculate button', () => {
     it('calls recalculate API on confirm and refreshes data', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      let confirmOpts: any;
+      mockConfirmDialog.mockImplementation((opts: any) => { confirmOpts = opts; });
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getByText('150'));
       const refreshBtn = screen.getByTitle('إعادة احتساب الرصيد من السجل');
       await user.click(refreshBtn);
+      expect(mockConfirmDialog).toHaveBeenCalledTimes(1);
+      await confirmOpts.onConfirm();
       expect(mockRecalculateRawMaterialStock).toHaveBeenCalledWith(42);
       await waitFor(() => {
         expect(mockGetRawMaterial).toHaveBeenCalledTimes(2);
       });
-      vi.restoreAllMocks();
     });
 
     it('does not call recalculate when user cancels', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getByText('150'));
       const refreshBtn = screen.getByTitle('إعادة احتساب الرصيد من السجل');
       await user.click(refreshBtn);
       expect(mockRecalculateRawMaterialStock).not.toHaveBeenCalled();
-      vi.restoreAllMocks();
     });
   });
 
   describe('delete movement', () => {
     it('calls deleteStockMovement on confirm', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      let confirmOpts: any;
+      mockConfirmDialog.mockImplementation((opts: any) => { confirmOpts = opts; });
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getAllByText('500'));
       const trashButtons = screen.getAllByTestId('icon').filter(el =>
         el.closest('button')?.className.includes('red')
       );
       await user.click(trashButtons[0].closest('button')!);
+      expect(mockConfirmDialog).toHaveBeenCalledTimes(1);
+      await confirmOpts.onConfirm();
       expect(mockDeleteStockMovement).toHaveBeenCalledWith(1);
-      vi.restoreAllMocks();
     });
 
     it('does not delete when user cancels', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
       render(createElement(RawMaterialDetailsPage));
       await waitFor(() => screen.getAllByText('500'));
       const trashButtons = screen.getAllByTestId('icon').filter(el =>
@@ -384,7 +394,6 @@ describe('RawMaterialDetailsPage', () => {
       );
       await user.click(trashButtons[0].closest('button')!);
       expect(mockDeleteStockMovement).not.toHaveBeenCalled();
-      vi.restoreAllMocks();
     });
   });
 

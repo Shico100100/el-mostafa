@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { FileUp, File, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Attachment {
     id: number;
@@ -55,7 +56,7 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({ relatedType, rela
             fetchAttachments();
         } catch (error) {
             console.error('Error uploading file:', error);
-            alert('فشل رفع الملف');
+            toast.error('فشل رفع الملف');
         } finally {
             setUploading(false);
         }

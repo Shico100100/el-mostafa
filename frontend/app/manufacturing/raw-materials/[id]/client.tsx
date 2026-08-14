@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '../../../../lib/api';
+import { toast } from 'sonner';
+import { confirmDialog } from '../../../../lib/confirm-dialog';
 import { FileText, BarChart3, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 
 interface RawMaterial {
@@ -106,16 +108,22 @@ export default function RawMaterialDetailsPage() {
     }, [filterData]);
 
     const handleDeleteMovement = async (movId: number) => {
-        if (!confirm('هل أنت متأكد من حذف هذا السجل؟\nسيتم عكس تأثيره على المخزون!')) return;
-
-        try {
-            await api.deleteStockMovement(movId);
-            alert('تم الحذف بنجاح');
-            fetchData();
-        } catch (error) {
-            console.error('Error deleting movement:', error);
-            alert('حدث خطأ');
-        }
+        confirmDialog({
+            message: 'هل أنت متأكد من حذف هذا السجل؟',
+            description: 'سيتم عكس تأثيره على المخزون!',
+            confirmLabel: 'حذف',
+            danger: true,
+            onConfirm: async () => {
+                try {
+                    await api.deleteStockMovement(movId);
+                    toast.success('تم الحذف بنجاح');
+                    fetchData();
+                } catch (error) {
+                    console.error('Error deleting movement:', error);
+                    toast.error('حدث خطأ');
+                }
+            },
+        });
     };
 
     const handleEditMovement = (mov: StockMovement) => {
@@ -143,10 +151,10 @@ export default function RawMaterialDetailsPage() {
             setShowEditDialog(false);
             setEditingMovement(null);
             fetchData();
-            alert('تم تحديث السجل بنجاح');
+            toast.success('تم تحديث السجل بنجاح');
         } catch (error) {
             console.error('Error updating movement:', error);
-            alert('حدث خطأ أثناء التحديث');
+            toast.error('حدث خطأ أثناء التحديث');
         }
     };
 
@@ -181,10 +189,10 @@ export default function RawMaterialDetailsPage() {
                 notes: ''
             });
             fetchData();
-            alert('تم إضافة الحركة بنجاح');
+            toast.success('تم إضافة الحركة بنجاح');
         } catch (error) {
             console.error('Error adding movement:', error);
-            alert('حدث خطأ أثناء الإضافة');
+            toast.error('حدث خطأ أثناء الإضافة');
         }
     };
 
@@ -218,16 +226,21 @@ export default function RawMaterialDetailsPage() {
                                     {rawMaterial.current_stock} <span className="text-sm font-normal">{rawMaterial.product.unit}</span>
                                 </p>
                                 <button
-                                    onClick={async () => {
-                                        if (!confirm('هل تريد إعادة حساب المخزون بناءً على سجل الحركات؟\nسيتم تعديل الرقم الحالي ليطابق مجموع العمليات المسجلة.')) return;
-                                        try {
-                                            const data = await api.recalculateRawMaterialStock(+id);
-                                            alert(`تم التحديث بنجاح\nالرصيد المحسوب: ${data.calculated_stock}`);
-                                            fetchData();
-                                        } catch (err) {
-                                            console.error(err);
-                                            alert('حدث خطأ');
-                                        }
+                                    onClick={() => {
+                                        confirmDialog({
+                                            message: 'هل تريد إعادة حساب المخزون بناءً على سجل الحركات؟',
+                                            description: 'سيتم تعديل الرقم الحالي ليطابق مجموع العمليات المسجلة.',
+                                            onConfirm: async () => {
+                                                try {
+                                                    const data = await api.recalculateRawMaterialStock(+id);
+                                                    toast.success(`تم التحديث بنجاح - الرصيد المحسوب: ${data.calculated_stock}`);
+                                                    fetchData();
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast.error('حدث خطأ');
+                                                }
+                                            },
+                                        });
                                     }}
                                     className="opacity-0 group-hover:opacity-100 transition p-1 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 rounded text-xs"
                                     title="إعادة احتساب الرصيد من السجل"

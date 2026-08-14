@@ -2,6 +2,7 @@
 
 import { Upload, Download } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 
 interface ExcelActionsProps {
     exportUrl: string;
@@ -41,7 +42,7 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
             }
         } catch (error) {
             console.error('Export failed:', error);
-            alert('فشل التصدير. يرجى المحاولة مرة أخرى.');
+            toast.error('فشل التصدير. يرجى المحاولة مرة أخرى.');
         }
     };
 
@@ -93,16 +94,16 @@ export default function ExcelActions({ exportUrl, importUrl, fileName, onImportS
             const success = result.success ?? 0;
             const errors = result.errors ?? 0;
             if (errors > 0) {
-                alert(`تم استيراد ${success} بنجاح. فشل ${errors}. \nراجع الكونسول للتفاصيل.`);
+                toast.success(`تم استيراد ${success} بنجاح. فشل ${errors}. راجع الكونسول للتفاصيل.`);
                 console.warn('Failed rows:', result.failedRows);
             } else {
-                alert(`تم الاستيراد بنجاح! (${success} صنف)`);
+                toast.success(`تم الاستيراد بنجاح! (${success} صنف)`);
             }
 
             onImportSuccess();
         } catch (error) {
             console.error('Import failed:', error);
-            alert('فشل الاستيراد. تأكد من صحة الملف.');
+            toast.error('فشل الاستيراد. تأكد من صحة الملف.');
         } finally {
             setImporting(false);
         }

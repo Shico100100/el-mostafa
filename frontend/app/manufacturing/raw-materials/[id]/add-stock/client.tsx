@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
 import { Plus, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RawMaterialDetail {
     id: number;
@@ -40,12 +41,12 @@ export default function AddRawMaterialStockPage() {
                 setRawMaterial(rmData);
                 setSuppliers(sortAlphabetically(Array.isArray(supData) ? supData : [], 'name'));
             } else {
-                alert('فشل في تحميل البيانات');
+                toast.error('فشل في تحميل البيانات');
                 router.back();
             }
         } catch (error) {
             console.error('Error fetching data:', error);
-            alert('فشل في تحميل البيانات');
+            toast.error('فشل في تحميل البيانات');
             router.back();
         } finally {
             setLoading(false);
@@ -70,13 +71,13 @@ export default function AddRawMaterialStockPage() {
                 }),
             });
 
-            alert('تم إضافة الرصيد بنجاح!');
+            toast.success('تم إضافة الرصيد بنجاح!');
             router.push('/manufacturing/raw-materials');
 
         } catch (error: unknown) {
             console.error('Error adding stock:', error);
             const message = error instanceof Error ? error.message : 'فشل عملية الإضافة';
-            alert(`خطأ: ${message}`);
+            toast.error(`خطأ: ${message}`);
         }
     };
 
