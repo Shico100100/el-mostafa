@@ -49,6 +49,9 @@ export class SalesOrder {
   @Column({ type: 'date', nullable: true })
   order_date: Date;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  delivered_at: Date;
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
