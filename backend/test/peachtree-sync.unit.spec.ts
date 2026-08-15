@@ -1326,4 +1326,57 @@ describe('PeachtreeSyncService review orchestration', () => {
     );
     expect(logRepo.save).toHaveBeenCalled();
   });
+
+  it('skipReview returns an errors array in its result', async () => {
+    const { service, reviewRepo } = buildService();
+    const result = await service.skipReview([1]);
+    expect(Array.isArray(result.errors)).toBe(true);
+    expect(reviewRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'skipped' }),
+    );
+  });
+
+  it('applies a missing review row without touching target tables', async () => {
+    const { service, reviewRepo, customerRepo } = buildService();
+    const reviewRow: any = {
+      id: 7, entity: 'customers', record_key: 'missing-7', change_type: 'missing',
+      db_record_id: 5, old_values: { name: 'x' }, new_values: null, status: 'pending',
+    };
+    (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
+    const result = await service.applyReview([7]);
+    expect(result.applied).toBe(1);
+    expect(customerRepo.update).not.toHaveBeenCalled();
+    expect(reviewRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'accepted' }),
+    );
+  });
+
+  it('applyReview returns graceful errors instead of throwing 500 when lookup fails', async () => {
+    const { service, reviewRepo, logRepo } = buildService();
+    (reviewRepo as any).find = jest
+      .fn()
+      .mockRejectedValue(new Error('invalid input syntax for type integer'));
+    const result = await service.applyReview([1]);
+    expect(result.applied).toBe(0);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(logRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('skipReview returns graceful errors instead of throwing 500 when lookup fails', async () => {
+    const { service, reviewRepo } = buildService();
+    (reviewRepo as any).find = jest
+      .fn()
+      .mockRejectedValue(new Error('connection pool exhausted'));
+    const result = await service.skipReview([1]);
+    expect(result.skipped).toBe(0);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it('applyReview with no matching rows resolves to applied 0 without throwing', async () => {
+    const { service, reviewRepo } = buildService();
+    (reviewRepo as any).find = jest.fn().mockResolvedValue([]);
+    const result = await service.applyReview([9999]);
+    expect(result.applied).toBe(0);
+    expect(result.errors.length).toBe(0);
+  });
 });

@@ -1514,27 +1514,51 @@ export class PeachtreeSyncService {
 
   async skipReview(
     ids: number[],
-  ): Promise<{ skipped: number }> {
-    const runId = `skip_${Date.now()}`;
-    const skipped = await this.reviewService.markSkipped(ids || []);
-    for (const id of ids || []) {
-      const [row] = await this.reviewService.getPendingByIds([id]);
-      if (!row || row.status !== 'skipped') continue;
-      await this.reviewService.log({
-        runId,
-        triggeredBy: 'skip',
-        entity: row.entity as SyncEntity,
-        action: SyncLogAction.SKIPPED_REVIEW,
-        recordKey: row.record_key,
-      });
+  ): Promise<{ skipped: number; errors: string[] }> {
+    const errors: string[] = [];
+    let rows: Awaited<ReturnType<typeof this.reviewService.getPendingByIds>> | undefined;
+    try {
+      rows = await this.reviewService.getPendingByIds(ids || []);
+    } catch (error: any) {
+      return {
+        skipped: 0,
+        errors: [`skipReview lookup failed: ${error?.message || String(error)}`],
+      };
     }
-    return { skipped };
+    const runId = `skip_${Date.now()}`;
+    let skipped = 0;
+    for (const row of rows) {
+      try {
+        await this.reviewService.markSkippedRow(row);
+        skipped++;
+        await this.reviewService.log({
+          runId,
+          triggeredBy: 'skip',
+          entity: row.entity as SyncEntity,
+          action: SyncLogAction.SKIPPED_REVIEW,
+          recordKey: row.record_key,
+        });
+      } catch (error: any) {
+        errors.push(
+          `${row.entity}:${row.record_key} — ${error?.message || String(error)}`,
+        );
+      }
+    }
+    return { skipped, errors };
   }
 
   async applyReview(
     ids: number[],
   ): Promise<{ applied: number; errors: string[] }> {
-    const rows = await this.reviewService.getPendingByIds(ids || []);
+    let rows: Awaited<ReturnType<typeof this.reviewService.getPendingByIds>> | undefined;
+    try {
+      rows = await this.reviewService.getPendingByIds(ids || []);
+    } catch (error: any) {
+      return {
+        applied: 0,
+        errors: [`applyReview lookup failed: ${error?.message || String(error)}`],
+      };
+    }
     const runId = `apply_${Date.now()}`;
     let applied = 0;
     const errors: string[] = [];
@@ -1543,6 +1567,15 @@ export class PeachtreeSyncService {
       try {
         if (row.change_type === 'missing') {
           await this.reviewService.markAccepted(row);
+          applied++;
+          await this.reviewService.log({
+            runId,
+            triggeredBy: 'apply',
+            entity: row.entity as SyncEntity,
+            action: SyncLogAction.MISSING,
+            recordKey: row.record_key,
+            changes: null,
+          });
           continue;
         }
         const nv: any = row.new_values || {};
@@ -1591,20 +1624,26 @@ export class PeachtreeSyncService {
             });
             break;
           case SyncEntity.INVOICE_LINE_ITEMS:
-            if (row.db_record_id && Array.isArray(nv.items)) {
-              if (nv.kind === 'purchase') {
-                await this.purchaseOrderItemRepo.delete({
-                  order_id: row.db_record_id,
-                });
-                if (nv.items.length > 0) {
-                  await this.purchaseOrderItemRepo.insert(nv.items);
-                }
-              } else {
-                await this.salesOrderItemRepo.delete({
-                  order_id: row.db_record_id,
-                });
-                if (nv.items.length > 0) {
-                  await this.salesOrderItemRepo.insert(nv.items);
+            ;{
+              const orderId = row.db_record_id;
+              if (orderId && Array.isArray(nv.items)) {
+                const items = (nv.items as Record<string, unknown>[]).map(
+                  (it) => ({ order_id: orderId, ...it }),
+                );
+                if (nv.kind === 'purchase') {
+                  await this.purchaseOrderItemRepo.delete({
+                    order_id: orderId,
+                  });
+                  if (items.length > 0) {
+                    await this.purchaseOrderItemRepo.insert(items);
+                  }
+                } else {
+                  await this.salesOrderItemRepo.delete({
+                    order_id: orderId,
+                  });
+                  if (items.length > 0) {
+                    await this.salesOrderItemRepo.insert(items);
+                  }
                 }
               }
             }
