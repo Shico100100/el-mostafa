@@ -138,6 +138,14 @@ export class PeachtreeReviewService {
     await this.reviewRepo.save(row);
   }
 
+  async markSkippedRow(
+    row: NonNullable<Awaited<ReturnType<typeof this.reviewRepo.findOne>>>,
+  ): Promise<void> {
+    row.status = ReviewStatus.SKIPPED;
+    row.decided_at = new Date();
+    await this.reviewRepo.save(row);
+  }
+
   async clearPendingForEntity(entity: SyncEntity): Promise<void> {
     await this.reviewRepo
       .createQueryBuilder()
