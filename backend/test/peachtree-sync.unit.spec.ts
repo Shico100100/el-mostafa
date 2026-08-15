@@ -1,6 +1,8 @@
 import { AccountType } from '../src/accounting/entities/account.entity';
 import { PeachtreeMappingService } from '../src/peachtree-sync/peachtree-mapping.service';
 import { PeachtreeReviewService } from '../src/peachtree-sync/peachtree-review.service';
+import { MovementType } from '../src/inventory/entities/stock-movement.entity';
+import { OrderStatus } from '../src/sales/entities/sales-order.entity';
 
 // ─────────────────────────────────────────────────────────
 // 1. PeachtreeMappingService (pure logic, no deps)
@@ -1123,6 +1125,11 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       },
     };
 
+    const stockService: any = {
+      addStockMovement: jest.fn().mockResolvedValue({}),
+      getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
+    };
+
     const service = new PeachtreeSyncService(
       connectionService,
       new PeachtreeMappingService(),
@@ -1134,6 +1141,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       purchaseOrderRepo,
       purchaseOrderItemRepo,
       reviewService,
+      stockService,
     );
 
     return {
@@ -1143,6 +1151,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       salesOrderRepo,
       salesOrderItemRepo,
       reviewService,
+      stockService,
     };
   }
 
@@ -1266,6 +1275,86 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       }),
     );
   });
+
+  it('auto-delivers a COMPLETED [PQ- sales order after sync (stock OUT + delivered_at)', async () => {
+    const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
+      buildService();
+    salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
+    salesOrderRepo.findOne = jest.fn().mockResolvedValue({
+      id: 77,
+      notes: '[PQ-90001_202607_1] INV-90001',
+      status: OrderStatus.COMPLETED,
+      delivered_at: null,
+      invoice_number: 'INV-90001',
+    });
+    salesOrderRepo.update = jest.fn().mockResolvedValue({});
+    salesOrderItemRepo.find.mockResolvedValue([
+      { order_id: 77, product_id: 9, quantity: 10 },
+      { order_id: 77, product_id: 10, quantity: 2 },
+    ]);
+
+    await service.runSyncPartial([SyncEntity.SALES_INVOICES], 'test');
+
+    expect(stockService.addStockMovement).toHaveBeenCalledTimes(2);
+    expect(stockService.addStockMovement).toHaveBeenCalledWith(
+      expect.objectContaining({
+        product_id: 9,
+        type: MovementType.OUT,
+        quantity: 10,
+      }),
+      undefined,
+      true,
+    );
+    expect(stockService.addStockMovement).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 10, quantity: 2 }),
+      undefined,
+      true,
+    );
+    expect(salesOrderRepo.update).toHaveBeenCalledWith(
+      77,
+      expect.objectContaining({ delivered_at: expect.any(Date) }),
+    );
+  });
+
+  it('does not deliver a PENDING [PQ- sales order', async () => {
+    const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
+      buildService();
+    salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
+    salesOrderRepo.findOne = jest.fn().mockResolvedValue({
+      id: 77,
+      notes: '[PQ-90001_202607_1] INV-90001',
+      status: OrderStatus.PENDING,
+      delivered_at: null,
+      invoice_number: 'INV-90001',
+    });
+    salesOrderItemRepo.find.mockResolvedValue([
+      { order_id: 77, product_id: 9, quantity: 10 },
+    ]);
+
+    await service.runSyncPartial([SyncEntity.SALES_INVOICES], 'test');
+
+    expect(stockService.addStockMovement).not.toHaveBeenCalled();
+  });
+
+  it('does not re-deliver an order that already has delivered_at', async () => {
+    const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
+      buildService();
+    salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
+    salesOrderRepo.findOne = jest.fn().mockResolvedValue({
+      id: 77,
+      notes: '[PQ-90001_202607_1] INV-90001',
+      status: OrderStatus.COMPLETED,
+      delivered_at: new Date(),
+      invoice_number: 'INV-90001',
+    });
+    salesOrderItemRepo.find.mockResolvedValue([
+      { order_id: 77, product_id: 9, quantity: 10 },
+    ]);
+
+    await service.runSyncPartial([SyncEntity.SALES_INVOICES], 'test');
+
+    expect(stockService.addStockMovement).not.toHaveBeenCalled();
+  });
 });
 
 describe('PeachtreeSyncService review orchestration', () => {
@@ -1302,6 +1391,10 @@ describe('PeachtreeSyncService review orchestration', () => {
       { update: jest.fn() } as any,
       {} as any,
       reviewService,
+      {
+        addStockMovement: jest.fn().mockResolvedValue({}),
+        getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
+      } as any,
     );
     return { service, customerRepo, reviewRepo, logRepo };
   }
@@ -1378,5 +1471,59 @@ describe('PeachtreeSyncService review orchestration', () => {
     const result = await service.applyReview([9999]);
     expect(result.applied).toBe(0);
     expect(result.errors.length).toBe(0);
+  });
+
+  it('delivers an order when a sales_invoices review flips status to COMPLETED', async () => {
+    const { service, reviewRepo } = buildService();
+    const reviewRow: any = {
+      id: 3,
+      entity: 'sales_invoices',
+      record_key: 'INV-1',
+      change_type: 'update',
+      db_record_id: 77,
+      old_values: { status: 'PENDING' },
+      new_values: {
+        status: 'COMPLETED',
+        total_amount: 100,
+        notes: '[PQ-1_2_3] x',
+      },
+      status: 'pending',
+    };
+    (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
+
+    const svc: any = service;
+    svc.salesOrderRepo = {
+      update: jest.fn().mockResolvedValue({}),
+      findOne: jest.fn().mockResolvedValue({
+        id: 77,
+        notes: '[PQ-1_2_3] x',
+        status: OrderStatus.COMPLETED,
+        delivered_at: null,
+        invoice_number: 'INV-1',
+      }),
+    };
+    svc.salesOrderItemRepo = {
+      find: jest
+        .fn()
+        .mockResolvedValue([{ order_id: 77, product_id: 9, quantity: 5 }]),
+    };
+    svc.stockService = {
+      addStockMovement: jest.fn().mockResolvedValue({}),
+      getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
+    };
+
+    const result = await service.applyReview([3]);
+
+    expect(result.applied).toBe(1);
+    expect(svc.stockService.addStockMovement).toHaveBeenCalledTimes(1);
+    expect(svc.stockService.addStockMovement).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 9, type: MovementType.OUT }),
+      undefined,
+      true,
+    );
+    expect(svc.salesOrderRepo.update).toHaveBeenCalledWith(
+      77,
+      expect.objectContaining({ delivered_at: expect.any(Date) }),
+    );
   });
 });

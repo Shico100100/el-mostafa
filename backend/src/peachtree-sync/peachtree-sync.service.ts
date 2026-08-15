@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Like } from 'typeorm';
+import { Repository, In, Like, IsNull } from 'typeorm';
 import { PeachtreeConnectionService } from './peachtree-connection.service';
 import { PeachtreeMappingService } from './peachtree-mapping.service';
 import {
@@ -23,6 +23,8 @@ import { PeachtreeReviewService } from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 import { PeachtreeSyncReview } from './entities/peachtree-sync-review.entity';
 import { PeachtreeSyncLog } from './entities/peachtree-sync-log.entity';
+import { StockService } from '../inventory/stock.service';
+import { MovementType } from '../inventory/entities/stock-movement.entity';
 
 const BATCH_SIZE = 500;
 const SKIP_IF_SYNCED_MS = 60 * 60 * 1000; // 1 hour
@@ -50,6 +52,7 @@ export class PeachtreeSyncService {
     @InjectRepository(PurchaseOrderItem)
     private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
     private reviewService: PeachtreeReviewService,
+    private stockService: StockService,
   ) {}
 
   async runSync(
@@ -105,6 +108,9 @@ export class PeachtreeSyncService {
         });
       }
     }
+
+    const deliveryResult = await this.deliverSyncSalesOrders(syncId);
+    syncStatus.results.push(deliveryResult);
 
     syncStatus.percentComplete = 100;
     syncStatus.currentEntity = '';
@@ -176,6 +182,14 @@ export class PeachtreeSyncService {
       }
     }
 
+    if (
+      entities.includes(SyncEntity.SALES_INVOICES) ||
+      entities.includes(SyncEntity.INVOICE_LINE_ITEMS)
+    ) {
+      const deliveryResult = await this.deliverSyncSalesOrders(syncId);
+      syncStatus.results.push(deliveryResult);
+    }
+
     syncStatus.percentComplete = 100;
     syncStatus.currentEntity = '';
     syncStatus.completedAt = new Date();
@@ -201,6 +215,89 @@ export class PeachtreeSyncService {
     );
     this.connectionService.disableCache();
     return syncStatus;
+  }
+
+  private async deliverSyncSalesOrders(runId: string): Promise<SyncResultDto> {
+    const result: SyncResultDto = {
+      entity: SyncEntity.SALES_INVOICES,
+      status: SyncStatus.COMPLETED,
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+    };
+
+    const orders = await this.salesOrderRepo.find({
+      where: {
+        notes: Like('[PQ-%'),
+        status: OrderStatus.COMPLETED,
+        delivered_at: IsNull(),
+      },
+      select: ['id'],
+    });
+
+    for (const order of orders) {
+      try {
+        await this.deliverSingleOrder(order.id, runId, result);
+      } catch (error: any) {
+        result.errors.push(
+          `deliver order ${order.id}: ${error?.message || String(error)}`,
+        );
+      }
+    }
+
+    if (result.errors.length > 0) result.status = SyncStatus.FAILED;
+    return result;
+  }
+
+  private async deliverSingleOrder(
+    orderId: number,
+    runId: string,
+    result?: SyncResultDto,
+  ): Promise<void> {
+    const order = await this.salesOrderRepo.findOne({
+      where: { id: orderId },
+    });
+    if (!order) return;
+    if (
+      order.status !== OrderStatus.COMPLETED ||
+      order.delivered_at ||
+      !order.notes?.startsWith('[PQ-')
+    ) {
+      return;
+    }
+
+    const items = await this.salesOrderItemRepo.find({
+      where: { order_id: order.id },
+    });
+    const warehouseId = await this.stockService.getDefaultWarehouseId();
+    for (const item of items) {
+      await this.stockService.addStockMovement(
+        {
+          product_id: item.product_id,
+          warehouse_id: warehouseId,
+          type: MovementType.OUT,
+          quantity: Number(item.quantity),
+          notes: `تسليم - فاتورة ${order.invoice_number || order.id}`,
+        },
+        undefined,
+        true,
+      );
+    }
+    await this.salesOrderRepo.update(order.id, { delivered_at: new Date() });
+    if (result) result.recordsProcessed++;
+    await this.reviewService.log({
+      runId,
+      triggeredBy: 'manual',
+      entity: SyncEntity.SALES_INVOICES,
+      action: SyncLogAction.UPDATED,
+      recordKey: order.invoice_number || String(order.id),
+      changes: [
+        { field: 'delivery', old: 'pending', new: 'delivered' },
+        { field: 'items_delivered', old: 0, new: items.length },
+      ],
+    });
   }
 
   private async syncEntity(
@@ -289,7 +386,9 @@ export class PeachtreeSyncService {
       total_amount: Number(existing.total_amount) || 0,
       status: existing.status,
       order_date: existing.order_date
-        ? existing.order_date.toISOString()
+        ? existing.order_date instanceof Date
+          ? existing.order_date.toISOString()
+          : String(existing.order_date)
         : '',
       notes: existing.notes || '',
     };
@@ -297,7 +396,9 @@ export class PeachtreeSyncService {
       total_amount: newOrder.total_amount,
       status: newOrder.status,
       order_date: newOrder.order_date
-        ? newOrder.order_date.toISOString()
+        ? newOrder.order_date instanceof Date
+          ? newOrder.order_date.toISOString()
+          : String(newOrder.order_date)
         : '',
       notes: newOrder.notes || '',
     };
@@ -796,6 +897,7 @@ export class PeachtreeSyncService {
       invNum: string;
       data: any;
     }[] = [];
+    const seen = new Set<string>();
     for (const hdr of rows) {
       const mapped = this.mappingService.mapSalesInvoice(hdr);
       const custRecNo = mapped.customer_vend_id;
@@ -813,6 +915,11 @@ export class PeachtreeSyncService {
       const invNum = String(
         mapped.invoice_number || hdr.JrnlKey_TrxNumber || '',
       );
+      if (seen.has(uniqueKey)) {
+        result.recordsSkipped++;
+        continue;
+      }
+      seen.add(uniqueKey);
       toCompare.push({
         key: uniqueKey,
         invNum,
@@ -947,6 +1054,7 @@ export class PeachtreeSyncService {
       invNum: string;
       data: any;
     }[] = [];
+    const seen = new Set<string>();
     for (const hdr of rows) {
       const mapped = this.mappingService.mapPurchaseInvoice(hdr);
       const vendRecNo = mapped.customer_vend_id;
@@ -964,6 +1072,11 @@ export class PeachtreeSyncService {
       const invNum = String(
         mapped.invoice_number || hdr.JrnlKey_TrxNumber || '',
       );
+      if (seen.has(uniqueKey)) {
+        result.recordsSkipped++;
+        continue;
+      }
+      seen.add(uniqueKey);
       toCompare.push({
         key: uniqueKey,
         invNum,
@@ -1614,6 +1727,9 @@ export class PeachtreeSyncService {
               order_date: nv.order_date || null,
               notes: nv.notes,
             });
+            if (nv.status === OrderStatus.COMPLETED) {
+              await this.deliverSingleOrder(row.db_record_id!, runId);
+            }
             break;
           case SyncEntity.PURCHASE_INVOICES:
             await this.purchaseOrderRepo.update(row.db_record_id!, {
