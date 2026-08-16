@@ -32,6 +32,7 @@ export interface Order {
   created_at: string;
   status: string;
   notes?: string;
+  delivered_at?: string;
   customer?: Customer;
   items?: OrderItem[];
 }

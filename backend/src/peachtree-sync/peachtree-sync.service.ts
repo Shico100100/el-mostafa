@@ -495,34 +495,84 @@ export class PeachtreeSyncService {
     orderId: number,
     recordToProduct: Map<number, number>,
   ): any[] {
-    const items: any[] = [];
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    // Step 1: collapse the 3x GL distribution rows (7/23/27) into one logical
+    // line per (ItemRecordNumber, Quantity, price), keeping the max amount.
+    const lines = new Map<
+      string,
+      { productId: number; qty: number; price: number; amt: number }
+    >();
     for (const row of rows) {
       const recNo = parseInt(row.ItemRecordNumber, 10);
       const productId = recordToProduct.get(recNo) || 0;
       if (!productId) continue;
-      const qty = Math.abs(parseFloat(row.Quantity || '0') || 1);
+      let qty = Math.abs(parseFloat(row.Quantity || '0') || 0);
       const price = Math.abs(parseFloat(row.UnitCost || '0') || 0);
-      const amt = Math.abs(parseFloat(row.Amount || '0') || 0);
-      if (qty <= 0 && price <= 0 && amt <= 0) continue;
-      items.push({
-        order_id: orderId,
-        product_id: productId,
-        quantity: qty || 1,
-        price: price || 0,
-        total: amt || qty * price,
+      let amt = Math.abs(parseFloat(row.Amount || '0') || 0);
+      if (qty <= 0 && amt > 0 && price > 0) qty = amt / price;
+      qty = Math.round(qty * 10000) / 10000;
+      amt = round2(amt);
+      if (qty <= 0 && amt <= 0) continue;
+      const lineKey = `${recNo}_${qty}_${price}`;
+      const existing = lines.get(lineKey);
+      if (existing) {
+        if (amt > existing.amt) existing.amt = amt;
+        continue;
+      }
+      lines.set(lineKey, { productId, qty, price, amt });
+    }
+    // Step 2: aggregate duplicate product lines by product (summing quantities
+    // and amounts) — the DB enforces one line per (order_id, product_id), so
+    // Peachtree lines that share a product (even at different prices) collapse
+    // into a single line. A single-line product keeps its exact price; merged
+    // lines use the amount-weighted price so the stored total stays exact.
+    const groups = new Map<
+      number,
+      {
+        product_id: number;
+        quantity: number;
+        total: number;
+        price: number;
+        n: number;
+      }
+    >();
+    for (const line of lines.values()) {
+      const existing = groups.get(line.productId);
+      if (existing) {
+        existing.quantity = round2(existing.quantity + line.qty);
+        existing.total = round2(existing.total + line.amt);
+        existing.n++;
+        continue;
+      }
+      groups.set(line.productId, {
+        product_id: line.productId,
+        quantity: line.qty || 1,
+        total: line.amt || round2(line.qty * line.price),
+        price: line.price,
+        n: 1,
       });
     }
-    return items;
+    return [...groups.values()].map((item) => ({
+      order_id: orderId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      total: item.total,
+      price:
+        item.n > 1
+          ? round2(item.quantity > 0 ? item.total / item.quantity : 0)
+          : round2(item.price || 0),
+    }));
   }
 
   private itemsEqual(a: any[], b: any[]): boolean {
+    const round2 = (n: number) => Math.round(n * 100) / 100;
     const norm = (list: any[]) =>
       list
         .map((i) => ({
           product_id: i.product_id,
-          quantity: Number(i.quantity) || 0,
-          price: Number(i.price) || 0,
-          total: Number(i.total) || 0,
+          quantity: round2(Number(i.quantity) || 0),
+          price: round2(Number(i.price) || 0),
+          total: round2(Number(i.total) || 0),
         }))
         .sort(
           (x, y) =>
@@ -1387,8 +1437,17 @@ export class PeachtreeSyncService {
       rowsByPostOrder.get(po)!.push(row);
     }
 
+    // Prefer PostOrders that actually contain item rows (invoices) over
+    // payment/receipt headers that share the same PQ key (e.g. 172 vs 3100).
+    const postOrdersWithItems = new Set<number>(rowsByPostOrder.keys());
+    for (const po of [...postOrderToSalesOrderId.keys()]) {
+      if (!postOrdersWithItems.has(po)) postOrderToSalesOrderId.delete(po);
+    }
+    for (const po of [...postOrderToPurchaseOrderId.keys()]) {
+      if (!postOrdersWithItems.has(po)) postOrderToPurchaseOrderId.delete(po);
+    }
     this.logger.log(
-      `JrnlRow grouped: ${rowsByPostOrder.size} unique PostOrders from ${allRows.length} rows`,
+      `JrnlRow grouped: ${rowsByPostOrder.size} unique PostOrders from ${allRows.length} rows; ${postOrderToSalesOrderId.size} sales / ${postOrderToPurchaseOrderId.size} purchase PostOrders with items after pruning`,
     );
 
     const salesBatch: any[] = [];
@@ -2117,6 +2176,14 @@ export class PeachtreeSyncService {
       rowsByPostOrder.get(po)!.push(row);
     }
     result.uniquePostOrders = rowsByPostOrder.size;
+
+    const postOrdersWithItems = new Set<number>(rowsByPostOrder.keys());
+    for (const po of [...postOrderToSalesOrderId.keys()]) {
+      if (!postOrdersWithItems.has(po)) postOrderToSalesOrderId.delete(po);
+    }
+    for (const po of [...postOrderToPurchaseOrderId.keys()]) {
+      if (!postOrdersWithItems.has(po)) postOrderToPurchaseOrderId.delete(po);
+    }
 
     let salesMatchedPOs = 0;
     let purchaseMatchedPOs = 0;

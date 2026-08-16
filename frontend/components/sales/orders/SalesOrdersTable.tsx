@@ -28,14 +28,15 @@ export function SalesOrdersTable({
               <th className="px-6 py-4 font-semibold text-sm">العميل</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">المبلغ</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">رقم الفاتورة</th>
+              <th className="px-6 py-4 font-semibold text-sm text-center">حالة التسليم</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {loading ? (
-              <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
             ) : orders.length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
             ) : (
               orders.map((order) => (
                 <tr key={order.id} className="hover:bg-white/5 transition-colors group">
@@ -54,6 +55,24 @@ export function SalesOrdersTable({
                     {order.notes?.match(/^\[PQ-/) && (
                       <span className="mr-2 inline-block px-2 py-0.5 rounded-full bg-teal-600/20 border border-teal-500/30 text-teal-300 text-xs font-semibold align-middle">
                         Peachtree
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {order.delivered_at ? (
+                      <span
+                        className="inline-block px-2.5 py-1 rounded-full bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold"
+                        title={`تاريخ التسليم: ${new Date(order.delivered_at).toLocaleDateString('ar-EG')}`}
+                      >
+                        مسلّم
+                      </span>
+                    ) : order.status === 'COMPLETED' ? (
+                      <span className="inline-block px-2.5 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+                        مكتمل
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2.5 py-1 rounded-full bg-slate-600/20 border border-slate-500/30 text-slate-300 text-xs font-semibold">
+                        {order.status === 'CANCELLED' ? 'ملغي' : 'قيد التنفيذ'}
                       </span>
                     )}
                   </td>

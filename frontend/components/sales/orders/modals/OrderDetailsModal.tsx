@@ -43,6 +43,17 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
               <p className="text-gray-400 text-sm">الإجمالي</p>
               <p className="text-3xl font-black text-blue-400">{Number(order.total_amount).toLocaleString()} <span className="text-sm">ج.م</span></p>
             </div>
+            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+              <p className="text-gray-400 text-sm">حالة التسليم</p>
+              {order.delivered_at ? (
+                <p className="text-emerald-300 font-bold mt-1">
+                  مسلّم بتاريخ {new Date(order.delivered_at).toLocaleDateString('ar-EG')}
+                  <span className="block text-xs text-emerald-400/70 mt-0.5">تم خصم الكميات من المخزون تلقائياً</span>
+                </p>
+              ) : (
+                <p className="text-slate-300 font-bold mt-1">لم يُسلَّم بعد</p>
+              )}
+            </div>
           </div>
         </div>
         <div className="space-y-4">
