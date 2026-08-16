@@ -363,6 +363,23 @@ export class PeachtreeSyncService {
     this.lastSyncCounts.set(entity, count);
   }
 
+  private normDate(v: Date | string | null | undefined, local = false): string {
+    if (!v) return '';
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    }
+    const d = v instanceof Date ? v : new Date(v);
+    if (isNaN(d.getTime())) return String(v).slice(0, 10);
+    if (local) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    return d.toISOString().slice(0, 10);
+  }
+
   private async compareOrderToReview(
     entity: SyncEntity,
     existing: {
@@ -381,25 +398,18 @@ export class PeachtreeSyncService {
     recordKey: string,
     result: SyncResultDto,
     runId: string,
+    local = false,
   ): Promise<void> {
     const oldObj = {
       total_amount: Number(existing.total_amount) || 0,
       status: existing.status,
-      order_date: existing.order_date
-        ? existing.order_date instanceof Date
-          ? existing.order_date.toISOString()
-          : String(existing.order_date)
-        : '',
+      order_date: this.normDate(existing.order_date, local),
       notes: existing.notes || '',
     };
     const newObj = {
       total_amount: newOrder.total_amount,
       status: newOrder.status,
-      order_date: newOrder.order_date
-        ? newOrder.order_date instanceof Date
-          ? newOrder.order_date.toISOString()
-          : String(newOrder.order_date)
-        : '',
+      order_date: this.normDate(newOrder.order_date, local),
       notes: newOrder.notes || '',
     };
     const changes = this.reviewService.computeDiff(oldObj, newObj);
@@ -1011,8 +1021,19 @@ export class PeachtreeSyncService {
 
     const toInsert: any[] = [];
     for (const c of toCompare) {
-      const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
-      if (!existing) {
+      const want = c.data.total_amount;
+      const invMatch = existingByInv.get(c.invNum);
+      const pqMatch = existingByPq.get(c.key);
+      const twin =
+        (pqMatch &&
+        Math.abs(Number(pqMatch.total_amount) - want) < 0.01 &&
+        String(pqMatch.invoice_number || '') === c.invNum
+          ? pqMatch
+          : undefined) ||
+        (invMatch && Math.abs(Number(invMatch.total_amount) - want) < 0.01
+          ? invMatch
+          : undefined);
+      if (!twin) {
         toInsert.push(c.data);
         await this.reviewService.log({
           runId,
@@ -1025,11 +1046,12 @@ export class PeachtreeSyncService {
       } else {
         await this.compareOrderToReview(
           SyncEntity.SALES_INVOICES,
-          existing,
+          twin,
           c.data,
           c.invNum || c.key,
           result,
           runId,
+          true,
         );
       }
     }
@@ -1104,7 +1126,6 @@ export class PeachtreeSyncService {
       invNum: string;
       data: any;
     }[] = [];
-    const seen = new Set<string>();
     for (const hdr of rows) {
       const mapped = this.mappingService.mapPurchaseInvoice(hdr);
       const vendRecNo = mapped.customer_vend_id;
@@ -1122,11 +1143,6 @@ export class PeachtreeSyncService {
       const invNum = String(
         mapped.invoice_number || hdr.JrnlKey_TrxNumber || '',
       );
-      if (seen.has(uniqueKey)) {
-        result.recordsSkipped++;
-        continue;
-      }
-      seen.add(uniqueKey);
       toCompare.push({
         key: uniqueKey,
         invNum,
@@ -1160,16 +1176,33 @@ export class PeachtreeSyncService {
       select: ['id', 'invoice_number', 'notes', 'total_amount', 'status', 'order_date'],
     });
     const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
-    const existingByPq = new Map<string, PurchaseOrder>();
+    const existingByPq = new Map<string, PurchaseOrder[]>();
     for (const o of pqOrders) {
       const m = (o.notes || '').match(pqNoteRegex);
-      if (m) existingByPq.set(`${m[1]}_${m[2]}_${m[3]}`, o);
+      if (m) {
+        const key = `${m[1]}_${m[2]}_${m[3]}`;
+        const arr = existingByPq.get(key) || [];
+        arr.push(o);
+        existingByPq.set(key, arr);
+      }
     }
 
     const toInsert: any[] = [];
     for (const c of toCompare) {
-      const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
-      if (!existing) {
+      const want = c.data.total_amount;
+      const candidates = existingByPq.get(c.key) || [];
+      const invMatch = existingByInv.get(c.invNum);
+      const twin =
+        candidates.find(
+          (o) =>
+            Math.abs(Number(o.total_amount) - want) < 0.01 &&
+            String(o.invoice_number || '') === c.invNum,
+        ) ||
+        (invMatch &&
+        Math.abs(Number(invMatch.total_amount) - want) < 0.01
+          ? invMatch
+          : undefined);
+      if (!twin) {
         toInsert.push(c.data);
         await this.reviewService.log({
           runId,
@@ -1182,11 +1215,12 @@ export class PeachtreeSyncService {
       } else {
         await this.compareOrderToReview(
           SyncEntity.PURCHASE_INVOICES,
-          existing,
+          twin,
           c.data,
           c.invNum || c.key,
           result,
           runId,
+          true,
         );
       }
     }
