@@ -15,6 +15,15 @@ function Stop-Port($Port) {
   }
 }
 
+function Remove-PidFile($Path) {
+  if (Test-Path -LiteralPath $Path) {
+    Remove-Item -LiteralPath $Path -Force
+    Write-Host "Removed pid file $Path"
+  }
+}
+
 Stop-Port 3001
 Stop-Port 3000
+Remove-PidFile 'C:\EL-Mostafa\backend\server.pid'
+Remove-PidFile 'C:\EL-Mostafa\frontend\server.pid'
 Write-Host "Done."

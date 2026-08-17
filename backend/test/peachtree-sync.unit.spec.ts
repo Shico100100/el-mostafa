@@ -1130,6 +1130,18 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
     };
 
+    const dataSource: any = {
+      transaction: jest.fn(async (cb: any) => {
+        const manager: any = {
+          delete: jest.fn().mockResolvedValue({}),
+          insert: jest.fn().mockResolvedValue({}),
+        };
+        dataSource.__lastManager = manager;
+        return cb(manager);
+      }),
+      __lastManager: null,
+    };
+
     const service = new PeachtreeSyncService(
       connectionService,
       new PeachtreeMappingService(),
@@ -1142,6 +1154,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
       purchaseOrderItemRepo,
       reviewService,
       stockService,
+      dataSource,
     );
 
     return {
@@ -1380,6 +1393,17 @@ describe('PeachtreeSyncService review orchestration', () => {
     };
     const reviewService = new PeachtreeReviewService(reviewRepo, logRepo);
     const customerRepo: any = { update: jest.fn().mockResolvedValue({}) };
+    const dataSource: any = {
+      transaction: jest.fn(async (cb: any) => {
+        const manager: any = {
+          delete: jest.fn().mockResolvedValue({}),
+          insert: jest.fn().mockResolvedValue({}),
+        };
+        dataSource.__lastManager = manager;
+        return cb(manager);
+      }),
+      __lastManager: null,
+    };
     const service = new PeachtreeSyncService(
       {} as any,
       new PeachtreeMappingService(),
@@ -1395,8 +1419,9 @@ describe('PeachtreeSyncService review orchestration', () => {
         addStockMovement: jest.fn().mockResolvedValue({}),
         getDefaultWarehouseId: jest.fn().mockResolvedValue(1),
       } as any,
+      dataSource,
     );
-    return { service, customerRepo, reviewRepo, logRepo };
+    return { service, customerRepo, reviewRepo, logRepo, dataSource };
   }
 
   it('applies an accepted review row and flips its status', async () => {
@@ -1524,6 +1549,78 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(svc.salesOrderRepo.update).toHaveBeenCalledWith(
       77,
       expect.objectContaining({ delivered_at: expect.any(Date) }),
+    );
+  });
+
+  it('replaces invoice line items inside a transaction (delete+insert atomic)', async () => {
+    const { service, reviewRepo, dataSource } = buildService();
+    const reviewRow: any = {
+      id: 9,
+      entity: 'invoice_line_items',
+      record_key: 'purchase-order-88',
+      change_type: 'update',
+      db_record_id: 88,
+      old_values: { kind: 'purchase', items: [{ product_id: 1, quantity: 1 }] },
+      new_values: {
+        kind: 'purchase',
+        items: [
+          { product_id: 1, quantity: 2 },
+          { product_id: 2, quantity: 3 },
+        ],
+      },
+      status: 'pending',
+    };
+    (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
+
+    const result = await service.applyReview([9]);
+
+    expect(result.applied).toBe(1);
+    expect(result.errors).toEqual([]);
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    const manager = dataSource.__lastManager;
+    expect(manager.delete).toHaveBeenCalledWith(
+      expect.anything(),
+      { order_id: 88 },
+    );
+    expect(manager.insert).toHaveBeenCalledWith(
+      expect.anything(),
+      [
+        { order_id: 88, product_id: 1, quantity: 2 },
+        { order_id: 88, product_id: 2, quantity: 3 },
+      ],
+    );
+  });
+
+  it('rolls back via transaction when inserting line items throws', async () => {
+    const { service, reviewRepo, dataSource } = buildService();
+    const reviewRow: any = {
+      id: 10,
+      entity: 'invoice_line_items',
+      record_key: 'sales-order-99',
+      change_type: 'update',
+      db_record_id: 99,
+      old_values: { kind: 'sales', items: [] },
+      new_values: {
+        kind: 'sales',
+        items: [{ product_id: 7, quantity: 5 }],
+      },
+      status: 'pending',
+    };
+    (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
+    (dataSource.transaction as jest.Mock).mockImplementationOnce(async (cb: any) => {
+      const manager: any = {
+        delete: jest.fn().mockResolvedValue({}),
+        insert: jest.fn().mockRejectedValue(new Error('insert boom')),
+      };
+      return cb(manager);
+    });
+
+    const result = await service.applyReview([10]);
+
+    expect(result.applied).toBe(0);
+    expect(result.errors[0]).toContain('insert boom');
+    expect(reviewRepo.save).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'accepted' }),
     );
   });
 });
