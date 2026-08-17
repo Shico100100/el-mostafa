@@ -938,20 +938,32 @@ export class PeachtreeSyncService {
       });
     }
 
-    const invNumbers = toCompare
-      .map((c) => c.invNum)
-      .filter(Boolean);
+    const invNumbers = toCompare.map((c) => c.invNum).filter(Boolean);
     const existingByInv = new Map<string, SalesOrder>();
     if (invNumbers.length > 0) {
       const existing = await this.salesOrderRepo.find({
         where: { invoice_number: In(invNumbers) },
-        select: ['id', 'invoice_number', 'total_amount', 'status', 'order_date', 'notes'],
+        select: [
+          'id',
+          'invoice_number',
+          'total_amount',
+          'status',
+          'order_date',
+          'notes',
+        ],
       });
       for (const o of existing) existingByInv.set(o.invoice_number!, o);
     }
     const pqOrders = await this.salesOrderRepo.find({
       where: { notes: Like('[PQ-%') },
-      select: ['id', 'invoice_number', 'notes', 'total_amount', 'status', 'order_date'],
+      select: [
+        'id',
+        'invoice_number',
+        'notes',
+        'total_amount',
+        'status',
+        'order_date',
+      ],
     });
     const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
     const existingByPq = new Map<string, SalesOrder>();
@@ -1008,7 +1020,9 @@ export class PeachtreeSyncService {
     result: SyncResultDto,
     runId: string,
   ): Promise<void> {
-    await this.reviewService.clearPendingForEntity(SyncEntity.PURCHASE_INVOICES);
+    await this.reviewService.clearPendingForEntity(
+      SyncEntity.PURCHASE_INVOICES,
+    );
 
     const rows = await this.connectionService
       .query(
@@ -1095,20 +1109,32 @@ export class PeachtreeSyncService {
       });
     }
 
-    const invNumbers = toCompare
-      .map((c) => c.invNum)
-      .filter(Boolean);
+    const invNumbers = toCompare.map((c) => c.invNum).filter(Boolean);
     const existingByInv = new Map<string, PurchaseOrder>();
     if (invNumbers.length > 0) {
       const existing = await this.purchaseOrderRepo.find({
         where: { invoice_number: In(invNumbers) },
-        select: ['id', 'invoice_number', 'total_amount', 'status', 'order_date', 'notes'],
+        select: [
+          'id',
+          'invoice_number',
+          'total_amount',
+          'status',
+          'order_date',
+          'notes',
+        ],
       });
       for (const o of existing) existingByInv.set(o.invoice_number!, o);
     }
     const pqOrders = await this.purchaseOrderRepo.find({
       where: { notes: Like('[PQ-%') },
-      select: ['id', 'invoice_number', 'notes', 'total_amount', 'status', 'order_date'],
+      select: [
+        'id',
+        'invoice_number',
+        'notes',
+        'total_amount',
+        'status',
+        'order_date',
+      ],
     });
     const pqNoteRegex = /^\[PQ-(\d+)_(\d+)_(\d+)\]/;
     const existingByPq = new Map<string, PurchaseOrder>();
@@ -1630,13 +1656,17 @@ export class PeachtreeSyncService {
     ids: number[],
   ): Promise<{ skipped: number; errors: string[] }> {
     const errors: string[] = [];
-    let rows: Awaited<ReturnType<typeof this.reviewService.getPendingByIds>> | undefined;
+    let rows:
+      | Awaited<ReturnType<typeof this.reviewService.getPendingByIds>>
+      | undefined;
     try {
       rows = await this.reviewService.getPendingByIds(ids || []);
     } catch (error: any) {
       return {
         skipped: 0,
-        errors: [`skipReview lookup failed: ${error?.message || String(error)}`],
+        errors: [
+          `skipReview lookup failed: ${error?.message || String(error)}`,
+        ],
       };
     }
     const runId = `skip_${Date.now()}`;
@@ -1664,13 +1694,17 @@ export class PeachtreeSyncService {
   async applyReview(
     ids: number[],
   ): Promise<{ applied: number; errors: string[] }> {
-    let rows: Awaited<ReturnType<typeof this.reviewService.getPendingByIds>> | undefined;
+    let rows:
+      | Awaited<ReturnType<typeof this.reviewService.getPendingByIds>>
+      | undefined;
     try {
       rows = await this.reviewService.getPendingByIds(ids || []);
     } catch (error: any) {
       return {
         applied: 0,
-        errors: [`applyReview lookup failed: ${error?.message || String(error)}`],
+        errors: [
+          `applyReview lookup failed: ${error?.message || String(error)}`,
+        ],
       };
     }
     const runId = `apply_${Date.now()}`;
@@ -1741,7 +1775,7 @@ export class PeachtreeSyncService {
             });
             break;
           case SyncEntity.INVOICE_LINE_ITEMS:
-            ;{
+            {
               const orderId = row.db_record_id;
               if (orderId && Array.isArray(nv.items)) {
                 const items = (nv.items as Record<string, unknown>[]).map(

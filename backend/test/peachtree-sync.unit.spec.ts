@@ -940,14 +940,14 @@ describe('PeachtreeSyncController', () => {
   });
 
   describe('POST /preview', () => {
-    it('starts a preview when not running', async () => {
+    it('should start a preview when not running', async () => {
       syncService.getCurrentSync.mockReturnValue(null);
       const result = await controller.preview();
       expect(result.status).toBe('running');
       expect(syncService.preview).toHaveBeenCalledWith('manual-preview');
     });
 
-    it('rejects if sync already running', async () => {
+    it('should reject if sync already running', async () => {
       syncService.getCurrentSync.mockReturnValue({
         id: 'x',
         status: 'running',
@@ -959,20 +959,20 @@ describe('PeachtreeSyncController', () => {
   });
 
   describe('GET /review', () => {
-    it('returns pending review rows', async () => {
+    it('should return pending review rows', async () => {
       syncService.getReview.mockResolvedValue([{ id: 1 }] as any);
       expect(await controller.getReview({})).toEqual([{ id: 1 }]);
       expect(syncService.getReview).toHaveBeenCalledWith(undefined);
     });
 
-    it('filters by entity', async () => {
+    it('should filter by entity', async () => {
       await controller.getReview({ entity: 'customers' });
       expect(syncService.getReview).toHaveBeenCalledWith('customers');
     });
   });
 
   describe('POST /review/apply', () => {
-    it('applies selected ids', async () => {
+    it('should apply selected ids', async () => {
       const result = await controller.applyReview({ ids: [1, 2] });
       expect(result).toEqual({ applied: 1, errors: [] });
       expect(syncService.applyReview).toHaveBeenCalledWith([1, 2]);
@@ -980,13 +980,13 @@ describe('PeachtreeSyncController', () => {
   });
 
   describe('POST /review/skip', () => {
-    it('skips selected ids', async () => {
+    it('should skip selected ids', async () => {
       expect(await controller.skipReview({ ids: [1] })).toEqual({ skipped: 2 });
     });
   });
 
   describe('GET /log', () => {
-    it('returns audit log', async () => {
+    it('should return audit log', async () => {
       syncService.getLog.mockResolvedValue([{ id: 1 }] as any);
       expect(await controller.getLog({})).toEqual([{ id: 1 }]);
     });
@@ -1131,7 +1131,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     };
 
     const dataSource: any = {
-      transaction: jest.fn(async (cb: any) => {
+      transaction: jest.fn((cb: any) => {
         const manager: any = {
           delete: jest.fn().mockResolvedValue({}),
           insert: jest.fn().mockResolvedValue({}),
@@ -1289,7 +1289,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     );
   });
 
-  it('auto-delivers a COMPLETED [PQ- sales order after sync (stock OUT + delivered_at)', async () => {
+  it('should auto-deliver a COMPLETED [PQ- sales order after sync (stock OUT + delivered_at)', async () => {
     const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
       buildService();
     salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
@@ -1329,7 +1329,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     );
   });
 
-  it('does not deliver a PENDING [PQ- sales order', async () => {
+  it('should not deliver a PENDING [PQ- sales order', async () => {
     const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
       buildService();
     salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
@@ -1349,7 +1349,7 @@ describe('PeachtreeSyncService pipeline (new invoice)', () => {
     expect(stockService.addStockMovement).not.toHaveBeenCalled();
   });
 
-  it('does not re-deliver an order that already has delivered_at', async () => {
+  it('should not re-deliver an order that already has delivered_at', async () => {
     const { service, salesOrderRepo, salesOrderItemRepo, stockService } =
       buildService();
     salesOrderRepo.find.mockResolvedValue([{ id: 77 }]);
@@ -1384,17 +1384,17 @@ describe('PeachtreeSyncService review orchestration', () => {
     };
     const reviewRepo: any = {
       create: jest.fn((input: any) => input),
-      save: jest.fn(async (r: any) => r),
+      save: jest.fn((r: any) => r),
       find: jest.fn().mockResolvedValue([reviewRow]),
     };
     const logRepo: any = {
       create: jest.fn((input: any) => input),
-      save: jest.fn(async (r: any) => r),
+      save: jest.fn((r: any) => r),
     };
     const reviewService = new PeachtreeReviewService(reviewRepo, logRepo);
     const customerRepo: any = { update: jest.fn().mockResolvedValue({}) };
     const dataSource: any = {
-      transaction: jest.fn(async (cb: any) => {
+      transaction: jest.fn((cb: any) => {
         const manager: any = {
           delete: jest.fn().mockResolvedValue({}),
           insert: jest.fn().mockResolvedValue({}),
@@ -1424,7 +1424,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     return { service, customerRepo, reviewRepo, logRepo, dataSource };
   }
 
-  it('applies an accepted review row and flips its status', async () => {
+  it('should apply an accepted review row and flip its status', async () => {
     const { service, customerRepo, reviewRepo, logRepo } = buildService();
     const result = await service.applyReview([1]);
     expect(result.applied).toBe(1);
@@ -1435,7 +1435,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(logRepo.save).toHaveBeenCalled();
   });
 
-  it('skips review rows and logs the decision', async () => {
+  it('should skip review rows and log the decision', async () => {
     const { service, reviewRepo, logRepo } = buildService();
     const result = await service.skipReview([1]);
     expect(result.skipped).toBe(1);
@@ -1445,7 +1445,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(logRepo.save).toHaveBeenCalled();
   });
 
-  it('skipReview returns an errors array in its result', async () => {
+  it('should return an errors array from skipReview', async () => {
     const { service, reviewRepo } = buildService();
     const result = await service.skipReview([1]);
     expect(Array.isArray(result.errors)).toBe(true);
@@ -1454,11 +1454,17 @@ describe('PeachtreeSyncService review orchestration', () => {
     );
   });
 
-  it('applies a missing review row without touching target tables', async () => {
+  it('should apply a missing review row without touching target tables', async () => {
     const { service, reviewRepo, customerRepo } = buildService();
     const reviewRow: any = {
-      id: 7, entity: 'customers', record_key: 'missing-7', change_type: 'missing',
-      db_record_id: 5, old_values: { name: 'x' }, new_values: null, status: 'pending',
+      id: 7,
+      entity: 'customers',
+      record_key: 'missing-7',
+      change_type: 'missing',
+      db_record_id: 5,
+      old_values: { name: 'x' },
+      new_values: null,
+      status: 'pending',
     };
     (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
     const result = await service.applyReview([7]);
@@ -1469,7 +1475,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     );
   });
 
-  it('applyReview returns graceful errors instead of throwing 500 when lookup fails', async () => {
+  it('should return graceful errors from applyReview instead of throwing 500 when lookup fails', async () => {
     const { service, reviewRepo, logRepo } = buildService();
     (reviewRepo as any).find = jest
       .fn()
@@ -1480,7 +1486,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(logRepo.save).not.toHaveBeenCalled();
   });
 
-  it('skipReview returns graceful errors instead of throwing 500 when lookup fails', async () => {
+  it('should return graceful errors from skipReview instead of throwing 500 when lookup fails', async () => {
     const { service, reviewRepo } = buildService();
     (reviewRepo as any).find = jest
       .fn()
@@ -1490,7 +1496,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it('applyReview with no matching rows resolves to applied 0 without throwing', async () => {
+  it('should resolve to applied 0 from applyReview with no matching rows without throwing', async () => {
     const { service, reviewRepo } = buildService();
     (reviewRepo as any).find = jest.fn().mockResolvedValue([]);
     const result = await service.applyReview([9999]);
@@ -1498,7 +1504,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(result.errors.length).toBe(0);
   });
 
-  it('delivers an order when a sales_invoices review flips status to COMPLETED', async () => {
+  it('should deliver an order when a sales_invoices review flips status to COMPLETED', async () => {
     const { service, reviewRepo } = buildService();
     const reviewRow: any = {
       id: 3,
@@ -1552,7 +1558,7 @@ describe('PeachtreeSyncService review orchestration', () => {
     );
   });
 
-  it('replaces invoice line items inside a transaction (delete+insert atomic)', async () => {
+  it('should replace invoice line items inside a transaction (delete+insert atomic)', async () => {
     const { service, reviewRepo, dataSource } = buildService();
     const reviewRow: any = {
       id: 9,
@@ -1578,20 +1584,16 @@ describe('PeachtreeSyncService review orchestration', () => {
     expect(result.errors).toEqual([]);
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     const manager = dataSource.__lastManager;
-    expect(manager.delete).toHaveBeenCalledWith(
-      expect.anything(),
-      { order_id: 88 },
-    );
-    expect(manager.insert).toHaveBeenCalledWith(
-      expect.anything(),
-      [
-        { order_id: 88, product_id: 1, quantity: 2 },
-        { order_id: 88, product_id: 2, quantity: 3 },
-      ],
-    );
+    expect(manager.delete).toHaveBeenCalledWith(expect.anything(), {
+      order_id: 88,
+    });
+    expect(manager.insert).toHaveBeenCalledWith(expect.anything(), [
+      { order_id: 88, product_id: 1, quantity: 2 },
+      { order_id: 88, product_id: 2, quantity: 3 },
+    ]);
   });
 
-  it('rolls back via transaction when inserting line items throws', async () => {
+  it('should roll back via transaction when inserting line items throws', async () => {
     const { service, reviewRepo, dataSource } = buildService();
     const reviewRow: any = {
       id: 10,
@@ -1607,7 +1609,7 @@ describe('PeachtreeSyncService review orchestration', () => {
       status: 'pending',
     };
     (reviewRepo as any).find = jest.fn().mockResolvedValue([reviewRow]);
-    (dataSource.transaction as jest.Mock).mockImplementationOnce(async (cb: any) => {
+    (dataSource.transaction as jest.Mock).mockImplementationOnce((cb: any) => {
       const manager: any = {
         delete: jest.fn().mockResolvedValue({}),
         insert: jest.fn().mockRejectedValue(new Error('insert boom')),

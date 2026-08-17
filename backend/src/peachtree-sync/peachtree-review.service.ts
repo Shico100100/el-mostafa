@@ -115,7 +115,10 @@ export class PeachtreeReviewService {
 
   async getReviewLog(runId?: string): Promise<PeachtreeSyncLog[]> {
     if (runId) {
-      return this.logRepo.find({ where: { run_id: runId }, order: { id: 'ASC' } });
+      return this.logRepo.find({
+        where: { run_id: runId },
+        order: { id: 'ASC' },
+      });
     }
     return this.logRepo.find({ order: { id: 'DESC' }, take: 500 });
   }

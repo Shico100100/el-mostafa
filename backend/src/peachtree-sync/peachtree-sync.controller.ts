@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Put, Body, Query, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Query,
+  Logger,
+} from '@nestjs/common';
 import { PeachtreeSyncService } from './peachtree-sync.service';
 import { SyncEntity } from './dto/sync-status.dto';
 

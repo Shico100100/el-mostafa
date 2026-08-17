@@ -1,23 +1,17 @@
 import { PeachtreeReviewService } from '../src/peachtree-sync/peachtree-review.service';
-import {
-  PeachtreeSyncReview,
-  ReviewStatus,
-} from '../src/peachtree-sync/entities/peachtree-sync-review.entity';
-import {
-  PeachtreeSyncLog,
-  SyncLogAction,
-} from '../src/peachtree-sync/entities/peachtree-sync-log.entity';
+import { ReviewStatus } from '../src/peachtree-sync/entities/peachtree-sync-review.entity';
+import { SyncLogAction } from '../src/peachtree-sync/entities/peachtree-sync-log.entity';
 import { SyncEntity } from '../src/peachtree-sync/dto/sync-status.dto';
 
 function buildService() {
   const reviewRepo: any = {
     create: jest.fn((input: any) => input),
-    save: jest.fn(async (row: any) => ({ id: 1, ...row })),
+    save: jest.fn((row: any) => ({ id: 1, ...row })),
     find: jest.fn().mockResolvedValue([]),
   };
   const logRepo: any = {
     create: jest.fn((input: any) => input),
-    save: jest.fn(async (row: any) => ({ id: 1, ...row })),
+    save: jest.fn((row: any) => ({ id: 1, ...row })),
     find: jest.fn().mockResolvedValue([]),
   };
   const service = new PeachtreeReviewService(reviewRepo, logRepo);
@@ -26,21 +20,24 @@ function buildService() {
 
 describe('PeachtreeReviewService', () => {
   describe('computeDiff', () => {
-    it('detects no changes when objects are equal', () => {
+    it('should detect no changes when objects are equal', () => {
       const { service } = buildService();
       expect(
-        service.computeDiff({ name: 'X', balance: 10 }, { name: 'X', balance: 10 }),
+        service.computeDiff(
+          { name: 'X', balance: 10 },
+          { name: 'X', balance: 10 },
+        ),
       ).toEqual([]);
     });
 
-    it('normalizes numbers stored as strings', () => {
+    it('should normalize numbers stored as strings', () => {
       const { service } = buildService();
-      expect(
-        service.computeDiff({ balance: 10 }, { balance: '10' }),
-      ).toEqual([]);
+      expect(service.computeDiff({ balance: 10 }, { balance: '10' })).toEqual(
+        [],
+      );
     });
 
-    it('detects changed fields', () => {
+    it('should detect changed fields', () => {
       const { service } = buildService();
       const changes = service.computeDiff(
         { name: 'X', phone: '111', email: '' },
@@ -52,14 +49,14 @@ describe('PeachtreeReviewService', () => {
       ]);
     });
 
-    it('treats null/undefined as empty string', () => {
+    it('should treat null/undefined as empty string', () => {
       const { service } = buildService();
       expect(service.computeDiff({ a: null }, { a: '' })).toEqual([]);
     });
   });
 
   describe('createReview', () => {
-    it('creates a pending review row', async () => {
+    it('should create a pending review row', async () => {
       const { service, reviewRepo } = buildService();
       const row = await service.createReview({
         entity: SyncEntity.CUSTOMERS,
@@ -83,7 +80,7 @@ describe('PeachtreeReviewService', () => {
   });
 
   describe('log', () => {
-    it('stores changes as {field: [old, new]} map', async () => {
+    it('should store changes as {field: [old, new]} map', async () => {
       const { service, logRepo } = buildService();
       await service.log({
         runId: 'sync_1',
@@ -107,7 +104,7 @@ describe('PeachtreeReviewService', () => {
   });
 
   describe('markSkipped / clearPendingForEntity', () => {
-    it('marks pending rows skipped', async () => {
+    it('should mark pending rows skipped', async () => {
       const { service, reviewRepo } = buildService();
       reviewRepo.find.mockResolvedValue([
         { id: 1, status: ReviewStatus.PENDING },
@@ -118,7 +115,7 @@ describe('PeachtreeReviewService', () => {
       expect(reviewRepo.save).toHaveBeenCalledTimes(2);
     });
 
-    it('clears pending rows for an entity', async () => {
+    it('should clear pending rows for an entity', async () => {
       const { service, reviewRepo } = buildService();
       const qb: any = {
         delete: jest.fn().mockReturnThis(),
