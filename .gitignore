@@ -44,6 +44,20 @@ startup.log
 python-installer.exe
 *.exe
 
+# Runtime / process files
+*.pid
+backend/server*.pid
+
+# Windows batch scripts (local helpers, not source)
+*.bat
+backend/scripts/*.bat
+*.ps1
+
+# Vitest / test caches
+*.vitest.ts
+*.spec.timestamp*
+coverage/
+
 # Python cache
 __pycache__/
 *.pyc
