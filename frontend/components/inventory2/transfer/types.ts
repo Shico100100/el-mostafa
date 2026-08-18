@@ -1,9 +1,4 @@
-export interface Product {
-  id: number;
-  name: string;
-  type: string;
-  stock_quantity: string;
-}
+export type { Product } from '@/types/product';
 
 export interface WarehouseItem {
   id: number;

@@ -53,13 +53,26 @@ export function usePermission() {
 
     const hasRole = (requiredRoles: UserRole[]) => {
         if (!role) return false;
-        return requiredRoles.includes(role);
+        if (requiredRoles.includes(role)) return true;
+        if (roleId !== null) {
+            const roleMap: Record<string, number> = {
+                [UserRole.ADMIN]: 1,
+                [UserRole.MANAGER]: 3,
+                [UserRole.ACCOUNTANT]: 4,
+                [UserRole.STOREKEEPER]: 5,
+                [UserRole.WORKER]: 6,
+                [UserRole.VIEWER]: 7,
+            };
+            const requiredIds = requiredRoles.map(r => roleMap[r]).filter(Boolean);
+            if (requiredIds.includes(roleId)) return true;
+        }
+        return false;
     };
 
     const isAdmin = role === UserRole.ADMIN || roleId === 1 || String(role).toLowerCase() === 'admin';
     const isManager = isAdmin || role === UserRole.MANAGER || roleId === 3;
     const isAccountant = isManager || role === UserRole.ACCOUNTANT || roleId === 4;
-    const isStorekeeper = isManager || role === UserRole.STOREKEEPER || roleId === 5;
+    const isStorekeeper = role === UserRole.STOREKEEPER || roleId === 5;
     const isViewer = role === UserRole.VIEWER || roleId === 7;
     const isWorker = role === UserRole.WORKER || roleId === 6;
 

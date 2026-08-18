@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import GlobalSidebar from "@/components/GlobalSidebar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,7 +56,9 @@ export default function RootLayout({
         <CommandPalette />
         <AuthProvider>
           <BackButtonProvider>
-            <GlobalSidebar>{children}</GlobalSidebar>
+            <GlobalSidebar>
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </GlobalSidebar>
             <ChatbotWidget />
             <ServiceWorkerRegister />
           </BackButtonProvider>

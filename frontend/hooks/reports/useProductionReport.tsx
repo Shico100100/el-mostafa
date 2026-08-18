@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { toast } from 'sonner';
 
 const API_URL = '/api';
@@ -20,6 +21,7 @@ export interface ProductionRecord {
 
 export function useProductionReport() {
   const router = useRouter();
+  const ready = useAuthCheck();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ProductionRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function useProductionReport() {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      if (!token) { router.push('/login'); return; }
+      if (!token) { return; }
       const response = await fetch(`${API_URL}/v1/manufacturing/production?start_date=${startDate}&end_date=${endDate}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
@@ -47,7 +49,7 @@ export function useProductionReport() {
     } finally { setLoading(false); }
   }, [startDate, endDate, router]);
 
-  useEffect(() => { loadReport(); }, [loadReport]);
+  useEffect(() => { if (!ready) return; loadReport(); }, [ready, loadReport]);
 
   const handleDelete = async (id: number) => {
     toast.custom((t: any) => (

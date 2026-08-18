@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -47,7 +47,7 @@ export interface LogEntry {
 }
 
 export function usePeachtreeSync() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [resyncing, setResyncing] = useState(false);
@@ -61,6 +61,8 @@ export function usePeachtreeSync() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [previewing, setPreviewing] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [syncPercent, setSyncPercent] = useState(0);
+  const [syncEntity, setSyncEntity] = useState('');
 
   const loadData = useCallback(async () => {
     try {
@@ -82,10 +84,25 @@ export function usePeachtreeSync() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
+
+  useEffect(() => {
+    const checkInitialSync = async () => {
+      try {
+        const p = await api.fetchWithAuth<{ running: boolean; percentComplete: number; currentEntity: string; status: string }>('/peachtree-sync/progress');
+        if (p.running) {
+          setSyncing(true);
+          setSyncPercent(p.percentComplete || 0);
+          setSyncEntity(p.currentEntity || '');
+          await pollSyncProgress();
+          setSyncing(false);
+        }
+      } catch { /* silent */ }
+    };
+    checkInitialSync();
+  }, [pollSyncProgress]);
 
   const testConnection = async () => {
     setTesting(true);
@@ -104,6 +121,8 @@ export function usePeachtreeSync() {
 
   const runSync = async (mode: 'full' | 'incremental' = 'full') => {
     setSyncing(true);
+    setSyncPercent(0);
+    setSyncEntity('');
     try {
       const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/run', {
         method: 'POST',
@@ -122,6 +141,8 @@ export function usePeachtreeSync() {
 
   const runIncrementalSync = async () => {
     setSyncing(true);
+    setSyncPercent(0);
+    setSyncEntity('');
     try {
       const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/run-incremental', { method: 'POST' });
       if (start.status === 'running') {
@@ -135,13 +156,16 @@ export function usePeachtreeSync() {
     finally { setSyncing(false); }
   };
 
-  const pollSyncProgress = async () => {
+  const pollSyncProgress = useCallback(async () => {
     const maxAttempts = 120;
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise(r => setTimeout(r, 3000));
       try {
-        const progress = await api.fetchWithAuth<{ running: boolean; status: string; percentComplete: number }>('/peachtree-sync/progress');
+        const progress = await api.fetchWithAuth<{ running: boolean; status: string; percentComplete: number; currentEntity: string }>('/peachtree-sync/progress');
+        setSyncPercent(progress.percentComplete || 0);
+        setSyncEntity(progress.currentEntity || '');
         if (!progress.running) {
+          setSyncPercent(100);
           if (progress.status === 'completed') {
             toast.success('تمت المزامنة بنجاح');
           } else {
@@ -154,10 +178,12 @@ export function usePeachtreeSync() {
     }
     toast.error('انتهت مهلة الانتظار — المزامنة قد لا تزال تعمل');
     loadData();
-  };
+  }, [loadData]);
 
   const resyncItems = async () => {
     setResyncing(true);
+    setSyncPercent(0);
+    setSyncEntity('');
     try {
       const start = await api.fetchWithAuth<{ message: string; status?: string; id?: string }>('/peachtree-sync/resync-items', { method: 'POST' });
       if (start.status === 'running') {
@@ -173,6 +199,8 @@ export function usePeachtreeSync() {
 
   const syncInvoices = async (entities: string[]) => {
     setSyncing(true);
+    setSyncPercent(0);
+    setSyncEntity('');
     try {
       const start = await api.fetchWithAuth<{ message: string; status?: string; entities?: string[] }>('/peachtree-sync/run-partial', {
         method: 'POST',
@@ -258,7 +286,7 @@ export function usePeachtreeSync() {
   return {
     loading, syncing, resyncing, testing, applying, previewing,
     connected, connectionError, history, tables, dsn,
-    review, logs,
+    review, logs, syncPercent, syncEntity,
     setDsn, testConnection, runSync, runIncrementalSync, resyncItems,
     syncInvoices, saveConfig, previewSync, applyReview, skipReview,
     loadReview, loadLogs,

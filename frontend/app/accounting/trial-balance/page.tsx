@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { Scale as BalanceIcon, FileDown } from 'lucide-react';
 import { exportToCsv } from '@/lib/csv-export';
 import { exportElementToPdf } from '@/lib/pdf-reports';
@@ -15,18 +15,17 @@ interface AccountBalance {
 }
 
 export default function TrialBalancePage() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [accounts, setAccounts] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     api.fetchWithAuth<AccountBalance[]>('/accounting/trial-balance')
       .then(data => setAccounts(data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [ready]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
 

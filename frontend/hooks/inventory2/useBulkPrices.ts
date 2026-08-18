@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Product } from '@/components/inventory2/bulk-prices/types';
 
 export function useBulkPrices() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -32,10 +32,9 @@ export function useBulkPrices() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadProducts();
-  }, [router, loadProducts]);
+  }, [ready, loadProducts]);
 
   const filtered = useMemo(() =>
     products.filter((p) => {

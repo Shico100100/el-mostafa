@@ -2,19 +2,8 @@
 // SEMI_FINISHED is the DB value; SEMI is also accepted for display grouping
 export type ProductType = 'FINISHED' | 'IMPORTED' | 'RAW' | 'PACKAGING' | 'RAW_PLASTIC' | 'SEMI' | 'SEMI_FINISHED' | 'DORMANT';
 
-export interface Product {
-  id: number;
-  name: string;
-  type: ProductType;
-  unit: string;
-  cost_price: string;
-  selling_price: string;
-  stock_quantity: string;
-  min_stock?: string;
-  warehouse_id: number;
-  created_at: string;
-  updated_at: string;
-}
+import type { Product } from '@/types/product';
+export type { Product };
 
 export interface SemiFinishedProduct {
   id: number;

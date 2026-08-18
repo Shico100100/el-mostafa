@@ -5,15 +5,18 @@ import { useDailyProduction } from '@/hooks/manufacturing/useDailyProduction';
 import StatsCards from '@/components/manufacturing/StatsCards';
 import MachineGrid from '@/components/manufacturing/MachineGrid';
 import WeeklyProductionTable from '@/components/manufacturing/WeeklyProductionTable';
-import BulkProductionModal from '@/components/manufacturing/modals/BulkProductionModal';
-import SingleProductionModal from '@/components/manufacturing/modals/SingleProductionModal';
-import RangeProductionModal from '@/components/manufacturing/modals/RangeProductionModal';
-import SessionsModal from '@/components/manufacturing/modals/SessionsModal';
-import SessionDetailModal from '@/components/manufacturing/modals/SessionDetailModal';
-import RecordHistoryModal from '@/components/manufacturing/modals/RecordHistoryModal';
-import StockErrorDialog from '@/components/manufacturing/modals/StockErrorDialog';
-import SubstitutePicker from '@/components/manufacturing/modals/SubstitutePicker';
+import dynamic from 'next/dynamic';
 import { Plus, Calendar, FileText, FolderOpen, Download, Upload, Factory, BarChart3 } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
+const BulkProductionModal = dynamic(() => import('@/components/manufacturing/modals/BulkProductionModal'), { ssr: false });
+const SingleProductionModal = dynamic(() => import('@/components/manufacturing/modals/SingleProductionModal'), { ssr: false });
+const RangeProductionModal = dynamic(() => import('@/components/manufacturing/modals/RangeProductionModal'), { ssr: false });
+const SessionsModal = dynamic(() => import('@/components/manufacturing/modals/SessionsModal'), { ssr: false });
+const SessionDetailModal = dynamic(() => import('@/components/manufacturing/modals/SessionDetailModal'), { ssr: false });
+const RecordHistoryModal = dynamic(() => import('@/components/manufacturing/modals/RecordHistoryModal'), { ssr: false });
+const StockErrorDialog = dynamic(() => import('@/components/manufacturing/modals/StockErrorDialog'), { ssr: false });
+const SubstitutePicker = dynamic(() => import('@/components/manufacturing/modals/SubstitutePicker'), { ssr: false });
 
 export default function DailyProductionPage() {
   const router = useRouter();
@@ -36,6 +39,7 @@ export default function DailyProductionPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 md:p-6" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -205,5 +209,6 @@ export default function DailyProductionPage() {
         onClose={() => h.setShowSubstitutePicker(false)}
       />
     </div>
+    </ErrorBoundary>
   );
 }

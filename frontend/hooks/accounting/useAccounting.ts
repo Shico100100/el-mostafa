@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
 import { toast } from 'sonner';
 import type { Account, TrialBalanceItem } from '@/components/accounting/types';
 
 export function useAccounting() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [trialBalance, setTrialBalance] = useState<TrialBalanceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,10 +35,9 @@ export function useAccounting() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const resetForm = () => { setCode(''); setName(''); setDescription(''); setType('ASSET'); };
 

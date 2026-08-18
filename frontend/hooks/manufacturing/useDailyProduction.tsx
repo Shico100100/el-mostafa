@@ -6,8 +6,9 @@ import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import type {
   Machine, Mold, RawMaterial, ProductionRecord, BulkProductionItem,
-  NormalizedProductionItem, RangeSession, SessionDetail, RecordHistoryEntry,
 } from '@/components/manufacturing/types';
+import { useProductionStock } from './useProductionStock';
+import { useProductionSessions } from './useProductionSessions';
 
 export function useDailyProduction() {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -37,52 +38,8 @@ export function useDailyProduction() {
     total_production_kg: '', mode: 'distribute' as 'sum' | 'distribute',
     hours_worked: 8, notes: '',
   });
-  const [showSessionsModal, setShowSessionsModal] = useState(false);
-  const [sessions, setSessions] = useState<RangeSession[]>([]);
-  const [sessionsTotal, setSessionsTotal] = useState(0);
-  const [sessionsPage, setSessionsPage] = useState(1);
-  const [sessionsLoading, setSessionsLoading] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
-  const [showSessionDetail, setShowSessionDetail] = useState(false);
-  const [showRecordHistory, setShowRecordHistory] = useState(false);
-  const [recordHistory, setRecordHistory] = useState<RecordHistoryEntry[]>([]);
-  const [historyRecordId, setHistoryRecordId] = useState<number | null>(null);
-  const [stockError, setStockError] = useState<{
-    items: Array<{ bulkIndex: number; normalized: NormalizedProductionItem; error: Error }>;
-  } | null>(null);
-  const [showStockDialog, setShowStockDialog] = useState(false);
-  const [showSubstitutePicker, setShowSubstitutePicker] = useState(false);
 
   const fetchedMoldIds = useRef<Set<number>>(new Set());
-
-  const todayTotalKg = useMemo(() =>
-    dailyRecords.reduce((sum, r) => sum + Number(r.total_production_kg), 0), [dailyRecords]);
-  const todayTotalPieces = useMemo(() =>
-    dailyRecords.reduce((sum, r) => sum + Number(r.pieces_produced), 0), [dailyRecords]);
-  const machinesInProduction = useMemo(() =>
-    new Set(dailyRecords.map(r => r.machine_id)).size, [dailyRecords]);
-  const activeMachinesCount = useMemo(() =>
-    machines.filter(m => m.status === 'ACTIVE').length, [machines]);
-  const avgPerMachine = useMemo(() =>
-    machinesInProduction > 0 ? todayTotalKg / machinesInProduction : 0, [todayTotalKg, machinesInProduction]);
-
-  const weeklyMoldAvg = useMemo(() => {
-    const sums: Record<number, { total: number; count: number }> = {};
-    for (const r of weeklyRecords) {
-      if (!sums[r.mold_id]) sums[r.mold_id] = { total: 0, count: 0 };
-      sums[r.mold_id].total += Number(r.total_production_kg);
-      sums[r.mold_id].count++;
-    }
-    const avgs: Record<number, number> = {};
-    for (const [id, s] of Object.entries(sums)) avgs[Number(id)] = s.total / s.count;
-    return avgs;
-  }, [weeklyRecords]);
-
-  const weeklyMachineKg = useMemo(() => {
-    const sums: Record<number, number> = {};
-    for (const r of weeklyRecords) sums[r.machine_id] = (sums[r.machine_id] || 0) + Number(r.total_production_kg);
-    return sums;
-  }, [weeklyRecords]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -113,6 +70,20 @@ export function useDailyProduction() {
       setLoading(false);
     }
   }, [date]);
+
+  const stock = useProductionStock(date, fetchData, setLoading, {
+    onClearEditState: () => {
+      setShowModal(false);
+      setIsEditMode(false);
+      setEditingRecords(new Map());
+    },
+  });
+
+  const sessions = useProductionSessions(fetchData, {
+    onSetShowRangeModal: setShowRangeModal,
+    onSetEditingSessionId: setEditingSessionId,
+    onSetRangeForm: setRangeForm,
+  });
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -290,20 +261,6 @@ export function useDailyProduction() {
     }
   };
 
-  const fetchSessions = async (page = 1) => {
-    setSessionsLoading(true);
-    try {
-      const result = await api.getRangeSessions(page, 20);
-      setSessions(result.sessions || []);
-      setSessionsTotal(result.total || 0);
-      setSessionsPage(result.page || 1);
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error);
-    } finally {
-      setSessionsLoading(false);
-    }
-  };
-
   const handleBulkChange = (index: number, field: keyof BulkProductionItem, value: string | number) => {
     const newData = [...bulkData];
     newData[index] = { ...newData[index], [field]: value };
@@ -384,12 +341,10 @@ export function useDailyProduction() {
         const stockFailed = failed.filter(({ r }) =>
           r.reason instanceof Error && r.reason.message?.includes('رصيد غير كافٍ للمادة الخام'));
         if (stockFailed.length > 0) {
-          const stockItems = stockFailed.map(({ i }) => ({
+          stock.triggerStockError(stockFailed.map(({ i }) => ({
             bulkIndex: i, normalized: normalizedItems[i],
             error: stockFailed.find(({ i: fi }) => fi === i)!.r.reason as Error,
-          }));
-          setStockError({ items: stockItems });
-          setShowStockDialog(true);
+          })));
           setLoading(false);
           return;
         }
@@ -426,130 +381,6 @@ export function useDailyProduction() {
     }
   };
 
-  const handleAllowNegativeStock = async () => {
-    if (!stockError) return;
-    setShowStockDialog(false);
-    setLoading(true);
-    try {
-      await Promise.all(stockError.items.map(({ normalized }) =>
-        api.createProduction({
-          machine_id: normalized.machine_id!, machine_name: normalized.machine_name,
-          mold_id: normalized.mold_id!, product_id: normalized.product_id!,
-          total_production_kg: normalized.total_production_kg!,
-          hours_worked: normalized.hours_worked ?? 8, notes: normalized.notes,
-          date: date, allow_negative_stock: true,
-        })));
-      setStockError(null);
-      setShowModal(false);
-      setIsEditMode(false);
-      setEditingRecords(new Map());
-      toast.success('تم الحفظ بالرصيد السالب');
-      fetchData();
-    } catch (error) {
-      console.error('Failed to save with negative stock:', error);
-      toast.error('حدث خطأ أثناء الحفظ بالرصيد السالب');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenSubstitutePicker = () => {
-    setShowStockDialog(false);
-    setShowSubstitutePicker(true);
-  };
-
-  const handleSubstituteMaterial = async (newMaterialId: number) => {
-    if (!stockError) return;
-    setShowSubstitutePicker(false);
-    setLoading(true);
-    try {
-      await Promise.all(stockError.items.map(({ normalized }) =>
-        api.createProduction({
-          machine_id: normalized.machine_id!, machine_name: normalized.machine_name,
-          mold_id: normalized.mold_id!, product_id: normalized.product_id!,
-          substitute_material_id: newMaterialId,
-          total_production_kg: normalized.total_production_kg!,
-          hours_worked: normalized.hours_worked ?? 8, notes: normalized.notes, date: date,
-        })));
-      setStockError(null);
-      setShowModal(false);
-      setIsEditMode(false);
-      setEditingRecords(new Map());
-      toast.success('تم الحفظ بالمادة البديلة');
-      fetchData();
-    } catch (error) {
-      console.error('Failed to save with substitute:', error);
-      toast.error('حدث خطأ أثناء الحفظ بالمادة البديلة');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelStockAction = () => {
-    setShowStockDialog(false);
-    setStockError(null);
-  };
-
-  const fetchRecordHistory = async (productionId: number) => {
-    try {
-      const history = await api.getProductionRecordHistory(productionId);
-      setRecordHistory(history || []);
-      setHistoryRecordId(productionId);
-      setShowRecordHistory(true);
-    } catch (error) {
-      console.error('Failed to fetch record history:', error);
-    }
-  };
-
-  const handleEditSession = (session: RangeSession) => {
-    setEditingSessionId(session.id);
-    setRangeForm({
-      machine_id: String(session.machine_id), machine_name: session.machine?.name || '',
-      mold_id: String(session.mold_id), product_id: String(session.product_id),
-      start_date: session.start_date?.split('T')[0] ?? '',
-      end_date: session.end_date?.split('T')[0] ?? '',
-      total_production_kg: String(Number(session.total_production_kg)),
-      mode: (session.mode as 'distribute' | 'sum') || 'distribute',
-      hours_worked: Number(session.hours_worked) || 8, notes: session.notes || '',
-    });
-    setShowSessionDetail(false);
-    setShowSessionsModal(false);
-    setShowRangeModal(true);
-  };
-
-  const handleDeleteSession = async (sessionId: number) => {
-    toast.custom((t) => (
-      <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
-        <p className="text-white text-lg font-semibold mb-4">
-          هل أنت متأكد من حذف هذه الفترة بالكامل؟ سيتم حذف جميع سجلات الإنتاج المرتبطة بها وعكس حركات المخزن.
-        </p>
-        <div className="flex gap-3 justify-end">
-          <button onClick={() => toast.dismiss(t)} className="px-4 py-2 bg-gray-500/20 text-gray-200 rounded-lg hover:bg-gray-500/30 transition">إلغاء</button>
-          <button onClick={async () => {
-            toast.dismiss(t);
-            try {
-              const result = await api.deleteRangeSession(sessionId);
-              toast.success(`تم حذف ${result.deletedRecords || 0} سجل بنجاح`);
-              setShowSessionDetail(false);
-              fetchSessions(sessionsPage);
-              fetchData();
-            } catch { toast.error('فشل حذف الفترة'); }
-          }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">حذف</button>
-        </div>
-      </div>
-    ), { duration: Infinity });
-  };
-
-  const openSessionDetail = async (session: RangeSession) => {
-    try {
-      const detail = await api.getRangeSession(session.id);
-      setSelectedSession(detail);
-      setShowSessionDetail(true);
-    } catch (error) {
-      console.error('Failed to fetch session detail:', error);
-    }
-  };
-
   const exportHistory = async () => {
     try {
       await api.exportProductionHistory();
@@ -568,27 +399,70 @@ export function useDailyProduction() {
     e.target.value = '';
   };
 
+  const todayTotalKg = useMemo(() =>
+    dailyRecords.reduce((sum, r) => sum + Number(r.total_production_kg), 0), [dailyRecords]);
+  const todayTotalPieces = useMemo(() =>
+    dailyRecords.reduce((sum, r) => sum + Number(r.pieces_produced), 0), [dailyRecords]);
+  const machinesInProduction = useMemo(() =>
+    new Set(dailyRecords.map(r => r.machine_id)).size, [dailyRecords]);
+  const activeMachinesCount = useMemo(() =>
+    machines.filter(m => m.status === 'ACTIVE').length, [machines]);
+  const avgPerMachine = useMemo(() =>
+    machinesInProduction > 0 ? todayTotalKg / machinesInProduction : 0, [todayTotalKg, machinesInProduction]);
+
+  const weeklyMoldAvg = useMemo(() => {
+    const sums: Record<number, { total: number; count: number }> = {};
+    for (const r of weeklyRecords) {
+      if (!sums[r.mold_id]) sums[r.mold_id] = { total: 0, count: 0 };
+      sums[r.mold_id].total += Number(r.total_production_kg);
+      sums[r.mold_id].count++;
+    }
+    const avgs: Record<number, number> = {};
+    for (const [id, s] of Object.entries(sums)) avgs[Number(id)] = s.total / s.count;
+    return avgs;
+  }, [weeklyRecords]);
+
+  const weeklyMachineKg = useMemo(() => {
+    const sums: Record<number, number> = {};
+    for (const r of weeklyRecords) sums[r.machine_id] = (sums[r.machine_id] || 0) + Number(r.total_production_kg);
+    return sums;
+  }, [weeklyRecords]);
+
   return {
     date, dailyRecords, weeklyRecords, machines, molds, rawMaterials, loading,
     showModal, bulkData, isEditMode, editingRecords,
     showSingleModal, singleMachine, singleForm,
     showRangeModal, editingSessionId, rangeForm,
-    showSessionsModal, sessions, sessionsTotal, sessionsPage, sessionsLoading,
-    selectedSession, showSessionDetail,
-    showRecordHistory, recordHistory, historyRecordId,
-    stockError, showStockDialog, showSubstitutePicker,
+    showSessionsModal: sessions.showSessionsModal, sessions: sessions.sessions,
+    sessionsTotal: sessions.sessionsTotal, sessionsPage: sessions.sessionsPage,
+    sessionsLoading: sessions.sessionsLoading,
+    selectedSession: sessions.selectedSession, showSessionDetail: sessions.showSessionDetail,
+    showRecordHistory: sessions.showRecordHistory, recordHistory: sessions.recordHistory,
+    historyRecordId: sessions.historyRecordId,
+    stockError: stock.stockError, showStockDialog: stock.showStockDialog,
+    showSubstitutePicker: stock.showSubstitutePicker,
     moldStats, weeklyMoldAvg, weeklyMachineKg,
     todayTotalKg, todayTotalPieces, machinesInProduction, activeMachinesCount, avgPerMachine,
     setDate, setShowModal, setBulkData, setIsEditMode, setShowRangeModal,
-    setShowSessionsModal, setShowSessionDetail, setShowRecordHistory,
+    setShowSessionsModal: sessions.setShowSessionsModal,
+    setShowSessionDetail: sessions.setShowSessionDetail,
+    setShowRecordHistory: sessions.setShowRecordHistory,
     setShowSingleModal, setSingleForm, setRangeForm, setEditForm: setSingleForm,
-    setShowStockDialog, setShowSubstitutePicker,
-    setSessionsPage, setEditingSessionId,
+    setShowStockDialog: stock.setShowStockDialog,
+    setShowSubstitutePicker: stock.setShowSubstitutePicker,
+    setSessionsPage: sessions.setSessionsPage,
+    setEditingSessionId,
     handleOpenModal, handleOpenSingleModal, handleSingleFieldChange, handleSaveSingle,
     handleSaveRange, handleBulkChange, handleSaveBulk,
-    handleAllowNegativeStock, handleOpenSubstitutePicker, handleSubstituteMaterial,
-    handleCancelStockAction, fetchRecordHistory, openSessionDetail,
-    handleEditSession, handleDeleteSession, fetchSessions,
+    handleAllowNegativeStock: stock.handleAllowNegativeStock,
+    handleOpenSubstitutePicker: stock.handleOpenSubstitutePicker,
+    handleSubstituteMaterial: stock.handleSubstituteMaterial,
+    handleCancelStockAction: stock.handleCancelStockAction,
+    fetchRecordHistory: sessions.fetchRecordHistory,
+    openSessionDetail: sessions.openSessionDetail,
+    handleEditSession: sessions.handleEditSession,
+    handleDeleteSession: sessions.handleDeleteSession,
+    fetchSessions: sessions.fetchSessions,
     exportHistory, importHistory, fetchData, getWorkingDays,
   };
 }

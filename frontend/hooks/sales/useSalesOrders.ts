@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
 import { useReactToPrint } from 'react-to-print';
@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import type { Order, Customer, Product, NewOrderData, PaymentData, Filters } from '@/components/sales/orders/types';
 
 export function useSalesOrders() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,13 +96,9 @@ export function useSalesOrders() {
   }, [filters]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const resetFilters = () => {
     setFilters({ search: '', fromDate: '', toDate: '', page: 1, limit: 20 });

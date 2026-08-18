@@ -122,7 +122,11 @@ export const api = {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async fetchWithAuth<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
-        const normalizedEndpoint = endpoint.startsWith('/v1/') ? endpoint : `/v1${endpoint}`;
+        let normalizedEndpoint = endpoint.startsWith('/v1/') ? endpoint : `/v1${endpoint}`;
+        const method = (options.method || 'GET').toUpperCase();
+        if (method !== 'GET' && !normalizedEndpoint.endsWith('/')) {
+            normalizedEndpoint += '/';
+        }
 
         const makeRequest = async (): Promise<Response> => {
             const token = localStorage.getItem('token');
@@ -130,7 +134,6 @@ export const api = {
             const headers: Record<string, string> = {
                 ...(token && { Authorization: `Bearer ${token}` }),
             };
-            const method = (options.method || 'GET').toUpperCase();
             const hasBody = !['GET', 'HEAD', 'DELETE'].includes(method);
             if (!isFormData && hasBody) {
                 headers['Content-Type'] = 'application/json';

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { PanelWrapper } from './PanelWrapper';
 import type { AgingItem } from '@/lib/dashboard/types';
 
@@ -15,13 +16,14 @@ const BUCKETS = [
 ];
 
 export function ARAgingPanel() {
+  const ready = useAuthCheck();
   const router = useRouter();
   const [state, setState] = useState<'loading' | 'error' | 'empty' | 'ready'>('loading');
   const [customers, setCustomers] = useState<AgingItem[]>([]);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { setState('empty'); return; }
+    if (!ready) { setState('empty'); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -35,7 +37,7 @@ export function ARAgingPanel() {
       }
     })();
     return () => { cancelled = true; };
-  }, [retryKey]);
+  }, [ready, retryKey]);
 
   const retry = useCallback(() => { setState('loading'); setRetryKey((k) => k + 1); }, []);
 

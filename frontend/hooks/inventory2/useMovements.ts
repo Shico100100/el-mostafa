@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { StockMovement } from '@/components/inventory2/types';
 
 export function useMovements() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -24,10 +24,9 @@ export function useMovements() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const filtered = movements.filter((m) => {
     if (search) {

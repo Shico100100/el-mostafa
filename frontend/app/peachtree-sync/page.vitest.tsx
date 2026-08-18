@@ -67,6 +67,8 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     logs: [] as LogEntry[],
     previewing: false,
     applying: false,
+    syncPercent: 0,
+    syncEntity: '',
     loadReview: vi.fn().mockResolvedValue(undefined),
     loadLogs: vi.fn().mockResolvedValue(undefined),
     previewSync: vi.fn().mockResolvedValue(undefined),

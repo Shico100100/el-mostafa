@@ -1,6 +1,6 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -16,7 +16,7 @@ export interface FixedAsset {
 }
 
 export function useFixedAssets() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
   const [assets, setAssets] = useState<FixedAsset[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -31,10 +31,9 @@ export function useFixedAssets() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

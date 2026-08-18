@@ -3,6 +3,7 @@
 import { useFinancialReports } from '@/hooks/reports/useFinancialReports';
 import { TrendingUp, TrendingDown, DollarSign, FileDown } from 'lucide-react';
 import { exportElementToPdf } from '@/lib/pdf-reports';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 interface ProfitLossLine {
   code: string;
@@ -25,6 +26,7 @@ export default function ProfitLossPage() {
   const pl = h.profitLoss as ProfitLossReport | null;
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -106,5 +108,6 @@ export default function ProfitLossPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

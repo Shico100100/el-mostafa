@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { sortAlphabetically } from '@/lib/sort-utils';
 import { toast } from 'sonner';
 import type { Product, Category, Warehouse, SortField, SortDir } from '@/components/inventory/types';
 
 export function useProducts() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -88,13 +88,9 @@ export function useProducts() {
   }, [page, debouncedSearch, selectedCategory, selectedType, showLowStock, selectedWarehouse]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const handleInitWarehouses = async () => {
     try {

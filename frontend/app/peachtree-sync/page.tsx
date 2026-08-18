@@ -204,6 +204,29 @@ export default function PeachtreeSyncPage() {
           </button>
         </div>
 
+        {/* Sync Progress Bar */}
+        {(h.syncing || h.resyncing || h.previewing) && (
+          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white font-semibold flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
+                {h.previewing ? 'جاري المعاينة' : 'جاري المزامنة'} — {h.syncPercent}%
+              </span>
+              <span className="text-gray-400 text-sm">
+                {h.syncEntity && ENTITY_LABELS[h.syncEntity]
+                  ? ENTITY_LABELS[h.syncEntity].label
+                  : h.syncEntity || 'جاري التجهيز...'}
+              </span>
+            </div>
+            <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${h.syncPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Review Differences */}
         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">

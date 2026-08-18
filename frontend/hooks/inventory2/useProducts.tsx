@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Product } from '@/components/inventory2/types';
@@ -16,7 +16,7 @@ interface ProductData {
 }
 
 export function useProducts() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,10 +86,9 @@ export function useProducts() {
   }, [page, debouncedSearch, selectedType, showLowStock, selectedWarehouse]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const toggleSort = (field: typeof sortField) => {
     if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));

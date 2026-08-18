@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 
 export interface AuditLog {
@@ -17,7 +17,7 @@ export interface AuditLog {
 }
 
 export function useAuditLog() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -38,10 +38,9 @@ export function useAuditLog() {
   }, [page]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadLogs();
-  }, [loadLogs, router]);
+  }, [loadLogs, ready]);
 
   const formatAction = (action: string) => {
     const actions: Record<string, string> = { CREATE: 'إنشاء', UPDATE: 'تحديث', DELETE: 'حذف', LOGIN: 'تسجيل دخول' };

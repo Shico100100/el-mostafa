@@ -37,6 +37,7 @@ function mockLoadData(
   overrides: { tables?: string[]; review?: any[]; logs?: any[] } = {},
 ) {
   mocks.fetchWithAuth
+    .mockResolvedValueOnce({ running: false, percentComplete: 0, currentEntity: '', status: 'idle' })
     .mockResolvedValueOnce([{ id: 'sync1', status: 'completed' }])
     .mockResolvedValueOnce({ dsn: 'mos' })
     .mockResolvedValueOnce(overrides.tables ?? ['Chart', 'Customers'])

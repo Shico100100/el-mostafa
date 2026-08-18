@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, TrendingUp, FileDown } from 'lucide-react';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
@@ -25,6 +26,7 @@ interface Product {
 }
 
 export default function PriceHistoryPage() {
+  const ready = useAuthCheck();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductHistory[]>([]);
@@ -49,11 +51,10 @@ export default function PriceHistoryPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadProducts();
     loadHistory();
-  }, [router]);
+  }, [ready]);
 
   const handleFilter = () => {
     loadHistory(selectedProductId ? Number(selectedProductId) : undefined);

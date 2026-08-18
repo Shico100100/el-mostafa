@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { User } from '@/components/settings/types';
 
 export function useSettings() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -21,10 +21,9 @@ export function useSettings() {
   const [syncLoading, setSyncLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadUser();
-  }, [router]);
+  }, [ready]);
 
   const loadUser = async () => {
     try {

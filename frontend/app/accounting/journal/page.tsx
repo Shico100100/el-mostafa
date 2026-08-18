@@ -3,7 +3,13 @@
 import { useJournal } from '@/hooks/accounting/useJournal';
 import { JournalHeader } from '@/components/accounting/journal/JournalHeader';
 import { JournalEntriesTable } from '@/components/accounting/journal/JournalEntriesTable';
-import { JournalEntryModal } from '@/components/accounting/journal/JournalEntryModal';
+import dynamic from 'next/dynamic';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+
+const JournalEntryModal = dynamic(
+  () => import('@/components/accounting/journal/JournalEntryModal').then(m => m.JournalEntryModal),
+  { ssr: false }
+);
 
 export default function JournalPage() {
   const h = useJournal();
@@ -17,6 +23,7 @@ export default function JournalPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
       <JournalHeader />
 
@@ -52,5 +59,6 @@ export default function JournalPage() {
         onSubmit={h.handleSubmit}
       />
     </div>
+    </ErrorBoundary>
   );
 }

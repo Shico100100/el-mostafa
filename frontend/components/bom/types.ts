@@ -1,16 +1,5 @@
-export interface Product {
-  id: number;
-  name: string;
-  sku: string;
-  unit: string;
-  type: string;
-  cost_price: number;
-  weight_grams: number;
-  image_path: string;
-  raw_material_type: string;
-  description: string;
-  pieces_per_carton?: number;
-}
+import type { Product } from '@/types/product';
+export type { Product };
 
 export interface BOMItem {
   id: number;

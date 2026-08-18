@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { ArrowLeftRight, CheckCircle, AlertTriangle, XCircle, Download, FileText } from 'lucide-react';
 
 interface ReconciliationItem {
@@ -43,9 +43,10 @@ export default function ReconciliationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'MATCHED' | 'DISCREPANCY' | 'NO_JOURNAL'>('ALL');
-  const router = useRouter();
+  const ready = useAuthCheck();
 
   const fetchData = useCallback(async () => {
+
     try {
       setLoading(true);
       const result = await api.fetchWithAuth<ReconciliationSummary>('/v1/accounting/reconciliation');
@@ -59,10 +60,9 @@ export default function ReconciliationPage() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     fetchData();
-  }, [fetchData, router]);
+  }, [ready, fetchData]);
 
   const exportCSV = () => {
     if (!data) return;

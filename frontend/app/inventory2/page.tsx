@@ -8,6 +8,7 @@ import { StockHealthDonut } from '@/components/inventory2/dashboard/StockHealthD
 import { RecentMovements } from '@/components/inventory2/dashboard/RecentMovements';
 import { SemiFinishedSummary } from '@/components/inventory2/dashboard/SemiFinishedSummary';
 import { AlertsPanel } from '@/components/inventory2/dashboard/AlertsPanel';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export default function Inventory2Dashboard() {
   const h = useInventory2Dashboard();
@@ -25,22 +26,24 @@ export default function Inventory2Dashboard() {
   }
 
   return (
-    <>
-      <Inventory2Header totalProducts={h.totalProducts} semiFinishedCount={h.semiFinished.length} totalStockAll={h.totalStockAll} />
-      <div className="px-8 py-8 space-y-8">
-        <HeroStatsGrid stats={heroStats} />
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <TypeDistributionBars typeStats={h.typeStats} totalProducts={h.totalProducts} maxCount={h.maxCount} />
-          <StockHealthDonut inStock={h.inStock} lowStockCount={h.lowStockCount} outOfStockCount={h.outOfStockCount} total={h.total} />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RecentMovements movements={h.recentMovements} />
-          <div className="space-y-6">
-            <SemiFinishedSummary semiFinished={h.semiFinished} sfTotalValue={h.sfTotalValue} sfTop={h.sfTop} sfMaxValue={h.sfMaxValue} />
-            <AlertsPanel outOfStockCount={h.outOfStockCount} lowStockCount={h.lowStockCount} />
+    <ErrorBoundary>
+      <>
+        <Inventory2Header totalProducts={h.totalProducts} semiFinishedCount={h.semiFinished.length} totalStockAll={h.totalStockAll} />
+        <div className="px-8 py-8 space-y-8">
+          <HeroStatsGrid stats={heroStats} />
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <TypeDistributionBars typeStats={h.typeStats} totalProducts={h.totalProducts} maxCount={h.maxCount} />
+            <StockHealthDonut inStock={h.inStock} lowStockCount={h.lowStockCount} outOfStockCount={h.outOfStockCount} total={h.total} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RecentMovements movements={h.recentMovements} />
+            <div className="space-y-6">
+              <SemiFinishedSummary semiFinished={h.semiFinished} sfTotalValue={h.sfTotalValue} sfTop={h.sfTop} sfMaxValue={h.sfMaxValue} />
+              <AlertsPanel outOfStockCount={h.outOfStockCount} lowStockCount={h.lowStockCount} />
+            </div>
           </div>
         </div>
-      </div>
-    </>
+      </>
+    </ErrorBoundary>
   );
 }

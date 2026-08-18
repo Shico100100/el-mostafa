@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useCustomers } from '@/hooks/sales/useCustomers';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { CustomersHeader } from '@/components/sales/customers/CustomersHeader';
 import { CustomerFilters } from '@/components/sales/customers/CustomerFilters';
 import { CustomerCard } from '@/components/sales/customers/CustomerCard';
@@ -18,17 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function CustomersPage() {
-  const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const t = localStorage.getItem('token');
-    if (!t) {
-      router.push('/login');
-    } else {
-      setToken(t);
-    }
-  }, [router]);
+  const ready = useAuthCheck();
 
   const {
     customers,
@@ -143,7 +133,7 @@ export default function CustomersPage() {
     doc.save('العملاء.pdf');
   };
 
-  if (!token) {
+  if (!ready) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />

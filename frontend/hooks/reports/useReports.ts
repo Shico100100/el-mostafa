@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import * as ExcelJS from 'exceljs';
 import type { ReportData, AnalyticsData, ShipmentProfit, TabId, Sale, Purchase, ProductReportItem } from '@/components/reports/types';
 
 export function useReports() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [activeTab, setActiveTab] = useState<TabId>('SALES');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ReportData | null>(null);
@@ -66,13 +66,9 @@ export function useReports() {
   }, [activeTab, startDate, endDate, page, limit]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!ready) return;
     loadReport();
-  }, [router, loadReport]);
+  }, [ready, loadReport]);
 
   const exportToExcel = async () => {
     if (!data && activeTab !== 'ANALYTICS' && activeTab !== 'SHIPMENT_PROFIT') return;

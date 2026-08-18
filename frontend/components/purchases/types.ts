@@ -5,15 +5,8 @@ export interface Supplier {
   address?: string;
 }
 
-export interface Product {
-  id: number;
-  name: string;
-  unit?: string;
-  type: string;
-  stock_quantity: number;
-  min_stock?: number;
-  weight_grams?: number;
-}
+import type { Product } from '@/types/product';
+export type { Product };
 
 export interface OrderItem {
   id: number;

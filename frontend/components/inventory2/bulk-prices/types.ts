@@ -1,11 +1,4 @@
-export interface Product {
-  id: number;
-  name: string;
-  type: string;
-  unit: string;
-  cost_price: string;
-  selling_price: string;
-}
+export type { Product } from '@/types/product';
 
 export const typeOptions = [
   { value: '', label: 'كل الأنواع' },

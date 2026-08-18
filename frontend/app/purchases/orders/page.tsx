@@ -4,6 +4,7 @@ import { ArrowLeft, BarChart3, CloudDownload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePurchaseOrders } from '@/hooks/purchases/usePurchaseOrders';
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 import PurchaseOrderTable from '@/components/purchases/PurchaseOrderTable';
 import LowStockAlert from '@/components/purchases/LowStockAlert';
 import PrintTemplate from '@/components/purchases/PrintTemplate';
@@ -20,6 +21,7 @@ export default function PurchaseOrdersPage() {
   const { syncInvoices, runIncrementalSync, syncing } = usePeachtreeSync();
 
   return (
+    <ErrorBoundary>
     <>
       <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -193,5 +195,6 @@ export default function PurchaseOrdersPage() {
 
       <PrintTemplate order={h.orderToPrint} componentRef={h.componentRef} />
     </>
+    </ErrorBoundary>
   );
 }

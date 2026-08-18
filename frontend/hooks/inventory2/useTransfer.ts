@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Product, WarehouseItem, StockItem } from '@/components/inventory2/transfer/types';
 
 export function useTransfer() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
@@ -38,10 +38,9 @@ export function useTransfer() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   useEffect(() => {
     if (warehouses.length >= 2) {

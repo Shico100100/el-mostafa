@@ -1,6 +1,6 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -13,7 +13,7 @@ export interface AccountingPeriod {
 }
 
 export function usePeriodClose() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState<AccountingPeriod[]>([]);
 
@@ -26,10 +26,9 @@ export function usePeriodClose() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const closePeriod = async (period: string) => {
     try {

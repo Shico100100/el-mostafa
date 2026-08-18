@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { StockItem, WarehouseOption } from '@/components/inventory2/stock/types';
 
 export function useStock() {
-  const router = useRouter();
+  const ready = useAuthCheck();
   const [stock, setStock] = useState<StockItem[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,10 +32,9 @@ export function useStock() {
   }, [selectedWarehouse]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router, loadData]);
+  }, [ready, loadData]);
 
   const filteredStock = stock.filter((item) => {
     const name = item.product?.name || '';

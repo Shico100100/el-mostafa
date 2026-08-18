@@ -1,11 +1,5 @@
-export interface Product {
-  id: number;
-  name: string;
-  selling_price: number;
-  stock_quantity: number;
-  unit: string;
-  type: string;
-}
+import type { Product } from '@/types/product';
+export type { Product };
 
 export interface Customer {
   id: number;

@@ -4,10 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import type { Machine } from '@/components/manufacturing/machines/types';
 
 export function useMachines() {
   const router = useRouter();
+  const ready = useAuthCheck();
   const [machines, setMachines] = useState<Machine[]>([]);
   const [totalMachines, setTotalMachines] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
@@ -42,13 +44,9 @@ export function useMachines() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!ready) return;
     loadMachines(searchQuery, statusFilter, currentPage);
-  }, [router, loadMachines, searchQuery, statusFilter, currentPage]);
+  }, [ready, loadMachines, searchQuery, statusFilter, currentPage]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);

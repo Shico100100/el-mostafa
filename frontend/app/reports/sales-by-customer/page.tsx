@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Users, FileDown, Download } from 'lucide-react';
+import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { exportElementToPdf } from '@/lib/pdf-reports';
 
@@ -22,6 +23,7 @@ interface SalesByCustomerReport {
 }
 
 export default function SalesByCustomerPage() {
+  const ready = useAuthCheck();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SalesByCustomerReport | null>(null);
@@ -41,10 +43,9 @@ export default function SalesByCustomerPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!ready) return;
     loadData();
-  }, [router]);
+  }, [ready]);
 
   const exportCsv = () => {
     if (!data?.customers?.length) return;

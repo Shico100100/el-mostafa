@@ -1,7 +1,4 @@
-export interface Product {
-  id: number;
-  name: string;
-}
+export type { Product } from '@/types/product';
 
 export interface Mold {
   id: number;

@@ -3,25 +3,7 @@ export interface Category {
   name: string;
 }
 
-export interface Product {
-  id: number;
-  name: string;
-  sku?: string;
-  barcode?: string;
-  type: 'RAW' | 'SEMI' | 'FINISHED' | 'IMPORTED' | 'RAW_PLASTIC' | 'PACKAGING' | 'CARTON' | 'BOX';
-  category_id?: number;
-  category?: Category;
-  warehouse_id?: number;
-  warehouse?: Warehouse;
-  cost_price: number;
-  selling_price: number;
-  stock_quantity: number;
-  unit: string;
-  min_stock?: number;
-  description?: string;
-  image_path?: string;
-  weight_grams?: number;
-}
+export type { Product } from '@/types/product';
 
 export interface Warehouse {
   id: number;

@@ -4,6 +4,7 @@ import { Plus, FileSpreadsheet, CloudDownload } from 'lucide-react';
 import { useSetBackButton } from '@/components/BackButton';
 import { useSalesOrders } from '@/hooks/sales/useSalesOrders';
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { SalesOrderFilters } from '@/components/sales/orders/SalesOrderFilters';
 import { SalesOrdersTable } from '@/components/sales/orders/SalesOrdersTable';
 import { SalesOrderPrintTemplate } from '@/components/sales/orders/SalesOrderPrintTemplate';
@@ -39,6 +40,7 @@ export default function SalesOrdersPage() {
   } = useSalesOrders();
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
       <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -105,5 +107,6 @@ export default function SalesOrdersPage() {
 
       <SalesOrderPrintTemplate order={orderToPrint} ref={componentRef} />
     </div>
+    </ErrorBoundary>
   );
 }
