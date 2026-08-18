@@ -28,7 +28,7 @@
 | 4 | `backend/src/manufacturing/manufacturing.controller.ts` | 749 | الـ controller ضخم جداً — انقل الـ logic للـ services وخلّي الـ controller thin. |
 | 5 | `backend/src/manufacturing/raw-material.service.ts` | 678 | فصل الاستهلاك/الحركات/إعادة الحساب. |
 | 6 | `backend/src/peachtree-sync/peachtree-sync.service.ts` | 642 | مقسوم مؤخراً — راجع. |
-| 7 | `backend/src/inventory/inventory.service.ts` | 575 | فصل المنتجات/المخزون/الحركات. |
+| 7 | `backend/src/inventory/inventory.service.ts` | 575 | **متقسّم أصلاً بنسبة 77%** — 23/30 method مجرد wrappers بتعمل delegate لـ sub-services موجودة فعلاً (`product.service.ts`, `category.service.ts`, `warehouse.service.ts`, `stock.service.ts`). الـ 7 الباقية (createProduct, updateProduct, markProductAsDormant, restoreProduct, transferStock, adjustStock, smartAssignWarehouses) عندهم logic حقيقي. **⚠️ تحذير:** `InventoryService` متـ inject في `purchases.service.ts` و `sales.service.ts` — فكّه هيبهدل الـ DI بين 3 modules. محتاج تخطيط معماري مش مجرد نقل methods. |
 | 8 | `backend/src/sales/sales.service.ts` | 563 | فصل الطلبات/المرتجعات/المدفوعات. |
 | 9 | `backend/src/peachtree-sync/peachtree-sync-debug.service.ts` | 537 | debug فقط — ممكن ينقل لمجلد `/debug` أو يُبقي كما هو. |
 | 10 | `backend/src/manufacturing/manufacturing.service.ts` | 497 | فصل الإنتاج اليومي/الجدولة/الصيانة. |
@@ -108,3 +108,4 @@
 - **لا تبدأ features جديدة كبيرة** قبل ما تخلص أولوية 1 و 2 — الأساس لازم يفضل نضيف.
 - أي تقسيم ملف = commit منفصل باسم واضح (conventional commits).
 - راجع الملف ده كل شهر وحدّث الأرقام (شغّل الفحص اللي ولّده).
+- **⚠️ قاعدة ذهبية للتقسيم:** قبل ما تفكّك أي service، افحص `grep "<ServiceName>"` على كل المشروع. لو متـ inject في modules تانية (زي `InventoryService` في purchases/sales) — التقسيم محتاج تخطيط معماري (إعادة توجيه الـ DI) مش مجرد نقل methods. الـ facade pattern (wrapper رفيع) أحسن من الحذف المفاجئ.
