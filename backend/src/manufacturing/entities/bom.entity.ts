@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Product } from '../../inventory/entities/product.entity';
 
@@ -63,6 +64,7 @@ export class BOMItem {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ type: 'int' })
   bom_id: number;
 
@@ -70,6 +72,7 @@ export class BOMItem {
   @JoinColumn({ name: 'bom_id' })
   bom: BOM;
 
+  @Index()
   @Column({ type: 'int' })
   product_id: number;
 

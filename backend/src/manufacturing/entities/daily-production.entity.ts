@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Machine } from './machine.entity';
 import { Mold } from './mold.entity';
@@ -20,6 +21,7 @@ export class DailyProduction {
   @JoinColumn({ name: 'machine_id' })
   machine: Machine;
 
+  @Index()
   @Column({ type: 'int' })
   machine_id: number;
 
@@ -27,6 +29,7 @@ export class DailyProduction {
   @JoinColumn({ name: 'mold_id' })
   mold: Mold;
 
+  @Index()
   @Column({ type: 'int' })
   mold_id: number;
 
@@ -34,9 +37,11 @@ export class DailyProduction {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   product_id: number;
 
+  @Index()
   @Column({ type: 'date' })
   date: Date;
 
@@ -67,6 +72,7 @@ export class DailyProduction {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Index()
   @Column({ default: 'PENDING' })
   status: string;
 

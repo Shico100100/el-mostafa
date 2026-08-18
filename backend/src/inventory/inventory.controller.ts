@@ -13,9 +13,9 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Public } from '../auth/public.decorator';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Public } from '../auth/public.decorator';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
@@ -23,6 +23,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import type { Response } from 'express';
+import { excelFileFilter } from '../common/file-filter';
 import {
   CreateCategoryDto,
   CreateProductDto,
@@ -94,7 +95,6 @@ export class InventoryController {
     });
   }
 
-  @Public()
   @Get('products/export')
   @ApiOperation({ summary: 'Export products to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
@@ -110,7 +110,7 @@ export class InventoryController {
   }
 
   @Post('products/import')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
   @ApiOperation({ summary: 'Import products from Excel' })
   @ApiResponse({ status: 201, description: 'Products imported' })
   async importProducts(@UploadedFile() file: Express.Multer.File) {

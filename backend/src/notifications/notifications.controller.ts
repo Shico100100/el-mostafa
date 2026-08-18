@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Public } from '../auth/public.decorator';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
@@ -61,7 +60,6 @@ export class NotificationsController {
     return this.notificationsService.markAsRead(+id);
   }
 
-  @Public()
   @Post('run-checks')
   async runChecks() {
     return this.notificationsService.runSystemChecks();

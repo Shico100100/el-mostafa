@@ -4,11 +4,17 @@ services:
     ports:
       - ${DATABASE_PORT}:5432
     volumes:
-      - boilerplate-db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d elmostafa_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   maildev:
     build:
@@ -17,10 +23,11 @@ services:
     ports:
       - ${MAIL_CLIENT_PORT}:1080
       - ${MAIL_PORT}:1025
+    restart: unless-stopped
 
   adminer:
     image: adminer
-    restart: always
+    restart: unless-stopped
     ports:
       - 8080:8080
 
@@ -36,6 +43,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - ${APP_PORT}:${APP_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
-  boilerplate-db:
+  postgres_data:

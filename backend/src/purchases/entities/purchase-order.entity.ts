@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Supplier } from './supplier.entity';
 
@@ -19,13 +20,16 @@ export enum PurchaseOrderStatus {
 import { PurchaseOrderItem } from './purchase-order-item.entity';
 
 @Entity('purchase_orders')
+@Index(['status', 'order_date'])
 export class PurchaseOrder {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ type: 'int' })
   supplier_id: number;
 
+  @Index()
   @Column({ nullable: true })
   invoice_number: string;
 
@@ -36,6 +40,7 @@ export class PurchaseOrder {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: PurchaseOrderStatus,
@@ -46,6 +51,7 @@ export class PurchaseOrder {
   @Column({ nullable: true, type: 'text' })
   notes: string;
 
+  @Index()
   @Column({ type: 'date', nullable: true })
   order_date: Date;
 

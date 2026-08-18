@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Product } from '../../inventory/entities/product.entity';
 
@@ -19,6 +20,7 @@ export class ManufacturingOrder {
   @Column({ type: 'int', nullable: true })
   sales_order_item_id: number;
 
+  @Index()
   @Column({ type: 'int' })
   product_id: number;
 
@@ -32,12 +34,14 @@ export class ManufacturingOrder {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   quantity_produced: number;
 
+  @Index()
   @Column({ default: 'PENDING' })
   status: string;
 
   @Column({ default: 'MEDIUM' })
   priority: string;
 
+  @Index()
   @Column({ type: 'date', nullable: true })
   due_date: Date;
 

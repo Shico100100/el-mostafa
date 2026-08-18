@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('suppliers')
@@ -11,9 +12,11 @@ export class Supplier {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column()
   name: string;
 
+  @Index()
   @Column({ nullable: true })
   phone: string;
 

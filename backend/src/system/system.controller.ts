@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Body,
   UseGuards,
   InternalServerErrorException,
   UseInterceptors,
@@ -103,12 +104,22 @@ export class SystemController {
   }
 
   @Post('reset')
-  async resetSystem() {
+  async resetSystem(@Body() body: { confirm?: boolean }) {
+    if (body?.confirm !== true) {
+      throw new BadRequestException(
+        'Send { "confirm": true } to confirm system reset',
+      );
+    }
     return this.systemService.resetSystem();
   }
 
   @Post('seed')
-  async seedDemoData() {
+  async seedDemoData(@Body() body: { confirm?: boolean }) {
+    if (body?.confirm !== true) {
+      throw new BadRequestException(
+        'Send { "confirm": true } to confirm seeding demo data',
+      );
+    }
     return this.systemService.seedDemoData();
   }
 

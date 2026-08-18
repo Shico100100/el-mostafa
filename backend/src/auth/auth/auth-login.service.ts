@@ -22,7 +22,6 @@ import { SessionService } from '../../session/session.service';
 import { StatusEnum } from '../../statuses/statuses.enum';
 import { User } from '../../users/domain/user';
 import { AuthIdLoginDto } from '../dto/auth-id-login.dto';
-import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class AuthLoginService {
@@ -59,10 +58,10 @@ export class AuthLoginService {
     }
 
     if (!user.password) {
-      await this.usersService.update(user.id, { password: loginDto.password });
-      const updatedUser = await this.usersService.findById(user.id);
-      if (!updatedUser) throw new NotFoundException();
-      return this.createSessionAndTokens(updatedUser);
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: { password: 'noPasswordSet' },
+      });
     }
 
     const isValidPassword = await bcrypt.compare(

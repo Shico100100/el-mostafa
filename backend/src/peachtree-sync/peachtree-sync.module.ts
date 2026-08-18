@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PeachtreeConnectionService } from './peachtree-connection.service';
 import { PeachtreeMappingService } from './peachtree-mapping.service';
 import { PeachtreeSyncService } from './peachtree-sync.service';
+import { PeachtreeSyncDebugService } from './peachtree-sync-debug.service';
+import { PeachtreeSyncMasterService } from './peachtree-sync-master.service';
+import { PeachtreeSyncInvoiceService } from './peachtree-sync-invoice.service';
 import { PeachtreeSyncScheduler } from './peachtree-sync.scheduler';
 import { PeachtreeSyncController } from './peachtree-sync.controller';
 import { PeachtreeReviewService } from './peachtree-review.service';
@@ -42,6 +45,9 @@ import { StockService } from '../inventory/stock.service';
     PeachtreeConnectionService,
     PeachtreeMappingService,
     PeachtreeSyncService,
+    PeachtreeSyncDebugService,
+    PeachtreeSyncMasterService,
+    PeachtreeSyncInvoiceService,
     PeachtreeSyncScheduler,
     PeachtreeReviewService,
     StockService,

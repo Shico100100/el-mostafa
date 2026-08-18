@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Product } from './product.entity';
 import { Warehouse } from './warehouse.entity';
@@ -15,6 +16,7 @@ export enum MovementType {
 }
 
 @Entity('stock_movements')
+@Index(['product_id', 'warehouse_id'])
 export class StockMovement {
   @PrimaryGeneratedColumn()
   id: number;
@@ -23,6 +25,7 @@ export class StockMovement {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
+  @Index()
   @Column({ type: 'int' })
   product_id: number;
 
@@ -30,9 +33,11 @@ export class StockMovement {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
 
+  @Index()
   @Column({ type: 'int' })
   warehouse_id: number;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: MovementType,
@@ -51,6 +56,7 @@ export class StockMovement {
   @Column({ nullable: true })
   notes: string;
 
+  @Index()
   @Column({ type: 'date', nullable: true })
   date: Date;
 }

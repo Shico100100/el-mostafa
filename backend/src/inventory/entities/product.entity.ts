@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Category } from './category.entity';
 import { Warehouse } from './warehouse.entity';
@@ -17,12 +18,15 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column()
   name: string;
 
+  @Index()
   @Column({ nullable: true })
   sku: string;
 
+  @Index()
   @Column({ nullable: true })
   barcode: string;
 
@@ -36,6 +40,7 @@ export class Product {
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   category_id: number;
 
@@ -43,12 +48,15 @@ export class Product {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   warehouse_id: number;
 
+  @Index()
   @Column({ default: 'piece' })
   unit: string;
 
+  @Index()
   @Column({ default: 'FINISHED' })
   type: string;
 
@@ -113,6 +121,7 @@ export class Product {
   @Column({ nullable: true, type: 'text' })
   notes: string;
 
+  @Index()
   @Column({ default: true, nullable: true })
   is_active: boolean;
 

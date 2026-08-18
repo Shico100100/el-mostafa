@@ -13,9 +13,14 @@ export class AddQuoteItemsTable1740960000000 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_quote" FOREIGN KEY ("quote_id") REFERENCES "quotes"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
-    await queryRunner.query(
-      `ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    const productsExists = await queryRunner.query(
+      `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products')`,
     );
+    if (productsExists[0]?.exists) {
+      await queryRunner.query(
+        `ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      );
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

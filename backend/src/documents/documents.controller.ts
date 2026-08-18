@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
+import { documentFileFilter } from '../common/file-filter';
 import * as path from 'path';
 
 @Controller('documents')
@@ -36,6 +37,7 @@ export class DocumentsController {
         },
       }),
       limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: documentFileFilter,
     }),
   )
   upload(

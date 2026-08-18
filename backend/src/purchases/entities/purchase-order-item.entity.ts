@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { PurchaseOrder } from './purchase-order.entity';
 import { Product } from '../../inventory/entities/product.entity';
@@ -13,6 +14,7 @@ export class PurchaseOrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ type: 'int' })
   order_id: number;
 
@@ -20,6 +22,7 @@ export class PurchaseOrderItem {
   @JoinColumn({ name: 'order_id' })
   order: PurchaseOrder;
 
+  @Index()
   @Column({ type: 'int' })
   product_id: number;
 

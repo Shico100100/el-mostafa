@@ -5,16 +5,16 @@ export class EnhanceAuditLog1740960000008 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='entity_type') THEN ALTER TABLE "audit_logs" ADD COLUMN "entity_type" varchar; END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_logs') AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='entity_type') THEN ALTER TABLE "audit_logs" ADD COLUMN "entity_type" varchar; END IF; END $$;`,
     );
     await queryRunner.query(
-      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='old_value') THEN ALTER TABLE "audit_logs" ADD COLUMN "old_value" text; END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_logs') AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='old_value') THEN ALTER TABLE "audit_logs" ADD COLUMN "old_value" text; END IF; END $$;`,
     );
     await queryRunner.query(
-      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='new_value') THEN ALTER TABLE "audit_logs" ADD COLUMN "new_value" text; END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_logs') AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='new_value') THEN ALTER TABLE "audit_logs" ADD COLUMN "new_value" text; END IF; END $$;`,
     );
     await queryRunner.query(
-      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='user_agent') THEN ALTER TABLE "audit_logs" ADD COLUMN "user_agent" varchar; END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_logs') AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='user_agent') THEN ALTER TABLE "audit_logs" ADD COLUMN "user_agent" varchar; END IF; END $$;`,
     );
   }
 

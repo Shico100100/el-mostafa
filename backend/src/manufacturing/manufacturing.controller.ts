@@ -30,8 +30,8 @@ import { RawMaterialService } from './raw-material.service';
 import { DailyProductionService } from './daily-production.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { sheetToJson } from '../utils/excel-export';
-import { Public } from '../auth/public.decorator';
 import { Roles } from '../roles/roles.decorator';
+import { excelFileFilter, imageFileFilter } from '../common/file-filter';
 import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import {
@@ -93,7 +93,6 @@ export class ManufacturingController {
     return this.manufacturingService.getManufacturingOrder(+id);
   }
 
-  @Public()
   @Get('export/machines')
   @ApiOperation({ summary: 'Export machines to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
@@ -108,7 +107,7 @@ export class ManufacturingController {
   }
 
   @Post('import/machines')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
   @ApiOperation({ summary: 'Import machines from Excel' })
   @ApiResponse({ status: 201, description: 'Machines imported' })
   async importMachines(@UploadedFile() file: Express.Multer.File) {
@@ -121,7 +120,6 @@ export class ManufacturingController {
     return this.machineService.importMachines(data as any[]);
   }
 
-  @Public()
   @Get('export/molds')
   @ApiOperation({ summary: 'Export molds to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
@@ -136,7 +134,7 @@ export class ManufacturingController {
   }
 
   @Post('import/molds')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
   @ApiOperation({ summary: 'Import molds from Excel' })
   @ApiResponse({ status: 201, description: 'Molds imported' })
   async importMolds(@UploadedFile() file: Express.Multer.File) {
@@ -149,7 +147,6 @@ export class ManufacturingController {
     return this.moldService.importMolds(data as any[]);
   }
 
-  @Public()
   @Get('export/raw-materials')
   @ApiOperation({ summary: 'Export raw materials to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
@@ -164,7 +161,7 @@ export class ManufacturingController {
   }
 
   @Post('import/raw-materials')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
   @ApiOperation({ summary: 'Import raw materials from Excel' })
   @ApiResponse({ status: 201, description: 'Raw materials imported' })
   async importRawMaterials(@UploadedFile() file: Express.Multer.File) {
@@ -193,6 +190,8 @@ export class ManufacturingController {
           return cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      fileFilter: imageFileFilter,
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
@@ -481,7 +480,6 @@ export class ManufacturingController {
     return this.manufacturingService.deleteProduction(+id);
   }
 
-  @Public()
   @Get('export/production-history')
   @ApiOperation({ summary: 'Export production history to Excel' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
@@ -496,7 +494,7 @@ export class ManufacturingController {
   }
 
   @Post('import/production-history')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
   @ApiOperation({ summary: 'Import production history from Excel' })
   @ApiResponse({ status: 201, description: 'Production history imported' })
   async importProductionHistory(@UploadedFile() file: Express.Multer.File) {
