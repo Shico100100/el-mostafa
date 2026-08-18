@@ -159,104 +159,111 @@ export class ProductExcelService {
 
     let createdCount = 0,
       updatedCount = 0;
-    for (let r = 2; r <= rows.length; r++) {
-      const row = (rows[r] as unknown as Array<unknown>) || [];
-      const name = (row[colMap['name']] || row[colMap['الاسم']]) as string;
-      if (!name) continue;
-      const sku = (row[colMap['SKU']] || row[colMap['sku']]) as
-        | string
-        | undefined;
-      const barcode = (row[colMap['Barcode']] || row[colMap['barcode']]) as
-        | string
-        | undefined;
-      let existingProduct: Product | null = null;
-      if (sku)
-        existingProduct = await this.productRepo.findOne({
-          where: { sku: String(sku) },
-        });
-      if (!existingProduct && barcode)
-        existingProduct = await this.productRepo.findOne({
-          where: { barcode: String(barcode) },
-        });
-      if (!existingProduct)
-        existingProduct = await this.productRepo.findOne({ where: { name } });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      for (let r = 2; r <= rows.length; r++) {
+        const row = (rows[r] as unknown as Array<unknown>) || [];
+        const name = (row[colMap['name']] || row[colMap['الاسم']]) as string;
+        if (!name) continue;
+        const sku = (row[colMap['SKU']] || row[colMap['sku']]) as
+          | string
+          | undefined;
+        const barcode = (row[colMap['Barcode']] || row[colMap['barcode']]) as
+          | string
+          | undefined;
+        let existingProduct: Product | null = null;
+        if (sku)
+          existingProduct = await queryRunner.manager.findOne(Product, {
+            where: { sku: String(sku) },
+          });
+        if (!existingProduct && barcode)
+          existingProduct = await queryRunner.manager.findOne(Product, {
+            where: { barcode: String(barcode) },
+          });
+        if (!existingProduct)
+          existingProduct = await queryRunner.manager.findOne(Product, {
+            where: { name },
+          });
 
-      const productData: Partial<Product> = {
-        name,
-        sku: sku ? String(sku) : undefined,
-        barcode: barcode ? String(barcode) : undefined,
-        selling_price: (row[colMap['Selling Price']] ||
-          row[colMap['selling_price']] ||
-          0) as number,
-        cost_price: (row[colMap['Cost Price']] ||
-          row[colMap['cost_price']] ||
-          0) as number,
-        min_stock: (row[colMap['Min Stock']] ||
-          row[colMap['min_stock']] ||
-          0) as number,
-        type: (
-          (row[colMap['Type']] || row[colMap['type']] || 'FINISHED') as string
-        ).toUpperCase(),
-        unit: (row[colMap['Unit']] || row[colMap['unit']] || 'piece') as string,
-        weight_grams: row[colMap['weight_grams']]
-          ? Number(row[colMap['weight_grams']])
-          : undefined,
-      };
-      const categoryName = (row[colMap['Category']] ||
-        row[colMap['category']]) as string | undefined;
-      if (categoryName) {
-        let category = await this.categoryRepo.findOne({
-          where: { name: categoryName },
-        });
-        if (!category) {
-          category = await this.categoryRepo.save(
-            this.categoryRepo.create({ name: categoryName }),
-          );
-        }
-        productData.category = category;
-      }
-      const warehouseName = row[colMap['warehouse']];
-      if (warehouseName) {
-        const warehouse = await this.warehouseRepo.findOne({
-          where: { name: String(warehouseName).trim() },
-        });
-        if (warehouse) productData.warehouse_id = warehouse.id;
-      }
-      for (const img of imagePlacements) {
-        const tlRow = (img.range?.tl?.row ?? -1) + 1;
-        if (tlRow === r) {
-          const mediaIdx = Number(img.imageId);
-          const entry = media[mediaIdx];
-          if (entry?.buffer) {
-            const ext = entry.extension || 'png';
-            const randomName = Array(32)
-              .fill(null)
-              .map(() => Math.round(Math.random() * 16).toString(16))
-              .join('');
-            const destPath = join(
-              process.cwd(),
-              'uploads',
-              `${randomName}.${ext}`,
+        const productData: Partial<Product> = {
+          name,
+          sku: sku ? String(sku) : undefined,
+          barcode: barcode ? String(barcode) : undefined,
+          selling_price: (row[colMap['Selling Price']] ||
+            row[colMap['selling_price']] ||
+            0) as number,
+          cost_price:
+            (row[colMap['Cost Price']] || row[colMap['cost_price']] || 0) as number,
+          min_stock:
+            (row[colMap['Min Stock']] || row[colMap['min_stock']] || 0) as number,
+          type: (
+            (row[colMap['Type']] || row[colMap['type']] || 'FINISHED') as string
+          ).toUpperCase(),
+          unit: (row[colMap['Unit']] || row[colMap['unit']] || 'piece') as string,
+          weight_grams: row[colMap['weight_grams']]
+            ? Number(row[colMap['weight_grams']])
+            : undefined,
+        };
+        const categoryName = (row[colMap['Category']] ||
+          row[colMap['category']]) as string | undefined;
+        if (categoryName) {
+          let category = await queryRunner.manager.findOne(Category, {
+            where: { name: categoryName },
+          });
+          if (!category) {
+            category = await queryRunner.manager.save(
+              queryRunner.manager.create(Category, { name: categoryName }),
             );
-            writeFileSync(
-              destPath,
-              entry.buffer as unknown as NodeJS.ArrayBufferView,
-            );
-            productData.image_path = `/uploads/${randomName}.${ext}`;
           }
-          break;
+          productData.category = category;
         }
-      }
-      if (existingProduct) {
-        await this.productRepo.update(existingProduct.id, productData);
-        updatedCount++;
-      } else {
-        const whId =
-          productData.warehouse_id ||
-          (await this.productCrudService.getDefaultWarehouseId());
-        await this.dataSource.transaction(async (manager) => {
-          const pr = manager.getRepository(Product);
-          const sr = manager.getRepository(Stock);
+        const warehouseName = row[colMap['warehouse']];
+        if (warehouseName) {
+          const warehouse = await queryRunner.manager.findOne(Warehouse, {
+            where: { name: String(warehouseName).trim() },
+          });
+          if (warehouse) productData.warehouse_id = warehouse.id;
+        }
+        for (const img of imagePlacements) {
+          const tlRow = (img.range?.tl?.row ?? -1) + 1;
+          if (tlRow === r) {
+            const mediaIdx = Number(img.imageId);
+            const entry = media[mediaIdx];
+            if (entry?.buffer) {
+              const ext = entry.extension || 'png';
+              const randomName = Array(32)
+                .fill(null)
+                .map(() => Math.round(Math.random() * 16).toString(16))
+                .join('');
+              const destPath = join(
+                process.cwd(),
+                'uploads',
+                `${randomName}.${ext}`,
+              );
+              writeFileSync(
+                destPath,
+                entry.buffer as unknown as NodeJS.ArrayBufferView,
+              );
+              productData.image_path = `/uploads/${randomName}.${ext}`;
+            }
+            break;
+          }
+        }
+        if (existingProduct) {
+          await queryRunner.manager.update(
+            Product,
+            existingProduct.id,
+            productData,
+          );
+          updatedCount++;
+        } else {
+          const whId =
+            productData.warehouse_id ||
+            (await this.productCrudService.getDefaultWarehouseId());
+          const pr = queryRunner.manager.getRepository(Product);
+          const sr = queryRunner.manager.getRepository(Stock);
           const saved = await pr.save(
             pr.create({ ...productData, warehouse_id: whId }),
           );
@@ -267,10 +274,16 @@ export class ProductExcelService {
               quantity: 0,
             }),
           );
-        });
-        createdCount++;
+          createdCount++;
+        }
       }
+      await queryRunner.commitTransaction();
+      return { created: createdCount, updated: updatedCount };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-    return { created: createdCount, updated: updatedCount };
   }
 }

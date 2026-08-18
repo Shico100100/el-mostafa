@@ -624,54 +624,65 @@ export class RawMaterialService {
   }
 
   async importRawMaterials(data: any[]) {
-    let success = 0;
-    for (const row of data) {
-      try {
-        const normalized: Record<string, any> = {};
-        for (const key of Object.keys(row)) normalized[key.trim()] = row[key];
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      let success = 0;
+      for (const row of data) {
+        try {
+          const normalized: Record<string, any> = {};
+          for (const key of Object.keys(row)) normalized[key.trim()] = row[key];
 
-        const name = normalized['name'] || normalized['Name'];
-        if (!name) continue;
-        const price =
-          normalized['last_purchase_price'] ??
-          normalized['Last Purchase Price'] ??
-          normalized['price'] ??
-          0;
+          const name = normalized['name'] || normalized['Name'];
+          if (!name) continue;
+          const price =
+            normalized['last_purchase_price'] ??
+            normalized['Last Purchase Price'] ??
+            normalized['price'] ??
+            0;
 
-        let product = await this.productRepo.findOne({
-          where: { name, type: 'RAW' },
-        });
-        if (!product) {
-          product = this.productRepo.create({
-            name,
-            type: 'RAW',
-            unit: 'kg',
+          let product = await queryRunner.manager.findOne(Product, {
+            where: { name, type: 'RAW' },
+          });
+          if (!product) {
+            product = queryRunner.manager.create(Product, {
+              name,
+              type: 'RAW',
+              unit: 'kg',
+              cost_price: Number(price),
+            });
+            await queryRunner.manager.save(product);
+          }
+
+          const reorderPoint =
+            normalized['reorder_point'] ?? normalized['Reorder Point'] ?? 0;
+          const reorderQty =
+            normalized['reorder_quantity'] ?? normalized['Reorder Quantity'] ?? 0;
+          const avgCons =
+            normalized['avg_consumption_rate'] ??
+            normalized['Average Consumption'] ??
+            0;
+
+          await queryRunner.manager.update(Product, product.id, {
+            reorder_point: reorderPoint,
+            reorder_quantity: reorderQty,
+            avg_consumption_rate: avgCons,
+            last_purchase_price: Number(price),
             cost_price: Number(price),
           });
-          await this.productRepo.save(product);
+          success++;
+        } catch {
+          /* skip row */
         }
-
-        const reorderPoint =
-          normalized['reorder_point'] ?? normalized['Reorder Point'] ?? 0;
-        const reorderQty =
-          normalized['reorder_quantity'] ?? normalized['Reorder Quantity'] ?? 0;
-        const avgCons =
-          normalized['avg_consumption_rate'] ??
-          normalized['Average Consumption'] ??
-          0;
-
-        await this.productRepo.update(product.id, {
-          reorder_point: reorderPoint,
-          reorder_quantity: reorderQty,
-          avg_consumption_rate: avgCons,
-          last_purchase_price: Number(price),
-          cost_price: Number(price),
-        });
-        success++;
-      } catch {
-        /* skip row */
       }
+      await queryRunner.commitTransaction();
+      return { success, failed: data.length - success };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-    return { success, failed: data.length - success };
   }
 }

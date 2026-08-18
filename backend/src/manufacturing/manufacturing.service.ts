@@ -444,53 +444,68 @@ export class ManufacturingService {
   }
 
   async importProductionHistory(data: Record<string, any>[]) {
-    const results = { success: 0, failed: 0, errors: [] as string[] };
-    for (const row of data) {
-      try {
-        const prodData: Record<string, any> = {
-          machine_id: row['Machine ID'],
-          mold_id: row['Mold ID'],
-          product_id: row['Raw Material ID'],
-          total_production_kg: row['Total KG'],
-          hours_worked: row['Hours Worked'] ?? 8,
-          notes: row['Notes'] || '',
-          status: row['Status'] || 'PENDING',
-        };
-        if (row['Date']) {
-          prodData.date =
-            typeof row['Date'] === 'number'
-              ? new Date((row['Date'] - 25569) * 86400 * 1000)
-              : new Date(row['Date']);
-        }
-        if (
-          !prodData.machine_id ||
-          !prodData.mold_id ||
-          !prodData.product_id ||
-          !prodData.total_production_kg
-        ) {
-          throw new BadRequestException(
-            'الحقول المطلوبة مفقودة: معرف الماكينة، معرف القالب، معرف المادة الخام، إجمالي الكجم',
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const results = { success: 0, failed: 0, errors: [] as string[] };
+      for (const row of data) {
+        try {
+          const prodData: Record<string, any> = {
+            machine_id: row['Machine ID'],
+            mold_id: row['Mold ID'],
+            product_id: row['Raw Material ID'],
+            total_production_kg: row['Total KG'],
+            hours_worked: row['Hours Worked'] ?? 8,
+            notes: row['Notes'] || '',
+            status: row['Status'] || 'PENDING',
+          };
+          if (row['Date']) {
+            prodData.date =
+              typeof row['Date'] === 'number'
+                ? new Date((row['Date'] - 25569) * 86400 * 1000)
+                : new Date(row['Date']);
+          }
+          if (
+            !prodData.machine_id ||
+            !prodData.mold_id ||
+            !prodData.product_id ||
+            !prodData.total_production_kg
+          ) {
+            throw new BadRequestException(
+              'الحقول المطلوبة مفقودة: معرف الماكينة، معرف القالب، معرف المادة الخام، إجمالي الكجم',
+            );
+          }
+          if (row['ID']) {
+            const exists = await queryRunner.manager.findOne(DailyProduction, {
+              where: { id: row['ID'] },
+            });
+            if (exists) {
+              await queryRunner.manager.update(
+                DailyProduction,
+                row['ID'],
+                prodData,
+              );
+              results.success++;
+              continue;
+            }
+          }
+          await this.createProduction(prodData);
+          results.success++;
+        } catch (err) {
+          results.failed++;
+          results.errors.push(
+            `Row ${JSON.stringify(row)}: ${(err as Error).message}`,
           );
         }
-        if (row['ID']) {
-          const exists = await this.productionRepo.findOne({
-            where: { id: row['ID'] },
-          });
-          if (exists) {
-            await this.productionRepo.update(row['ID'], prodData);
-            results.success++;
-            continue;
-          }
-        }
-        await this.createProduction(prodData);
-        results.success++;
-      } catch (err) {
-        results.failed++;
-        results.errors.push(
-          `Row ${JSON.stringify(row)}: ${(err as Error).message}`,
-        );
       }
+      await queryRunner.commitTransaction();
+      return results;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-    return results;
   }
 }

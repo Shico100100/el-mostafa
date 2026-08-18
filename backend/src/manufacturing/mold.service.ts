@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, DataSource } from 'typeorm';
 import { Mold } from './entities/mold.entity';
 import { MoldIssue } from './entities/mold-issue.entity';
 import { DailyProduction } from './entities/daily-production.entity';
@@ -38,6 +38,7 @@ export class MoldService {
     private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
     private warehouseHelper: WarehouseHelper,
     private fixedCostService: FixedCostService,
+    private dataSource: DataSource,
   ) {}
 
   async getAllMolds(page = 1, limit = 50) {
@@ -309,55 +310,74 @@ export class MoldService {
       string,
       { productions: typeof productions; productId?: number }
     > = {};
+    // Collect every raw-material product id up front to avoid N+1 findOne calls.
+    const rawProductIds = new Set<number>();
     for (const prod of productions) {
       if (!prod.mold || !prod.pieces_produced) continue;
       const productName = `بلاستيك ${prod.mold.name}`;
       if (!productGroups[productName])
         productGroups[productName] = { productions: [] };
       productGroups[productName].productions.push(prod);
+      if (prod.product_id) rawProductIds.add(prod.product_id);
     }
+    const rawProducts = rawProductIds.size
+      ? await this.productRepo.findByIds([...rawProductIds])
+      : [];
+    const rawProductMap = new Map(rawProducts.map((p) => [p.id, p]));
+
     let updatedCount = 0;
-    for (const [productName, group] of Object.entries(productGroups)) {
-      const product = await this.productRepo.findOne({
-        where: { name: productName, type: 'SEMI_FINISHED' },
-      });
-      if (!product) continue;
-      productGroups[productName].productId = product.id;
-      let totalQty = 0,
-        totalCost = 0;
-      for (const prod of group.productions) {
-        const monthStr = prod.date
-          ? `${new Date(prod.date).getFullYear()}-${String(new Date(prod.date).getMonth() + 1).padStart(2, '0')}`
-          : '';
-        const hourlyCost = monthStr
-          ? await this.fixedCostService.calculateHourlyCost(
-              monthStr,
-              prod.machine_id,
-            )
-          : 0;
-        let rawMaterialPrice = 0;
-        if (prod.product_id) {
-          const rawProd = await this.productRepo.findOne({
-            where: { id: prod.product_id },
-          });
-          rawMaterialPrice =
-            Number(rawProd?.cost_price) ||
-            Number(rawProd?.last_purchase_price) ||
-            0;
-        }
-        const unitCost = this.fixedCostService.calculatePieceCost({
-          rawMaterialPrice,
-          pieceWeight: Number(prod.mold.product_weight),
-          hourlyCost,
-          hoursWorked: Number(prod.hours_worked || 8),
-          totalPieces: Number(prod.pieces_produced),
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      for (const [productName, group] of Object.entries(productGroups)) {
+        const product = await queryRunner.manager.findOne(Product, {
+          where: { name: productName, type: 'SEMI_FINISHED' },
         });
-        totalQty += Number(prod.pieces_produced);
-        totalCost += Number(prod.pieces_produced) * unitCost;
+        if (!product) continue;
+        productGroups[productName].productId = product.id;
+        let totalQty = 0,
+          totalCost = 0;
+        for (const prod of group.productions) {
+          const monthStr = prod.date
+            ? `${new Date(prod.date).getFullYear()}-${String(new Date(prod.date).getMonth() + 1).padStart(2, '0')}`
+            : '';
+          const hourlyCost = monthStr
+            ? await this.fixedCostService.calculateHourlyCost(
+                monthStr,
+                prod.machine_id,
+              )
+            : 0;
+          let rawMaterialPrice = 0;
+          if (prod.product_id) {
+            const rawProd = rawProductMap.get(prod.product_id);
+            rawMaterialPrice =
+              Number(rawProd?.cost_price) ||
+              Number(rawProd?.last_purchase_price) ||
+              0;
+          }
+          const unitCost = this.fixedCostService.calculatePieceCost({
+            rawMaterialPrice,
+            pieceWeight: Number(prod.mold.product_weight),
+            hourlyCost,
+            hoursWorked: Number(prod.hours_worked || 8),
+            totalPieces: Number(prod.pieces_produced),
+          });
+          totalQty += Number(prod.pieces_produced);
+          totalCost += Number(prod.pieces_produced) * unitCost;
+        }
+        const newAvgCost = totalQty > 0 ? totalCost / totalQty : 0;
+        await queryRunner.manager.update(Product, product.id, {
+          cost_price: newAvgCost,
+        });
+        updatedCount++;
       }
-      const newAvgCost = totalQty > 0 ? totalCost / totalQty : 0;
-      await this.productRepo.update(product.id, { cost_price: newAvgCost });
-      updatedCount++;
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
     return {
       message: 'Recalculation complete',
@@ -458,21 +478,40 @@ export class MoldService {
   }
 
   async importMolds(data: any[]) {
-    let created = 0,
-      updated = 0;
-    for (const row of data) {
-      if (!row.name) continue;
-      const existing = await this.moldRepo.findOne({
-        where: { name: row.name },
-      });
-      if (existing) {
-        await this.moldRepo.update(existing.id, row);
-        updated++;
-      } else {
-        await this.moldRepo.save(this.moldRepo.create(row));
-        created++;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      // Fetch all existing molds matching the incoming names in one query
+      // instead of an N+1 findOne per row.
+      const names = [...new Set(data.map((r) => r.name).filter(Boolean))];
+      const existingMolds = names.length
+        ? await queryRunner.manager.find(Mold, { where: names.map((n) => ({ name: n })) })
+        : [];
+      const existingByName = new Map(existingMolds.map((m) => [m.name, m]));
+
+      let created = 0,
+        updated = 0;
+      for (const row of data) {
+        if (!row.name) continue;
+        const existing = existingByName.get(row.name);
+        if (existing) {
+          await queryRunner.manager.update(Mold, existing.id, row);
+          updated++;
+        } else {
+          await queryRunner.manager.save(
+            queryRunner.manager.create(Mold, row),
+          );
+          created++;
+        }
       }
+      await queryRunner.commitTransaction();
+      return { created, updated };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-    return { created, updated };
   }
 }

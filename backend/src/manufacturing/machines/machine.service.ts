@@ -2,7 +2,7 @@ import { Injectable, Logger, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Machine, MachineStatus } from '../entities/machine.entity';
 import {
   MachineMaintenance,
@@ -25,6 +25,7 @@ export class MachineService {
     private productionRepo: Repository<DailyProduction>,
     @Inject(CacheService) private cacheService: CacheService,
     @InjectQueue('depreciation') private depreciationQueue: Queue,
+    private dataSource: DataSource,
   ) {}
 
   async getAllMachines(page = 1, limit = 50) {
@@ -214,23 +215,42 @@ export class MachineService {
   }
 
   async importMachines(data: any[]) {
-    let created = 0,
-      updated = 0;
-    for (const row of data) {
-      if (!row.name) continue;
-      const existing = await this.machineRepo.findOne({
-        where: { name: row.name },
-      });
-      if (existing) {
-        await this.machineRepo.update(existing.id, row);
-        updated++;
-      } else {
-        await this.machineRepo.save(this.machineRepo.create(row));
-        created++;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const names = [...new Set(data.map((r) => r.name).filter(Boolean))];
+      const existingMachines = names.length
+        ? await queryRunner.manager.find(Machine, {
+            where: names.map((n) => ({ name: n })),
+          })
+        : [];
+      const existingByName = new Map(existingMachines.map((m) => [m.name, m]));
+
+      let created = 0,
+        updated = 0;
+      for (const row of data) {
+        if (!row.name) continue;
+        const existing = existingByName.get(row.name);
+        if (existing) {
+          await queryRunner.manager.update(Machine, existing.id, row);
+          updated++;
+        } else {
+          await queryRunner.manager.save(
+            queryRunner.manager.create(Machine, row),
+          );
+          created++;
+        }
       }
+      await queryRunner.commitTransaction();
+      await this.cacheService.delByPattern('machines_all_*');
+      return { created, updated };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-    await this.cacheService.delByPattern('machines_all_*');
-    return { created, updated };
   }
 
   async queueDepreciationCalculation(machineId: number) {
