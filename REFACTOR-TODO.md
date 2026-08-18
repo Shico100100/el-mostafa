@@ -65,7 +65,19 @@
 
 ---
 
-### أولوية 3 — نقاط تحقق قبل النشر (Deployment Checks)
+### أولوية 2.5 — ⚠️ دوال بتكتب في loop من غير transaction (مخاطرة بيانات)
+المراجعة لقيت **9 دوال** بتعمل update-loop من غير transaction — لو حصل خطأ في نص الـ loop البيانات هتتضارب:
+- [x] `purchases/purchase-orders/purchase-order.service.ts` → `updateLandedCost()` — **تم الإصلاح (2026-08-19): حوّل لـ QueryRunner transaction + typed DTO بدل `any`**
+- [ ] `manufacturing/mold.service.ts` → `recalculateSemiFinishedCosts()` — **أخطرهم**: بيحسب تكلفة نصف المصنّع اللي بتغذّي كل حسابات التصنيع
+- [ ] `inventory/inventory.service.ts` → `smartAssignWarehouses()`
+- [ ] `inventory/product-excel/product-excel.service.ts` → `importProductsFromExcel()`
+- [ ] `inventory/product-pricing/product-pricing.service.ts` → `bulkUpdatePrices()`
+- [ ] `manufacturing/manufacturing.service.ts` → `importProductionHistory()`
+- [ ] `manufacturing/mold.service.ts` → `importMolds()`
+- [ ] `manufacturing/raw-material.service.ts` → `importRawMaterials()`
+- [ ] `manufacturing/machines/machine.service.ts` → `importMachines()`
+
+**الأولوية:** ابدأ بـ `recalculateSemiFinishedCosts` (أثره على التصنيع كله)، وبعدها الـ imports/bulk-updates.
 - [ ] **مزامنة الـ DB:** الـ migrations القديمة (1715...–1787...) اتعدّلت بـ `IF EXISTS` — آمنة على DB موجود أو جديد، بس تأكد إن الـ `migrations` table متزامن قبل أي `npm run migration:run` على production.
 - [ ] **`.env` production:** راجع `backend/.env.production.example` — تأكد إن `JWT_SECRET` و `DB_PASSWORD` متغيرين (مش默认值).
 - [ ] **Caddyfile / docker-compose.prod.yml:** اختبر المسار الكامل للنشر على الـ VPS قبل الإطلاق.

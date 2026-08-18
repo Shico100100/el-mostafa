@@ -102,7 +102,8 @@ export function usePeachtreeSync() {
       } catch { /* silent */ }
     };
     checkInitialSync();
-  }, [pollSyncProgress]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const testConnection = async () => {
     setTesting(true);
@@ -156,7 +157,7 @@ export function usePeachtreeSync() {
     finally { setSyncing(false); }
   };
 
-  const pollSyncProgress = useCallback(async () => {
+  const pollSyncProgress = async () => {
     const maxAttempts = 120;
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise(r => setTimeout(r, 3000));
@@ -178,7 +179,7 @@ export function usePeachtreeSync() {
     }
     toast.error('انتهت مهلة الانتظار — المزامنة قد لا تزال تعمل');
     loadData();
-  }, [loadData]);
+  };
 
   const resyncItems = async () => {
     setResyncing(true);

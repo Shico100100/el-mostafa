@@ -2,6 +2,19 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ExcelActions from './ExcelActions';
 
+// ExcelActions uses useAuthCheck -> useRouter() from next/navigation,
+// so the Next.js app router must be mocked for unit tests.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 describe('ExcelActions', () => {
   const defaultProps = {
     exportUrl: '/manufacturing/export/molds',
