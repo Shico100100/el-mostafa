@@ -61,7 +61,7 @@ const modules: NavItem[] = [
     href: '/manufacturing', label: 'التصنيع', icon: Factory,
     children: [
       { href: '/manufacturing', label: 'لوحة التصنيع' },
-      { href: '/bom', label: 'BOM' },
+      { href: '/bom', label: 'BOM (قوائم المكونات)' },
       { href: '/manufacturing/machines', label: 'الماكينات' },
       { href: '/manufacturing/molds', label: 'القوالب' },
       { href: '/manufacturing/raw-materials', label: 'الخامات' },
