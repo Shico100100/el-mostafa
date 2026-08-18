@@ -68,16 +68,16 @@
 ### أولوية 2.5 — ⚠️ دوال بتكتب في loop من غير transaction (مخاطرة بيانات)
 المراجعة لقيت **9 دوال** بتعمل update-loop من غير transaction — لو حصل خطأ في نص الـ loop البيانات هتتضارب:
 - [x] `purchases/purchase-orders/purchase-order.service.ts` → `updateLandedCost()` — **تم الإصلاح (2026-08-19): حوّل لـ QueryRunner transaction + typed DTO بدل `any`**
-- [ ] `manufacturing/mold.service.ts` → `recalculateSemiFinishedCosts()` — **أخطرهم**: بيحسب تكلفة نصف المصنّع اللي بتغذّي كل حسابات التصنيع
-- [ ] `inventory/inventory.service.ts` → `smartAssignWarehouses()`
-- [ ] `inventory/product-excel/product-excel.service.ts` → `importProductsFromExcel()`
-- [ ] `inventory/product-pricing/product-pricing.service.ts` → `bulkUpdatePrices()`
-- [ ] `manufacturing/manufacturing.service.ts` → `importProductionHistory()`
-- [ ] `manufacturing/mold.service.ts` → `importMolds()`
-- [ ] `manufacturing/raw-material.service.ts` → `importRawMaterials()`
-- [ ] `manufacturing/machines/machine.service.ts` → `importMachines()`
+- [x] `manufacturing/mold.service.ts` → `recalculateSemiFinishedCosts()` — **تم الإصلاح (2026-08-19): transaction + حل N+1 findOne→findByIds**
+- [x] `manufacturing/mold.service.ts` → `importMolds()` — **تم الإصلاح (2026-08-19)**
+- [x] `manufacturing/machines/machine.service.ts` → `importMachines()` — **تم الإصلاح (2026-08-19)**
+- [x] `manufacturing/raw-material.service.ts` → `importRawMaterials()` — **تم الإصلاح (2026-08-19)**
+- [x] `manufacturing/manufacturing.service.ts` → `importProductionHistory()` — **تم الإصلاح (2026-08-19)**
+- [x] `inventory/product-excel/product-excel.service.ts` → `importProductsFromExcel()` — **تم الإصلاح (2026-08-19): كانت بتعمل update بره transaction**
+- [x] `inventory/inventory.service.ts` → `smartAssignWarehouses()` — متظبط أصلاً (بيستخدم TransactionHelper)
+- [x] `inventory/product-pricing/product-pricing.service.ts` → `bulkUpdatePrices()` — متظبط أصلاً (dataSource.transaction)
 
-**الأولوية:** ابدأ بـ `recalculateSemiFinishedCosts` (أثره على التصنيع كله)، وبعدها الـ imports/bulk-updates.
+**الحالة:** ✅ كل الـ 9 دوال اتراجعت — 7 اتصلحوا، 2 كانوا متظبطين. خلصنا باب "مخاطرة البيانات".
 - [ ] **مزامنة الـ DB:** الـ migrations القديمة (1715...–1787...) اتعدّلت بـ `IF EXISTS` — آمنة على DB موجود أو جديد، بس تأكد إن الـ `migrations` table متزامن قبل أي `npm run migration:run` على production.
 - [ ] **`.env` production:** راجع `backend/.env.production.example` — تأكد إن `JWT_SECRET` و `DB_PASSWORD` متغيرين (مش默认值).
 - [ ] **Caddyfile / docker-compose.prod.yml:** اختبر المسار الكامل للنشر على الـ VPS قبل الإطلاق.
