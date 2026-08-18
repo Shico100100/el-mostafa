@@ -145,7 +145,12 @@ export class PurchaseOrderService {
       total_weight_kg?: number;
     },
   ) {
-    const updateData: any = {};
+    const updateData: Partial<{
+      freight_cost: number;
+      customs_percent: number;
+      commission_percent: number;
+      total_weight_kg: number;
+    }> = {};
     if (data.freight_cost !== undefined)
       updateData.freight_cost = data.freight_cost;
     if (data.customs_percent !== undefined)
@@ -155,29 +160,45 @@ export class PurchaseOrderService {
     if (data.total_weight_kg !== undefined)
       updateData.total_weight_kg = data.total_weight_kg;
 
-    if (Object.keys(updateData).length > 0) {
-      await this.orderRepo.update(orderId, updateData);
-    }
-
     const result = await this.calculateLandedCost(orderId);
 
-    for (const b of result.breakdown) {
-      await this.orderItemRepo.update(b.item_id, {
-        landed_cost: b.unit_landed_cost,
-      });
-      const product = await this.dataSource
-        .getRepository(Product)
-        .findOne({ where: { id: b.product_id } });
-      if (product && product.type === 'RAW') {
-        await this.dataSource.getRepository(Product).update(b.product_id, {
-          cost_price: b.unit_landed_cost,
-        });
+    // Run all writes in a single transaction so a partial failure cannot
+    // leave item landed costs / product cost prices out of sync.
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      if (Object.keys(updateData).length > 0) {
+        await queryRunner.manager.update(PurchaseOrder, orderId, updateData);
       }
-    }
 
-    await this.orderRepo.update(orderId, {
-      total_landed_cost: result.total_landed_cost,
-    });
+      for (const b of result.breakdown) {
+        await queryRunner.manager.update(
+          PurchaseOrderItem,
+          b.item_id,
+          { landed_cost: b.unit_landed_cost },
+        );
+        const product = await queryRunner.manager.findOne(Product, {
+          where: { id: b.product_id },
+        });
+        if (product && product.type === 'RAW') {
+          await queryRunner.manager.update(Product, b.product_id, {
+            cost_price: b.unit_landed_cost,
+          });
+        }
+      }
+
+      await queryRunner.manager.update(PurchaseOrder, orderId, {
+        total_landed_cost: result.total_landed_cost,
+      });
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
 
     return this.calculateLandedCost(orderId);
   }
