@@ -144,7 +144,7 @@ export const api = {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000);
             try {
-                return await fetch(`${API_URL}${normalizedEndpoint}`, { ...options, headers, signal: controller.signal });
+                return await fetch(`${API_URL}${normalizedEndpoint}`, { ...options, headers, signal: controller.signal, redirect: 'follow' });
             } finally {
                 clearTimeout(timeoutId);
             }
