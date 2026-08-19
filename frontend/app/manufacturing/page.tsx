@@ -31,18 +31,18 @@ export default function ManufacturingDashboard() {
 
   const gradientCards: GradientCard[] = [
     { icon: <FileText />, title: 'قائمة المكونات BOM', description: 'تفجير المكونات وحساب الأوزان والتكاليف', gradient: 'bg-gradient-to-br from-emerald-500/10 to-teal-500/10', borderClass: 'border-emerald-500/20', onClick: () => router.push('/bom') },
-    { icon: <Search />, title: 'المخزون', description: 'لوحة المخزون وحركاته', gradient: 'bg-gradient-to-br from-cyan-500/10 to-blue-500/10', borderClass: 'border-cyan-500/20', onClick: () => router.push('/inventory2') },
+    { icon: <Search />, title: 'المخزون', description: 'لوحة المخزون وحركاته', gradient: 'bg-gradient-to-br from-cyan-500/10 to-emerald-500/10', borderClass: 'border-cyan-500/20', onClick: () => router.push('/inventory2') },
     { icon: <Wrench />, title: 'إدارة الصيانة', description: 'متابعة ومواعيد صيانة الماكينات', gradient: 'bg-gradient-to-br from-red-500/10 to-amber-500/10', badge: 'عاجل', onClick: () => router.push('/manufacturing/maintenance') },
   ];
 
   const navButtons = [
-    { icon: <Factory />, title: 'إدارة الماكينات', description: 'إضافة الماكينات، متابعة الحالة، وسجلات الصيانة', gradient: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20', borderClass: 'border-blue-500/30', onClick: () => router.push('/manufacturing/machines') },
-    { icon: <Settings />, title: 'إدارة الإسطمبات', description: 'إدارة الإسطمبات، أوزان المنتجات، وعدد العيون', gradient: 'bg-gradient-to-br from-purple-500/20 to-purple-600/20', borderClass: 'border-purple-500/30', onClick: () => router.push('/manufacturing/molds') },
+    { icon: <Factory />, title: 'إدارة الماكينات', description: 'إضافة الماكينات، متابعة الحالة، وسجلات الصيانة', gradient: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20', borderClass: 'border-emerald-500/30', onClick: () => router.push('/manufacturing/machines') },
+    { icon: <Settings />, title: 'إدارة الإسطمبات', description: 'إدارة الإسطمبات، أوزان المنتجات، وعدد العيون', gradient: 'bg-gradient-to-br from-teal-500/20 to-teal-600/20', borderClass: 'border-teal-500/30', onClick: () => router.push('/manufacturing/molds') },
     { icon: <Link />, title: 'المخازن', description: 'إدارة المخازن والأرصدة', gradient: 'bg-gradient-to-br from-cyan-500/20 to-teal-500/20', borderClass: 'border-cyan-500/30', onClick: () => router.push('/inventory2/warehouses') },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <ManufacturingHeader onBack={() => router.push('/dashboard')} />
       <main className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

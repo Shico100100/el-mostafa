@@ -18,8 +18,8 @@ export default function Inventory2Dashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-          <div className="text-slate-400 text-lg">جاري تحميل لوحة التحكم...</div>
+          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="text-[#6b8378] text-lg">جاري تحميل لوحة التحكم...</div>
         </div>
       </div>
     );

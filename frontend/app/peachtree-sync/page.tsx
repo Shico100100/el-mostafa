@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
-  customers: { label: 'العملاء', icon: Users, color: 'text-blue-400' },
+  customers: { label: 'العملاء', icon: Users, color: 'text-emerald-400' },
   suppliers: { label: 'الموردين', icon: Truck, color: 'text-orange-400' },
   products: { label: 'المنتجات', icon: Package, color: 'text-green-400' },
   sales_invoices: { label: 'فواتير المبيعات', icon: FileText, color: 'text-emerald-400' },
@@ -59,38 +59,38 @@ export default function PeachtreeSyncPage() {
   };
 
   if (h.loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
       <div className="text-white text-xl">جاري التحميل...</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <div className="container mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
           <Link2 className="w-8 h-8 text-sky-400" />ربط Peachtree
         </h1>
-        <p className="text-gray-400 mb-8">مزامنة البيانات مع Peachtree Quantum — {Object.keys(ENTITY_LABELS).length} كيان</p>
+        <p className="text-[#6b8378] mb-8">مزامنة البيانات مع Peachtree Quantum — {Object.keys(ENTITY_LABELS).length} كيان</p>
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className={`w-3 h-3 rounded-full ${h.connected === true ? 'bg-green-500' : h.connected === false ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`} />
-              <span className="text-gray-400 text-sm">الاتصال</span>
+              <span className="text-[#6b8378] text-sm">الاتصال</span>
             </div>
             <p className="text-white font-bold">{h.connected === true ? 'متصل' : h.connected === false ? 'غير متصل' : 'لم يتم الفحص'}</p>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-            <p className="text-gray-400 text-sm mb-2">عمليات المزامنة</p>
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
+            <p className="text-[#6b8378] text-sm mb-2">عمليات المزامنة</p>
             <p className="text-white font-bold text-2xl">{h.history.length}</p>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-            <p className="text-gray-400 text-sm mb-2">جداول Peachtree</p>
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
+            <p className="text-[#6b8378] text-sm mb-2">جداول Peachtree</p>
             <p className="text-white font-bold text-2xl">{h.tables.length}</p>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-            <p className="text-gray-400 text-sm mb-2">آخر مزامنة</p>
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
+            <p className="text-[#6b8378] text-sm mb-2">آخر مزامنة</p>
             <p className="text-white font-bold text-lg">
               {h.history.length > 0
                 ? `${h.history[0].records_synced ?? '-'} سجل`
@@ -100,19 +100,19 @@ export default function PeachtreeSyncPage() {
         </div>
 
         {/* Connection Config */}
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
           <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
             <Settings className="w-5 h-5 text-sky-400" />إعدادات الاتصال
           </h2>
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
-              <label className="text-gray-400 text-sm">DSN / مسار قاعدة البيانات</label>
+              <label className="text-[#6b8378] text-sm">DSN / مسار قاعدة البيانات</label>
               <input
                 type="text"
                 value={h.dsn}
                 onChange={e => h.setDsn(e.target.value)}
                 placeholder="D:\OneDrive\Mostafaapp"
-                className="w-full mt-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm"
+                className="w-full mt-1 px-4 py-3 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white font-mono text-sm"
               />
             </div>
             <div className="flex gap-3">
@@ -125,7 +125,7 @@ export default function PeachtreeSyncPage() {
               <button
                 onClick={h.testConnection}
                 disabled={h.testing}
-                className="px-6 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition whitespace-nowrap flex items-center gap-2"
+                className="px-6 py-3 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition whitespace-nowrap flex items-center gap-2"
               >
                 {h.testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
                 <span>{h.testing ? 'جاري الفحص...' : 'اختبار الاتصال'}</span>
@@ -151,8 +151,8 @@ export default function PeachtreeSyncPage() {
             disabled={h.syncing || h.connected !== true}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.syncing || h.connected !== true
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-sky-600 to-blue-600 text-white hover:from-sky-700 hover:to-blue-700'
+                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
+                : 'bg-gradient-to-r from-sky-600 to-emerald-600 text-white hover:from-sky-700 hover:to-emerald-700'
             }`}
           >
             {h.syncing ? (
@@ -166,7 +166,7 @@ export default function PeachtreeSyncPage() {
             disabled={h.resyncing || h.syncing || h.connected !== true}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.resyncing || h.syncing || h.connected !== true
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700'
             }`}
           >
@@ -181,7 +181,7 @@ export default function PeachtreeSyncPage() {
             disabled={h.syncing || h.connected !== true}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.syncing || h.connected !== true
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
                 : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700'
             }`}
           >
@@ -192,8 +192,8 @@ export default function PeachtreeSyncPage() {
             disabled={syncingInvoices || h.syncing || h.connected !== true}
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               syncingInvoices || h.syncing || h.connected !== true
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700'
+                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
+                : 'bg-gradient-to-r from-violet-600 to-teal-600 text-white hover:from-violet-700 hover:to-teal-600'
             }`}
           >
             {syncingInvoices ? (
@@ -206,21 +206,21 @@ export default function PeachtreeSyncPage() {
 
         {/* Sync Progress Bar */}
         {(h.syncing || h.resyncing || h.previewing) && (
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
             <div className="flex items-center justify-between mb-3">
               <span className="text-white font-semibold flex items-center gap-2">
                 <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
                 {h.previewing ? 'جاري المعاينة' : 'جاري المزامنة'} — {h.syncPercent}%
               </span>
-              <span className="text-gray-400 text-sm">
+              <span className="text-[#6b8378] text-sm">
                 {h.syncEntity && ENTITY_LABELS[h.syncEntity]
                   ? ENTITY_LABELS[h.syncEntity].label
                   : h.syncEntity || 'جاري التجهيز...'}
               </span>
             </div>
-            <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-[#121a16] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${h.syncPercent}%` }}
               />
             </div>
@@ -228,7 +228,7 @@ export default function PeachtreeSyncPage() {
         )}
 
         {/* Review Differences */}
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-emerald-400" />تقرير الفروقات
@@ -263,7 +263,7 @@ export default function PeachtreeSyncPage() {
               <button
                 onClick={() => h.skipReview(h.review.filter((r) => r.status === 'pending').map((r) => r.id))}
                 disabled={h.applying}
-                className="px-4 py-2 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
               >
                 <EyeOff className="w-4 h-4" />تجاهل الكل
               </button>
@@ -271,14 +271,14 @@ export default function PeachtreeSyncPage() {
           </div>
 
           {h.review.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-[#6b8378] text-center py-8">
               لا توجد فروقات معلقة — اضغط &quot;معاينة الفروقات&quot; للفحص
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-gray-400 border-b border-white/10">
+                  <tr className="text-[#6b8378] border-b border-[#1f2d26]">
                     <th className="py-3 px-4 text-right" />
                     <th className="py-3 px-4 text-right">الكيان</th>
                     <th className="py-3 px-4 text-right">السجل</th>
@@ -304,7 +304,7 @@ export default function PeachtreeSyncPage() {
                         : null;
                     return (
                       <Fragment key={entry.id}>
-                        <tr className="border-b border-white/5 hover:bg-white/5 transition">
+                        <tr className="border-b border-[#1f2d26] hover:bg-[#121a16] transition">
                           <td className="py-3 px-4">
                             <input
                               type="checkbox"
@@ -319,10 +319,10 @@ export default function PeachtreeSyncPage() {
                             />
                           </td>
                           <td className="py-3 px-4 text-white flex items-center gap-2">
-                            <Icon className={`w-5 h-5 ${meta.color || 'text-gray-400'}`} />
+                            <Icon className={`w-5 h-5 ${meta.color || 'text-[#6b8378]'}`} />
                             {meta.label || entry.entity}
                           </td>
-                          <td className="py-3 px-4 text-gray-400 font-mono text-xs">
+                          <td className="py-3 px-4 text-[#6b8378] font-mono text-xs">
                             {entry.record_key}
                           </td>
                           <td className="py-3 px-4">
@@ -340,7 +340,7 @@ export default function PeachtreeSyncPage() {
                           </td>
                           <td className="py-3 px-4">
                             {lineItemCount ? (
-                              <span className="text-gray-400">
+                              <span className="text-[#6b8378]">
                                 البنود: {lineItemCount[0]} ← {lineItemCount[1]}
                               </span>
                             ) : diffs.length > 0 ? (
@@ -362,7 +362,7 @@ export default function PeachtreeSyncPage() {
                                 {diffs.length} حقل
                               </button>
                             ) : (
-                              <span className="text-gray-500">—</span>
+                              <span className="text-[#6b8378]">—</span>
                             )}
                           </td>
                           <td className="py-3 px-4">
@@ -381,7 +381,7 @@ export default function PeachtreeSyncPage() {
                                 disabled={
                                   h.applying || entry.status !== 'pending'
                                 }
-                                className="px-2 py-1 rounded text-xs bg-white/10 text-white hover:bg-white/20 disabled:opacity-40"
+                                className="px-2 py-1 rounded text-xs bg-[#121a16] text-white hover:bg-white/20 disabled:opacity-40"
                               >
                                 تجاهل
                               </button>
@@ -394,7 +394,7 @@ export default function PeachtreeSyncPage() {
                               <td colSpan={6} className="px-6 py-4 bg-black/30">
                                 <table className="w-full text-xs">
                                   <thead>
-                                    <tr className="text-gray-500 border-b border-white/10">
+                                    <tr className="text-[#6b8378] border-b border-[#1f2d26]">
                                       <th className="py-2 text-right">الحقل</th>
                                       <th className="py-2 text-right">القديم</th>
                                       <th className="py-2 text-right">الجديد</th>
@@ -404,12 +404,12 @@ export default function PeachtreeSyncPage() {
                                     {diffs.map((d) => (
                                       <tr
                                         key={d.field}
-                                        className="border-b border-white/5"
+                                        className="border-b border-[#1f2d26]"
                                       >
-                                        <td className="py-2 text-gray-400">
+                                        <td className="py-2 text-[#6b8378]">
                                           {d.field}
                                         </td>
-                                        <td className="py-2 text-gray-300">
+                                        <td className="py-2 text-[#ecfdf5]">
                                           {d.old || '—'}
                                         </td>
                                         <td className="py-2 text-green-400">
@@ -432,14 +432,14 @@ export default function PeachtreeSyncPage() {
         </div>
 
         {/* Sync History */}
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/10">
+        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#1f2d26]">
             <h2 className="text-lg font-bold text-white">سجل المزامنة</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 border-b border-white/10">
+                <tr className="text-[#6b8378] border-b border-[#1f2d26]">
                   <th className="py-3 px-4 text-right">التاريخ</th>
                   <th className="py-3 px-4 text-right">الحالة</th>
                   <th className="py-3 px-4 text-right">السجلات</th>
@@ -450,13 +450,13 @@ export default function PeachtreeSyncPage() {
               <tbody>
                 {h.history.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                    <td colSpan={5} className="py-12 text-center text-[#6b8378]">
                       لم تتم أي مزامنة بعد
                     </td>
                   </tr>
                 ) : h.history.map((entry) => (
                   <Fragment key={entry.id}>
-                    <tr className="border-b border-white/5 hover:bg-white/5 transition">
+                    <tr className="border-b border-[#1f2d26] hover:bg-[#121a16] transition">
                       <td className="py-3 px-4 text-white">
                         {new Date((entry.startedAt || entry.started_at) as string).toLocaleString('ar-EG')}
                       </td>
@@ -471,12 +471,12 @@ export default function PeachtreeSyncPage() {
                           {entry.status === 'completed' ? 'نجاح' : entry.status === 'failed' ? 'فشل' : 'قيد التنفيذ'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-blue-400 font-semibold">
+                      <td className="py-3 px-4 text-emerald-400 font-semibold">
                         {entry.records_synced ?? entry.results?.reduce?.(
                           (s: number, r) => s + (r.recordsCreated || 0) + (r.recordsUpdated || 0), 0
                         ) ?? '-'}
                       </td>
-                      <td className="py-3 px-4 text-gray-400">
+                      <td className="py-3 px-4 text-[#6b8378]">
                         {entry.duration_ms ? `${(entry.duration_ms / 1000).toFixed(1)} ث` : '-'}
                       </td>
                       <td className="py-3 px-4">
@@ -496,14 +496,14 @@ export default function PeachtreeSyncPage() {
                         <td colSpan={5} className="px-6 py-4 bg-black/30">
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {entry.results.map((r) => {
-                              const meta = ENTITY_LABELS[r.entity] || { label: r.entity, icon: Package, color: 'text-gray-400' };
+                              const meta = ENTITY_LABELS[r.entity] || { label: r.entity, icon: Package, color: 'text-[#6b8378]' };
                               const Icon = meta.icon;
                               return (
-                                <div key={r.entity} className="flex items-center gap-3 bg-white/5 rounded-lg p-3">
+                                <div key={r.entity} className="flex items-center gap-3 bg-[#121a16] rounded-lg p-3">
                                   <Icon className={`w-5 h-5 ${meta.color}`} />
                                   <div>
                                     <p className="text-white text-sm font-semibold">{meta.label}</p>
-                                    <p className="text-gray-400 text-xs">
+                                    <p className="text-[#6b8378] text-xs">
                                       +{r.recordsCreated} / ~{r.recordsUpdated} / ={r.recordsSkipped}
                                       {r.status === 'failed' && <span className="text-red-400 mr-2">فشل</span>}
                                     </p>
@@ -523,8 +523,8 @@ export default function PeachtreeSyncPage() {
         </div>
 
         {/* Audit Log */}
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden mt-8">
-          <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl overflow-hidden mt-8">
+          <div className="px-6 py-4 border-b border-[#1f2d26] flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-violet-400" />سجل العمليات
             </h2>
@@ -536,7 +536,7 @@ export default function PeachtreeSyncPage() {
             </button>
           </div>
           {h.logs.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">
+            <p className="py-8 text-center text-[#6b8378]">
               لا توجد عمليات مسجلة بعد
             </p>
           ) : (
@@ -554,11 +554,11 @@ export default function PeachtreeSyncPage() {
                         expandedRun === runId ? null : runId,
                       )
                     }
-                    className="w-full text-right px-6 py-3 hover:bg-white/5 flex items-center justify-between gap-3"
+                    className="w-full text-right px-6 py-3 hover:bg-[#121a16] flex items-center justify-between gap-3"
                   >
                     <div>
                       <p className="text-white font-mono text-xs">{runId}</p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-[#6b8378] text-xs">
                         {events.length} حدث — {events[0].triggered_by}
                         {events[0].created_at
                           ? ` — ${new Date(events[0].created_at).toLocaleString('ar-EG')}`
@@ -566,16 +566,16 @@ export default function PeachtreeSyncPage() {
                       </p>
                     </div>
                     {expandedRun === runId ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                      <ChevronUp className="w-4 h-4 text-[#6b8378]" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 text-[#6b8378]" />
                     )}
                   </button>
                   {expandedRun === runId && (
                     <div className="px-6 pb-4 bg-black/30">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="text-gray-500 border-b border-white/10">
+                          <tr className="text-[#6b8378] border-b border-[#1f2d26]">
                             <th className="py-2 text-right">الكيان</th>
                             <th className="py-2 text-right">الإجراء</th>
                             <th className="py-2 text-right">السجل</th>
@@ -595,28 +595,28 @@ export default function PeachtreeSyncPage() {
                             return (
                               <tr
                                 key={e.id}
-                                className="border-b border-white/5"
+                                className="border-b border-[#1f2d26]"
                               >
                                 <td className="py-2 text-white flex items-center gap-2">
                                   <Icon
-                                    className={`w-4 h-4 ${meta.color || 'text-gray-400'}`}
+                                    className={`w-4 h-4 ${meta.color || 'text-[#6b8378]'}`}
                                   />
                                   {meta.label || e.entity}
                                 </td>
-                                <td className="py-2 text-gray-300">
+                                <td className="py-2 text-[#ecfdf5]">
                                   {ACTION_LABELS[e.action] || e.action}
                                 </td>
-                                <td className="py-2 text-gray-400 font-mono">
+                                <td className="py-2 text-[#6b8378] font-mono">
                                   {e.record_key}
                                 </td>
-                                <td className="py-2 text-gray-400">
+                                <td className="py-2 text-[#6b8378]">
                                   {e.changes
                                     ? (Object.entries(e.changes) as [
                                         string,
                                         [unknown, unknown],
                                       ][]).map(([f, [o, n]]) => (
                                         <span key={f} className="block">
-                                          <span className="text-gray-500">
+                                          <span className="text-[#6b8378]">
                                             {f}:
                                           </span>{' '}
                                           {String(o)} ← {String(n)}

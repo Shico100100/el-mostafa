@@ -12,14 +12,14 @@ export default function AccountingPage() {
 
   if (h.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
         <div className="text-white text-xl">جاري التحميل...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <AccountingHeader />
 
       <main className="container mx-auto px-6 py-8">

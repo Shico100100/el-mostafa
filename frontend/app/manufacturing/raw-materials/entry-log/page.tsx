@@ -9,10 +9,10 @@ import { EditMovementDialog } from '@/components/manufacturing/entry-log/EditMov
 export default function EntryLogPage() {
   const h = useEntryLog();
 
-  if (h.loading) return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />;
+  if (h.loading) return <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <EntryLogHeader />
       <main className="container mx-auto px-6 py-8">
         <PeriodFilter value={h.filterPeriod} onChange={h.setFilterPeriod} />

@@ -22,12 +22,12 @@ interface BalanceSheetReport {
 
 export default function BalanceSheetPage() {
   const h = useFinancialReports();
-  if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
+  if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
   const bs = h.balanceSheet as BalanceSheetReport | null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Landmark className="w-8 h-8 text-amber-400" />الميزان العمومي</h1>
@@ -35,20 +35,20 @@ export default function BalanceSheetPage() {
         </div>
 
         {!bs ? (
-          <p className="text-gray-500 text-center py-12">لا توجد بيانات متاحة</p>
+          <p className="text-[#6b8378] text-center py-12">لا توجد بيانات متاحة</p>
         ) : (
-          <div id="balance-sheet-content" className="p-6 bg-slate-900 rounded-xl">
+          <div id="balance-sheet-content" className="p-6 bg-[#0a0f0d] rounded-xl">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Assets */}
-              <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+              <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-green-400" />الأصول</h2>
                 {bs.assets?.length === 0 ? (
-                  <p className="text-gray-500 text-center py-6">لا توجد أصول</p>
+                  <p className="text-[#6b8378] text-center py-6">لا توجد أصول</p>
                 ) : (
                   <div className="space-y-3">
                     {bs.assets?.map((a: BalanceSheetLine, i: number) => (
-                      <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-gray-300">{a.account_name || a.name}</span>
+                      <div key={i} className="flex justify-between items-center py-2 border-b border-[#1f2d26]">
+                        <span className="text-[#ecfdf5]">{a.account_name || a.name}</span>
                         <span className="text-green-400 font-bold">{Number(a.balance || a.amount).toLocaleString()} ج.م</span>
                       </div>
                     ))}
@@ -61,21 +61,21 @@ export default function BalanceSheetPage() {
               </div>
 
               {/* Liabilities + Equity */}
-              <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+              <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><TrendingDown className="w-5 h-5 text-red-400" />الخصوم وحقوق الملكية</h2>
                 {bs.liabilities?.length === 0 && bs.equity?.length === 0 ? (
-                  <p className="text-gray-500 text-center py-6">لا توجد بيانات</p>
+                  <p className="text-[#6b8378] text-center py-6">لا توجد بيانات</p>
                 ) : (
                   <div className="space-y-3">
                     {bs.liabilities?.map((l: BalanceSheetLine, i: number) => (
-                      <div key={`l-${i}`} className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-gray-300">{l.account_name || l.name}</span>
+                      <div key={`l-${i}`} className="flex justify-between items-center py-2 border-b border-[#1f2d26]">
+                        <span className="text-[#ecfdf5]">{l.account_name || l.name}</span>
                         <span className="text-red-400 font-bold">{Number(l.balance || l.amount).toLocaleString()} ج.م</span>
                       </div>
                     ))}
                     {bs.equity?.map((e: BalanceSheetLine, i: number) => (
-                      <div key={`e-${i}`} className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-gray-300">{e.account_name || e.name}</span>
+                      <div key={`e-${i}`} className="flex justify-between items-center py-2 border-b border-[#1f2d26]">
+                        <span className="text-[#ecfdf5]">{e.account_name || e.name}</span>
                         <span className="text-amber-400 font-bold">{Number(e.balance || e.amount).toLocaleString()} ج.م</span>
                       </div>
                     ))}

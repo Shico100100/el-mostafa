@@ -23,12 +23,12 @@ export default function PurchaseOrdersPage() {
   return (
     <ErrorBoundary>
     <>
-      <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
+      <header className="bg-[#121a16] backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="p-2 hover:bg-white/5 rounded-full transition text-white/50 hover:text-white"
+              className="p-2 hover:bg-[#121a16] rounded-full transition text-white/50 hover:text-white"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
@@ -41,45 +41,45 @@ export default function PurchaseOrdersPage() {
         <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-end">
           <div className="flex flex-col md:flex-row gap-4 flex-1">
             <div className="flex-1">
-              <label className="block text-gray-300 text-sm mb-1">بحث (المورد أو رقم الفاتورة)</label>
+              <label className="block text-[#ecfdf5] text-sm mb-1">بحث (المورد أو رقم الفاتورة)</label>
               <input
                 type="text"
                 placeholder="بحث..."
                 value={h.filters.search}
                 onChange={(e) => h.setFilters({ ...h.filters, search: e.target.value, page: 1 })}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-[#121a16] border border-white/20 rounded-lg text-white"
               />
             </div>
             <div>
-              <label className="block text-gray-300 text-sm mb-1">من تاريخ</label>
+              <label className="block text-[#ecfdf5] text-sm mb-1">من تاريخ</label>
               <input
                 type="date"
                 value={h.filters.fromDate}
                 onChange={(e) => h.setFilters({ ...h.filters, fromDate: e.target.value, page: 1 })}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-[#121a16] border border-white/20 rounded-lg text-white"
               />
             </div>
             <div>
-              <label className="block text-gray-300 text-sm mb-1">إلى تاريخ</label>
+              <label className="block text-[#ecfdf5] text-sm mb-1">إلى تاريخ</label>
               <input
                 type="date"
                 value={h.filters.toDate}
                 onChange={(e) => h.setFilters({ ...h.filters, toDate: e.target.value, page: 1 })}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                className="w-full px-4 py-2 bg-[#121a16] border border-white/20 rounded-lg text-white"
               />
             </div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={h.exportToExcel}
-              className="px-6 py-2 h-[42px] bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition flex items-center gap-2"
+              className="px-6 py-2 h-[42px] bg-[#121a16] hover:bg-white/20 text-white rounded-lg border border-white/20 transition flex items-center gap-2"
             >
               <BarChart3 className="w-4 h-4 inline" /> تصدير Excel
             </button>
             <button
               onClick={() => syncInvoices(['purchase_invoices', 'invoice_line_items']).finally(h.loadData)}
               disabled={syncing}
-              className="px-6 py-2 h-[42px] bg-white/10 hover:bg-white/20 text-teal-300 rounded-lg border border-teal-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 h-[42px] bg-[#121a16] hover:bg-white/20 text-teal-300 rounded-lg border border-teal-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CloudDownload className="w-4 h-4" />
               {syncing ? 'جارٍ الاستيراد...' : 'استيراد من Peachtree'}
@@ -87,7 +87,7 @@ export default function PurchaseOrdersPage() {
             <button
               onClick={() => runIncrementalSync().finally(h.loadData)}
               disabled={syncing}
-              className="px-6 py-2 h-[42px] bg-white/10 hover:bg-white/20 text-emerald-300 rounded-lg border border-emerald-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 h-[42px] bg-[#121a16] hover:bg-white/20 text-emerald-300 rounded-lg border border-emerald-500/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               title="تحديث الفواتير الجديدة فقط دون تكرار المستوردة مسبقاً"
             >
               <CloudDownload className="w-4 h-4" />

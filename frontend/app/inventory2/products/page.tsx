@@ -44,7 +44,7 @@ function ProductsPageContent() {
   }, []);
 
   const statsCards = [
-    { label: 'إجمالي المنتجات', value: h.totalItems, icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-blue-500/20' },
+    { label: 'إجمالي المنتجات', value: h.totalItems, icon: <Package className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
     { label: 'المعروض', value: h.sortedProducts.length, icon: <Package className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
     { label: 'قيمة المخزون', value: (() => { try { return h.sortedProducts.reduce((s: number, p: Product) => s + Number(p.cost_price) * Number(p.stock_quantity), 0).toLocaleString(); } catch { return '0'; } })(), icon: <TrendingUp className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
     { label: 'نواقص', value: h.sortedProducts.filter((p: Product) => Number(p.stock_quantity) <= Number(p.min_stock || 0)).length, icon: <AlertTriangle className="w-6 h-6 text-red-400" />, color: 'bg-red-500/20' },
@@ -91,7 +91,7 @@ function ProductsPageContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="text-center text-slate-400 py-20">جاري التحميل...</div>}>
+    <Suspense fallback={<div className="text-center text-[#6b8378] py-20">جاري التحميل...</div>}>
       <ProductsPageContent />
     </Suspense>
   );

@@ -33,19 +33,19 @@ export default function KioskLandingPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-[#05080a] flex items-center justify-center">
                 <div className="text-white text-4xl font-bold animate-pulse">جاري تحميل الماكينات...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white p-8" dir="rtl">
+        <div className="min-h-screen bg-[#05080a] text-white p-8" dir="rtl">
             <header className="mb-12 text-center">
-                <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text">
+                <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-emerald-400 to-teal-400 text-transparent bg-clip-text">
                     اختر ماكينة للبدء
                 </h1>
-                <p className="text-xl text-slate-400">نظام تسجيل الإنتاج الفوري</p>
+                <p className="text-xl text-[#6b8378]">نظام تسجيل الإنتاج الفوري</p>
             </header>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -59,7 +59,7 @@ export default function KioskLandingPage() {
                                 ? 'bg-emerald-500/10 border-emerald-500/50 hover:bg-emerald-500/20 hover:border-emerald-400'
                                 : machine.status === 'MAINTENANCE' || machine.status === 'BROKEN'
                                     ? 'bg-rose-500/10 border-rose-500/50 hover:bg-rose-500/20 hover:border-rose-400'
-                                    : 'bg-slate-800/50 border-white/10 hover:bg-slate-800 hover:border-white/30'
+                                    : 'bg-[#0f1714]/50 border-[#1f2d26] hover:bg-[#0f1714] hover:border-white/30'
                             }
                         `}
                     >
@@ -69,7 +69,7 @@ export default function KioskLandingPage() {
                         <h2 className="text-3xl font-bold mb-2">{machine.name}</h2>
                         <span className={`
                             inline-block px-4 py-1 rounded-full text-lg font-bold
-                            ${machine.status === 'RUNNING' ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-400 bg-slate-700/50'}
+                            ${machine.status === 'RUNNING' ? 'text-emerald-400 bg-emerald-500/20' : 'text-[#6b8378] bg-[#16241d]/50'}
                         `}>
                             {machine.status === 'RUNNING' ? 'تعمل الآن' : 'متوقفة'}
                         </span>

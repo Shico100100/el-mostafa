@@ -41,14 +41,14 @@ export default function SettingsPage() {
 
   if (h.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
         <div className="text-white text-xl">جاري التحميل...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <SettingsHeader />
 
       <main className="container mx-auto px-6 py-8">
@@ -82,9 +82,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Server Settings */}
-        <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
+        <div className="mt-6 p-4 rounded-xl bg-[#121a16] border border-[#1f2d26]">
           <h3 className="text-lg font-semibold mb-3 text-white">إعدادات الخادم</h3>
-          <p className="text-sm text-slate-400 mb-3">عنوان الخادم لتطبيق الجوال</p>
+          <p className="text-sm text-[#6b8378] mb-3">عنوان الخادم لتطبيق الجوال</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -92,11 +92,11 @@ export default function SettingsPage() {
               onChange={(e) => setServerUrl(e.target.value)}
               placeholder="http://192.168.1.100:3001"
               dir="ltr"
-              className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-mono"
+              className="flex-1 px-3 py-2 rounded-lg bg-[#121a16] border border-[#1f2d26] text-white text-sm font-mono"
             />
             <button
               onClick={testConnection}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm transition"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-sm transition"
             >
               اختبار
             </button>

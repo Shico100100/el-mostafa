@@ -10,7 +10,7 @@ export default function AdjustPage() {
   const h = useAdjust();
 
   if (h.loading) {
-    return <div className="flex items-center justify-center min-h-screen text-slate-400">جاري التحميل...</div>;
+    return <div className="flex items-center justify-center min-h-screen text-[#6b8378]">جاري التحميل...</div>;
   }
 
   return (

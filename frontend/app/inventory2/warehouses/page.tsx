@@ -17,15 +17,15 @@ export default function WarehousesPage() {
         onInit={h.handleInit} onAdd={h.openNew} />
 
       {h.loading ? (
-        <div className="px-8 text-center text-slate-400 py-20">جاري التحميل...</div>
+        <div className="px-8 text-center text-[#6b8378] py-20">جاري التحميل...</div>
       ) : h.filtered.length === 0 ? (
         <div className="px-8">
-          <div className="bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-16 text-center">
-            <WarehouseIcon className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg mb-4">لا توجد مخازن</p>
+          <div className="bg-[#121a16] backdrop-blur rounded-2xl border border-[#1f2d26] p-16 text-center">
+            <WarehouseIcon className="w-16 h-16 text-[#6b8378] mx-auto mb-4" />
+            <p className="text-[#6b8378] text-lg mb-4">لا توجد مخازن</p>
             <div className="flex gap-3 justify-center">
               <button onClick={h.handleInit} className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition">تهيئة المخازن الافتراضية</button>
-              <button onClick={h.openNew} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition">إضافة مخزن يدوياً</button>
+              <button onClick={h.openNew} className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition">إضافة مخزن يدوياً</button>
             </div>
           </div>
         </div>

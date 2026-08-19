@@ -13,19 +13,19 @@ export default function ControlTower() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-slate-200 p-8 pt-24" dir="rtl">
+    <div className="min-h-screen bg-[#0a0a0c] text-[#ecfdf5] p-8 pt-24" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
               برج المراقبة (Control Tower)
             </h1>
-            <p className="text-slate-400 mt-2 font-medium">نظرة شاملة ومؤشرات الأداء الرئيسية للمصنع</p>
+            <p className="text-[#6b8378] mt-2 font-medium">نظرة شاملة ومؤشرات الأداء الرئيسية للمصنع</p>
           </div>
         </div>
 

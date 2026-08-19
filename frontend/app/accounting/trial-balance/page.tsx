@@ -27,7 +27,7 @@ export default function TrialBalancePage() {
       .finally(() => setLoading(false));
   }, [ready]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
   const totalDebit = accounts.filter(a => a.balance > 0).reduce((s, a) => s + a.balance, 0);
   const totalCredit = accounts.filter(a => a.balance < 0).reduce((s, a) => s + Math.abs(a.balance), 0);
@@ -42,7 +42,7 @@ export default function TrialBalancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <div className="container mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3"><BalanceIcon className="w-8 h-8 text-yellow-400" />ميزان المراجعة</h1>
@@ -56,11 +56,11 @@ export default function TrialBalancePage() {
           </div>
         </div>
 
-        <div id="trial-balance-content" className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
+        <div id="trial-balance-content" className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 border-b border-white/10">
+                <tr className="text-[#6b8378] border-b border-[#1f2d26]">
                   <th className="py-3 px-4 text-right">الكود</th>
                   <th className="py-3 px-4 text-right">اسم الحساب</th>
                   <th className="py-3 px-4 text-right">النوع</th>
@@ -70,10 +70,10 @@ export default function TrialBalancePage() {
               </thead>
               <tbody>
                 {accounts.map((a, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
+                  <tr key={i} className="border-b border-[#1f2d26] hover:bg-[#121a16] transition">
                     <td className="py-3 px-4 text-white font-mono">{a.code}</td>
                     <td className="py-3 px-4 text-white">{a.name}</td>
-                    <td className="py-3 px-4 text-gray-400 text-xs">{a.type}</td>
+                    <td className="py-3 px-4 text-[#6b8378] text-xs">{a.type}</td>
                     <td className="py-3 px-4 text-green-400">{a.balance > 0 ? a.balance.toLocaleString() : '-'}</td>
                     <td className="py-3 px-4 text-red-400">{a.balance < 0 ? Math.abs(a.balance).toLocaleString() : '-'}</td>
                   </tr>

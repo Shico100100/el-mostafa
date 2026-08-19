@@ -13,7 +13,7 @@ export default function UsersPage() {
   const isEditing = h.editingUser !== null;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100" dir="rtl">
+    <div className="min-h-screen bg-[#0a0f0d] text-[#ecfdf5]" dir="rtl">
       <UsersHeader onNewUser={h.startNew} />
 
       <main className="container mx-auto px-6 py-8">

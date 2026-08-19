@@ -29,10 +29,10 @@ export default function DailyProductionPage() {
 
   if (h.loading && !h.showModal && !h.showSingleModal && !h.showRangeModal) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white p-6 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-[#0a0f0d] text-white p-6 flex items-center justify-center" dir="rtl">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4" />
-          <p className="text-slate-400">جاري تحميل البيانات...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4" />
+          <p className="text-[#6b8378]">جاري تحميل البيانات...</p>
         </div>
       </div>
     );
@@ -40,20 +40,20 @@ export default function DailyProductionPage() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 md:p-6" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d] text-white p-4 md:p-6" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-slate-700/50 rounded-lg transition text-slate-400 hover:text-white"
+              className="p-2 hover:bg-[#16241d]/50 rounded-lg transition text-[#6b8378] hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
             </button>
             <div>
               <h1 className="text-3xl font-bold">تسجيل الإنتاج اليومي</h1>
-              <p className="text-slate-400 mt-1">متابعة وتسجيل إنتاج الماكينات — {h.date}</p>
+              <p className="text-[#6b8378] mt-1">متابعة وتسجيل إنتاج الماكينات — {h.date}</p>
             </div>
           </div>
           <div className="flex gap-3 w-full md:w-auto flex-wrap">
@@ -61,9 +61,9 @@ export default function DailyProductionPage() {
               type="date"
               value={h.date}
               onChange={(e) => h.setDate(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-auto"
+              className="bg-[#0f1714] border border-[#1f2d26] rounded-lg px-4 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-auto"
             />
-            <button onClick={h.handleOpenModal} className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap">
+            <button onClick={h.handleOpenModal} className="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap">
               <span><Plus /></span> تسجيل إنتاج جديد
             </button>
             <button onClick={() => h.setShowRangeModal(true)} className="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap">
@@ -73,14 +73,14 @@ export default function DailyProductionPage() {
               <span><FileText /></span> سجل الفترات
             </button>
             <div className="relative group">
-              <button className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap">
+              <button className="bg-[#16241d] hover:bg-[#1f2d26] px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap">
                 <span><FolderOpen /></span> تصدير/استيراد
               </button>
-              <div className="absolute left-0 top-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 hidden group-hover:block min-w-[200px]">
-                <button onClick={h.exportHistory} className="w-full text-right px-4 py-3 hover:bg-slate-700 rounded-t-xl transition flex items-center gap-2">
+              <div className="absolute left-0 top-full mt-2 bg-[#0f1714] border border-[#1f2d26] rounded-xl shadow-2xl z-50 hidden group-hover:block min-w-[200px]">
+                <button onClick={h.exportHistory} className="w-full text-right px-4 py-3 hover:bg-[#16241d] rounded-t-xl transition flex items-center gap-2">
                   <span><Download /></span> تصدير إلى Excel
                 </button>
-                <label className="w-full text-right px-4 py-3 hover:bg-slate-700 rounded-b-xl transition flex items-center gap-2 cursor-pointer">
+                <label className="w-full text-right px-4 py-3 hover:bg-[#16241d] rounded-b-xl transition flex items-center gap-2 cursor-pointer">
                   <span><Upload /></span> استيراد من Excel
                   <input type="file" accept=".xlsx" className="hidden" onChange={h.importHistory} />
                 </label>

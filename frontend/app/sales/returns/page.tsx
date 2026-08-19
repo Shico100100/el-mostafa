@@ -9,7 +9,7 @@ export default function SalesReturnsPage() {
   const h = useSalesReturns();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-200 p-8 pt-24" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#05080a] via-[#0a0f0d] to-[#05080a] text-[#ecfdf5] p-8 pt-24" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <SalesReturnsHeader onNewReturn={h.openModal} />
 

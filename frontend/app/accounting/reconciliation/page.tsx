@@ -121,7 +121,7 @@ export default function ReconciliationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
         <div className="text-white text-xl">جاري التحميل...</div>
       </div>
     );
@@ -129,7 +129,7 @@ export default function ReconciliationPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
         <div className="text-red-400 text-xl">{error}</div>
       </div>
     );
@@ -139,10 +139,10 @@ export default function ReconciliationPage() {
     data?.items.filter((i) => filter === 'ALL' || i.status === filter) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
-      <header className="bg-white/5 backdrop-blur-md border-b border-white/10">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
+      <header className="bg-[#121a16] backdrop-blur-md border-b border-[#1f2d26]">
         <div className="container mx-auto px-6 py-4 flex items-center gap-3">
-          <ArrowLeftRight className="w-6 h-6 text-blue-400" />
+          <ArrowLeftRight className="w-6 h-6 text-emerald-400" />
           <h1 className="text-2xl font-bold text-white">المطابقة المالية</h1>
         </div>
       </header>
@@ -158,15 +158,15 @@ export default function ReconciliationPage() {
               <StatCard label="إجمالي الفروقات" value={data.total_difference.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} color="text-orange-400" />
             </div>
 
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4 mb-6 flex flex-wrap items-center gap-3">
+            <div className="bg-[#121a16] backdrop-blur-md rounded-2xl border border-[#1f2d26] p-4 mb-6 flex flex-wrap items-center gap-3">
               {(['ALL', 'DISCREPANCY', 'NO_JOURNAL', 'MATCHED'] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                     filter === f
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[#121a16] text-[#6b8378] hover:bg-[#121a16] hover:text-white'
                   }`}
                 >
                   {f === 'ALL' ? 'الكل' : STATUS_CONFIG[f].label}
@@ -175,30 +175,30 @@ export default function ReconciliationPage() {
               <div className="flex-1" />
               <button
                 onClick={exportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition"
+                className="flex items-center gap-2 px-4 py-2 bg-[#121a16] hover:bg-[#121a16] text-[#ecfdf5] rounded-xl text-sm transition"
               >
                 <Download className="w-4 h-4" /> CSV
               </button>
               <button
                 onClick={exportPDF}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-sm transition"
+                className="flex items-center gap-2 px-4 py-2 bg-[#121a16] hover:bg-[#121a16] text-[#ecfdf5] rounded-xl text-sm transition"
               >
                 <FileText className="w-4 h-4" /> PDF
               </button>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
+            <div className="bg-[#121a16] backdrop-blur-md rounded-2xl border border-[#1f2d26] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="px-4 py-3 text-right text-gray-400 font-medium">كود الحساب</th>
-                      <th className="px-4 py-3 text-right text-gray-400 font-medium">اسم الحساب</th>
-                      <th className="px-4 py-3 text-right text-gray-400 font-medium">النوع</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-medium">رصيد ELMostafa</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-medium">رصيد اليومية</th>
-                      <th className="px-4 py-3 text-left text-gray-400 font-medium">الفرق</th>
-                      <th className="px-4 py-3 text-center text-gray-400 font-medium">الحالة</th>
+                    <tr className="border-b border-[#1f2d26]">
+                      <th className="px-4 py-3 text-right text-[#6b8378] font-medium">كود الحساب</th>
+                      <th className="px-4 py-3 text-right text-[#6b8378] font-medium">اسم الحساب</th>
+                      <th className="px-4 py-3 text-right text-[#6b8378] font-medium">النوع</th>
+                      <th className="px-4 py-3 text-left text-[#6b8378] font-medium">رصيد ELMostafa</th>
+                      <th className="px-4 py-3 text-left text-[#6b8378] font-medium">رصيد اليومية</th>
+                      <th className="px-4 py-3 text-left text-[#6b8378] font-medium">الفرق</th>
+                      <th className="px-4 py-3 text-center text-[#6b8378] font-medium">الحالة</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -208,18 +208,18 @@ export default function ReconciliationPage() {
                       return (
                         <tr
                           key={idx}
-                          className={`border-b border-white/5 hover:bg-white/5 transition ${cfg.bg}`}
+                          className={`border-b border-[#1f2d26] hover:bg-[#121a16] transition ${cfg.bg}`}
                         >
                           <td className="px-4 py-3 text-white font-mono">{item.account_code}</td>
-                          <td className="px-4 py-3 text-gray-300">{item.account_name}</td>
-                          <td className="px-4 py-3 text-gray-400">{TYPE_LABELS[item.type] || item.type}</td>
+                          <td className="px-4 py-3 text-[#ecfdf5]">{item.account_name}</td>
+                          <td className="px-4 py-3 text-[#6b8378]">{TYPE_LABELS[item.type] || item.type}</td>
                           <td className="px-4 py-3 text-white text-left font-mono">
                             {item.elmostafa_balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
                           <td className="px-4 py-3 text-white text-left font-mono">
                             {item.journal_computed.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
-                          <td className={`px-4 py-3 text-left font-mono ${item.difference !== 0 ? cfg.color : 'text-gray-400'}`}>
+                          <td className={`px-4 py-3 text-left font-mono ${item.difference !== 0 ? cfg.color : 'text-[#6b8378]'}`}>
                             {item.difference.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -233,7 +233,7 @@ export default function ReconciliationPage() {
                     })}
                     {filteredItems.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-[#6b8378]">
                           لا توجد نتائج
                         </td>
                       </tr>
@@ -251,8 +251,8 @@ export default function ReconciliationPage() {
 
 function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4">
-      <p className="text-gray-400 text-sm mb-1">{label}</p>
+    <div className="bg-[#121a16] backdrop-blur-md rounded-2xl border border-[#1f2d26] p-4">
+      <p className="text-[#6b8378] text-sm mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
     </div>
   );

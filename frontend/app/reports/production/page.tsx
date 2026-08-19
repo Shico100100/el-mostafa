@@ -11,7 +11,7 @@ export default function ProductionReportPage() {
   const { loading, data, error, startDate, endDate, setStartDate, setEndDate, loadReport, handleDelete } = useProductionReport();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <ProductionReportHeader onBack={() => router.push('/reports')} />
       <main className="container mx-auto px-6 py-8">
         <DateFilter startDate={startDate} endDate={endDate} loading={loading}
@@ -20,7 +20,7 @@ export default function ProductionReportPage() {
         {loading && <div className="text-center text-white py-12">جاري التحميل...</div>}
         {!loading && data && data.length > 0 && <ProductionTable data={data} onDelete={handleDelete} />}
         {!loading && data && data.length === 0 && (
-          <div className="text-center text-gray-400 py-12 bg-white/5 rounded-xl border border-white/10">
+          <div className="text-center text-[#6b8378] py-12 bg-[#121a16] rounded-xl border border-[#1f2d26]">
             لا توجد سجلات إنتاج في هذه الفترة
           </div>
         )}

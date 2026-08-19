@@ -88,106 +88,112 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20">
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2">ELMostafa</h1>
-                    <p className="text-gray-300">نظام إدارة المصنع</p>
+        <div className="flex min-h-screen items-center justify-center bg-[#0a0f0d] bg-gradient-to-br from-[#0f1714] via-[#0a0f0d] to-[#0a0f0d] px-4">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#1f2d26] bg-[#0f1714] shadow-2xl shadow-emerald-500/5">
+                {/* Header */}
+                <div className="relative border-b border-[#1f2d26] bg-gradient-to-r from-emerald-600/10 to-teal-600/5 px-8 py-7 text-center">
+                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-2xl font-black text-[#04130d] shadow-lg shadow-emerald-500/30">
+                        م
+                    </div>
+                    <h1 className="text-2xl font-bold text-white">ELMostafa</h1>
+                    <p className="mt-1 text-sm text-[#6b8378]">نظام إدارة المصنع</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
-                            البريد الإلكتروني
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                            placeholder="أدخل بريدك الإلكتروني"
-                            required
-                            dir="rtl"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-200 mb-2">
-                            كلمة المرور
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                            placeholder="أدخل كلمة المرور"
-                            required
-                            dir="rtl"
-                            minLength={8}
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm" dir="rtl">
-                            {error}
+                <div className="p-8">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label htmlFor="email" className="mb-2 block text-sm font-medium text-[#6b8378]">
+                                البريد الإلكتروني
+                            </label>
+                            <input
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full rounded-lg border border-[#1f2d26] bg-[#121a16] px-4 py-3 text-white placeholder-[#4a5d54] outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                placeholder="أدخل بريدك الإلكتروني"
+                                required
+                                dir="rtl"
+                            />
                         </div>
-                    )}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'جاري التحميل...' : 'تسجيل الدخول'}
-                    </button>
-                </form>
+                        <div>
+                            <label htmlFor="password" className="mb-2 block text-sm font-medium text-[#6b8378]">
+                                كلمة المرور
+                            </label>
+                            <input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full rounded-lg border border-[#1f2d26] bg-[#121a16] px-4 py-3 text-white placeholder-[#4a5d54] outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                placeholder="أدخل كلمة المرور"
+                                required
+                                dir="rtl"
+                                minLength={8}
+                            />
+                        </div>
 
-                <div className="mt-6">
-                    <button
-                        type="button"
-                        onClick={() => setShowServerConfig(!showServerConfig)}
-                        className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white transition"
-                    >
-                        <Server className="w-4 h-4" />
-                        {showServerConfig ? 'إخفاء إعدادات الخادم' : 'إعدادات الخادم للتطبيق'}
-                    </button>
-
-                    {showServerConfig && (
-                        <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                            <p className="text-xs text-slate-400 mb-2">عنوان الخادم لتطبيق الجوال</p>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={serverUrl}
-                                    onChange={(e) => setServerUrl(e.target.value)}
-                                    placeholder="http://192.168.1.100:3001"
-                                    dir="ltr"
-                                    className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-mono"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={testConnection}
-                                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-xs transition"
-                                >
-                                    اختبار
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={saveServerUrl}
-                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-xs transition"
-                                >
-                                    حفظ
-                                </button>
+                        {error && (
+                            <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-300" dir="rtl">
+                                {error}
                             </div>
-                            {connectionStatus && (
-                                <p className={`mt-2 text-xs ${connectionOk ? 'text-green-400' : 'text-red-400'}`}>
-                                    {connectionStatus}
-                                </p>
-                            )}
-                        </div>
-                    )}
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 py-3 font-semibold text-white transition hover:from-emerald-500 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {loading ? 'جاري التحميل...' : 'تسجيل الدخول'}
+                        </button>
+                    </form>
+
+                    <div className="mt-6">
+                        <button
+                            type="button"
+                            onClick={() => setShowServerConfig(!showServerConfig)}
+                            className="flex w-full items-center justify-center gap-2 text-sm text-[#6b8378] transition hover:text-emerald-400"
+                        >
+                            <Server className="h-4 w-4" />
+                            {showServerConfig ? 'إخفاء إعدادات الخادم' : 'إعدادات الخادم للتطبيق'}
+                        </button>
+
+                        {showServerConfig && (
+                            <div className="mt-4 rounded-xl border border-[#1f2d26] bg-[#121a16] p-4">
+                                <p className="mb-2 text-xs text-[#6b8378]">عنوان الخادم لتطبيق الجوال</p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={serverUrl}
+                                        onChange={(e) => setServerUrl(e.target.value)}
+                                        placeholder="http://192.168.1.100:3001"
+                                        dir="ltr"
+                                        className="flex-1 rounded-lg border border-[#1f2d26] bg-[#0a0f0d] px-3 py-2 text-sm font-mono text-white"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={testConnection}
+                                        className="rounded-lg bg-teal-600 px-3 py-2 text-xs text-white transition hover:bg-teal-500"
+                                    >
+                                        اختبار
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={saveServerUrl}
+                                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs text-white transition hover:bg-emerald-500"
+                                    >
+                                        حفظ
+                                    </button>
+                                </div>
+                                {connectionStatus && (
+                                    <p className={`mt-2 text-xs ${connectionOk ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {connectionStatus}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -11,7 +11,7 @@ export default function BOMsRedirectPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
       <div className="text-white text-xl">جاري التوجيه إلى صفحة BOM الموحدة...</div>
     </div>
   );

@@ -41,8 +41,8 @@ export default function SalesOrdersPage() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
-      <header className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
+      <header className="bg-[#121a16] backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">إدارة أوامر البيع</h1>
           <div className="flex gap-4">
@@ -58,7 +58,7 @@ export default function SalesOrdersPage() {
               <CloudDownload className="w-4 h-4" />
               {syncing ? 'جارٍ الاستيراد...' : 'استيراد من Peachtree'}
             </button>
-            <button onClick={() => setShowModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-blue-900/40">
+            <button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-800/40">
               <Plus className="w-5 h-5" />
               أمر بيع جديد
             </button>

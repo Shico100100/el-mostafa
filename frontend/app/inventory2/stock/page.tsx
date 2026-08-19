@@ -14,7 +14,7 @@ export default function StockPage() {
   const h = useStock();
 
   const statsCards = [
-    { label: 'إجمالي السجلات', value: h.filteredStock.length, icon: <Layers className="w-6 h-6 text-blue-400" />, color: 'bg-blue-500/20' },
+    { label: 'إجمالي السجلات', value: h.filteredStock.length, icon: <Layers className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
     { label: 'إجمالي القطع', value: h.totalItems.toLocaleString(), icon: <ShoppingCart className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
     { label: 'الأصناف المتوفرة', value: h.activeCount, icon: <Package className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
   ];
@@ -29,7 +29,7 @@ export default function StockPage() {
           selectedType={h.selectedType} onTypeChange={h.setSelectedType}
           warehouses={h.warehouses} />
         {h.loading ? (
-          <div className="text-center text-slate-400 py-20">جاري التحميل...</div>
+          <div className="text-center text-[#6b8378] py-20">جاري التحميل...</div>
         ) : (
           <StockTable items={h.filteredStock} warehousesCount={h.warehouses.length} onTransfer={h.openTransfer} />
         )}

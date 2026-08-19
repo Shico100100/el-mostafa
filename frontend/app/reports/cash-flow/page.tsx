@@ -33,7 +33,7 @@ export default function CashFlowPage() {
   const [showInvesting, setShowInvesting] = useState(false);
   const [showFinancing, setShowFinancing] = useState(false);
 
-  if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900"><div className="text-white text-xl">جاري التحميل...</div></div>;
+  if (h.loading) return <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]"><div className="text-white text-xl">جاري التحميل...</div></div>;
 
   const cf = h.cashFlow as CashFlowReport | null;
   const opTotal = Number(cf?.operating_activities?.total ?? cf?.operating_activities ?? 0);
@@ -44,12 +44,12 @@ export default function CashFlowPage() {
   const finItems = cf?.financing_activities?.items || [];
 
   const renderItems = (items: CashFlowLine[]) => items.length === 0 ? (
-    <p className="text-gray-500 text-sm text-center py-2">لا توجد بنود</p>
+    <p className="text-[#6b8378] text-sm text-center py-2">لا توجد بنود</p>
   ) : (
     <div className="mt-3 space-y-1">
       {items.map((item: CashFlowLine, i: number) => (
-        <div key={i} className="flex justify-between text-sm py-1 border-b border-white/5">
-          <span className="text-gray-300">{item.account_code} - {item.account_name}</span>
+        <div key={i} className="flex justify-between text-sm py-1 border-b border-[#1f2d26]">
+          <span className="text-[#ecfdf5]">{item.account_code} - {item.account_name}</span>
           <span className={`font-semibold ${item.net >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {item.net >= 0 ? '+' : ''}{Number(item.net).toLocaleString()} ج.م
           </span>
@@ -59,7 +59,7 @@ export default function CashFlowPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Wallet className="w-8 h-8 text-cyan-400" />قائمة التدفقات النقدية</h1>
@@ -67,64 +67,64 @@ export default function CashFlowPage() {
         </div>
 
         {!cf ? (
-          <p className="text-gray-500 text-center py-12">لا توجد بيانات متاحة</p>
+          <p className="text-[#6b8378] text-center py-12">لا توجد بيانات متاحة</p>
         ) : (
-          <div id="cash-flow-content" className="p-6 bg-slate-900 rounded-xl space-y-6">
-            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
-              <span className="text-gray-400">الفترة:</span>
+          <div id="cash-flow-content" className="p-6 bg-[#0a0f0d] rounded-xl space-y-6">
+            <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-4 text-center">
+              <span className="text-[#6b8378]">الفترة:</span>
               <span className="text-white font-bold mr-2">{cf.period?.start}</span>
-              <span className="text-gray-400 mr-2">إلى</span>
+              <span className="text-[#6b8378] mr-2">إلى</span>
               <span className="text-white font-bold">{cf.period?.end}</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <button onClick={() => setShowOperating(!showOperating)} className={`bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
+              <button onClick={() => setShowOperating(!showOperating)} className={`bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {opTotal >= 0 ? <ArrowDownLeft className="w-6 h-6 text-green-400" /> : <ArrowUpRight className="w-6 h-6 text-red-400" />}
                     <h2 className="text-lg font-bold text-white">الأنشطة التشغيلية</h2>
                   </div>
-                  {showOperating ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {showOperating ? <ChevronUp className="w-4 h-4 text-[#6b8378]" /> : <ChevronDown className="w-4 h-4 text-[#6b8378]" />}
                 </div>
                 <p className={`text-3xl font-bold mt-2 ${opTotal >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {opTotal.toLocaleString()} ج.م
                 </p>
-                <p className="text-gray-500 text-sm mt-1">الإيرادات والمصروفات التشغيلية</p>
+                <p className="text-[#6b8378] text-sm mt-1">الإيرادات والمصروفات التشغيلية</p>
                 {showOperating && renderItems(opItems)}
               </button>
 
-              <button onClick={() => setShowInvesting(!showInvesting)} className={`bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
+              <button onClick={() => setShowInvesting(!showInvesting)} className={`bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <ArrowUpRight className="w-6 h-6 text-blue-400" />
+                    <ArrowUpRight className="w-6 h-6 text-emerald-400" />
                     <h2 className="text-lg font-bold text-white">الأنشطة الاستثمارية</h2>
                   </div>
-                  {showInvesting ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {showInvesting ? <ChevronUp className="w-4 h-4 text-[#6b8378]" /> : <ChevronDown className="w-4 h-4 text-[#6b8378]" />}
                 </div>
-                <p className="text-3xl font-bold mt-2 text-blue-400">
+                <p className="text-3xl font-bold mt-2 text-emerald-400">
                   {invTotal.toLocaleString()} ج.م
                 </p>
-                <p className="text-gray-500 text-sm mt-1">شراء/بيع الأصول الثابتة</p>
+                <p className="text-[#6b8378] text-sm mt-1">شراء/بيع الأصول الثابتة</p>
                 {showInvesting && renderItems(invItems)}
               </button>
 
-              <button onClick={() => setShowFinancing(!showFinancing)} className={`bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
+              <button onClick={() => setShowFinancing(!showFinancing)} className={`bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 text-right transition hover:border-cyan-500/30`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Wallet className="w-6 h-6 text-purple-400" />
+                    <Wallet className="w-6 h-6 text-teal-400" />
                     <h2 className="text-lg font-bold text-white">الأنشطة التمويلية</h2>
                   </div>
-                  {showFinancing ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {showFinancing ? <ChevronUp className="w-4 h-4 text-[#6b8378]" /> : <ChevronDown className="w-4 h-4 text-[#6b8378]" />}
                 </div>
-                <p className="text-3xl font-bold mt-2 text-purple-400">
+                <p className="text-3xl font-bold mt-2 text-teal-400">
                   {finTotal.toLocaleString()} ج.م
                 </p>
-                <p className="text-gray-500 text-sm mt-1">القروض والحقوق</p>
+                <p className="text-[#6b8378] text-sm mt-1">القروض والحقوق</p>
                 {showFinancing && renderItems(finItems)}
               </button>
             </div>
 
-            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+            <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-white">صافي التدفق النقدي</span>
                 <span className={`font-bold text-2xl ${cf.net_cash_flow >= 0 ? 'text-green-400' : 'text-red-400'}`}>

@@ -72,11 +72,11 @@ export default function NotificationsPage() {
     if (loading) return <div className="text-white text-center mt-20">جاري التحميل...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-100" dir="rtl">
-            <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+        <div className="min-h-screen bg-[#0a0f0d] text-[#ecfdf5]" dir="rtl">
+            <header className="bg-[#121a16] backdrop-blur-lg border-b border-[#1f2d26] sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full text-white transition"><ArrowRight className="w-5 h-5" /></button>
+                        <button onClick={() => router.back()} className="p-2 hover:bg-[#121a16] rounded-full text-white transition"><ArrowRight className="w-5 h-5" /></button>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Bell className="w-6 h-6" /> مركز التنبيهات</h1>
                     </div>
                 </div>
@@ -86,13 +86,13 @@ export default function NotificationsPage() {
                 <div className="flex gap-4 mb-8">
                     <button
                         onClick={() => setFilter('ALL')}
-                        className={`px-6 py-2 rounded-xl transition font-bold ${filter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'}`}
+                        className={`px-6 py-2 rounded-xl transition font-bold ${filter === 'ALL' ? 'bg-emerald-600 text-white' : 'bg-[#121a16] text-[#6b8378]'}`}
                     >
                         الكل
                     </button>
                     <button
                         onClick={() => setFilter('UNREAD')}
-                        className={`px-6 py-2 rounded-xl transition font-bold ${filter === 'UNREAD' ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-400'}`}
+                        className={`px-6 py-2 rounded-xl transition font-bold ${filter === 'UNREAD' ? 'bg-emerald-600 text-white' : 'bg-[#121a16] text-[#6b8378]'}`}
                     >
                         غير المقروءة
                     </button>
@@ -100,12 +100,12 @@ export default function NotificationsPage() {
 
                 <div className="grid grid-cols-1 gap-4">
                     {filteredNotifications.map((n) => (
-                        <div key={n.id} className={`glass p-6 rounded-2xl border ${!n.isRead ? 'border-blue-500/30 bg-blue-500/5' : 'border-white/5 opacity-80'}`}>
+                        <div key={n.id} className={`glass p-6 rounded-2xl border ${!n.isRead ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-[#1f2d26] opacity-80'}`}>
                             <div className="flex justify-between items-start mb-2">
-                                <h3 className={`text-lg font-bold ${!n.isRead ? 'text-blue-300' : 'text-slate-300'}`}>{n.title}</h3>
-                                <span className="text-xs text-slate-500">{new Date(n.createdAt).toLocaleString('ar-EG')}</span>
+                                <h3 className={`text-lg font-bold ${!n.isRead ? 'text-emerald-300' : 'text-[#ecfdf5]'}`}>{n.title}</h3>
+                                <span className="text-xs text-[#6b8378]">{new Date(n.createdAt).toLocaleString('ar-EG')}</span>
                             </div>
-                            <p className="text-slate-400 mb-6">{n.message}</p>
+                            <p className="text-[#6b8378] mb-6">{n.message}</p>
 
                             <div className="flex gap-3 justify-end">
                                 {!n.isRead && (
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
                                         )}
                                         <button
                                             onClick={() => handleMarkAsRead(n.id)}
-                                            className="px-6 py-2 bg-white/5 text-slate-300 hover:bg-white/10 rounded-xl transition text-sm font-bold"
+                                            className="px-6 py-2 bg-[#121a16] text-[#ecfdf5] hover:bg-[#121a16] rounded-xl transition text-sm font-bold"
                                         >
                                             تحديد كمقروء
                                         </button>
@@ -130,8 +130,8 @@ export default function NotificationsPage() {
                         </div>
                     ))}
                     {filteredNotifications.length === 0 && (
-                        <div className="text-center py-20 text-slate-500">
-                            <div className="text-6xl mb-4"><BellOff className="w-16 h-16 mx-auto text-gray-500" /></div>
+                        <div className="text-center py-20 text-[#6b8378]">
+                            <div className="text-6xl mb-4"><BellOff className="w-16 h-16 mx-auto text-[#6b8378]" /></div>
                             لا توجد تنبيهات
                         </div>
                     )}

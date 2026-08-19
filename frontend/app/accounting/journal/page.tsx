@@ -16,7 +16,7 @@ export default function JournalPage() {
 
   if (h.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
         <div className="text-white text-xl">جاري التحميل...</div>
       </div>
     );
@@ -24,14 +24,14 @@ export default function JournalPage() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
       <JournalHeader />
 
       <main className="container mx-auto px-6 py-8">
         <div className="mb-6">
           <button
             onClick={() => h.setShowModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition"
+            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-600 transition"
           >
             + قيد يومية جديد
           </button>
