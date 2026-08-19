@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 --webpack",
+    "dev": "next dev -H 0.0.0.0 --turbopack",
     "dev:clean": "powershell -Command \"if (Test-Path '.next/dev/cache/turbopack') { Remove-Item -Recurse -Force '.next/dev/cache/turbopack'; Write-Output 'cleared turbopack cache' }\" && next dev -H 0.0.0.0",
     "fixfs": "powershell -NoProfile -ExecutionPolicy Bypass -File \"scripts\\fix-slow-filesystem.ps1\"",
     "build": "next build",
