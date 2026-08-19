@@ -135,15 +135,15 @@ export function CashFlowPanel() {
               >
                 <defs>
                   <linearGradient id="cfGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <polygon points={svgChart.areaPoints} fill="url(#cfGrad)" />
                 <polyline
                   points={svgChart.linePoints}
                   fill="none"
-                  stroke="#3b82f6"
+                  stroke="#10b981"
                   strokeWidth="2"
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -157,8 +157,8 @@ export function CashFlowPanel() {
                       cx={x}
                       cy={y}
                       r={hoveredIdx === i ? 4 : 2}
-                      fill="#3b82f6"
-                      stroke="#0f172a"
+                      fill="#10b981"
+                      stroke="#0a0f0d"
                       strokeWidth="1"
                       className="transition-all"
                       onMouseEnter={() => setHoveredIdx(i)}

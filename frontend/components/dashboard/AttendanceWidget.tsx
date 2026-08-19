@@ -17,7 +17,7 @@ export function AttendanceWidget({ summary }: { summary?: { present: number; abs
       <div className="relative w-28 h-28 mx-auto mb-4">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
           <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
-          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#22c55e" strokeWidth="3"
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#34d399" strokeWidth="3"
             strokeDasharray={`${presentPct} ${100 - presentPct}`}
             strokeLinecap="round" className="transition-all duration-1000" />
           <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444" strokeWidth="3"

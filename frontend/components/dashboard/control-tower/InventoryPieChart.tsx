@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const COLORS = ['#6366f1', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#14b8a6', '#14b8a6', '#f59e0b', '#ef4444', '#14b8a6'];
 
 interface InventoryValue {
   [key: string]: unknown;
@@ -66,7 +66,7 @@ export function InventoryPieChart({ data }: InventoryPieChartProps) {
               d={arcPath(seg.startAngle, seg.endAngle, outerR, innerR)}
               fill={seg.color}
               opacity={hoveredIdx === i ? 1 : 0.85}
-              stroke="#18181b"
+              stroke="#0f1714"
               strokeWidth="2"
               className="transition-opacity cursor-pointer"
               onMouseEnter={() => setHoveredIdx(i)}
@@ -78,7 +78,7 @@ export function InventoryPieChart({ data }: InventoryPieChartProps) {
               <text x={cx} y={cy - 5} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
                 {total.toLocaleString()}
               </text>
-              <text x={cx} y={cy + 15} textAnchor="middle" fill="#94a3b8" fontSize="10">
+              <text x={cx} y={cy + 15} textAnchor="middle" fill="#6b8378" fontSize="10">
                 إجمالي القيمة
               </text>
             </>
@@ -87,7 +87,7 @@ export function InventoryPieChart({ data }: InventoryPieChartProps) {
               <text x={cx} y={cy - 5} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold">
                 {segments[hoveredIdx].value.toLocaleString()}
               </text>
-              <text x={cx} y={cy + 15} textAnchor="middle" fill="#94a3b8" fontSize="10">
+              <text x={cx} y={cy + 15} textAnchor="middle" fill="#6b8378" fontSize="10">
                 {segments[hoveredIdx].name}
               </text>
               <text x={cx} y={cy + 30} textAnchor="middle" fill={segments[hoveredIdx].color} fontSize="11" fontWeight="bold">

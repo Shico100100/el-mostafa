@@ -89,13 +89,13 @@ export default function ReconciliationPage() {
     const rows = filteredItems
       .map(
         (i) => `<tr>
-          <td style="padding:8px;border:1px solid #ddd">${i.account_code}</td>
-          <td style="padding:8px;border:1px solid #ddd">${i.account_name}</td>
-          <td style="padding:8px;border:1px solid #ddd">${TYPE_LABELS[i.type] || i.type}</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:left">${i.elmostafa_balance.toLocaleString()}</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:left">${i.journal_computed.toLocaleString()}</td>
-          <td style="padding:8px;border:1px solid #ddd;text-align:left">${i.difference.toLocaleString()}</td>
-          <td style="padding:8px;border:1px solid #ddd">${STATUS_CONFIG[i.status].label}</td>
+          <td style="padding:8px;border:1px solid #6b8378">${i.account_code}</td>
+          <td style="padding:8px;border:1px solid #6b8378">${i.account_name}</td>
+          <td style="padding:8px;border:1px solid #6b8378">${TYPE_LABELS[i.type] || i.type}</td>
+          <td style="padding:8px;border:1px solid #6b8378;text-align:left">${i.elmostafa_balance.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #6b8378;text-align:left">${i.journal_computed.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #6b8378;text-align:left">${i.difference.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #6b8378">${STATUS_CONFIG[i.status].label}</td>
         </tr>`,
       )
       .join('');
@@ -104,14 +104,14 @@ export default function ReconciliationPage() {
       <h2>تقرير المطابقة المالية</h2>
       <p>إجمالي الحسابات: ${data.total_accounts} | مطابق: ${data.matched} | خلاف: ${data.discrepancies} | بدون قيود: ${data.no_journal}</p>
       <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#f3f4f6">
-          <th style="padding:8px;border:1px solid #ddd">كود</th>
-          <th style="padding:8px;border:1px solid #ddd">اسم</th>
-          <th style="padding:8px;border:1px solid #ddd">النوع</th>
-          <th style="padding:8px;border:1px solid #ddd">ELMostafa</th>
-          <th style="padding:8px;border:1px solid #ddd">اليومية</th>
-          <th style="padding:8px;border:1px solid #ddd">الفرق</th>
-          <th style="padding:8px;border:1px solid #ddd">الحالة</th>
+        <thead><tr style="background:#6b8378">
+          <th style="padding:8px;border:1px solid #6b8378">كود</th>
+          <th style="padding:8px;border:1px solid #6b8378">اسم</th>
+          <th style="padding:8px;border:1px solid #6b8378">النوع</th>
+          <th style="padding:8px;border:1px solid #6b8378">ELMostafa</th>
+          <th style="padding:8px;border:1px solid #6b8378">اليومية</th>
+          <th style="padding:8px;border:1px solid #6b8378">الفرق</th>
+          <th style="padding:8px;border:1px solid #6b8378">الحالة</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table></body></html>`);

@@ -33,14 +33,14 @@ export default function KioskLandingPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#05080a] flex items-center justify-center">
+            <div className="min-h-screen bg-[#0a0f0d] flex items-center justify-center">
                 <div className="text-white text-4xl font-bold animate-pulse">جاري تحميل الماكينات...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#05080a] text-white p-8" dir="rtl">
+        <div className="min-h-screen bg-[#0a0f0d] text-white p-8" dir="rtl">
             <header className="mb-12 text-center">
                 <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-emerald-400 to-teal-400 text-transparent bg-clip-text">
                     اختر ماكينة للبدء

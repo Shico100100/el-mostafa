@@ -25,7 +25,7 @@ export function AddMaintenanceDialog({ visible, machines, formData, onFormChange
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-[#1e293b] w-full max-w-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'scaleIn 0.2s ease-out' }}>
+      <div className="bg-[#0f1714] w-full max-w-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'scaleIn 0.2s ease-out' }}>
         <div className="p-6 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-xl font-bold">تسجيل عملية صيانة</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white"><X /></button>

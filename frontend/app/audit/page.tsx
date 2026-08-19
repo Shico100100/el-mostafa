@@ -11,7 +11,7 @@ export default function AuditLogPage() {
   const { logs, loading, page, totalPages, totalItems, setPage, formatAction } = useAuditLog();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#05080a] via-[#0a0f0d] to-[#05080a] text-[#ecfdf5] p-8 pt-24" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0a0f0d] to-[#0a0f0d] text-[#ecfdf5] p-8 pt-24" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <AuditHeader onBack={() => router.push('/dashboard')} />
         <div className="bg-[#121a16] border border-[#1f2d26] rounded-3xl p-6 backdrop-blur-xl shadow-2xl">

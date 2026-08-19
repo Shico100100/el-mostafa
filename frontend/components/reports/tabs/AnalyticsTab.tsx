@@ -10,7 +10,7 @@ export function AnalyticsTab({ analytics }: { analytics: AnalyticsData }) {
         <ReportBarChart
           title="قيمة المخزون حسب التصنيف"
           data={(analytics.inventory || []).map(d => ({ name: d.name, value: d.value }))}
-          color="#3b82f6"
+          color="#10b981"
         />
         <ReportPieChart
           title="توزيع المبيعات حسب القسم"

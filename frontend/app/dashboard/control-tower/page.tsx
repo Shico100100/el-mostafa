@@ -12,13 +12,13 @@ export default function ControlTower() {
   const { trends, inventoryValue, stats, loading } = useControlTower();
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
+    <div className="flex items-center justify-center min-h-screen bg-[#0a0f0d]">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-[#ecfdf5] p-8 pt-24" dir="rtl">
+    <div className="min-h-screen bg-[#0a0f0d] text-[#ecfdf5] p-8 pt-24" dir="rtl">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <div>

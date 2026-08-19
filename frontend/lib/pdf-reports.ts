@@ -8,7 +8,7 @@ export async function exportElementToPdf(elementId: string, filename: string) {
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#0f1714',
     logging: false,
   });
 

@@ -63,14 +63,14 @@ function SingleInvoicePrint({ order }: { order: OrderRow }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
         <thead>
           <tr style={{ background: '#10b981', color: '#fff' }}>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>البيان</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>المبلغ</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>البيان</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>المبلغ</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ padding: '8px', border: '1px solid #ddd' }}>{order.notes || `فاتورة مبيعات #${order.id}`}</td>
-            <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'left' }}>{Number(order.total_amount).toLocaleString('ar-EG')} ج.م</td>
+            <td style={{ padding: '8px', border: '1px solid #6b8378' }}>{order.notes || `فاتورة مبيعات #${order.id}`}</td>
+            <td style={{ padding: '8px', border: '1px solid #6b8378', textAlign: 'left' }}>{Number(order.total_amount).toLocaleString('ar-EG')} ج.م</td>
           </tr>
         </tbody>
       </table>
@@ -87,35 +87,35 @@ function SummaryPrintContent({ orders, month, year }: { orders: OrderRow[]; mont
     <div dir="rtl" style={{ fontFamily: 'Arial, sans-serif', padding: '24px', width: '297mm', background: '#fff', color: '#000' }}>
       <div style={{ textAlign: 'center', borderBottom: '3px solid #10b981', paddingBottom: '12px', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '22px', margin: 0 }}>ملخص مبيعات {MONTH_NAMES[month]} {year}</h1>
-        <p style={{ margin: '4px 0 0', color: '#666', fontSize: '14px' }}>عدد الفواتير: {orders.length} | الإجمالي: {total.toLocaleString('ar-EG')} ج.م</p>
+        <p style={{ margin: '4px 0 0', color: '#6b8378', fontSize: '14px' }}>عدد الفواتير: {orders.length} | الإجمالي: {total.toLocaleString('ar-EG')} ج.م</p>
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
         <thead>
           <tr style={{ background: '#10b981', color: '#fff' }}>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>#</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>رقم الفاتورة</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>العميل</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>التاريخ</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>الحالة</th>
-            <th style={{ padding: '8px', border: '1px solid #ddd' }}>المبلغ</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>#</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>رقم الفاتورة</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>العميل</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>التاريخ</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>الحالة</th>
+            <th style={{ padding: '8px', border: '1px solid #6b8378' }}>المبلغ</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o, i) => (
-            <tr key={o.id} style={{ background: i % 2 === 0 ? '#f9f9f9' : '#fff' }}>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd' }}>{i + 1}</td>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd' }}>{o.invoice_number || '-'}</td>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd' }}>{o.customer?.name || '-'}</td>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd' }}>{o.order_date}</td>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd' }}>{STATUS_AR[o.status] || o.status}</td>
-              <td style={{ padding: '6px 8px', border: '1px solid #ddd', fontWeight: 'bold' }}>{Number(o.total_amount).toLocaleString('ar-EG')} ج.م</td>
+            <tr key={o.id} style={{ background: i % 2 === 0 ? '#ecfdf5' : '#fff' }}>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378' }}>{i + 1}</td>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378' }}>{o.invoice_number || '-'}</td>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378' }}>{o.customer?.name || '-'}</td>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378' }}>{o.order_date}</td>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378' }}>{STATUS_AR[o.status] || o.status}</td>
+              <td style={{ padding: '6px 8px', border: '1px solid #6b8378', fontWeight: 'bold' }}>{Number(o.total_amount).toLocaleString('ar-EG')} ج.م</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr style={{ background: '#10b981', color: '#fff', fontWeight: 'bold' }}>
-            <td colSpan={5} style={{ padding: '10px 8px', border: '1px solid #ddd', textAlign: 'left' }}>الإجمالي</td>
-            <td style={{ padding: '10px 8px', border: '1px solid #ddd' }}>{total.toLocaleString('ar-EG')} ج.م</td>
+            <td colSpan={5} style={{ padding: '10px 8px', border: '1px solid #6b8378', textAlign: 'left' }}>الإجمالي</td>
+            <td style={{ padding: '10px 8px', border: '1px solid #6b8378' }}>{total.toLocaleString('ar-EG')} ج.م</td>
           </tr>
         </tfoot>
       </table>

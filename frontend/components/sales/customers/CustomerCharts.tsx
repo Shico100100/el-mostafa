@@ -72,7 +72,7 @@ function BarChart({ data, maxVal }: { data: { name: string; value: number }[]; m
           return (
             <g key={f}>
               <line x1={0} y1={y} x2={totalW} y2={y} stroke="#ffffff10" />
-              <text x={0} y={y - 4} fill="#94a3b8" fontSize="9">{Math.round(maxVal * f / 1000)}k</text>
+              <text x={0} y={y - 4} fill="#6b8378" fontSize="9">{Math.round(maxVal * f / 1000)}k</text>
             </g>
           );
         })}
@@ -82,7 +82,7 @@ function BarChart({ data, maxVal }: { data: { name: string; value: number }[]; m
           return (
             <g key={i}>
               <rect x={x} y={220 - h} width={barW} height={h} fill="#10b981" rx="4" />
-              <text x={x + barW / 2} y={236} textAnchor="middle" fill="#94a3b8" fontSize="9">{d.name}</text>
+              <text x={x + barW / 2} y={236} textAnchor="middle" fill="#6b8378" fontSize="9">{d.name}</text>
             </g>
           );
         })}

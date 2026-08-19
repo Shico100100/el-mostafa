@@ -3,7 +3,7 @@
 import { PieChart as PieChartIcon, BarChart as BarChartIcon } from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 
-const PIE_COLORS = ['#3b82f6', '#ef4444', '#fbbf24', '#22c55e', '#a855f7'];
+const PIE_COLORS = ['#10b981', '#ef4444', '#fbbf24', '#34d399', '#14b8a6'];
 
 interface Props {
   accountTypeCounts: { name: string; value: number }[];
@@ -74,8 +74,8 @@ function BarGroup({ data, maxVal }: { data: { name: string; debit: number; credi
           const y = 280 - f * 260;
           return (
             <g key={f}>
-              <line x1={0} y1={y} x2={totalW} y2={y} stroke="#334155" strokeDasharray="4 4" />
-              <text x={0} y={y - 4} fill="#94a3b8" fontSize="9">{Math.round(maxVal * f).toLocaleString()}</text>
+              <line x1={0} y1={y} x2={totalW} y2={y} stroke="#1f2d26" strokeDasharray="4 4" />
+              <text x={0} y={y - 4} fill="#6b8378" fontSize="9">{Math.round(maxVal * f).toLocaleString()}</text>
             </g>
           );
         })}
@@ -85,9 +85,9 @@ function BarGroup({ data, maxVal }: { data: { name: string; debit: number; credi
           const hC = (d.credit / maxVal) * 260;
           return (
             <g key={i}>
-              <rect x={x} y={280 - hD} width={barW} height={hD} fill="#3b82f6" rx="3" />
+              <rect x={x} y={280 - hD} width={barW} height={hD} fill="#10b981" rx="3" />
               <rect x={x + barW + 2} y={280 - hC} width={barW} height={hC} fill="#ef4444" rx="3" />
-              <text x={x + barW} y={294} textAnchor="middle" fill="#94a3b8" fontSize="8">
+              <text x={x + barW} y={294} textAnchor="middle" fill="#6b8378" fontSize="8">
                 {d.name.length > 6 ? d.name.slice(0, 6) + '..' : d.name}
               </text>
             </g>

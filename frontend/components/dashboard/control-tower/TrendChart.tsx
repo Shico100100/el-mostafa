@@ -50,8 +50,8 @@ export function TrendChart({ data }: TrendChartProps) {
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full">
           <defs>
             <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+              <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorPurchases" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
@@ -62,35 +62,35 @@ export function TrendChart({ data }: TrendChartProps) {
           {yTicks.map((t, i) => (
             <g key={i}>
               <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y} stroke="#ffffff10" strokeDasharray="3 3" />
-              <text x={PAD.left - 8} y={t.y + 4} textAnchor="end" fill="#94a3b8" fontSize="10">
+              <text x={PAD.left - 8} y={t.y + 4} textAnchor="end" fill="#6b8378" fontSize="10">
                 {t.value >= 1000 ? `${(t.value / 1000).toFixed(0)}k` : Math.round(t.value)}
               </text>
             </g>
           ))}
 
           {data.map((d, i) => (
-            <text key={i} x={toX(i)} y={H - 10} textAnchor="middle" fill="#94a3b8" fontSize="11">
+            <text key={i} x={toX(i)} y={H - 10} textAnchor="middle" fill="#6b8378" fontSize="11">
               {d.month}
             </text>
           ))}
 
           <polygon points={salesArea} fill="url(#colorSales)" />
-          <polyline points={salesPoints} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+          <polyline points={salesPoints} fill="none" stroke="#14b8a6" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
 
           <polygon points={purchaseArea} fill="url(#colorPurchases)" />
           <polyline points={purchasePoints} fill="none" stroke="#f43f5e" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
 
           {data.map((d, i) => (
             <g key={i}>
-              <circle cx={toX(i)} cy={toY(d.sales)} r={hoveredIdx === i ? 5 : 3} fill="#6366f1" stroke="#18181b" strokeWidth="2" className="transition-all cursor-pointer"
+              <circle cx={toX(i)} cy={toY(d.sales)} r={hoveredIdx === i ? 5 : 3} fill="#14b8a6" stroke="#0f1714" strokeWidth="2" className="transition-all cursor-pointer"
                 onMouseEnter={() => setHoveredIdx(i)} onMouseLeave={() => setHoveredIdx(null)} />
-              <circle cx={toX(i)} cy={toY(d.purchases)} r={hoveredIdx === i ? 5 : 3} fill="#f43f5e" stroke="#18181b" strokeWidth="2" className="transition-all cursor-pointer"
+              <circle cx={toX(i)} cy={toY(d.purchases)} r={hoveredIdx === i ? 5 : 3} fill="#f43f5e" stroke="#0f1714" strokeWidth="2" className="transition-all cursor-pointer"
                 onMouseEnter={() => setHoveredIdx(i)} onMouseLeave={() => setHoveredIdx(null)} />
               {hoveredIdx === i && (
                 <g>
-                  <rect x={toX(i) - 60} y={PAD.top} width="120" height="50" rx="8" fill="#18181b" stroke="#3f3f46" />
-                  <text x={toX(i)} y={PAD.top + 18} textAnchor="middle" fill="#94a3b8" fontSize="9">{d.month}</text>
-                  <text x={toX(i)} y={PAD.top + 33} textAnchor="middle" fill="#6366f1" fontSize="10" fontWeight="bold">
+                  <rect x={toX(i) - 60} y={PAD.top} width="120" height="50" rx="8" fill="#0f1714" stroke="#1f2d26" />
+                  <text x={toX(i)} y={PAD.top + 18} textAnchor="middle" fill="#6b8378" fontSize="9">{d.month}</text>
+                  <text x={toX(i)} y={PAD.top + 33} textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="bold">
                     مبيعات: {d.sales.toLocaleString()}
                   </text>
                   <text x={toX(i)} y={PAD.top + 47} textAnchor="middle" fill="#f43f5e" fontSize="10" fontWeight="bold">

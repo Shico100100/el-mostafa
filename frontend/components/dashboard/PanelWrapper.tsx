@@ -38,7 +38,7 @@ export function PanelWrapper({
     >
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-1 h-5 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]" />
+          <span className="w-1 h-5 bg-blue-500 rounded-full shadow-[0_0_8px_#10b981]" />
           <h3 className="text-white font-bold text-sm">{title}</h3>
         </div>
         <div className="flex items-center gap-2">

@@ -15,7 +15,7 @@ export default function MaintenancePage() {
   if (h.loading) return <div className="p-8 text-white">جاري التحميل...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-[#ecfdf5] p-4 md:p-8" dir="rtl">
+    <div className="min-h-screen bg-[#0a0f0d] text-[#ecfdf5] p-4 md:p-8" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-8">
         <MaintenanceHeader onBack={() => router.back()} onAdd={() => h.setShowModal(true)} />
         <MaintenanceStats overdueCount={h.getOverdueCount()} upcomingCount={h.getUpcomingCount()} totalMachines={h.machines.length} />

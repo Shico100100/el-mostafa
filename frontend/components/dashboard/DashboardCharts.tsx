@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#10b981', '#10b981', '#f59e0b', '#ef4444', '#14b8a6'];
 
 interface ChartsProps {
   salesTrend: { date: string; value: number }[];
@@ -53,17 +53,17 @@ function CSSLineChart({ data }: { data: { date: string; value: number }[] }) {
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full">
           <defs>
             <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
             </linearGradient>
           </defs>
           <polygon points={areaPoints} fill="url(#lineGrad)" />
-          <polyline points={linePoints} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          <polyline points={linePoints} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
           {data.map((d, i) => (
-            <circle key={i} cx={PAD + i * stepX} cy={toY(d.value)} r="3" fill="#3b82f6" stroke="#0f172a" strokeWidth="1.5" />
+            <circle key={i} cx={PAD + i * stepX} cy={toY(d.value)} r="3" fill="#10b981" stroke="#0a0f0d" strokeWidth="1.5" />
           ))}
           {data.map((d, i) => (
-            <text key={`label-${i}`} x={PAD + i * stepX} y={H - 2} textAnchor="middle" fill="#64748b" fontSize="9">
+            <text key={`label-${i}`} x={PAD + i * stepX} y={H - 2} textAnchor="middle" fill="#6b8378" fontSize="9">
               {d.date}
             </text>
           ))}
@@ -138,7 +138,7 @@ function CSSPieChart({ data }: { data: { name: string; total: number }[] }) {
             </text>
           )}
           {hoveredIdx !== null && segments[hoveredIdx] && (
-            <text x={cx} y={cy + 12} textAnchor="middle" fill="#94a3b8" fontSize="9">
+            <text x={cx} y={cy + 12} textAnchor="middle" fill="#6b8378" fontSize="9">
               {segments[hoveredIdx].name}
             </text>
           )}
