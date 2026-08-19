@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup B — Glass Flow</title>
+<style>
+  :root{
+    --bg:#08110d; --bg2:#0c1611; --em:#34d399; --em2:#2dd4bf; --amber:#fbbf24; --red:#f87171;
+    --txt:#ecfdf5; --mut:#7c9b8d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
+  body{background:radial-gradient(circle at 80% -10%,rgba(45,212,191,.12),transparent 40%),radial-gradient(circle at 10% 110%,rgba(52,211,153,.10),transparent 40%),var(--bg);color:var(--txt);min-height:100vh}
+  /* TOP NAV */
+  .topnav{display:flex;align-items:center;justify-content:space-between;padding:16px 30px;border-bottom:1px solid rgba(52,211,153,.15);backdrop-filter:blur(10px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .b{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--em),var(--em2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#04130d;box-shadow:0 0 25px rgba(52,211,153,.4)}
+  .brand h1{font-size:17px} .brand p{font-size:10px;color:var(--mut)}
+  .menu{display:flex;gap:6px}
+  .menu a{padding:8px 16px;border-radius:30px;color:var(--mut);text-decoration:none;font-size:13px;transition:.2s}
+  .menu a:hover,.menu a.act{background:rgba(52,211,153,.15);color:var(--txt)}
+  .ic-acts{display:flex;gap:10px}
+  .ic-acts .c{width:38px;height:38px;border-radius:50%;background:rgba(52,211,153,.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(52,211,153,.2);cursor:pointer}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px}
+  .hi{text-align:center;margin-bottom:26px}
+  .hi h2{font-size:26px;font-weight:800;background:linear-gradient(90deg,var(--em),var(--em2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hi p{font-size:12px;color:var(--mut);margin-top:4px}
+  /* GLASS CARDS */
+  .glass{background:rgba(18,30,24,.55);backdrop-filter:blur(14px);border:1px solid rgba(52,211,153,.18);border-radius:22px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .kpi{text-align:center}
+  .kpi .ic{width:46px;height:46px;border-radius:50%;background:rgba(52,211,153,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px}
+  .kpi .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  .kpi .l{font-size:11px;color:var(--mut);margin-top:4px}
+  .row{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:20px}
+  .h{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .h .dot{width:8px;height:8px;border-radius:50%;background:var(--em);box-shadow:0 0 10px var(--em)}
+  .chart{height:150px;display:flex;align-items:flex-end;gap:10px}
+  .chart .b{flex:1;background:linear-gradient(180deg,var(--em),var(--em2));border-radius:8px 8px 0 0;opacity:.85}
+  .donut{width:120px;height:120px;border-radius:50%;margin:10px auto;background:conic-gradient(var(--em) 0 70%,var(--amber) 70% 82%,var(--red) 82% 100%);display:flex;align-items:center;justify-content:center}
+  .donut i{width:80px;height:80px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .li{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(52,211,153,.1);font-size:13px}
+  .li:last-child{border:0}
+  .pill{font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(52,211,153,.2);color:var(--em)}
+  .pill.r{background:rgba(248,113,113,.2);color:var(--red)} .pill.am{background:rgba(251,191,36,.2);color:var(--amber)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .quick{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+  .q{text-align:center;font-size:11px;color:var(--mut)}
+  .q .g{width:54px;height:54px;border-radius:18px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:22px}
+</style>
+</head>
+<body>
+  <nav class="topnav">
+    <div class="brand"><div class="b">م</div><div><h1>نظام المصطفى</h1><p>إدارة مصنع متكامل</p></div></div>
+    <div class="menu">
+      <a class="act" href="#">لوحة التحكم</a><a href="#">المبيعات</a><a href="#">المشتريات</a>
+      <a href="#">التصنيع</a><a href="#">المحاسبة</a><a href="#">التقارير</a>
+    </div>
+    <div class="ic-acts"><div class="c">🔔</div><div class="c">💬</div><div class="c">⚙️</div></div>
+  </nav>
+
+  <div class="wrap">
+    <div class="hi"><h2>مساء الخير، Mostafa</h2><p>الأربعاء، ١٩ أغسطس ٢٠٢٧ — نظرة شاملة على المصنع</p></div>
+
+    <div class="kpis">
+      <div class="glass kpi"><div class="ic">📈</div><div class="v">٤١٢٬٤٠٠</div><div class="l">المبيعات ج.م</div></div>
+      <div class="glass kpi"><div class="ic">💰</div><div class="v">١٬٢٤٠٬٠٠٠</div><div class="l">الخزينة ج.م</div></div>
+      <div class="glass kpi"><div class="ic">🏭</div><div class="v">٣٤</div><div class="l">أوامر إنتاج</div></div>
+      <div class="glass kpi"><div class="ic">⭐</div><div class="v">١٢٤٬٥٠٠</div><div class="l">صافي الربح ج.م</div></div>
+    </div>
+
+    <div class="row">
+      <div class="glass"><div class="h"><span class="dot"></span>اتجاه المبيعات</div>
+        <div class="chart"><div class="b" style="height:40%"></div><div class="b" style="height:62%"></div><div class="b" style="height:50%"></div><div class="b" style="height:78%"></div><div class="b" style="height:68%"></div><div class="b" style="height:92%"></div></div>
+      </div>
+      <div class="glass"><div class="h"><span class="dot"></span>توزيع الحضور</div>
+        <div class="donut"><i>84%</i></div>
+        <div class="li"><span>حاضر</span><span class="pill">42</span></div>
+        <div class="li"><span>متأخر</span><span class="pill am">5</span></div>
+        <div class="li"><span>غائب</span><span class="pill r">3</span></div>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="glass"><div class="h"><span class="dot"></span>أفضل العملاء</div>
+        <div class="li"><span>محسن توفيق</span><span class="pill">١٨٠٬٩٣٠</span></div>
+        <div class="li"><span>شركة الأمل</span><span class="pill">١٢٤٬٥٠٠</span></div>
+        <div class="li"><span>مؤسسة النور</span><span class="pill">٩٨٬٢٠٠</span></div>
+      </div>
+      <div class="glass"><div class="h"><span class="dot"></span>آخر المعاملات</div>
+        <div class="li"><span>محسن توفيق</span><span class="pill">٥٠٬٠٠٠</span></div>
+        <div class="li"><span>شركة الأمل</span><span class="pill">١٧٩٬٥٧٥</span></div>
+        <div class="li"><span>مؤسسة النور</span><span class="pill">٢٬٩٠٨</span></div>
+      </div>
+      <div class="glass"><div class="h"><span class="dot"></span>المخزون</div>
+        <div class="li"><span>نقص؟</span><span class="pill">لا</span></div>
+        <div class="li"><span>منخفض</span><span class="pill am">٣</span></div>
+        <div class="li"><span>حرج</span><span class="pill r">١</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="glass"><div class="h"><span class="dot"></span>الإيرادات والمصروفات</div>
+        <div class="li"><span>الإيرادات</span><span class="pill">٤١٢٬٤٠٠</span></div>
+        <div class="li"><span>المصروفات</span><span class="pill r">٢٨٧٬٩٠٠</span></div>
+        <div class="li"><span>الصافي</span><span style="color:var(--em);font-weight:700">١٢٤٬٥٠٠</span></div>
+      </div>
+      <div class="glass"><div class="h"><span class="dot"></span>أرصدة الحسابات</div>
+        <div class="li"><span>النقدية</span><span>٣٢٠٬٠٠٠</span></div>
+        <div class="li"><span>البنك</span><span>٩٢٠٬٠٠٠</span></div>
+        <div class="li"><span>العملاء</span><span>٧٨٬٩٠٠</span></div>
+      </div>
+    </div>
+
+    <div class="h"><span class="dot"></span>الوصول السريع</div>
+    <div class="quick" style="margin-top:12px">
+      <div class="q"><div class="g">📦</div>المنتجات</div><div class="q"><div class="g">🛒</div>العملاء</div>
+      <div class="q"><div class="g">🏭</div>الإنتاج</div><div class="q"><div class="g">📋</div>الموردين</div>
+      <div class="q"><div class="g">⚙️</div>الماكينات</div><div class="q"><div class="g">🔧</div>الصيانة</div>
+    </div>
+  </div>
+</body>
+</html>

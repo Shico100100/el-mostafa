@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup A — Industrial Command</title>
+<style>
+  :root{
+    --bg:#0a0f0d; --bg2:#0f1714; --panel:#121a16; --line:#1f2d26;
+    --em:#10b981; --em-d:#059669; --teal:#14b8a6; --amber:#f59e0b; --red:#ef4444;
+    --txt:#ecfdf5; --mut:#6b8378;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
+  body{background:var(--bg);color:var(--txt);display:flex;min-height:100vh}
+  /* SIDEBAR */
+  .side{width:240px;background:var(--bg2);border-inline-start:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+  .logo{display:flex;align-items:center;gap:10px;padding:8px 10px 18px}
+  .logo .b{width:38px;height:38px;background:linear-gradient(135deg,var(--em),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#04130d}
+  .logo h1{font-size:15px} .logo p{font-size:9px;color:var(--mut)}
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:var(--mut);text-decoration:none;font-size:13px;transition:.15s}
+  .nav a:hover,.nav a.act{background:var(--panel);color:var(--txt);border-inline-start:3px solid var(--em)}
+  .nav svg{width:17px;height:17px}
+  /* MAIN */
+  .main{flex:1;padding:22px 28px;overflow:auto}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+  .top .hi{font-size:22px;font-weight:800} .top .dt{font-size:12px;color:var(--mut)}
+  .top .acts{display:flex;gap:8px}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--txt);padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer}
+  .btn.em{background:var(--em);border-color:var(--em-d);color:#04130d;font-weight:700}
+  /* KPI GRID */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--em);border-radius:10px;padding:16px}
+  .kpi .l{font-size:11px;color:var(--mut);display:flex;justify-content:space-between}
+  .kpi .v{font-size:23px;font-weight:800;margin-top:8px;font-variant-numeric:tabular-nums}
+  .kpi .ic{color:var(--em)}
+  /* TWO COL */
+  .row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .card h3{font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h3::before{content:'';width:4px;height:16px;background:var(--em);border-radius:2px}
+  /* chart fake */
+  .chart{height:160px;display:flex;align-items:flex-end;gap:6px;padding-top:10px}
+  .chart .bar{flex:1;background:linear-gradient(180deg,var(--em),transparent);border-radius:4px 4px 0 0}
+  .att{display:flex;flex-direction:column;gap:10px}
+  .att .r{display:flex;justify-content:space-between;font-size:12px}
+  .att .bar2{height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+  .att .bar2 i{display:block;height:100%;background:var(--em)}
+  /* LISTS */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  .li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+  .li:last-child{border:0}
+  .tag{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--em);color:#04130d}
+  .tag.r{background:var(--red);color:#fff} .tag.am{background:var(--amber);color:#04130d}
+  .warn{display:flex;align-items:center;gap:8px;color:var(--em);font-size:12px;padding:10px;background:rgba(16,185,129,.08);border-radius:8px}
+  /* quick */
+  .quick{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center;font-size:11px;color:var(--mut)}
+  .q svg{width:22px;height:22px;color:var(--em);margin-bottom:6px}
+  .sec-t{font-size:14px;font-weight:700;margin:6px 0 12px;display:flex;align-items:center;gap:8px}
+  .sec-t::before{content:'';width:4px;height:18px;background:var(--em);border-radius:2px}
+</style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="logo"><div class="b">م</div><div><h1>نظام المصطفى</h1><p>إدارة مصنع متكامل</p></div></div>
+    <nav class="nav">
+      <a class="act" href="#">📊 لوحة التحكم</a>
+      <a href="#">🛒 المبيعات</a>
+      <a href="#">📦 المشتريات</a>
+      <a href="#">🏭 التصنيع</a>
+      <a href="#">📋 المحاسبة</a>
+      <a href="#">📈 التقارير</a>
+      <a href="#">🔔 الإشعارات</a>
+      <a href="#">👤 المستخدمين</a>
+      <a href="#">⚙️ الإعدادات</a>
+    </nav>
+  </aside>
+  <!-- MAIN -->
+  <main class="main">
+    <div class="top">
+      <div><div class="hi">مساء الخير، Mostafa</div><div class="dt">الأربعاء، ١٩ أغسطس ٢٠٢٧ — لوحة القيادة الصناعية</div></div>
+      <div class="acts"><button class="btn">تحديث</button><button class="btn em">تخصيص</button></div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpis">
+      <div class="kpi"><div class="l"><span>المبيعات (شهري)</span><span class="ic">📈</span></div><div class="v">٤١٢٬٤٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>المشتريات (شهري)</span><span class="ic">📦</span></div><div class="v">٢٨٧٬٩٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>رصيد الخزينة</span><span class="ic">💰</span></div><div class="v">١٬٢٤٠٬٠٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>قيمة المخزون</span><span class="ic">🏭</span></div><div class="v">٨٩٥٬٢٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>صافي الربح</span><span class="ic">⭐</span></div><div class="v">١٢٤٬٥٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>أوامر الإنتاج</span><span class="ic">⚙️</span></div><div class="v">٣٤</div></div>
+      <div class="kpi"><div class="l"><span>مستحقات العملاء</span><span class="ic">↙️</span></div><div class="v">٧٨٬٩٠٠ ج.م</div></div>
+      <div class="kpi"><div class="l"><span>صيانة متأخرة</span><span class="ic">🔧</span></div><div class="v" style="color:var(--red)">٥</div></div>
+    </div>
+
+    <!-- CHART + ATTENDANCE -->
+    <div class="row">
+      <div class="card"><h3>اتجاه المبيعات (٦ أشهر)</h3>
+        <div class="chart">
+          <div class="bar" style="height:40%"></div><div class="bar" style="height:62%"></div>
+          <div class="bar" style="height:50%"></div><div class="bar" style="height:78%"></div>
+          <div class="bar" style="height:68%"></div><div class="bar" style="height:92%"></div>
+        </div>
+      </div>
+      <div class="card"><h3>الحضور والانصراف</h3>
+        <div class="att">
+          <div><div class="r"><span>حاضر</span><span>42</span></div><div class="bar2"><i style="width:84%"></i></div></div>
+          <div><div class="r"><span>متأخر</span><span>5</span></div><div class="bar2"><i style="width:10%;background:var(--amber)"></i></div></div>
+          <div><div class="r"><span>غائب</span><span>3</span></div><div class="bar2"><i style="width:6%;background:var(--red)"></i></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTS -->
+    <div class="grid3">
+      <div class="card"><h3>أفضل العملاء</h3>
+        <div class="li"><span>محسن توفيق</span><span class="tag">١٨٠٬٩٣٠</span></div>
+        <div class="li"><span>شركة الأمل</span><span class="tag">١٢٤٬٥٠٠</span></div>
+        <div class="li"><span>مؤسسة النور</span><span class="tag">٩٨٬٢٠٠</span></div>
+      </div>
+      <div class="card"><h3>آخر المعاملات</h3>
+        <div class="li"><span>محسن توفيق — بيع</span><span class="tag">٥٠٬٠٠٠</span></div>
+        <div class="li"><span>شركة الأمل — بيع</span><span class="tag">١٧٩٬٥٧٥</span></div>
+        <div class="li"><span>مؤسسة النور — بيع</span><span class="tag">٢٬٩٠٨</span></div>
+      </div>
+      <div class="card"><h3>حالة المخزون</h3>
+        <div class="warn">✓ لا يوجد نقص في المخزون</div>
+        <div class="li" style="margin-top:10px"><span>منتجات منخفضة</span><span class="tag am">٣</span></div>
+        <div class="li"><span>تحت الحد الأدنى</span><span class="tag r">١</span></div>
+      </div>
+    </div>
+
+    <!-- REVENUE + BALANCES -->
+    <div class="row">
+      <div class="card"><h3>الإيرادات والمصروفات</h3>
+        <div class="li"><span>إجمالي الإيرادات</span><span class="tag">٤١٢٬٤٠٠</span></div>
+        <div class="li"><span>إجمالي المصروفات</span><span class="tag r">٢٨٧٬٩٠٠</span></div>
+        <div class="li"><span>صافي الربح</span><span style="color:var(--em);font-weight:700">١٢٤٬٥٠٠</span></div>
+      </div>
+      <div class="card"><h3>أرصدة الحسابات</h3>
+        <div class="li"><span>النقدية (101)</span><span>٣٢٠٬٠٠٠</span></div>
+        <div class="li"><span>البنك (102)</span><span>٩٢٠٬٠٠٠</span></div>
+        <div class="li"><span>العملاء (1102)</span><span>٧٨٬٩٠٠</span></div>
+        <div class="li"><span>الموردين (1103)</span><span>٥٤٬٢٠٠</span></div>
+      </div>
+    </div>
+
+    <!-- QUICK -->
+    <div class="sec-t">الوصول السريع</div>
+    <div class="quick">
+      <div class="q">📦<br>المنتجات</div><div class="q">🛒<br>العملاء</div>
+      <div class="q">🏭<br>الإنتاج</div><div class="q">📋<br>الموردين</div>
+      <div class="q">⚙️<br>الماكينات</div><div class="q">🔧<br>الصيانة</div>
+    </div>
+  </main>
+</body>
+</html>
