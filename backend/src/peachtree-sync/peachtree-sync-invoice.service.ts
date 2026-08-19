@@ -4,11 +4,7 @@ import { Repository, In, Like } from 'typeorm';
 import { PeachtreeConnectionService } from './peachtree-connection.service';
 import { PeachtreeMappingService } from './peachtree-mapping.service';
 import { PeachtreeReviewService } from './peachtree-review.service';
-import {
-  SyncEntity,
-  SyncResultDto,
-  SyncStatus,
-} from './dto/sync-status.dto';
+import { SyncEntity, SyncResultDto } from './dto/sync-status.dto';
 import { Customer } from '../sales/entities/customer.entity';
 import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';
@@ -68,10 +64,7 @@ export class PeachtreeSyncInvoiceService {
     private purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
   ) {}
 
-  async syncSalesInvoices(
-    result: SyncResultDto,
-    runId: string,
-  ): Promise<void> {
+  async syncSalesInvoices(result: SyncResultDto, runId: string): Promise<void> {
     await this.reviewService.clearPendingForEntity(SyncEntity.SALES_INVOICES);
 
     const rows = await this.connectionService

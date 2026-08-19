@@ -658,7 +658,9 @@ export class RawMaterialService {
           const reorderPoint =
             normalized['reorder_point'] ?? normalized['Reorder Point'] ?? 0;
           const reorderQty =
-            normalized['reorder_quantity'] ?? normalized['Reorder Quantity'] ?? 0;
+            normalized['reorder_quantity'] ??
+            normalized['Reorder Quantity'] ??
+            0;
           const avgCons =
             normalized['avg_consumption_rate'] ??
             normalized['Average Consumption'] ??

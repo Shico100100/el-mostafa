@@ -101,9 +101,9 @@ describe('SystemController', () => {
       await expect(controller.seedDemoData({})).rejects.toThrow(
         BadRequestException,
       );
-      await expect(
-        controller.seedDemoData({ confirm: false }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.seedDemoData({ confirm: false })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should call systemService.seedDemoData when confirm is true', async () => {

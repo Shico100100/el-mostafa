@@ -47,15 +47,17 @@ describe('AuthLoginService', () => {
 
     service = module.get<AuthLoginService>(AuthLoginService);
 
-    (configService.getOrThrow as jest.Mock).mockImplementation((key: string) => {
-      const config: Record<string, string> = {
-        'auth.expires': '1d',
-        'auth.secret': 'test-secret',
-        'auth.refreshSecret': 'test-refresh-secret',
-        'auth.refreshExpires': '7d',
-      };
-      return config[key] ?? 'mock';
-    });
+    (configService.getOrThrow as jest.Mock).mockImplementation(
+      (key: string) => {
+        const config: Record<string, string> = {
+          'auth.expires': '1d',
+          'auth.secret': 'test-secret',
+          'auth.refreshSecret': 'test-refresh-secret',
+          'auth.refreshExpires': '7d',
+        };
+        return config[key] ?? 'mock';
+      },
+    );
   });
 
   describe('validateIdLogin', () => {
@@ -134,10 +136,16 @@ describe('AuthLoginService', () => {
       };
       (usersService.findById as jest.Mock).mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (sessionService.create as jest.Mock).mockResolvedValue({ id: 10, hash: 'hash' });
+      (sessionService.create as jest.Mock).mockResolvedValue({
+        id: 10,
+        hash: 'hash',
+      });
       (jwtService.signAsync as jest.Mock).mockResolvedValue('jwt-token');
 
-      const result = await service.validateIdLogin({ userId: 1, password: 'pass1234' });
+      const result = await service.validateIdLogin({
+        userId: 1,
+        password: 'pass1234',
+      });
 
       expect(result).toHaveProperty('token', 'jwt-token');
       expect(result).toHaveProperty('refreshToken', 'jwt-token');

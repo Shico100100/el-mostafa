@@ -173,11 +173,9 @@ export class PurchaseOrderService {
       }
 
       for (const b of result.breakdown) {
-        await queryRunner.manager.update(
-          PurchaseOrderItem,
-          b.item_id,
-          { landed_cost: b.unit_landed_cost },
-        );
+        await queryRunner.manager.update(PurchaseOrderItem, b.item_id, {
+          landed_cost: b.unit_landed_cost,
+        });
         const product = await queryRunner.manager.findOne(Product, {
           where: { id: b.product_id },
         });

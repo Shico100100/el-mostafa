@@ -8,7 +8,12 @@ const ALLOWED_EXCEL_MIMES = [
 
 const ALLOWED_EXCEL_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
 
-const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_IMAGE_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 

@@ -194,14 +194,18 @@ export class ProductExcelService {
           selling_price: (row[colMap['Selling Price']] ||
             row[colMap['selling_price']] ||
             0) as number,
-          cost_price:
-            (row[colMap['Cost Price']] || row[colMap['cost_price']] || 0) as number,
-          min_stock:
-            (row[colMap['Min Stock']] || row[colMap['min_stock']] || 0) as number,
+          cost_price: (row[colMap['Cost Price']] ||
+            row[colMap['cost_price']] ||
+            0) as number,
+          min_stock: (row[colMap['Min Stock']] ||
+            row[colMap['min_stock']] ||
+            0) as number,
           type: (
             (row[colMap['Type']] || row[colMap['type']] || 'FINISHED') as string
           ).toUpperCase(),
-          unit: (row[colMap['Unit']] || row[colMap['unit']] || 'piece') as string,
+          unit: (row[colMap['Unit']] ||
+            row[colMap['unit']] ||
+            'piece') as string,
           weight_grams: row[colMap['weight_grams']]
             ? Number(row[colMap['weight_grams']])
             : undefined,

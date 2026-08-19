@@ -14,10 +14,7 @@ import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { SalesOrder, OrderStatus } from '../sales/entities/sales-order.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
-import {
-  PurchaseOrder,
-  PurchaseOrderStatus,
-} from '../purchases/entities/purchase-order.entity';
+import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 import { PeachtreeReviewService } from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
@@ -78,13 +75,12 @@ export class PeachtreeSyncService {
   }
 
   private get syncContext() {
-    const self = this;
     return {
-      shouldSkip(entity: string, peachtreeCount: number) {
-        return self.shouldSkip(entity, peachtreeCount);
+      shouldSkip: (entity: string, peachtreeCount: number) => {
+        return this.shouldSkip(entity, peachtreeCount);
       },
-      markSynced(entity: string, count: number) {
-        self.markSynced(entity, count);
+      markSynced: (entity: string, count: number) => {
+        return this.markSynced(entity, count);
       },
     };
   }
@@ -520,8 +516,7 @@ export class PeachtreeSyncService {
             {
               const orderId = row.db_record_id;
               const DEC_MAX = 99999999.99;
-              const clamp = (v: number) =>
-                Math.min(Math.max(v, 0), DEC_MAX);
+              const clamp = (v: number) => Math.min(Math.max(v, 0), DEC_MAX);
               if (orderId && Array.isArray(nv.items)) {
                 const raw = nv.items as Record<string, unknown>[];
                 const merged = new Map<number, Record<string, unknown>>();

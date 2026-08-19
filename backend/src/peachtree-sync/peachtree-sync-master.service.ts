@@ -6,11 +6,7 @@ import { PeachtreeMappingService } from './peachtree-mapping.service';
 import { PeachtreeReviewService } from './peachtree-review.service';
 import { StockService } from '../inventory/stock.service';
 import { MovementType } from '../inventory/entities/stock-movement.entity';
-import {
-  SyncEntity,
-  SyncResultDto,
-  SyncStatus,
-} from './dto/sync-status.dto';
+import { SyncEntity, SyncResultDto, SyncStatus } from './dto/sync-status.dto';
 import { Customer } from '../sales/entities/customer.entity';
 import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';

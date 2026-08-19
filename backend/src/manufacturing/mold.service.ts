@@ -486,7 +486,9 @@ export class MoldService {
       // instead of an N+1 findOne per row.
       const names = [...new Set(data.map((r) => r.name).filter(Boolean))];
       const existingMolds = names.length
-        ? await queryRunner.manager.find(Mold, { where: names.map((n) => ({ name: n })) })
+        ? await queryRunner.manager.find(Mold, {
+            where: names.map((n) => ({ name: n })),
+          })
         : [];
       const existingByName = new Map(existingMolds.map((m) => [m.name, m]));
 
@@ -499,9 +501,7 @@ export class MoldService {
           await queryRunner.manager.update(Mold, existing.id, row);
           updated++;
         } else {
-          await queryRunner.manager.save(
-            queryRunner.manager.create(Mold, row),
-          );
+          await queryRunner.manager.save(queryRunner.manager.create(Mold, row));
           created++;
         }
       }
