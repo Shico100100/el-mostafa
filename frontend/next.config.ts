@@ -13,7 +13,7 @@ const baseConfig: NextConfig = {
         images: { unoptimized: true },
       }),
   reactStrictMode: true,
-  trailingSlash: true,
+  trailingSlash: false,
   allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS?.split(',')?.filter(Boolean) || [],
   async headers() {
     return [
