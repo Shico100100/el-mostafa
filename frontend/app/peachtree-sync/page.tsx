@@ -298,8 +298,8 @@ export default function PeachtreeSyncPage() {
                       entry.change_type === 'update' &&
                       entry.entity === 'invoice_line_items'
                         ? [
-                            (entry.old_values?.items as any[] | undefined)?.length ?? 0,
-                            (entry.new_values?.items as any[] | undefined)?.length ?? 0,
+                            (entry.old_values?.items as Record<string, unknown>[] | undefined)?.length ?? 0,
+                            (entry.new_values?.items as Record<string, unknown>[] | undefined)?.length ?? 0,
                           ]
                         : null;
                     return (

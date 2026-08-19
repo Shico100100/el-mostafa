@@ -34,7 +34,7 @@ import { usePeachtreeSync } from './usePeachtreeSync';
 import type { ReviewEntry, LogEntry } from './usePeachtreeSync';
 
 function mockLoadData(
-  overrides: { tables?: string[]; review?: any[]; logs?: any[] } = {},
+  overrides: { tables?: string[]; review?: ReviewEntry[]; logs?: LogEntry[] } = {},
 ) {
   mocks.fetchWithAuth
     .mockResolvedValueOnce({ running: false, percentComplete: 0, currentEntity: '', status: 'idle' })
@@ -469,13 +469,13 @@ describe('usePeachtreeSync', () => {
 
     it('loads review and logs on mount', async () => {
       mockLoadData({
-        review: [{ id: 1, entity: 'customers', record_key: 'Acme' }],
-        logs: [{ id: 9, run_id: 'sync_1', entity: 'products', action: 'inserted' }],
+        review: [{ id: '1', entity: 'customers', record_key: 'Acme', change_type: 'insert', old_values: null, new_values: {} }],
+        logs: [{ id: '9', run_id: 'sync_1', entity: 'products', action: 'inserted' }],
       });
       const { result } = renderHook(() => usePeachtreeSync());
       await waitFor(() => expect(result.current.loading).toBe(false));
-      expect(result.current.review).toEqual([{ id: 1, entity: 'customers', record_key: 'Acme' }]);
-      expect(result.current.logs).toEqual([{ id: 9, run_id: 'sync_1', entity: 'products', action: 'inserted' }]);
+      expect(result.current.review).toEqual([{ id: '1', entity: 'customers', record_key: 'Acme', change_type: 'insert', old_values: null, new_values: {} }]);
+      expect(result.current.logs).toEqual([{ id: '9', run_id: 'sync_1', entity: 'products', action: 'inserted' }]);
     });
   });
 });

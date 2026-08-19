@@ -3,7 +3,6 @@
 import { Upload, Download } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { useAuthCheck } from '@/lib/useAuthCheck';
 
 interface ExcelActionsProps {
     exportUrl: string;
@@ -13,7 +12,6 @@ interface ExcelActionsProps {
 }
 
 export default function ExcelActions({ exportUrl, importUrl, fileName, onImportSuccess }: ExcelActionsProps) {
-    const ready = useAuthCheck();
     const [importing, setImporting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 

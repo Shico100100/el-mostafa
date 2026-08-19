@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuthCheck } from '@/lib/useAuthCheck';
 import type { Machine } from '@/components/manufacturing/machines/types';
 
 export function useMachines() {
-  const router = useRouter();
   const ready = useAuthCheck();
   const [machines, setMachines] = useState<Machine[]>([]);
   const [totalMachines, setTotalMachines] = useState(0);

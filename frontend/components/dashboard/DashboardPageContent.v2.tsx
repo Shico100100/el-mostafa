@@ -13,15 +13,12 @@ import {
   Star,
   ArrowDownRight,
   Cog,
-  ArrowUpRight,
   Wrench,
   RefreshCw,
-  Bell,
   Bot,
   Radar,
   Trophy,
   ShoppingCart,
-  AlertTriangle,
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/dashboard/useDashboardStats';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -39,18 +36,6 @@ import { APAgingPanel } from '@/components/dashboard/APAgingPanel';
 import { RevenueExpensesPanel } from '@/components/dashboard/RevenueExpensesPanel';
 import { CashFlowPanel } from '@/components/dashboard/CashFlowPanel';
 import { DashboardToolbar } from '@/components/dashboard/DashboardToolbar';
-
-const SIDEBAR = [
-  { icon: '📊', label: 'لوحة التحكم', href: '/dashboard', act: true },
-  { icon: '🛒', label: 'المبيعات', href: '/sales' },
-  { icon: '📦', label: 'المشتريات', href: '/purchases' },
-  { icon: '🏭', label: 'التصنيع', href: '/manufacturing' },
-  { icon: '📋', label: 'المحاسبة', href: '/accounting' },
-  { icon: '📈', label: 'التقارير', href: '/reports' },
-  { icon: '🔔', label: 'الإشعارات', href: '/notifications' },
-  { icon: '👤', label: 'المستخدمين', href: '/users' },
-  { icon: '⚙️', label: 'الإعدادات', href: '/settings' },
-];
 
 export function DashboardPageContentV2() {
   const router = useRouter();

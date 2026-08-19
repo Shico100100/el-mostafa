@@ -1,6 +1,5 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuthCheck } from '@/lib/useAuthCheck';
@@ -31,7 +30,6 @@ export interface BankStatement {
 }
 
 export function useBanking() {
-  const router = useRouter();
   const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
