@@ -233,6 +233,24 @@ def start_frontend():
     processes.append(proc)
     return proc
 
+def _chatbot_python():
+    """Return the Python interpreter to run the chatbot with.
+
+    Prefer the system Python (which has pip + chatbot deps installed)
+    over the interpreter running this launcher (e.g. a venv without pip).
+    """
+    candidates = [
+        r"C:\Users\Mostafa\AppData\Local\Python\bin\python.exe",
+        r"C:\Users\Mostafa\AppData\Local\Python\python.exe",
+        r"C:\Python314\python.exe",
+    ]
+    for cand in candidates:
+        if os.path.exists(cand):
+            return cand
+    # Fall back to the running interpreter
+    return sys.executable
+
+
 def check_chatbot_deps():
     """Check if chatbot Python dependencies are installed"""
     chatbot_dir = os.path.join(SCRIPT_DIR, "chatbot")
@@ -250,8 +268,9 @@ def install_chatbot_deps():
     """Install chatbot Python dependencies"""
     chatbot_dir = os.path.join(SCRIPT_DIR, "chatbot")
     print("🔧 Installing chatbot dependencies (first time only)...")
+    py = _chatbot_python()
     result = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
+        [py, "-m", "pip", "install", "-r", "requirements.txt"],
         cwd=chatbot_dir,
     )
     if result.returncode != 0:
@@ -261,8 +280,9 @@ def install_chatbot_deps():
 def run_chatbot_migrations():
     """Run chatbot DB migrations"""
     chatbot_dir = os.path.join(SCRIPT_DIR, "chatbot")
+    py = _chatbot_python()
     subprocess.run(
-        [sys.executable, "-m", "database.migrations"],
+        [py, "-m", "database.migrations"],
         cwd=chatbot_dir,
         capture_output=True,
         text=True,
@@ -273,6 +293,7 @@ def start_chatbot():
     """Start the AI chatbot server"""
     print("🤖 Starting AI Chatbot (Port 8765)...")
     chatbot_dir = os.path.join(SCRIPT_DIR, "chatbot")
+    py = _chatbot_python()
 
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)
@@ -280,7 +301,7 @@ def start_chatbot():
 
     main_py = os.path.join(chatbot_dir, "main.py")
     proc = subprocess.Popen(
-        [sys.executable, "-u", main_py],
+        [py, "-u", main_py],
         cwd=chatbot_dir,
         env=env,
     )
