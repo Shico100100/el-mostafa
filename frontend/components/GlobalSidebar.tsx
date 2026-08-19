@@ -139,7 +139,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    <div className="flex min-h-screen bg-[#0a0f0d]">
       {/* Mobile overlay */}
       {open && (
         <div
@@ -151,29 +151,29 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
       {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 right-4 z-30 lg:hidden p-2.5 bg-slate-800 rounded-xl border border-white/10 text-slate-400 hover:text-white shadow-lg"
+        className="fixed top-4 right-4 z-30 lg:hidden p-2.5 bg-[#121a16] rounded-lg border border-[#1f2d26] text-[#6b8378] hover:text-white shadow-lg"
       >
         <Menu className="w-5 h-5" />
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 z-50 h-screen bg-slate-900/95 backdrop-blur-xl border-l border-white/10 flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 w-64 ${
+        className={`fixed lg:sticky top-0 z-50 h-screen bg-[#0f1714]/95 backdrop-blur-xl border-l border-[#1f2d26] flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 w-64 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 border-b border-[#1f2d26]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <span className="text-sm font-black text-white">م</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <span className="text-sm font-black text-[#04130d]">م</span>
             </div>
             <div>
               <h1 className="text-sm font-bold text-white">المصطفى</h1>
-              <p className="text-[8px] text-slate-500 -mt-0.5">نظام إدارة متكامل</p>
+              <p className="text-[8px] text-[#6b8378] -mt-0.5">نظام إدارة متكامل</p>
             </div>
           </div>
-          <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-slate-500 hover:text-white rounded-lg hover:bg-white/5 transition">
+          <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-[#6b8378] hover:text-white rounded-lg hover:bg-white/5 transition">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -196,10 +196,10 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
                       setOpen(false);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     active && !expanded
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/20'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/20'
+                      : 'text-[#6b8378] hover:text-white hover:bg-white/5 border border-transparent'
                   }`}
                 >
                   <mod.icon className="w-4 h-4 shrink-0" />
@@ -214,7 +214,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
                   )}
                 </button>
                 {hasChildren && expanded && (
-                  <div className="mr-4 mt-0.5 space-y-0.5 border-r border-white/10 pr-2">
+                  <div className="mr-4 mt-0.5 space-y-0.5 border-r border-[#1f2d26] pr-2">
                     {mod.children!.filter(child => {
                       const roles = resolveRoles(child.href);
                       return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
@@ -224,13 +224,13 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
                         <button
                           key={child.href}
                           onClick={() => { router.push(child.href); setOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
                             childActive
-                              ? 'bg-blue-600/10 text-blue-300 border border-blue-500/10'
-                              : 'text-slate-500 hover:text-white hover:bg-white/5 border border-transparent'
+                              ? 'bg-emerald-600/10 text-emerald-300 border border-emerald-500/10'
+                              : 'text-[#6b8378] hover:text-white hover:bg-white/5 border border-transparent'
                           }`}
                         >
-                          <div className={`w-1 h-1 rounded-full ${childActive ? 'bg-blue-400' : 'bg-slate-600'}`} />
+                          <div className={`w-1 h-1 rounded-full ${childActive ? 'bg-emerald-400' : 'bg-slate-600'}`} />
                           {child.label}
                         </button>
                       );
@@ -243,10 +243,10 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
         </nav>
 
         {/* Bottom */}
-        <div className="p-2 border-t border-white/10">
+        <div className="p-2 border-t border-[#1f2d26]">
           <button
             onClick={() => { router.push('/dashboard'); setOpen(false); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition border border-transparent"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6b8378] hover:text-white hover:bg-white/5 transition border border-transparent"
           >
             <ArrowLeft className="w-4 h-4 shrink-0" />
             <span>الرئيسية</span>

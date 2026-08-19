@@ -2,7 +2,7 @@
 
 import { DateProvider } from '@/lib/dashboard/date-context';
 import { DashboardProvider } from '@/lib/dashboard/dashboard-context';
-import { DashboardPageContent } from '@/components/dashboard/DashboardPageContent';
+import { DashboardPageContentV2 } from '@/components/dashboard/DashboardPageContent.v2';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export default function DashboardPage() {
@@ -10,7 +10,7 @@ export default function DashboardPage() {
     <ErrorBoundary>
       <DateProvider>
         <DashboardProvider>
-          <DashboardPageContent />
+          <DashboardPageContentV2 />
         </DashboardProvider>
       </DateProvider>
     </ErrorBoundary>
