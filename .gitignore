@@ -95,3 +95,7 @@ andrid.txt
 query
 AGENTS1.md
 backup_*.dump
+# Debug/scratch scripts with hardcoded credentials (never commit)
+check_price*.js
+debug_*.js
+scratch_*.js
