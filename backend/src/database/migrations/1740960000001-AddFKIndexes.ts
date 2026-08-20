@@ -28,7 +28,7 @@ export class AddFKIndexes1740960000001 implements MigrationInterface {
       `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='daily_production') THEN CREATE INDEX IF NOT EXISTS "IDX_daily_production_mold_id" ON "daily_production" ("mold_id"); END IF; END $$;`,
     );
     await queryRunner.query(
-      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='daily_production') THEN CREATE INDEX IF NOT EXISTS "IDX_daily_production_raw_material_id" ON "daily_production" ("raw_material_id"); END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='daily_production') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='daily_production' AND column_name='raw_material_id') THEN CREATE INDEX IF NOT EXISTS "IDX_daily_production_raw_material_id" ON "daily_production" ("raw_material_id"); END IF; END $$;`,
     );
 
     // BOMs
@@ -162,7 +162,7 @@ export class AddFKIndexes1740960000001 implements MigrationInterface {
       `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='supplier_materials') THEN CREATE INDEX IF NOT EXISTS "IDX_supplier_materials_supplier_id" ON "supplier_materials" ("supplier_id"); END IF; END $$;`,
     );
     await queryRunner.query(
-      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='supplier_materials') THEN CREATE INDEX IF NOT EXISTS "IDX_supplier_materials_raw_material_id" ON "supplier_materials" ("raw_material_id"); END IF; END $$;`,
+      `DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='supplier_materials') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='supplier_materials' AND column_name='raw_material_id') THEN CREATE INDEX IF NOT EXISTS "IDX_supplier_materials_raw_material_id" ON "supplier_materials" ("raw_material_id"); END IF; END $$;`,
     );
 
     // Accounting
