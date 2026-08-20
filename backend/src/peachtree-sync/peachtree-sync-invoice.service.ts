@@ -19,8 +19,6 @@ import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
 const BATCH_SIZE = 500;
 
-type PeachtreeRow = Record<string, string>;
-
 interface InvoiceData {
   customer_id?: number;
   supplier_id?: number;
@@ -39,18 +37,6 @@ interface SalesInvoiceData extends InvoiceData {
 interface PurchaseInvoiceData extends InvoiceData {
   supplier_id: number;
   status: PurchaseOrderStatus;
-}
-
-interface LineItemRow {
-  PostOrder: string;
-  CustomerRecordNumber: string;
-  VendorRecordNumber: string;
-  ItemRecordNumber: string;
-  Quantity: string;
-  UnitCost: string;
-  Amount: string;
-  GLAcntNumber: string;
-  RowDescription: string;
 }
 
 interface ExpectedItem {

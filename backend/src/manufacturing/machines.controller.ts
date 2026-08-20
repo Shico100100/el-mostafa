@@ -10,16 +10,13 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
-  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import type { Response, Request } from 'express';
+import type { Response } from 'express';
 import { MachineService } from './machines/machine.service';
 import { MachineStatus } from './entities/machine.entity';
-import { CreateMachineDto, CreateMaintenanceDto } from './dto';
+import { CreateMachineDto } from './dto';
 import { excelFileFilter } from '../common/file-filter';
 import { sheetToJson } from '../utils/excel-export';
 import { UseGuards } from '@nestjs/common';

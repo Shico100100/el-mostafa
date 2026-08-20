@@ -90,7 +90,11 @@ export class PeachtreeSyncDebugService {
     result.dbPqKey_count = dbPqKeys.size;
 
     let matches = 0;
-    const sampleMatches: Array<{ pqKey: string; orderId: number; postOrder: number }> = [];
+    const sampleMatches: Array<{
+      pqKey: string;
+      orderId: number;
+      postOrder: number;
+    }> = [];
     for (const [pqKey, orderId] of dbPqKeys) {
       if (hdrPqKeyToPostOrder.has(pqKey)) {
         matches++;
@@ -513,8 +517,8 @@ export class PeachtreeSyncDebugService {
     const purchaseWithItems = purchaseRows.filter(
       (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
     );
-    const purchaseWithItemsFiltered = purchaseWithItems.filter((r: PeachtreeRow) =>
-      glSet.includes(parseInt(r.GLAcntNumber, 10)),
+    const purchaseWithItemsFiltered = purchaseWithItems.filter(
+      (r: PeachtreeRow) => glSet.includes(parseInt(r.GLAcntNumber, 10)),
     );
     result.purchaseWithItems = purchaseWithItems.length;
     result.purchaseWithItemsAfterGLFilter = purchaseWithItemsFiltered.length;

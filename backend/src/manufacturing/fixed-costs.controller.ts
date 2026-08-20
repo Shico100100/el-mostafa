@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FixedCostService } from './fixed-cost.service';
 import { CreateFixedCostDto } from './dto';

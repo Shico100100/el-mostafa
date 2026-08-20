@@ -14,8 +14,6 @@ import { SalesOrder, OrderStatus } from '../sales/entities/sales-order.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
-type PeachtreeRow = Record<string, string>;
-
 interface MappedCustomer {
   name: string;
   phone: string;

@@ -14,7 +14,10 @@ import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { SalesOrder, OrderStatus } from '../sales/entities/sales-order.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
-import { PurchaseOrder, PurchaseOrderStatus } from '../purchases/entities/purchase-order.entity';
+import {
+  PurchaseOrder,
+  PurchaseOrderStatus,
+} from '../purchases/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 import { PeachtreeReviewService } from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';

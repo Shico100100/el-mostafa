@@ -77,9 +77,7 @@ export class TimeBillingService {
     await this.timeRepo.update(ids, { is_billed: true });
   }
 
-  async getSummaryByJob(
-    jobId: number,
-  ): Promise<{
+  async getSummaryByJob(jobId: number): Promise<{
     job_id: number;
     totalHours: number;
     billableHours: number;

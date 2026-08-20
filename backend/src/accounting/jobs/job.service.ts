@@ -86,9 +86,7 @@ export class JobService {
     return saved;
   }
 
-  async getProfitability(
-    id: number,
-  ): Promise<{
+  async getProfitability(id: number): Promise<{
     job_id: number;
     job_name: string;
     estimated_cost: number;

@@ -27,10 +27,7 @@ export async function seedUsers(qr: QueryRunner) {
     },
   ]);
 
-  const managerPassword = await bcrypt.hash(
-    'admin123',
-    await bcrypt.genSalt(),
-  );
+  const managerPassword = await bcrypt.hash('admin123', await bcrypt.genSalt());
   const workerPassword = managerPassword;
   const viewerPassword = managerPassword;
 
