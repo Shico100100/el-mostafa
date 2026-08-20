@@ -40,5 +40,7 @@ export async function createTestApp(): Promise<INestApplication> {
 }
 
 export async function closeTestApp(app: INestApplication): Promise<void> {
-  await app.close();
+  if (app) {
+    await app.close();
+  }
 }

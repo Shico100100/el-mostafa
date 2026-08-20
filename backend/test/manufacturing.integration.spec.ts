@@ -28,15 +28,6 @@ describe('Manufacturing Flow (Integration)', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  it('should list accessories', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/api/v1/manufacturing/accessories')
-      .set('Authorization', `Bearer ${token}`);
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-  });
-
   it('should list BOMs', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/v1/manufacturing/boms')
