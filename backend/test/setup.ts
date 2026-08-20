@@ -6,16 +6,23 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  ClassSerializerInterceptor,
   INestApplication,
   ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
+import { MailerService } from '../src/mailer/mailer.service';
+import validationOptions from '../src/utils/validation-options';
 
 export async function createTestApp(): Promise<INestApplication> {
   const module: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(MailerService)
+    .useValue({ sendMail: async () => {} })
+    .compile();
 
   const app = module.createNestApplication();
 
@@ -27,13 +34,8 @@ export async function createTestApp(): Promise<INestApplication> {
     type: VersioningType.URI,
     defaultVersion: '1',
   });
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   await app.init();
   return app;
