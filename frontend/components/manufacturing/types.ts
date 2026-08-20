@@ -84,7 +84,7 @@ export interface NormalizedProductionItem {
 
 export const statusColors: Record<string, string> = {
   ACTIVE: 'bg-green-500',
-  INACTIVE: 'bg-slate-500',
+  INACTIVE: 'bg-[#ecfdf5]0',
   MAINTENANCE: 'bg-yellow-500',
   BROKEN: 'bg-red-500',
 };

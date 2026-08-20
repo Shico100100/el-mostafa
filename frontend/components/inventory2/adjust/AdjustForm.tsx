@@ -32,14 +32,14 @@ export function AdjustForm({
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1.5">المنتج *</label>
         <select value={productId} onChange={(e) => onProductChange(Number(e.target.value))}
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
           <option value={0}>اختر المنتج...</option>
           {products.map((p) => (<option key={p.id} value={p.id}>{p.name} ({p.type})</option>))}
         </select>
       </div>
 
       {selectedProduct && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3">
           <Package className="w-5 h-5 text-blue-400" />
           <div>
             <p className="text-white font-medium">{selectedProduct.name}</p>
@@ -51,7 +51,7 @@ export function AdjustForm({
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1.5">المخزن *</label>
         <select value={warehouseId} onChange={(e) => onWarehouseChange(Number(e.target.value))}
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
           {warehouses.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}
         </select>
         {currentStock && (
@@ -65,10 +65,10 @@ export function AdjustForm({
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1.5">الكمية الجديدة *</label>
         <input type="number" step="1" min="0" value={newQuantity} onChange={(e) => onQuantityChange(e.target.value)}
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
           placeholder="أدخل الكمية الفعلية..." />
         {currentStock && (
-          <p className="text-xs text-slate-500 mt-1.5">
+          <p className="text-xs text-[#ecfdf5]0 mt-1.5">
             الفرق: {newQuantity ? (Number(newQuantity) - currentQty).toLocaleString() : '0'} (سالب = نقص، موجب = زيادة)
           </p>
         )}
@@ -77,7 +77,7 @@ export function AdjustForm({
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1.5">سبب التسوية (اختياري)</label>
         <input type="text" value={notes} onChange={(e) => onNotesChange(e.target.value)}
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+          className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
           placeholder="مثال: توالف، سرقة، خطأ في الجرد..." />
       </div>
 

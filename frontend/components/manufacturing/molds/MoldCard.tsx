@@ -14,7 +14,7 @@ function getStatusColor(status: string) {
     case 'GOOD': return 'bg-green-500/20 text-green-200';
     case 'NEEDS_REPAIR': return 'bg-yellow-500/20 text-yellow-200';
     case 'BROKEN': return 'bg-red-500/20 text-red-200';
-    default: return 'bg-gray-500/20 text-gray-200';
+    default: return 'bg-[#ecfdf5]0/20 text-gray-200';
   }
 }
 
@@ -57,9 +57,9 @@ export function MoldCard({ mold, onEdit, onIssue }: MoldCardProps) {
       </div>
       <div className="flex gap-2">
         <button onClick={() => router.push(`/manufacturing/molds/${mold.id}`)}
-          className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded">السجل</button>
+          className="flex-1 px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded">السجل</button>
         <button onClick={() => onEdit(mold)}
-          className="flex-1 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded">تعديل</button>
+          className="flex-1 px-3 py-2 bg-teal-500/20 hover:bg-teal-500/30 text-purple-200 rounded">تعديل</button>
         <button onClick={() => onIssue(mold)}
           className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded">مشكلة</button>
       </div>

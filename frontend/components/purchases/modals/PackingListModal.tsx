@@ -29,44 +29,44 @@ export default function PackingListModal({
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">طول الكرتونة (سم)</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" value={form.carton_length_cm} onChange={e => onFormChange({ ...form, carton_length_cm: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" value={form.carton_length_cm} onChange={e => onFormChange({ ...form, carton_length_cm: e.target.value })} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">عرض الكرتونة (سم)</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" value={form.carton_width_cm} onChange={e => onFormChange({ ...form, carton_width_cm: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" value={form.carton_width_cm} onChange={e => onFormChange({ ...form, carton_width_cm: e.target.value })} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">ارتفاع الكرتونة (سم)</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" value={form.carton_height_cm} onChange={e => onFormChange({ ...form, carton_height_cm: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" value={form.carton_height_cm} onChange={e => onFormChange({ ...form, carton_height_cm: e.target.value })} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">عدد الكراتين</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" value={form.cartons_count} onChange={e => onFormChange({ ...form, cartons_count: e.target.value })} min="1" />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" value={form.cartons_count} onChange={e => onFormChange({ ...form, cartons_count: e.target.value })} min="1" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">حد الانحراف (%)</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" step="0.1" value={form.deviation_threshold_percent} onChange={e => onFormChange({ ...form, deviation_threshold_percent: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" step="0.1" value={form.deviation_threshold_percent} onChange={e => onFormChange({ ...form, deviation_threshold_percent: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">الوزن الصافي الفعلي (كجم) — Net Weight</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" step="0.01" value={form.actual_net_weight_kg} onChange={e => onFormChange({ ...form, actual_net_weight_kg: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" step="0.01" value={form.actual_net_weight_kg} onChange={e => onFormChange({ ...form, actual_net_weight_kg: e.target.value })} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">الوزن الإجمالي الفعلي (كجم) — Gross Weight</label>
-              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" type="number" step="0.01" value={form.actual_gross_weight_kg} onChange={e => onFormChange({ ...form, actual_gross_weight_kg: e.target.value })} />
+              <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" type="number" step="0.01" value={form.actual_gross_weight_kg} onChange={e => onFormChange({ ...form, actual_gross_weight_kg: e.target.value })} />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">ملاحظات</label>
-            <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500" value={form.notes} onChange={e => onFormChange({ ...form, notes: e.target.value })} />
+            <input className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500" value={form.notes} onChange={e => onFormChange({ ...form, notes: e.target.value })} />
           </div>
           <div className="flex justify-end">
             <button
               onClick={onSave}
               disabled={saving}
-              className="px-6 py-3 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-500/30 hover:bg-purple-500/30 transition disabled:opacity-50"
+              className="px-6 py-3 bg-teal-500/20 text-purple-300 rounded-xl border border-teal-500/30 hover:bg-teal-500/30 transition disabled:opacity-50"
             >
               {saving ? 'جاري الحفظ...' : 'حساب وتحليل'}
             </button>
@@ -151,7 +151,7 @@ export default function PackingListModal({
           })()}
         </div>
         <div className="px-6 py-4 border-t border-white/10 flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition">
+          <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-300 rounded-lg hover:bg-[#ecfdf5]0/30 transition">
             إغلاق
           </button>
         </div>

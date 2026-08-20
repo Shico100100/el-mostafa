@@ -14,7 +14,7 @@ export function StatCards({ stats }: Props) {
             <p className="text-gray-400 text-sm">إجمالي السجلات</p>
             <p className="text-3xl font-bold text-white mt-1">{stats.totalConsumptions}</p>
           </div>
-          <div className="p-3 bg-blue-500/20 rounded-xl"><FileText /></div>
+          <div className="p-3 bg-emerald-500/20 rounded-xl"><FileText /></div>
         </div>
       </div>
       <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
@@ -32,7 +32,7 @@ export function StatCards({ stats }: Props) {
             <p className="text-gray-400 text-sm">إجمالي الكمية</p>
             <p className="text-3xl font-bold text-purple-400 mt-1">{stats.totalQuantity.toFixed(2)}</p>
           </div>
-          <div className="p-3 bg-purple-500/20 rounded-xl"><Package /></div>
+          <div className="p-3 bg-teal-500/20 rounded-xl"><Package /></div>
         </div>
       </div>
     </div>

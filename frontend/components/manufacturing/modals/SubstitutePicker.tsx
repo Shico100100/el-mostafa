@@ -42,7 +42,7 @@ export default function SubstitutePicker({
             </button>
           ))}
           {available.length === 0 && (
-            <p className="text-gray-500 text-center py-4">لا توجد خامات بديلة متاحة</p>
+            <p className="text-[#ecfdf5]0 text-center py-4">لا توجد خامات بديلة متاحة</p>
           )}
         </div>
         <button onClick={onClose} className="w-full mt-4 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-gray-200 rounded-lg transition">

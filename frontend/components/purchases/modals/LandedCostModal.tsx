@@ -138,7 +138,7 @@ export default function LandedCostModal({
           )}
         </div>
         <div className="px-6 py-4 border-t border-white/10 flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition">
+          <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-300 rounded-lg hover:bg-[#ecfdf5]0/30 transition">
             إغلاق
           </button>
         </div>

@@ -34,7 +34,7 @@ export default function StockAdjustModal({ productId, onClose, onSave }: {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">نوع الحركة</label>
             <select value={type} onChange={(e) => setType(e.target.value as 'IN' | 'OUT')}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
               <option value="IN">إضافة إلى المخزون</option>
               <option value="OUT">خصم من المخزون</option>
             </select>
@@ -42,12 +42,12 @@ export default function StockAdjustModal({ productId, onClose, onSave }: {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">الكمية</label>
             <input type="number" min="0.01" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" placeholder="أدخل الكمية" autoFocus />
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" placeholder="أدخل الكمية" autoFocus />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">ملاحظات (اختياري)</label>
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" placeholder="سبب التعديل..." />
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" placeholder="سبب التعديل..." />
           </div>
           <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
             <button onClick={onClose} className="px-5 py-2.5 bg-slate-700/50 text-slate-200 rounded-xl hover:bg-slate-700 transition" disabled={saving}>إلغاء</button>

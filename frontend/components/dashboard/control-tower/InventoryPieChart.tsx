@@ -106,7 +106,7 @@ export function InventoryPieChart({ data }: InventoryPieChartProps) {
           >
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: seg.color }} />
             <span className="text-slate-300">{seg.name}</span>
-            <span className="text-slate-500">({seg.percent}%)</span>
+            <span className="text-[#ecfdf5]0">({seg.percent}%)</span>
           </div>
         ))}
       </div>

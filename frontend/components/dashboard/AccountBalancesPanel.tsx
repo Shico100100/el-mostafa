@@ -38,7 +38,7 @@ export function AccountBalancesPanel() {
       onRetry={retry}
     >
       <div className="space-y-1">
-        <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-500 font-medium border-b border-white/5 mb-2">
+        <div className="flex items-center justify-between px-3 py-2 text-xs text-[#ecfdf5]0 font-medium border-b border-white/5 mb-2">
           <span>الحساب</span>
           <span>الرصيد الحالي</span>
         </div>
@@ -48,7 +48,7 @@ export function AccountBalancesPanel() {
             className="flex items-center justify-between px-3 py-2.5 hover:bg-white/5 rounded-xl transition group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <span className="text-[10px] font-mono text-slate-500 bg-white/5 px-1.5 py-0.5 rounded shrink-0">
+              <span className="text-[10px] font-mono text-[#ecfdf5]0 bg-white/5 px-1.5 py-0.5 rounded shrink-0">
                 {acc.code || `#${acc.id}`}
               </span>
               <span className="text-sm text-slate-200 truncate">{acc.name}</span>

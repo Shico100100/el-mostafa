@@ -80,7 +80,7 @@ export default function ProductTable({
                         onClick={(e) => { e.stopPropagation(); window.open(product.image_path, '_blank'); }}
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-xs text-gray-500">—</div>
+                      <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-xs text-[#ecfdf5]0">—</div>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -91,7 +91,7 @@ export default function ProductTable({
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-300 flex items-center gap-1.5">
-                      <Warehouse className="w-3.5 h-3.5 text-gray-500" />
+                      <Warehouse className="w-3.5 h-3.5 text-[#ecfdf5]0" />
                       {product.warehouse?.name || '—'}
                     </span>
                   </td>
@@ -104,7 +104,7 @@ export default function ProductTable({
                         type="number"
                         value={editForm.selling_price}
                         onChange={(e) => onEditFormChange('selling_price', e.target.value)}
-                        className="w-24 bg-slate-900 border border-blue-500 rounded px-2 py-1 outline-none text-white"
+                        className="w-24 bg-slate-900 border border-emerald-500 rounded px-2 py-1 outline-none text-white"
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
@@ -126,14 +126,14 @@ export default function ProductTable({
                           type="number"
                           value={editForm.stock_quantity}
                           onChange={(e) => onEditFormChange('stock_quantity', e.target.value)}
-                          className="w-20 bg-slate-900 border border-blue-500 rounded px-2 py-1 outline-none text-white"
+                          className="w-20 bg-slate-900 border border-emerald-500 rounded px-2 py-1 outline-none text-white"
                         />
-                        <span className="text-xs text-gray-500">{product.unit}</span>
+                        <span className="text-xs text-[#ecfdf5]0">{product.unit}</span>
                       </div>
                     ) : (
                       <div className={`flex items-center gap-2 font-semibold ${product.stock_quantity <= (product.min_stock || 0) ? 'text-red-400' : 'text-green-400'}`}>
                         {product.stock_quantity}
-                        <span className="text-xs font-normal text-gray-500">{product.unit || 'قطعة'}</span>
+                        <span className="text-xs font-normal text-[#ecfdf5]0">{product.unit || 'قطعة'}</span>
                       </div>
                     )}
                   </td>
@@ -169,14 +169,14 @@ export default function ProductTable({
                           <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => onEditFull(product)}
-                              className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition"
+                              className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-blue-200 rounded-lg transition"
                               title="تعديل كامل"
                             >
                               ✏️
                             </button>
                             <button
                               onClick={() => onDuplicate(product)}
-                              className="p-1.5 bg-purple-500/20 hover:bg-purple-500/40 text-purple-200 rounded-lg transition"
+                              className="p-1.5 bg-teal-500/20 hover:bg-teal-500/40 text-purple-200 rounded-lg transition"
                               title="نسخ المنتج"
                             >
                               📋

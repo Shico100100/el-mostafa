@@ -42,7 +42,7 @@ export function WarehouseCard({ warehouse, stockCount, onOpen, onEdit, onDelete 
         <span>{stockCount ?? 0} صنف</span>
       </div>
       <div className="flex gap-2 mt-3 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
-        <button onClick={() => onEdit(w)} className="flex-1 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 rounded-lg text-sm transition flex items-center justify-center gap-1.5">
+        <button onClick={() => onEdit(w)} className="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-blue-300 rounded-lg text-sm transition flex items-center justify-center gap-1.5">
           <Edit3 className="w-3.5 h-3.5" /> تعديل
         </button>
         <button onClick={() => onDelete(w.id, w.name)} className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg text-sm transition flex items-center justify-center gap-1.5">

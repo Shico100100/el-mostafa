@@ -33,7 +33,7 @@ export function NewReturnModal({
             <RotateCcw className="w-6 h-6" />
             تسجيل مرتجع جديد
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition text-slate-500 hover:text-white">
+          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition text-[#ecfdf5]0 hover:text-white">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -41,7 +41,7 @@ export function NewReturnModal({
         <div className="p-8 overflow-y-auto space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 mr-1 italic">العميل</label>
+              <label className="text-xs font-bold text-[#ecfdf5]0 mr-1 italic">العميل</label>
               <select
                 value={newReturn.customer_id}
                 onChange={(e) => onCustomerChange(e.target.value)}
@@ -52,7 +52,7 @@ export function NewReturnModal({
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 mr-1 italic">الفاتورة الأصلية (اختياري)</label>
+              <label className="text-xs font-bold text-[#ecfdf5]0 mr-1 italic">الفاتورة الأصلية (اختياري)</label>
               <select
                 disabled={!newReturn.customer_id}
                 value={newReturn.order_id}
@@ -64,7 +64,7 @@ export function NewReturnModal({
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 mr-1 italic">تاريخ المرتجع</label>
+              <label className="text-xs font-bold text-[#ecfdf5]0 mr-1 italic">تاريخ المرتجع</label>
               <input
                 type="date"
                 value={newReturn.return_date}
@@ -75,7 +75,7 @@ export function NewReturnModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 mr-1 italic">سبب الإرجاع</label>
+            <label className="text-xs font-bold text-[#ecfdf5]0 mr-1 italic">سبب الإرجاع</label>
             <textarea
               value={newReturn.reason}
               onChange={(e) => onReasonChange(e.target.value)}
@@ -93,7 +93,7 @@ export function NewReturnModal({
               <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/5">
                 <table className="w-full text-right text-sm">
                   <thead>
-                    <tr className="bg-white/5 text-slate-500">
+                    <tr className="bg-white/5 text-[#ecfdf5]0">
                       <th className="px-4 py-3">الصنف</th>
                       <th className="px-4 py-3 text-center">الكمية المباعة</th>
                       <th className="px-4 py-3 text-center w-32">الكمية المرتجعة</th>

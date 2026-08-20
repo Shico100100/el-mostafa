@@ -18,16 +18,16 @@ export function DateFilter({ startDate, endDate, onStartChange, onEndChange, onS
         <div>
           <label className="block text-gray-300 text-sm mb-2">من تاريخ</label>
           <input type="date" value={startDate} onChange={(e) => onStartChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500" />
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500" />
         </div>
         <div>
           <label className="block text-gray-300 text-sm mb-2">إلى تاريخ</label>
           <input type="date" value={endDate} onChange={(e) => onEndChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500" />
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500" />
         </div>
         <div className="flex items-end">
           <button onClick={onSearch}
-            className="w-full px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition">
+            className="w-full px-6 py-2 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition">
             بحث
           </button>
         </div>

@@ -41,7 +41,7 @@ export default function StockAdjustModal({ productId, onClose, onSave }: StockAd
             <select
               value={type}
               onChange={(e) => setType(e.target.value as 'IN' | 'OUT')}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="IN">إضافة إلى المخزون</option>
               <option value="OUT">خصم من المخزون</option>
@@ -53,7 +53,7 @@ export default function StockAdjustModal({ productId, onClose, onSave }: StockAd
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               placeholder="أدخل الكمية"
               autoFocus
             />
@@ -64,12 +64,12 @@ export default function StockAdjustModal({ productId, onClose, onSave }: StockAd
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               placeholder="سبب التعديل..."
             />
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-200 rounded-lg hover:bg-gray-500/30 transition" disabled={saving}>إلغاء</button>
+            <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-200 rounded-lg hover:bg-[#ecfdf5]0/30 transition" disabled={saving}>إلغاء</button>
             <button onClick={handleSave} disabled={saving || !quantity} className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 font-bold disabled:opacity-50">
               {saving ? 'جاري الحفظ...' : 'حفظ'}
             </button>

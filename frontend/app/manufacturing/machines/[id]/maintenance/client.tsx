@@ -91,7 +91,7 @@ export default function MachineMaintenancePage() {
                     </div>
                     <button
                         onClick={() => router.push('/manufacturing/machines')}
-                        className="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition"
+                        className="px-4 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition"
                     >
                         عودة للماكينات
                     </button>
@@ -124,7 +124,7 @@ export default function MachineMaintenancePage() {
                                 <tr key={item.id} className="border-t border-white/10 hover:bg-white/5">
                                     <td className="px-6 py-4 text-gray-200">{new Date(item.date).toLocaleDateString('ar-EG')}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-sm ${item.type === 'BREAKDOWN' ? 'bg-red-500/20 text-red-200' : 'bg-blue-500/20 text-blue-200'
+                                        <span className={`px-2 py-1 rounded text-sm ${item.type === 'BREAKDOWN' ? 'bg-red-500/20 text-red-200' : 'bg-emerald-500/20 text-blue-200'
                                             }`}>
                                             {item.type === 'BREAKDOWN' ? 'عطل' : 'صيانة دورية'}
                                         </span>
@@ -211,7 +211,7 @@ export default function MachineMaintenancePage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="px-6 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg"
+                                    className="px-6 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg"
                                 >
                                     إلغاء
                                 </button>

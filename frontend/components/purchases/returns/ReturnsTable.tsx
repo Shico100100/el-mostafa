@@ -23,9 +23,9 @@ export function ReturnsTable({ returns, loading }: ReturnsTableProps) {
         </thead>
         <tbody className="divide-y divide-white/5">
           {loading ? (
-            <tr><td colSpan={5} className="px-6 py-16 text-center text-slate-500 italic animate-pulse">جاري تحميل البيانات...</td></tr>
+            <tr><td colSpan={5} className="px-6 py-16 text-center text-[#ecfdf5]0 italic animate-pulse">جاري تحميل البيانات...</td></tr>
           ) : returns.length === 0 ? (
-            <tr><td colSpan={5} className="px-6 py-16 text-center text-slate-500 italic">لا توجد سجلات مرتجعات حالياً</td></tr>
+            <tr><td colSpan={5} className="px-6 py-16 text-center text-[#ecfdf5]0 italic">لا توجد سجلات مرتجعات حالياً</td></tr>
           ) : (
             returns.map((ret) => (
               <tr key={ret.id} className="hover:bg-amber-500/5 transition group">
@@ -38,7 +38,7 @@ export function ReturnsTable({ returns, loading }: ReturnsTableProps) {
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-400 font-medium">{new Date(ret.return_date).toLocaleDateString('ar-EG')}</td>
                 <td className="px-6 py-4 font-black text-white">{Number(ret.total_amount).toLocaleString()} ج.م</td>
-                <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate italic">{ret.reason || 'لا يوجد'}</td>
+                <td className="px-6 py-4 text-xs text-[#ecfdf5]0 max-w-xs truncate italic">{ret.reason || 'لا يوجد'}</td>
               </tr>
             ))
           )}

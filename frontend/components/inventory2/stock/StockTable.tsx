@@ -31,12 +31,12 @@ export function StockTable({ items, warehousesCount, onTransfer }: Props) {
               <tr key={`${item.warehouse_id}-${pid}-${index}`} className="border-t border-white/5 hover:bg-white/5 transition">
                 <td className="px-6 py-4">
                   <div className="text-white font-medium">{item.product?.name || `منتج #${pid}`}</div>
-                  {item.product?.sku && <div className="text-xs text-slate-500 mt-0.5">SKU: {item.product.sku}</div>}
+                  {item.product?.sku && <div className="text-xs text-[#ecfdf5]0 mt-0.5">SKU: {item.product.sku}</div>}
                 </td>
                 <td className="px-6 py-4 text-slate-300">{item.warehouse?.name || '-'}</td>
                 <td className="px-6 py-4">
                   <span className="text-lg font-bold text-white">{qty.toLocaleString()}</span>
-                  <span className="text-xs text-slate-500 mr-1">{item.product?.unit || 'قطعة'}</span>
+                  <span className="text-xs text-[#ecfdf5]0 mr-1">{item.product?.unit || 'قطعة'}</span>
                 </td>
                 <td className="px-6 py-4"><StockBadge quantity={qty} /></td>
                 <td className="px-6 py-4 text-center">
@@ -52,7 +52,7 @@ export function StockTable({ items, warehousesCount, onTransfer }: Props) {
           })}
           {items.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+              <td colSpan={5} className="px-6 py-16 text-center text-[#ecfdf5]0">
                 <Package className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                 <p>لا توجد بيانات مخزون</p>
               </td>

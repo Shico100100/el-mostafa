@@ -304,7 +304,7 @@ export function MonthlySalesDialog({ visible, initialMonth, initialYear, onClose
               <button
                 onClick={() => handlePrintSummary(selectedOrders, `selected-${selected.size}`)}
                 disabled={printing}
-                className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-xl transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
+                className="bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-400 px-4 py-2 rounded-xl transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
               >
                 {printing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
                 طباعة المحدد ({selected.size})

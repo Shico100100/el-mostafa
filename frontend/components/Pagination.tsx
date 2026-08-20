@@ -26,7 +26,7 @@ export function Pagination({ page, totalPages, totalItems, showingItems, onPageC
         </button>
         {generatePageNumbers(page, totalPages).map((p, i) =>
           p === '...' ? (
-            <span key={`dots-${i}`} className="px-2 text-gray-500 text-sm">...</span>
+            <span key={`dots-${i}`} className="px-2 text-[#ecfdf5]0 text-sm">...</span>
           ) : (
             <button
               key={p}

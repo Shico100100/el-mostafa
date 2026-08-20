@@ -54,7 +54,7 @@ export default function SessionDetailModal({
           </div>
           {session.notes && (
             <div className="bg-slate-900/50 rounded-xl p-3 mb-6">
-              <p className="text-xs text-slate-500 mb-1">ملاحظات</p>
+              <p className="text-xs text-[#ecfdf5]0 mb-1">ملاحظات</p>
               <p className="text-slate-300">{session.notes}</p>
             </div>
           )}
@@ -77,7 +77,7 @@ export default function SessionDetailModal({
                   <td className="py-3 px-2 font-bold text-emerald-400">{Number(record.total_production_kg).toFixed(1)}</td>
                   <td className="py-3 px-2 text-blue-400">{record.pieces_produced}</td>
                   <td className="py-3 px-2 text-slate-400">{record.hours_worked}</td>
-                  <td className="py-3 px-2 text-sm text-slate-500 max-w-[200px] truncate">{record.notes}</td>
+                  <td className="py-3 px-2 text-sm text-[#ecfdf5]0 max-w-[200px] truncate">{record.notes}</td>
                   <td className="py-3 px-2">
                     <button
                       onClick={() => onShowHistory(record.id)}
@@ -100,7 +100,7 @@ export default function SessionDetailModal({
 function InfoBox({ label, value, valueClass }: { label: string; value?: string | number; valueClass?: string }) {
   return (
     <div className="bg-slate-900/50 rounded-xl p-3">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-[#ecfdf5]0">{label}</p>
       <p className={`font-bold ${valueClass || ''}`}>{value || '---'}</p>
     </div>
   );

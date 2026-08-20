@@ -31,7 +31,7 @@ function PieSlice({ cx, cy, startAngle, endAngle, innerRadius, outerRadius, fill
 
 function CSSDonutChart({ data }: { data: { name: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return <div className="flex items-center justify-center h-full text-gray-500">لا توجد بيانات</div>;
+  if (total === 0) return <div className="flex items-center justify-center h-full text-[#ecfdf5]0">لا توجد بيانات</div>;
   const cx = 150, cy = 110, outerR = 90, innerR = 60;
   let currentAngle = 0;
   const slices = data.map((d) => {
@@ -61,7 +61,7 @@ function CSSDonutChart({ data }: { data: { name: string; value: number; color: s
 }
 
 function BarChart({ data, maxVal }: { data: { name: string; value: number }[]; maxVal: number }) {
-  if (maxVal === 0) return <div className="flex items-center justify-center h-full text-gray-500">لا توجد بيانات</div>;
+  if (maxVal === 0) return <div className="flex items-center justify-center h-full text-[#ecfdf5]0">لا توجد بيانات</div>;
   const barW = 30, gap = 16;
   const totalW = data.length * (barW + gap) + gap;
   return (

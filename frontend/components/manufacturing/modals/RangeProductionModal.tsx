@@ -47,7 +47,7 @@ export default function RangeProductionModal({
                 const m = machines.find(m => m.id === Number(e.target.value));
                 onFormChange({ ...rangeForm, machine_id: e.target.value, machine_name: m?.name || '' });
               }}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             >
               <option value="">اختر ماكينة</option>
               {machines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -59,7 +59,7 @@ export default function RangeProductionModal({
             <select
               value={rangeForm.mold_id}
               onChange={(e) => onFormChange({ ...rangeForm, mold_id: e.target.value })}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             >
               <option value="">اختر إسطمبة</option>
               {molds.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -71,7 +71,7 @@ export default function RangeProductionModal({
             <select
                value={rangeForm.product_id}
                onChange={(e) => onFormChange({ ...rangeForm, product_id: e.target.value })}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             >
               <option value="">اختر خامة</option>
               {rawMaterials.map(rm => <option key={rm.id} value={rm.id}>{rm.product?.name}</option>)}
@@ -85,7 +85,7 @@ export default function RangeProductionModal({
                 type="date"
                 value={rangeForm.start_date}
                 onChange={(e) => onFormChange({ ...rangeForm, start_date: e.target.value })}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
               />
             </div>
             <div>
@@ -94,7 +94,7 @@ export default function RangeProductionModal({
                 type="date"
                 value={rangeForm.end_date}
                 onChange={(e) => onFormChange({ ...rangeForm, end_date: e.target.value })}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
               />
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function RangeProductionModal({
               value={rangeForm.total_production_kg}
               onChange={(e) => onFormChange({ ...rangeForm, total_production_kg: e.target.value })}
               placeholder="0.0"
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white font-bold text-blue-400"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white font-bold text-blue-400"
             />
             {rangeForm.mode === 'distribute' && rangeForm.total_production_kg && rangeForm.start_date && rangeForm.end_date && (
               <span className="text-xs text-green-400 mt-1 block">
@@ -128,7 +128,7 @@ export default function RangeProductionModal({
                 type="number"
                 value={rangeForm.hours_worked}
                 onChange={(e) => onFormChange({ ...rangeForm, hours_worked: Number(e.target.value) })}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
               />
             </div>
             <div>
@@ -136,7 +136,7 @@ export default function RangeProductionModal({
               <select
                 value={rangeForm.mode}
                 onChange={(e) => onFormChange({ ...rangeForm, mode: e.target.value as 'sum' | 'distribute' })}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
               >
                 <option value="distribute">توزيع على أيام العمل</option>
                 <option value="sum">كدفعة واحدة (تاريخ النهاية)</option>
@@ -151,7 +151,7 @@ export default function RangeProductionModal({
               value={rangeForm.notes}
               onChange={(e) => onFormChange({ ...rangeForm, notes: e.target.value })}
               placeholder="..."
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             />
           </div>
         </div>

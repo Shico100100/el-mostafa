@@ -22,9 +22,9 @@ export function ReturnsTable({ returns, loading }: Props) {
         </thead>
         <tbody className="divide-y divide-white/5">
           {loading ? (
-            <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">جاري تحميل البيانات...</td></tr>
+            <tr><td colSpan={5} className="px-6 py-12 text-center text-[#ecfdf5]0 italic">جاري تحميل البيانات...</td></tr>
           ) : returns.length === 0 ? (
-            <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">لا توجد مرتجعـات مسجلة</td></tr>
+            <tr><td colSpan={5} className="px-6 py-12 text-center text-[#ecfdf5]0 italic">لا توجد مرتجعـات مسجلة</td></tr>
           ) : (
             returns.map((ret) => (
               <tr key={ret.id} className="hover:bg-white/5 transition group">
@@ -32,7 +32,7 @@ export function ReturnsTable({ returns, loading }: Props) {
                 <td className="px-6 py-4 font-bold">{ret.customer?.name}</td>
                 <td className="px-6 py-4 text-sm text-slate-400">{new Date(ret.return_date).toLocaleDateString('ar-EG')}</td>
                 <td className="px-6 py-4 font-bold text-emerald-400">{Number(ret.total_amount).toLocaleString()} ج.م</td>
-                <td className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate">{ret.reason || '-'}</td>
+                <td className="px-6 py-4 text-xs text-[#ecfdf5]0 max-w-xs truncate">{ret.reason || '-'}</td>
               </tr>
             ))
           )}

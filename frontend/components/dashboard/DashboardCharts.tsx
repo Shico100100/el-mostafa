@@ -20,14 +20,14 @@ function CSSBarChart({ data, label }: { data: { name: string; total: number }[];
           const pct = (d.total / maxVal) * 100;
           return (
             <div key={d.name} className="flex-1 flex flex-col items-center gap-1 group/bc">
-              <span className="text-[9px] text-slate-500 opacity-0 group-hover/bc:opacity-100 transition-opacity">
+              <span className="text-[9px] text-[#ecfdf5]0 opacity-0 group-hover/bc:opacity-100 transition-opacity">
                 {d.total.toLocaleString()}
               </span>
               <div
                 className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80"
                 style={{ height: `${Math.max(pct, 3)}%`, backgroundColor: COLORS[i % COLORS.length] }}
               />
-              <span className="text-[9px] text-slate-500 truncate w-full text-center">{d.name}</span>
+              <span className="text-[9px] text-[#ecfdf5]0 truncate w-full text-center">{d.name}</span>
             </div>
           );
         })}

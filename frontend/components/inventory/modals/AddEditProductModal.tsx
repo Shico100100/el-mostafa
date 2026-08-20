@@ -55,12 +55,12 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">اسم المنتج <span className="text-red-400">*</span></label>
                 <input name="name" type="text" defaultValue={editingProduct?.name} required
-                  className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
                   placeholder="مثال: شاسيه بلاستيك مقاس 10" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">المخزن</label>
-                <select name="warehouse_id" defaultValue={editingProduct?.warehouse_id} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-blue-500 focus:outline-none">
+                <select name="warehouse_id" defaultValue={editingProduct?.warehouse_id} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-none">
                   <option value="">اختر المخزن...</option>
                   {warehouses.map((w) => (
                     <option key={w.id} value={w.id}>{w.name}</option>
@@ -69,7 +69,7 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">نوع المنتج</label>
-                <select name="type" defaultValue={editingProduct?.type || 'FINISHED'} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-blue-500 focus:outline-none">
+                <select name="type" defaultValue={editingProduct?.type || 'FINISHED'} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-none">
                   <option value="FINISHED">منتج تام</option>
                   <option value="IMPORTED">مستورد</option>
                   <option value="RAW_PLASTIC">خام بلاستيك</option>
@@ -82,7 +82,7 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">وحدة القياس</label>
-                <input name="unit" defaultValue={editingProduct?.unit || 'piece'} list="units" className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" />
+                <input name="unit" defaultValue={editingProduct?.unit || 'piece'} list="units" className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" />
                 <datalist id="units">
                   <option value="piece">قطعة</option>
                   <option value="kg">كيلوجرام</option>
@@ -93,27 +93,27 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">سعر البيع</label>
-                  <input name="selling_price" type="number" step="0.01" min="0" defaultValue={editingProduct?.selling_price ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="0.00" />
+                  <input name="selling_price" type="number" step="0.01" min="0" defaultValue={editingProduct?.selling_price ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">سعر التكلفة</label>
-                  <input name="cost_price" type="number" step="0.01" min="0" defaultValue={editingProduct?.cost_price ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="0.00" />
+                  <input name="cost_price" type="number" step="0.01" min="0" defaultValue={editingProduct?.cost_price ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="0.00" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">SKU</label>
-                  <input name="sku" defaultValue={editingProduct?.sku ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="رمز المنتج" />
+                  <input name="sku" defaultValue={editingProduct?.sku ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="رمز المنتج" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Barcode</label>
-                  <input name="barcode" defaultValue={editingProduct?.barcode ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="باركود" />
+                  <input name="barcode" defaultValue={editingProduct?.barcode ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="باركود" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">التصنيف</label>
-                  <select name="category_id" defaultValue={editingProduct?.category_id ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-blue-500 focus:outline-none">
+                  <select name="category_id" defaultValue={editingProduct?.category_id ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-gray-300 focus:border-emerald-500 focus:outline-none">
                     <option value="">اختر التصنيف...</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -122,17 +122,17 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">حد الطلب الأدنى</label>
-                  <input name="min_stock" type="number" step="1" min="0" defaultValue={editingProduct?.min_stock ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="0" />
+                  <input name="min_stock" type="number" step="1" min="0" defaultValue={editingProduct?.min_stock ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="0" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">وزن القطعة (جرام)</label>
-                <input name="weight_grams" type="number" step="0.01" min="0" defaultValue={editingProduct?.weight_grams ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="مثال: 50" />
-                <p className="text-xs text-gray-500 mt-1">يساعد في حساب عدد القطع عند الشراء بالكيلو</p>
+                <input name="weight_grams" type="number" step="0.01" min="0" defaultValue={editingProduct?.weight_grams ?? ''} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="مثال: 50" />
+                <p className="text-xs text-[#ecfdf5]0 mt-1">يساعد في حساب عدد القطع عند الشراء بالكيلو</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">وصف المنتج</label>
-                <textarea name="description" defaultValue={editingProduct?.description ?? ''} rows={2} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none" placeholder="ملاحظات إضافية..." />
+                <textarea name="description" defaultValue={editingProduct?.description ?? ''} rows={2} className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none" placeholder="ملاحظات إضافية..." />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">صورة المنتج</label>
@@ -153,11 +153,11 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
                       <img src={editingProduct.image_path} alt="" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="w-20 h-20 rounded-xl border border-dashed border-white/20 bg-slate-900/30 flex items-center justify-center text-gray-500 text-xs">
+                    <div className="w-20 h-20 rounded-xl border border-dashed border-white/20 bg-slate-900/30 flex items-center justify-center text-[#ecfdf5]0 text-xs">
                       لا توجد
                     </div>
                   )}
-                  <label className="cursor-pointer px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg border border-blue-500/30 transition text-sm">
+                  <label className="cursor-pointer px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-300 rounded-lg border border-emerald-500/30 transition text-sm">
                     {uploading ? 'جاري الرفع...' : 'اختيار صورة'}
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                   </label>
@@ -168,7 +168,7 @@ export default function AddEditProductModal({ isOpen, editingProduct, categories
           </div>
 
           <div className="flex gap-4 justify-end pt-4 border-t border-white/10">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition font-medium">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition font-medium">
               إلغاء
             </button>
             <button type="submit" className="px-8 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-bold shadow-lg shadow-blue-900/20">

@@ -42,7 +42,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
             {p}
           </button>
         ) : (
-          <span key={i} className="px-1 text-gray-500">...</span>
+          <span key={i} className="px-1 text-[#ecfdf5]0">...</span>
         )
       ))}
       <button

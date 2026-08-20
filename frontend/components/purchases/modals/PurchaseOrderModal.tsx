@@ -119,7 +119,7 @@ export default function PurchaseOrderModal({
                 <button
                   type="button"
                   onClick={onAddItem}
-                  className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded text-sm"
+                  className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded text-sm"
                 >
                   + إضافة صنف
                 </button>
@@ -143,7 +143,7 @@ export default function PurchaseOrderModal({
                     <button
                       type="button"
                       onClick={() => onQuickProduct(index)}
-                      className="mb-1 p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded text-sm h-[38px] flex items-center justify-center"
+                      className="mb-1 p-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded text-sm h-[38px] flex items-center justify-center"
                       title="إضافة صنف جديد"
                     >
                       +
@@ -239,7 +239,7 @@ export default function PurchaseOrderModal({
                 );
               })}
               {newOrder.items.length === 0 && (
-                <div className="text-center text-gray-500 py-4">
+                <div className="text-center text-[#ecfdf5]0 py-4">
                   أضف أصناف للأمر
                 </div>
               )}
@@ -254,7 +254,7 @@ export default function PurchaseOrderModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg"
+                className="px-6 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg"
               >
                 إلغاء
               </button>

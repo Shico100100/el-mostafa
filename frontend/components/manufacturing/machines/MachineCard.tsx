@@ -49,8 +49,8 @@ export function MachineCard({ machine, onEdit, getStatusColor, getStatusText, ge
         </div>
       </div>
       <div className="flex gap-2">
-        <button onClick={() => onEdit(machine)} className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded">تعديل</button>
-        <button onClick={() => router.push(`/manufacturing/machines/${machine.id}`)} className="flex-1 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded">السجل</button>
+        <button onClick={() => onEdit(machine)} className="flex-1 px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded">تعديل</button>
+        <button onClick={() => router.push(`/manufacturing/machines/${machine.id}`)} className="flex-1 px-3 py-2 bg-teal-500/20 hover:bg-teal-500/30 text-purple-200 rounded">السجل</button>
         <button onClick={() => router.push(`/manufacturing/machines/${machine.id}/maintenance`)} className="flex-1 px-3 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-200 rounded">الصيانة</button>
       </div>
     </div>

@@ -129,7 +129,7 @@ export function NotificationCenter() {
                                     <div
                                         key={notification.id}
                                         onClick={() => !notification.isRead && markAsRead(notification.id)}
-                                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition cursor-pointer ${!notification.isRead ? 'bg-blue-500/5' : ''
+                                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition cursor-pointer ${!notification.isRead ? 'bg-emerald-500/5' : ''
                                             }`}
                                     >
                                         <div className="flex gap-3">
@@ -140,13 +140,13 @@ export function NotificationCenter() {
                                                         {notification.title}
                                                     </h4>
                                                     {!notification.isRead && (
-                                                        <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></span>
+                                                        <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 mt-1.5"></span>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                                                     {notification.message}
                                                 </p>
-                                                <p className="text-xs text-gray-500 mt-2">
+                                                <p className="text-xs text-[#ecfdf5]0 mt-2">
                                                     {getTimeAgo(notification.createdAt)}
                                                 </p>
                                             </div>

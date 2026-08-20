@@ -22,7 +22,7 @@ export default function GlobalError({
             </p>
             <button
               onClick={() => reset()}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium transition"
             >
               أعد تحميل الصفحة
             </button>

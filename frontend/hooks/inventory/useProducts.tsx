@@ -225,7 +225,7 @@ export function useProducts() {
         <div className="flex gap-3 justify-end">
           <button
             onClick={() => toast.dismiss(t)}
-            className="px-4 py-2 bg-gray-500/20 text-gray-200 rounded-lg hover:bg-gray-500/30 transition"
+            className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-200 rounded-lg hover:bg-[#ecfdf5]0/30 transition"
           >
             إلغاء
           </button>

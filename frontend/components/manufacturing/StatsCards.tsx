@@ -22,11 +22,11 @@ export default function StatsCards({
   ];
 
   const colors: Record<string, string> = {
-    blue: 'from-blue-500/10 to-blue-600/10 border-blue-500/20 text-blue-400',
+    blue: 'from-emerald-500/10 to-blue-600/10 border-emerald-500/20 text-blue-400',
     emerald: 'from-emerald-500/10 to-emerald-600/10 border-emerald-500/20 text-emerald-400',
-    purple: 'from-purple-500/10 to-purple-600/10 border-purple-500/20 text-purple-400',
+    purple: 'from-teal-500/10 to-purple-600/10 border-teal-500/20 text-purple-400',
     amber: 'from-amber-500/10 to-amber-600/10 border-amber-500/20 text-amber-400',
-    indigo: 'from-indigo-500/10 to-indigo-600/10 border-indigo-500/20 text-indigo-400',
+    indigo: 'from-teal-500/10 to-indigo-600/10 border-teal-500/20 text-indigo-400',
   };
 
   return (
@@ -35,7 +35,7 @@ export default function StatsCards({
         <div key={i} className={`bg-gradient-to-br ${colors[card.color]} border rounded-2xl p-4 md:p-5`}>
           <p className="text-slate-400 text-xs md:text-sm font-medium mb-1">{card.label}</p>
           <p className={`text-xl md:text-2xl font-bold ${colors[card.color].split(' ').pop()}`}>{card.value}</p>
-          <p className="text-xs text-slate-500">{card.sub}</p>
+          <p className="text-xs text-[#ecfdf5]0">{card.sub}</p>
         </div>
       ))}
     </div>

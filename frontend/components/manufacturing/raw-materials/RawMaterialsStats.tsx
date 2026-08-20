@@ -18,7 +18,7 @@ export function RawMaterialsStats({ total, lowStock, outOfStock, totalValue }: R
             <p className="text-gray-400 text-sm">إجمالي المواد</p>
             <p className="text-3xl font-bold text-white mt-1">{total}</p>
           </div>
-          <div className="p-3 bg-blue-500/20 rounded-xl"><Package /></div>
+          <div className="p-3 bg-emerald-500/20 rounded-xl"><Package /></div>
         </div>
       </div>
       <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">

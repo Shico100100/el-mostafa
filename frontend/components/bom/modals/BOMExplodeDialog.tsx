@@ -75,7 +75,7 @@ export function BOMExplodeDialog({
                   <div className="text-sm text-gray-400">عدد المكونات</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 text-center">
+              <div className="text-xs text-[#ecfdf5]0 text-center">
                 {ppc} قطع/كرتونة &nbsp;|&nbsp; {ppb} قطع/علبة &nbsp;|&nbsp; إجمالي الوزن: {(explosionResult.total_weight_kg ?? 0).toFixed(3)} كجم
               </div>
 
@@ -187,7 +187,7 @@ export function BOMExplodeDialog({
 
               {costResult && (explosionResult.product_selling_price || 0) > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-blue-500/10 rounded-xl p-4 text-center border border-blue-500/20">
+                  <div className="bg-emerald-500/10 rounded-xl p-4 text-center border border-emerald-500/20">
                     <div className="text-2xl font-bold text-blue-400">{(revenue ?? 0).toFixed(2)}</div>
                     <div className="text-sm text-gray-400">إجمالي الإيراد</div>
                   </div>
@@ -220,7 +220,7 @@ export function BOMExplodeDialog({
               </button>
             )}
           </div>
-          <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition">إغلاق</button>
+          <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-300 rounded-lg hover:bg-[#ecfdf5]0/30 transition">إغلاق</button>
         </div>
       </div>
     </div>

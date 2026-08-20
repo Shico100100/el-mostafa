@@ -31,8 +31,8 @@ export function UsersTable({ users, onEdit, onDelete }: Props) {
               <td className="px-6 py-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   u.role.id === 1 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
-                  u.role.id === 3 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                  'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+                  u.role.id === 3 ? 'bg-emerald-500/20 text-blue-300 border border-emerald-500/30' :
+                  'bg-[#ecfdf5]0/20 text-slate-300 border border-[#ecfdf5]0/30'
                 }`}>
                   {ROLES.find(r => r.id === u.role.id)?.label || u.role.name}
                 </span>
@@ -42,7 +42,7 @@ export function UsersTable({ users, onEdit, onDelete }: Props) {
                 {u.status?.id === 1 ? 'نشط' : 'معطل'}
               </td>
               <td className="px-6 py-4 flex gap-2">
-                <button onClick={() => onEdit(u)} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition">
+                <button onClick={() => onEdit(u)} className="p-2 bg-emerald-500/10 text-blue-400 rounded-lg hover:bg-emerald-500/20 transition">
                   <Edit className="w-4 h-4" />
                 </button>
                 <button onClick={() => onDelete(u.id)} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20 transition">

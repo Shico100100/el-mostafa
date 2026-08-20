@@ -10,17 +10,17 @@ interface CardProps {
 }
 
 const colors = {
-  blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+  blue: 'bg-emerald-500/10 border-emerald-500/20 text-blue-400',
   green: 'bg-green-500/10 border-green-500/20 text-green-400',
   amber: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-  purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+  purple: 'bg-teal-500/10 border-teal-500/20 text-purple-400',
   red: 'bg-red-500/10 border-red-500/20 text-red-400',
   emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
 };
 
 const iconBg = {
-  blue: 'bg-blue-500/20', green: 'bg-green-500/20', amber: 'bg-amber-500/20',
-  purple: 'bg-purple-500/20', red: 'bg-red-500/20', emerald: 'bg-emerald-500/20',
+  blue: 'bg-emerald-500/20', green: 'bg-green-500/20', amber: 'bg-amber-500/20',
+  purple: 'bg-teal-500/20', red: 'bg-red-500/20', emerald: 'bg-emerald-500/20',
 };
 
 export default function Card({ icon, label, value, sub, color = 'blue', className = '' }: CardProps) {

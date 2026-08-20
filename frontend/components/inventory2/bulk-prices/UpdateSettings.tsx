@@ -29,7 +29,7 @@ export function UpdateSettings({
           <select
             value={priceField}
             onChange={(e) => onPriceFieldChange(e.target.value as 'cost_price' | 'selling_price')}
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
           >
             {fieldOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -41,7 +41,7 @@ export function UpdateSettings({
           <select
             value={updateType}
             onChange={(e) => onUpdateTypeChange(e.target.value as 'percentage' | 'fixed')}
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
           >
             {updateTypeOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -57,12 +57,12 @@ export function UpdateSettings({
             step={updateType === 'percentage' ? '1' : '0.01'}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
             placeholder={updateType === 'percentage' ? 'مثال: 10' : 'مثال: 50.00'}
           />
         </div>
         <div className="flex items-end">
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 w-full text-center">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 w-full text-center">
             <p className="text-xs text-blue-300">
               {updateType === 'percentage'
                 ? `زيادة/نقص بنسبة ${value || '0'}%`

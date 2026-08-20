@@ -32,11 +32,11 @@ export function SemiFinishedSummary({ semiFinished, sfTotalValue, sfTop, sfMaxVa
         </div>
         <div className="bg-gradient-to-br from-amber-900/20 to-amber-800/5 rounded-xl p-4 border border-amber-500/15">
           <p className="text-xs text-slate-400">القيمة الإجمالية</p>
-          <p className="text-2xl font-black text-amber-300 mt-1">{sfTotalValue.toLocaleString()} <span className="text-xs font-normal text-slate-500">ج.م</span></p>
+          <p className="text-2xl font-black text-amber-300 mt-1">{sfTotalValue.toLocaleString()} <span className="text-xs font-normal text-[#ecfdf5]0">ج.م</span></p>
         </div>
       </div>
       <div className="space-y-3">
-        {sfTop.length === 0 && <p className="text-slate-500 text-center py-4 text-sm">لا توجد منتجات بلاستيكية بعد</p>}
+        {sfTop.length === 0 && <p className="text-[#ecfdf5]0 text-center py-4 text-sm">لا توجد منتجات بلاستيكية بعد</p>}
         {sfTop.map((sf) => {
           const val = Number(sf.cost_price) * Number(sf.stock_quantity);
           const pct = (val / sfMaxValue) * 100;

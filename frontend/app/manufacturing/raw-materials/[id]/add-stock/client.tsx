@@ -94,7 +94,7 @@ export default function AddRawMaterialStockPage() {
                     </h1>
                     <button
                         onClick={() => router.back()}
-                        className="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition"
+                        className="px-4 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition"
                     >
                         عودة
                     </button>
@@ -117,7 +117,7 @@ export default function AddRawMaterialStockPage() {
                                     dir="ltr"
                                     value={quantity}
                                     onChange={(e) => setQuantity(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500 text-right"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-right"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -132,7 +132,7 @@ export default function AddRawMaterialStockPage() {
                                     dir="ltr"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500 text-right"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-right"
                                     placeholder="0.00"
                                 />
                                 <p className="text-xs text-gray-400 mt-1">أدخل سعر الشراء للوحدة الواحدة</p>
@@ -149,7 +149,7 @@ export default function AddRawMaterialStockPage() {
                                     required
                                     value={dataDate}
                                     onChange={(e) => setDate(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                                 />
                             </div>
                             <div>
@@ -159,7 +159,7 @@ export default function AddRawMaterialStockPage() {
                                 <select
                                     value={supplierId}
                                     onChange={(e) => setSupplierId(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value="">اختر مورد...</option>
                                     {suppliers.map(s => (
@@ -177,7 +177,7 @@ export default function AddRawMaterialStockPage() {
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                             />
                         </div>
 

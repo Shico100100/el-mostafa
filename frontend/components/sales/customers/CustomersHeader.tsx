@@ -53,7 +53,7 @@ export function CustomersHeader({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-500/20 p-3 rounded-xl">
+            <div className="bg-emerald-500/20 p-3 rounded-xl">
               <Users className="w-6 h-6 text-blue-400" />
             </div>
             <div>

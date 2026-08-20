@@ -209,7 +209,7 @@ export default function RawMaterialDetailsPage() {
                     </h1>
                     <button
                         onClick={() => router.push('/manufacturing/raw-materials')}
-                        className="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition"
+                        className="px-4 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition"
                     >
                         عودة للقائمة
                     </button>
@@ -242,7 +242,7 @@ export default function RawMaterialDetailsPage() {
                                             },
                                         });
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 transition p-1 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 rounded text-xs"
+                                    className="opacity-0 group-hover:opacity-100 transition p-1 bg-emerald-500/20 hover:bg-emerald-500/40 text-blue-300 rounded text-xs"
                                     title="إعادة احتساب الرصيد من السجل"
                                 >
                                     <RefreshCw /> تصحيح

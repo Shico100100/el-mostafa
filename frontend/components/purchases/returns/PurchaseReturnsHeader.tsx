@@ -13,7 +13,7 @@ export function PurchaseReturnsHeader({ onNewReturn }: PurchaseReturnsHeaderProp
         <h1 className="text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent underline decoration-amber-500/20 underline-offset-8">
           مرتجعات المشتريات
         </h1>
-        <p className="text-slate-500 mt-2 font-medium text-sm flex items-center gap-2">
+        <p className="text-[#ecfdf5]0 mt-2 font-medium text-sm flex items-center gap-2">
           <Truck className="w-4 h-4" />
           إدارة عمليات إعادة البضائع للموردين
         </p>

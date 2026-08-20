@@ -53,7 +53,7 @@ export function APAgingPanel() {
           ].map((b) => (
             <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
               <div className={`h-1.5 w-full rounded-full ${b.color} opacity-80`} />
-              <span className="text-[9px] text-slate-500 font-medium">{b.label}</span>
+              <span className="text-[9px] text-[#ecfdf5]0 font-medium">{b.label}</span>
             </div>
           ))}
         </div>

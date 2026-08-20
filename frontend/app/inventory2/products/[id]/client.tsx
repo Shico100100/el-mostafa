@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
         <>
           <button
             onClick={() => router.push(`/inventory2/products/${product.id}/movements`)}
-            className="px-4 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/20 transition flex items-center gap-2 text-sm"
+            className="px-4 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-xl border border-emerald-500/20 transition flex items-center gap-2 text-sm"
           >
             <BarChart3 className="w-4 h-4" /> سجل الحركات
           </button>

@@ -40,21 +40,21 @@ export function AttendanceWidget({ summary }: { summary?: { present: number; abs
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
           </div>
           <p className="text-sm font-bold text-emerald-400">{present}</p>
-          <p className="text-[9px] text-slate-500">حاضر</p>
+          <p className="text-[9px] text-[#ecfdf5]0">حاضر</p>
         </div>
         <div className="bg-red-500/10 rounded-lg p-2">
           <div className="flex items-center justify-center gap-1 mb-1">
             <div className="w-2 h-2 rounded-full bg-red-500" />
           </div>
           <p className="text-sm font-bold text-red-400">{absent}</p>
-          <p className="text-[9px] text-slate-500">غائب</p>
+          <p className="text-[9px] text-[#ecfdf5]0">غائب</p>
         </div>
         <div className="bg-amber-500/10 rounded-lg p-2">
           <div className="flex items-center justify-center gap-1 mb-1">
             <div className="w-2 h-2 rounded-full bg-amber-500" />
           </div>
           <p className="text-sm font-bold text-amber-400">{late}</p>
-          <p className="text-[9px] text-slate-500">متأخر</p>
+          <p className="text-[9px] text-[#ecfdf5]0">متأخر</p>
         </div>
       </div>
     </div>

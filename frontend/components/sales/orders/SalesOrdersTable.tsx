@@ -48,7 +48,7 @@ export function SalesOrdersTable({
                     <span className="text-lg font-bold text-blue-400">
                       {Number(order.total_amount).toLocaleString()}
                     </span>
-                    <span className="text-xs text-gray-500 mr-1">ج.م</span>
+                    <span className="text-xs text-[#ecfdf5]0 mr-1">ج.م</span>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className="text-white font-bold">#{order.id}</span>
@@ -67,11 +67,11 @@ export function SalesOrdersTable({
                         مسلّم
                       </span>
                     ) : order.status === 'COMPLETED' ? (
-                      <span className="inline-block px-2.5 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+                      <span className="inline-block px-2.5 py-1 rounded-full bg-blue-600/20 border border-emerald-500/30 text-blue-300 text-xs font-semibold">
                         مكتمل
                       </span>
                     ) : (
-                      <span className="inline-block px-2.5 py-1 rounded-full bg-slate-600/20 border border-slate-500/30 text-slate-300 text-xs font-semibold">
+                      <span className="inline-block px-2.5 py-1 rounded-full bg-slate-600/20 border border-[#ecfdf5]0/30 text-slate-300 text-xs font-semibold">
                         {order.status === 'CANCELLED' ? 'ملغي' : 'قيد التنفيذ'}
                       </span>
                     )}

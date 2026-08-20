@@ -121,7 +121,7 @@ export function useMachines() {
       case 'ACTIVE': return 'bg-green-500/20 text-green-200';
       case 'MAINTENANCE': return 'bg-yellow-500/20 text-yellow-200';
       case 'BROKEN': return 'bg-red-500/20 text-red-200';
-      default: return 'bg-gray-500/20 text-gray-200';
+      default: return 'bg-[#ecfdf5]0/20 text-gray-200';
     }
   };
   const getStatusText = (status: string) => {

@@ -42,7 +42,7 @@ export function TrendChart({ data }: TrendChartProps) {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">المبيعات مقابل المشتريات</h2>
         <div className="flex gap-4 text-xs font-bold">
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-500"></div> مبيعات</div>
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-teal-500"></div> مبيعات</div>
           <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> مشتريات</div>
         </div>
       </div>

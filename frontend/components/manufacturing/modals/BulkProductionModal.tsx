@@ -57,7 +57,7 @@ export default function BulkProductionModal({
                     <select
                       value={item.mold_id}
                       onChange={(e) => onBulkChange(index, 'mold_id', e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full outline-none focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">اختر إسطمبة</option>
                       {molds.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -67,7 +67,7 @@ export default function BulkProductionModal({
                     <select
                       value={item.product_id}
                       onChange={(e) => onBulkChange(index, 'product_id', e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full outline-none focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">اختر خامة</option>
                       {rawMaterials.map(rm => <option key={rm.id} value={rm.id}>{rm.product?.name}</option>)}
@@ -78,7 +78,7 @@ export default function BulkProductionModal({
                       type="number"
                       value={item.hours_worked}
                       onChange={(e) => onBulkChange(index, 'hours_worked', e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-20 text-center outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-20 text-center outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </td>
                   <td className="py-4 px-2">
@@ -88,7 +88,7 @@ export default function BulkProductionModal({
                         value={item.total_production_kg}
                         onChange={(e) => onBulkChange(index, 'total_production_kg', e.target.value)}
                         placeholder="0.0"
-                        className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-24 text-center outline-none focus:ring-1 focus:ring-blue-500 font-bold text-blue-400"
+                        className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-24 text-center outline-none focus:ring-1 focus:ring-emerald-500 font-bold text-blue-400"
                       />
                       {item.mold_id && item.total_production_kg && (
                         <span className="text-[10px] text-green-400 text-center font-bold">
@@ -117,7 +117,7 @@ export default function BulkProductionModal({
                       value={item.notes}
                       onChange={(e) => onBulkChange(index, 'notes', e.target.value)}
                       placeholder="..."
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full text-xs outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </td>
                 </tr>

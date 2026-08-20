@@ -35,7 +35,7 @@ export function MovementsTable({ movements, onEdit, onDelete }: Props) {
                 <td className="px-6 py-4 font-mono text-yellow-400">{mov.price ? mov.price.toFixed(2) : '-'}</td>
                 <td className="px-6 py-4 text-sm text-gray-400">{mov.notes}</td>
                 <td className="px-6 py-4 flex gap-2 justify-end">
-                  <button onClick={() => onEdit(mov)} className="p-2 bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20"><Pencil /></button>
+                  <button onClick={() => onEdit(mov)} className="p-2 bg-emerald-500/10 text-blue-400 rounded hover:bg-emerald-500/20"><Pencil /></button>
                   <button onClick={() => onDelete(mov.id)} className="p-2 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20"><Trash2 /></button>
                 </td>
               </tr>

@@ -18,7 +18,7 @@ export function Sidebar() {
     <aside className="w-64 bg-slate-900/80 backdrop-blur-xl border-l border-white/10 min-h-screen flex flex-col shrink-0">
       <div className="p-6 border-b border-white/10">
         <h2 className="text-lg font-black text-white">المخزون v2</h2>
-        <p className="text-xs text-slate-500 mt-1">نظام إدارة متطور</p>
+        <p className="text-xs text-[#ecfdf5]0 mt-1">نظام إدارة متطور</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -30,7 +30,7 @@ export function Sidebar() {
               onClick={() => router.push(link.href)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 active
-                  ? 'bg-blue-600/20 text-blue-300 border border-blue-500/20'
+                  ? 'bg-blue-600/20 text-blue-300 border border-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >

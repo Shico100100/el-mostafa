@@ -67,8 +67,8 @@ export function BOMTable({ boms, search, onSearchChange, onExplode, onEdit, onDu
                     <td className="px-6 py-4">
                       <div className="flex gap-2 justify-center">
                         <button onClick={() => onExplode(bom)} className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg text-sm transition">تفجير</button>
-                        <button onClick={() => onEdit(bom)} className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-sm transition">تعديل</button>
-                        <button onClick={() => onDuplicate(bom)} className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg text-sm transition">نسخ</button>
+                        <button onClick={() => onEdit(bom)} className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-300 rounded-lg text-sm transition">تعديل</button>
+                        <button onClick={() => onDuplicate(bom)} className="px-3 py-1.5 bg-teal-500/20 hover:bg-teal-500/30 text-purple-300 rounded-lg text-sm transition">نسخ</button>
                         <button onClick={() => onDelete(bom)} className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-sm transition">حذف</button>
                       </div>
                     </td>

@@ -8,11 +8,11 @@ const typeConfig: Record<string, { class: string }> = {
   RAW: { class: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
   SEMI: { class: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
   SEMI_FINISHED: { class: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
-  DORMANT: { class: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
+  DORMANT: { class: 'bg-[#ecfdf5]0/20 text-gray-300 border-[#ecfdf5]0/30' },
 };
 
 export function TypeBadge({ type }: { type: string }) {
-  const cfg = typeConfig[type] ?? { class: 'bg-gray-500/20 text-gray-300 border-gray-500/30' };
+  const cfg = typeConfig[type] ?? { class: 'bg-[#ecfdf5]0/20 text-gray-300 border-[#ecfdf5]0/30' };
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${cfg.class}`}>
       {productTypeLabel(type)}

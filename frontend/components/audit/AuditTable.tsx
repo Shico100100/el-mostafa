@@ -13,7 +13,7 @@ export function AuditTable({ logs, loading, formatAction }: AuditTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full text-right border-collapse">
         <thead>
-          <tr className="text-slate-500 text-sm border-b border-white/10">
+          <tr className="text-[#ecfdf5]0 text-sm border-b border-white/10">
             <th className="px-6 py-4 font-bold">المستخدم</th>
             <th className="px-6 py-4 font-bold">العملية</th>
             <th className="px-6 py-4 font-bold">التاريخ والوقت</th>
@@ -22,20 +22,20 @@ export function AuditTable({ logs, loading, formatAction }: AuditTableProps) {
         </thead>
         <tbody className="divide-y divide-white/5">
           {loading ? (
-            <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-500">جاري التحميل...</td></tr>
+            <tr><td colSpan={4} className="px-6 py-12 text-center text-[#ecfdf5]0">جاري التحميل...</td></tr>
           ) : logs.length === 0 ? (
-            <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-500">لا توجد سجلات مسجلة</td></tr>
+            <tr><td colSpan={4} className="px-6 py-12 text-center text-[#ecfdf5]0">لا توجد سجلات مسجلة</td></tr>
           ) : (
             logs.map((log) => (
               <tr key={log.id} className="hover:bg-white/5 transition group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
                       {log.user?.firstName?.[0] || 'U'}
                     </div>
                     <div>
                       <p className="font-bold text-slate-200">{log.user?.firstName} {log.user?.lastName}</p>
-                      <p className="text-xs text-slate-500">{log.user?.email}</p>
+                      <p className="text-xs text-[#ecfdf5]0">{log.user?.email}</p>
                     </div>
                   </div>
                 </td>

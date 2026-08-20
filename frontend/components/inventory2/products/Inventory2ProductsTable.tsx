@@ -85,14 +85,14 @@ export function Inventory2ProductsTable({
               return (
                 <tr key={product.id} className="border-t border-white/5 hover:bg-white/5 transition cursor-pointer group" onClick={() => onRowClick(product.id)}>
                   <td className="px-4 py-4">
-                    <div className="w-10 h-10 bg-slate-800 rounded-xl border border-white/10 flex items-center justify-center text-xs text-slate-500">—</div>
+                    <div className="w-10 h-10 bg-slate-800 rounded-xl border border-white/10 flex items-center justify-center text-xs text-[#ecfdf5]0">—</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <span className="text-white font-medium">{product.name}</span>
                       {product.type === 'FINISHED' && hasBom && <Box className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">{product.unit || 'قطعة'}</div>
+                    <div className="text-xs text-[#ecfdf5]0 mt-0.5">{product.unit || 'قطعة'}</div>
                   </td>
                   <td className="px-6 py-4"><TypeBadge type={product.type} /></td>
                   <td className="px-6 py-4 text-slate-300 text-sm">{cost.toFixed(2)}</td>
@@ -100,7 +100,7 @@ export function Inventory2ProductsTable({
                     {inlineEditingId === product.id ? (
                       <input type="number" value={editForm.selling_price}
                         onChange={(e) => onEditFormChange({ ...editForm, selling_price: e.target.value })}
-                        className="w-24 bg-slate-900 border border-blue-500 rounded-lg px-2 py-1 text-white outline-none"
+                        className="w-24 bg-slate-900 border border-emerald-500 rounded-lg px-2 py-1 text-white outline-none"
                         onClick={(e) => e.stopPropagation()} />
                     ) : (
                       <span className="text-white">{sell.toFixed(2)}</span>
@@ -116,7 +116,7 @@ export function Inventory2ProductsTable({
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <input type="number" value={editForm.stock_quantity}
                           onChange={(e) => onEditFormChange({ ...editForm, stock_quantity: e.target.value })}
-                          className="w-20 bg-slate-900 border border-blue-500 rounded-lg px-2 py-1 text-white outline-none" />
+                          className="w-20 bg-slate-900 border border-emerald-500 rounded-lg px-2 py-1 text-white outline-none" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export function Inventory2ProductsTable({
                         <>
                           <button onClick={() => onStartInlineEdit(product)} className="p-1.5 bg-amber-500/20 hover:bg-amber-500/40 text-amber-200 rounded-lg transition" title="تعديل سريع"><Zap className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onOpenAdjustment(product.id)} className="p-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-200 rounded-lg transition" title="تسوية"><Gauge className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => onEditFull(product)} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => onEditFull(product)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Pencil className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onDuplicate(product)} className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-200 rounded-lg transition" title="نسخ المنتج"><ClipboardList className="w-3.5 h-3.5" /></button>
                           {product.type === 'DORMANT' ? (
                             <button onClick={() => onRestoreProduct(product.id)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-200 rounded-lg transition" title="استرجاع"><RotateCcw className="w-3.5 h-3.5" /></button>
@@ -155,7 +155,7 @@ export function Inventory2ProductsTable({
             })}
             {products.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-6 py-16 text-center text-slate-500">
+                <td colSpan={9} className="px-6 py-16 text-center text-[#ecfdf5]0">
                   <Package className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                   <p>لا توجد منتجات</p>
                 </td>

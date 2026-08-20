@@ -6,7 +6,7 @@ export function SalesTrendChart({ data }: { data: { date: string; value: number 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">آخر 7 أيام</span>
+        <span className="text-xs text-[#ecfdf5]0">آخر 7 أيام</span>
         <span className="text-[10px] text-slate-600">
           الإجمالي: {last7.reduce((s, d) => s + d.value, 0).toLocaleString()} ج.م
         </span>
@@ -24,7 +24,7 @@ export function SalesTrendChart({ data }: { data: { date: string; value: number 
               </span>
               <div className="w-full rounded-md relative overflow-hidden" style={{ height: `${h}%`, minHeight: '4px' }}>
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-blue-600/80 to-cyan-400/60 rounded-md hover:from-blue-500 hover:to-cyan-300 transition-all cursor-pointer"
+                  className="absolute inset-0 bg-gradient-to-t from-blue-600/80 to-cyan-400/60 rounded-md hover:from-emerald-500 hover:to-cyan-300 transition-all cursor-pointer"
                   style={{ height: '100%' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-transparent rounded-md" />

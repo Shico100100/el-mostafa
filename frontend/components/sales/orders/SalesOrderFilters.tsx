@@ -20,7 +20,7 @@ export function SalesOrderFilters({ filters, onFilterChange, onReset }: {
               placeholder="بحث..."
               value={filters.search}
               onChange={(e) => onFilterChange({ ...filters, search: e.target.value, page: 1 })}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl pr-10 pl-4 py-2.5 text-white focus:outline-none focus:border-blue-500 transition"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-xl pr-10 pl-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition"
             />
           </div>
         </div>
@@ -30,7 +30,7 @@ export function SalesOrderFilters({ filters, onFilterChange, onReset }: {
             type="date"
             value={filters.fromDate}
             onChange={(e) => onFilterChange({ ...filters, fromDate: e.target.value, page: 1 })}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition"
+            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition"
           />
         </div>
         <div className="space-y-2">
@@ -39,7 +39,7 @@ export function SalesOrderFilters({ filters, onFilterChange, onReset }: {
             type="date"
             value={filters.toDate}
             onChange={(e) => onFilterChange({ ...filters, toDate: e.target.value, page: 1 })}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition"
+            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition"
           />
         </div>
         <button

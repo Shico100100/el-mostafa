@@ -66,7 +66,7 @@ export default function Table<T>({
           <tbody className="divide-y divide-white/5">
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-16 text-center text-gray-500">
+                <td colSpan={columns.length} className="px-6 py-16 text-center text-[#ecfdf5]0">
                   <Inbox className="w-10 h-10 mx-auto mb-3 opacity-50" />
                   <p>{emptyMessage}</p>
                 </td>

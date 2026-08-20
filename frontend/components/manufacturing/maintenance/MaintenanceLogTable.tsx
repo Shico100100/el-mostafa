@@ -9,7 +9,7 @@ interface MaintenanceLogTableProps {
 
 const statusConfig: Record<string, { text: string; className: string }> = {
   COMPLETED: { text: 'مكتمل', className: 'bg-green-500/10 text-green-400' },
-  IN_PROGRESS: { text: 'جاري العمل', className: 'bg-blue-500/10 text-blue-400' },
+  IN_PROGRESS: { text: 'جاري العمل', className: 'bg-emerald-500/10 text-blue-400' },
   PENDING: { text: 'قيد الانتظار', className: 'bg-amber-500/10 text-amber-400' },
 };
 
@@ -50,7 +50,7 @@ export function MaintenanceLogTable({ logs }: MaintenanceLogTableProps) {
               );
             })}
             {logs.length === 0 && (
-              <tr><td colSpan={6} className="p-12 text-center text-slate-500">لا يوجد سجل صيانة حالياً</td></tr>
+              <tr><td colSpan={6} className="p-12 text-center text-[#ecfdf5]0">لا يوجد سجل صيانة حالياً</td></tr>
             )}
           </tbody>
         </table>

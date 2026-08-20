@@ -120,7 +120,7 @@ export default function SemiFinishedDetailPage() {
                 <DetailRow label="عدد الطلقات" value={`${mold.current_shots?.toLocaleString() || 0} / ${mold.max_shots?.toLocaleString() || '∞'}`} />
               </>
             ) : (
-              <p className="text-slate-500">لا يوجد قالب مرتبط</p>
+              <p className="text-[#ecfdf5]0">لا يوجد قالب مرتبط</p>
             )}
           </InfoCard>
 
@@ -133,7 +133,7 @@ export default function SemiFinishedDetailPage() {
                 <DetailRow label="إجمالي القطع المنتجة" value={`${bestMachine.total_pieces?.toLocaleString() || 0} قطعة`} />
               </>
             ) : (
-              <p className="text-slate-500">لا توجد بيانات كافية</p>
+              <p className="text-[#ecfdf5]0">لا توجد بيانات كافية</p>
             )}
           </InfoCard>
 
@@ -141,11 +141,11 @@ export default function SemiFinishedDetailPage() {
             <div className="lg:col-span-2">
               <InfoCard title="تحليل التكلفة" icon={<DollarSign className="w-5 h-5 text-emerald-400" />}>
                 <div className="space-y-6">
-                  <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
                     <p className="text-blue-200 font-bold mb-2">متوسط آخر {costBreakdown.monthDetails.length} أشهر (قبل {costBreakdown.monthStr}):</p>
                     <div className="flex gap-2 flex-wrap mb-2">
                       {costBreakdown.monthDetails.map((m) => (
-                        <span key={m.month} className="bg-blue-500/20 px-2.5 py-1 rounded-lg text-sm text-slate-300">{m.month}: {m.amount.toFixed(0)} ج.م</span>
+                        <span key={m.month} className="bg-emerald-500/20 px-2.5 py-1 rounded-lg text-sm text-slate-300">{m.month}: {m.amount.toFixed(0)} ج.م</span>
                       ))}
                     </div>
                     <div className="text-sm text-slate-400 space-y-0.5">
@@ -189,7 +189,7 @@ export default function SemiFinishedDetailPage() {
                   </div>
 
                   {costBreakdown.moldAmortizationPerPiece > 0 && (
-                    <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4">
+                    <div className="bg-teal-500/5 border border-teal-500/20 rounded-xl p-4">
                       <h3 className="text-lg font-bold text-purple-300 mb-3">3. إهلاك القالب</h3>
                       <div className="text-slate-300 text-sm space-y-1">
                         <p>سعر القالب: <span className="text-white font-bold">{details.mold?.price.toLocaleString()} ج.م</span></p>
@@ -214,7 +214,7 @@ export default function SemiFinishedDetailPage() {
                       <br />
                       = <span className="text-yellow-300 font-bold text-lg">{costBreakdown.totalPerPiece.toFixed(4)} ج.م / قطعة</span>
                     </div>
-                    <div className="mt-3 text-slate-500 text-xs">
+                    <div className="mt-3 text-[#ecfdf5]0 text-xs">
                       * ملاحظة: متوسط التكلفة الفعلي للمنتج ({Number(product.cost_price || 0).toFixed(2)} ج.م) هو WAC عبر كل دفعات الإنتاج السابقة، وقد يختلف عن التقدير الحالي.
                     </div>
                   </div>

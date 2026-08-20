@@ -59,7 +59,7 @@ export function buildProductStats(products: { cost_price: number; selling_price:
 
 export function productStatCards(stats: ReturnType<typeof buildProductStats>): StatCardDef[] {
   return [
-    { label: 'إجمالي المنتجات', value: stats.total, icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-blue-500/20' },
+    { label: 'إجمالي المنتجات', value: stats.total, icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-emerald-500/20' },
     { label: 'قيمة المخزون', value: stats.totalStockValue.toLocaleString(), icon: <DollarSign className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
     { label: 'متوسط هامش الربح', value: `${stats.avgMargin.toFixed(1)}%`, icon: <Percent className="w-6 h-6 text-amber-400" />, color: 'bg-amber-500/20' },
     { label: 'منتجات ناقصة', value: stats.lowStockCount, icon: <AlertTriangle className="w-6 h-6 text-red-400" />, color: 'bg-red-500/20' },

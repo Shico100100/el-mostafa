@@ -90,7 +90,7 @@ export default function SupplierStatementPage() {
                 </div>
             </div>
 
-            <div className="bg-gray-100 p-4 rounded mb-6 border border-gray-300">
+            <div className="bg-[#6b8378] p-4 rounded mb-6 border border-gray-300">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <span className="font-bold">اسم المورد:</span> {supplier.name}
@@ -128,7 +128,7 @@ export default function SupplierStatementPage() {
                                 <td className="border border-black p-2">{t.description || '-'}</td>
                                 <td className="border border-black p-2">{credit > 0 ? credit.toLocaleString() : '-'}</td>
                                 <td className="border border-black p-2">{debit > 0 ? debit.toLocaleString() : '-'}</td>
-                                <td className="border border-black p-2 bg-gray-50"></td>
+                                <td className="border border-black p-2 bg-[#ecfdf5]"></td>
                             </tr>
                         );
                     })}

@@ -34,7 +34,7 @@ function PieSlice({ cx, cy, startAngle, endAngle, innerRadius, outerRadius, fill
 
 function CSSDonutChart({ data, colors }: { data: { name: string; value: number }[]; colors: string[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return <div className="flex items-center justify-center h-full text-gray-500">لا توجد بيانات</div>;
+  if (total === 0) return <div className="flex items-center justify-center h-full text-[#ecfdf5]0">لا توجد بيانات</div>;
   const cx = 150, cy = 130, outerR = 100, innerR = 60;
   let currentAngle = 0;
   const slices = data.map((d, i) => {
@@ -64,7 +64,7 @@ function CSSDonutChart({ data, colors }: { data: { name: string; value: number }
 }
 
 function BarGroup({ data, maxVal }: { data: { name: string; debit: number; credit: number }[]; maxVal: number }) {
-  if (maxVal === 0) return <div className="flex items-center justify-center h-full text-gray-500">لا توجد بيانات</div>;
+  if (maxVal === 0) return <div className="flex items-center justify-center h-full text-[#ecfdf5]0">لا توجد بيانات</div>;
   const barW = 14, groupGap = 20;
   const totalW = data.length * (barW * 2 + groupGap) + groupGap;
   return (
@@ -95,7 +95,7 @@ function BarGroup({ data, maxVal }: { data: { name: string; debit: number; credi
         })}
       </svg>
       <div className="flex justify-center gap-6 mt-2">
-        <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-2.5 h-2.5 rounded bg-blue-500 inline-block" /> مدين</span>
+        <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" /> مدين</span>
         <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-2.5 h-2.5 rounded bg-red-500 inline-block" /> دائن</span>
       </div>
     </div>

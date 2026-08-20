@@ -57,7 +57,7 @@ export function CreateSalesOrderModal({
                 value={newOrder.date}
                 onChange={(e) => setNewOrder({ ...newOrder, date: e.target.value })}
                 required
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition"
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition"
               />
             </div>
           </div>
@@ -67,7 +67,7 @@ export function CreateSalesOrderModal({
               value={newOrder.notes}
               onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
               rows={2}
-              className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none resize-none transition"
+              className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none resize-none transition"
               placeholder="أدخل أي ملاحظات إضافية هنا..."
             />
           </div>
@@ -77,7 +77,7 @@ export function CreateSalesOrderModal({
               <button
                 type="button"
                 onClick={onAddItem}
-                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-1.5 rounded-lg text-sm font-bold border border-blue-500/30 transition flex items-center gap-2"
+                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-1.5 rounded-lg text-sm font-bold border border-emerald-500/30 transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 إضافة صنف
@@ -104,7 +104,7 @@ export function CreateSalesOrderModal({
                       onChange={(e) => onItemChange(index, 'quantity', parseFloat(e.target.value))}
                       required
                       min="1"
-                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none text-sm transition"
+                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-emerald-500 outline-none text-sm transition"
                     />
                   </div>
                   <div className="w-32 space-y-2">
@@ -114,7 +114,7 @@ export function CreateSalesOrderModal({
                       value={item.unit_price}
                       onChange={(e) => onItemChange(index, 'unit_price', parseFloat(e.target.value))}
                       required
-                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none text-sm transition"
+                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-emerald-500 outline-none text-sm transition"
                     />
                   </div>
                   <div className="w-32 pb-2 text-left text-blue-300 font-bold text-sm">
@@ -130,7 +130,7 @@ export function CreateSalesOrderModal({
                 </div>
               ))}
               {newOrder.items.length === 0 && (
-                <div className="text-center py-8 text-gray-500 border-2 border-dashed border-white/5 rounded-2xl">
+                <div className="text-center py-8 text-[#ecfdf5]0 border-2 border-dashed border-white/5 rounded-2xl">
                   لم يتم إضافة أي أصناف بعد
                 </div>
               )}
@@ -140,7 +140,7 @@ export function CreateSalesOrderModal({
             <div className="text-white">
               <span className="text-gray-400 ml-2">الإجمالي المستحق:</span>
               <span className="text-3xl font-bold text-blue-400">{calculateTotal().toLocaleString()}</span>
-              <span className="text-sm text-gray-500 mr-1">ج.م</span>
+              <span className="text-sm text-[#ecfdf5]0 mr-1">ج.م</span>
             </div>
             <div className="flex gap-4">
               <button

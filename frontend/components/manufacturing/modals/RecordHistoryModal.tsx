@@ -23,7 +23,7 @@ export default function RecordHistoryModal({ show, entries, recordId, onClose }:
         </div>
         <div className="p-6 overflow-y-auto flex-1">
           {entries.length === 0 ? (
-            <p className="text-center text-slate-500 py-12">لا يوجد تاريخ تعديلات لهذا السجل</p>
+            <p className="text-center text-[#ecfdf5]0 py-12">لا يوجد تاريخ تعديلات لهذا السجل</p>
           ) : (
             <div className="space-y-4">
               {entries.map((entry) => (
@@ -39,7 +39,7 @@ export default function RecordHistoryModal({ show, entries, recordId, onClose }:
                          entry.change_type === 'DELETE' ? 'حذف' : 'إنشاء'}
                       </span>
                     </div>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-[#ecfdf5]0">
                       {new Date(entry.changed_at).toLocaleString('ar-EG')}
                     </span>
                   </div>
@@ -49,7 +49,7 @@ export default function RecordHistoryModal({ show, entries, recordId, onClose }:
                         .filter(k => entry.old_values![k] !== entry.new_values![k])
                         .map(key => (
                           <div key={key} className="grid grid-cols-3 gap-2 text-slate-400">
-                            <span className="text-slate-500">{({
+                            <span className="text-[#ecfdf5]0">{({
                               total_production_kg: 'الإنتاج', hours_worked: 'ساعات',
                               pieces_produced: 'القطع', notes: 'ملاحظات', status: 'الحالة',
                               machine_id: 'الماكينة', mold_id: 'الإسطمبة',

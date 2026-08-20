@@ -28,7 +28,7 @@ export function ConsumptionTable({ items }: Props) {
                 <tr key={c.id} className="hover:bg-white/5 transition">
                   <td className="px-6 py-4">
                     <div className="text-gray-300">{new Date(c.consumed_at).toLocaleDateString('ar-EG')}</div>
-                    <div className="text-xs text-gray-500">{new Date(c.consumed_at).toLocaleTimeString('ar-EG')}</div>
+                    <div className="text-xs text-[#ecfdf5]0">{new Date(c.consumed_at).toLocaleTimeString('ar-EG')}</div>
                   </td>
                   <td className="px-6 py-4"><div className="text-white font-medium">{c.raw_material.product.name}</div></td>
                   <td className="px-6 py-4"><div className="text-white font-semibold">{Number(c.quantity).toFixed(2)} {c.raw_material.product.unit}</div></td>

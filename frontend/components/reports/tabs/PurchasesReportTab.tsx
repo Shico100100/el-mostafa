@@ -7,11 +7,11 @@ export function PurchasesReportTab({ data, page, totalPages, onPageChange }: { d
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-purple-500/10 border border-purple-500/20 p-6 rounded-2xl">
+        <div className="bg-teal-500/10 border border-teal-500/20 p-6 rounded-2xl">
           <h3 className="text-purple-200 mb-2">إجمالي المشتريات</h3>
           <p className="text-3xl font-bold text-white">{Number(data.totalPurchases).toFixed(2)} ج.م</p>
         </div>
-        <div className="bg-purple-500/10 border border-purple-500/20 p-6 rounded-2xl">
+        <div className="bg-teal-500/10 border border-teal-500/20 p-6 rounded-2xl">
           <h3 className="text-purple-200 mb-2">عدد الطلبات</h3>
           <p className="text-3xl font-bold text-white">{data.purchasesCount}</p>
         </div>

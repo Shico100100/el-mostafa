@@ -51,7 +51,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
             <select
               value={priceField}
               onChange={(e) => setPriceField(e.target.value as 'selling_price' | 'cost_price')}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="selling_price">سعر البيع</option>
               <option value="cost_price">سعر التكلفة</option>
@@ -62,7 +62,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
             <select
               value={updateType}
               onChange={(e) => setUpdateType(e.target.value as 'percentage' | 'fixed')}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="percentage">نسبة مئوية (%)</option>
               <option value="fixed">قيمة ثابتة</option>
@@ -77,7 +77,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
               step="0.01"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               placeholder="القيمة..."
               autoFocus
             />
@@ -88,7 +88,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="">كل التصنيفات</option>
                 {categories.map((cat) => (
@@ -101,7 +101,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="">كل الأنواع</option>
                 <option value="RAW">خامة</option>
@@ -111,7 +111,7 @@ export default function BulkPriceModal({ isOpen, onClose, categories, onSave }: 
             </div>
           </div>
           <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-200 rounded-lg hover:bg-gray-500/30 transition" disabled={saving}>إلغاء</button>
+            <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-200 rounded-lg hover:bg-[#ecfdf5]0/30 transition" disabled={saving}>إلغاء</button>
             <button onClick={handleSave} disabled={saving || !value} className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 font-bold shadow-lg shadow-purple-900/20 disabled:opacity-50">
               {saving ? 'جاري التطبيق...' : 'تطبيق التحديث'}
             </button>

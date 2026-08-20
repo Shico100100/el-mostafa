@@ -31,7 +31,7 @@ export default function PrintTemplate({ order, componentRef }: PrintTemplateProp
             </div>
 
             <table className="w-full border-collapse border border-gray-300 mb-8">
-              <thead className="bg-gray-100">
+              <thead className="bg-[#6b8378]">
                 <tr>
                   <th className="border border-gray-300 p-2 text-right">م</th>
                   <th className="border border-gray-300 p-2 text-right">الصنف</th>

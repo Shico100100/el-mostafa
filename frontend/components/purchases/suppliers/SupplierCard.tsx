@@ -20,9 +20,9 @@ export function SupplierCard({ supplier, onEdit, onStatement, onPayment }: Suppl
       <p className="text-purple-400 font-semibold mb-4">الرصيد: {supplier.balance} جنيه</p>
       <div className="flex gap-2">
         <button onClick={() => onEdit(supplier)}
-          className="flex-1 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded">تعديل</button>
+          className="flex-1 px-3 py-2 bg-teal-500/20 hover:bg-teal-500/30 text-purple-200 rounded">تعديل</button>
         <button onClick={() => onStatement(supplier)}
-          className="flex-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded">كشف حساب</button>
+          className="flex-1 px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded">كشف حساب</button>
         <button onClick={() => onPayment(supplier)}
           className="flex-1 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded">دفع</button>
       </div>

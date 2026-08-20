@@ -130,8 +130,8 @@ export function RevenueExpensesPanel() {
                 })}
               </div>
               <div className="flex items-center justify-center gap-4 mt-2">
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-emerald-400" /><span className="text-[9px] text-slate-500">الإيرادات</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-rose-400" /><span className="text-[9px] text-slate-500">المصروفات</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-emerald-400" /><span className="text-[9px] text-[#ecfdf5]0">الإيرادات</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-rose-400" /><span className="text-[9px] text-[#ecfdf5]0">المصروفات</span></div>
               </div>
             </div>
           )}

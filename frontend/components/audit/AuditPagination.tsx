@@ -13,7 +13,7 @@ interface AuditPaginationProps {
 export function AuditPagination({ page, totalPages, totalItems, currentCount, onPageChange }: AuditPaginationProps) {
   return (
     <div className="flex justify-between items-center mt-6 pt-6 border-t border-white/10">
-      <p className="text-xs text-slate-500 font-medium">عرض {currentCount} من {totalItems} سجل</p>
+      <p className="text-xs text-[#ecfdf5]0 font-medium">عرض {currentCount} من {totalItems} سجل</p>
       <div className="flex items-center gap-4">
         <button disabled={page === 1} onClick={() => onPageChange(page - 1)}
           className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white disabled:opacity-30 transition">

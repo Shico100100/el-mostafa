@@ -13,7 +13,7 @@ export function SalesReturnsHeader({ onNewReturn }: Props) {
         <h1 className="text-3xl font-black bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent">
           مرتجعات المبيعات
         </h1>
-        <p className="text-slate-500 mt-1 font-medium text-sm">إدارة عمليات الإرجاع واسترداد المخزون</p>
+        <p className="text-[#ecfdf5]0 mt-1 font-medium text-sm">إدارة عمليات الإرجاع واسترداد المخزون</p>
       </div>
       <button
         onClick={onNewReturn}

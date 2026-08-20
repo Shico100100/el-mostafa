@@ -41,7 +41,7 @@ export function IssueMoldDialog({ visible, moldName, onSave, onClose }: IssueMol
           </div>
           <div className="flex gap-4 justify-end">
             <button type="button" onClick={onClose}
-              className="px-6 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg">إلغاء</button>
+              className="px-6 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg">إلغاء</button>
             <button type="submit"
               className="px-6 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700">
               تسجيل المشكلة

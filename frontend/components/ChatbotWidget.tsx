@@ -254,7 +254,7 @@ export default function ChatbotWidget() {
               <button
                 onClick={() => setAutoTts((v) => !v)}
                 className={`p-1.5 rounded-lg transition ${
-                  autoTts ? 'text-blue-400 hover:bg-white/10' : 'text-slate-500 hover:text-slate-300'
+                  autoTts ? 'text-blue-400 hover:bg-white/10' : 'text-[#ecfdf5]0 hover:text-slate-300'
                 }`}
                 title={autoTts ? 'إيقاف القراءة الصوتية' : 'تشغيل القراءة الصوتية'}
               >
@@ -273,7 +273,7 @@ export default function ChatbotWidget() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                 {msg.sender === 'bot' && (
-                  <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
                     <Bot className="w-4 h-4 text-blue-400" />
                   </div>
                 )}
@@ -287,7 +287,7 @@ export default function ChatbotWidget() {
                   {msg.text}
                 </div>
                 {msg.sender === 'user' && (
-                  <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 mt-1">
+                  <div className="w-7 h-7 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0 mt-1">
                     <User className="w-4 h-4 text-indigo-400" />
                   </div>
                 )}
@@ -298,7 +298,7 @@ export default function ChatbotWidget() {
                 <div className="max-w-[80%] px-3 py-2 rounded-2xl bg-white/5 rounded-bl-md">
                   <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
                 </div>
-                <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
                   <Bot className="w-4 h-4 text-blue-400" />
                 </div>
               </div>
@@ -328,13 +328,13 @@ export default function ChatbotWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="اكتب رسالتك هنا..."
-                className="flex-1 bg-white/10 text-white placeholder-slate-400 rounded-xl px-3 py-2 text-sm outline-none border border-white/5 focus:border-blue-500/50 transition"
+                className="flex-1 bg-white/10 text-white placeholder-slate-400 rounded-xl px-3 py-2 text-sm outline-none border border-white/5 focus:border-emerald-500/50 transition"
                 dir="rtl"
               />
               <button
                 onClick={() => send()}
                 disabled={loading || !input.trim()}
-                className="p-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition"
+                className="p-2 bg-blue-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -357,7 +357,7 @@ export default function ChatbotWidget() {
       <button
         onClick={() => setOpen(!open)}
         className={`fixed bottom-[86px] left-4 z-50 p-3 rounded-2xl shadow-lg transition-all duration-200 ${
-          open ? 'bg-red-500/80 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
+          open ? 'bg-red-500/80 hover:bg-red-500' : 'bg-blue-600 hover:bg-emerald-500'
         } text-white`}
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}

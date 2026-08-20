@@ -15,7 +15,7 @@ export function AccountingHeader() {
         <div className="flex gap-4">
           <button
             onClick={() => router.push('/accounting/journal')}
-            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-xl border border-blue-500/20 transition flex items-center gap-2 font-bold"
+            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2 rounded-xl border border-emerald-500/20 transition flex items-center gap-2 font-bold"
           >
             <FileText className="w-4 h-4" />
             قيود اليومية

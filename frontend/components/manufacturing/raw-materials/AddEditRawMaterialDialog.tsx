@@ -28,14 +28,14 @@ export function AddEditRawMaterialDialog({
             <input
               type="text" required value={formData.name}
               onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500"
               placeholder="مثال: بلاستيك PP"
             />
           </div>
           <div>
             <label className="block text-gray-300 text-sm font-semibold mb-2">الوحدة *</label>
             <select required value={formData.unit} onChange={(e) => onFormDataChange({ ...formData, unit: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500">
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500">
               <option value="kg">كيلوجرام (kg)</option>
               <option value="ton">طن (ton)</option>
             </select>
@@ -44,16 +44,16 @@ export function AddEditRawMaterialDialog({
             <label className="block text-gray-300 text-sm font-semibold mb-2">الحد الأدنى للطلب (Reorder Point) *</label>
             <input type="number" step="0.01" required value={formData.reorder_point}
               onChange={(e) => onFormDataChange({ ...formData, reorder_point: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-emerald-500"
               placeholder="مثال: 100"
             />
           </div>
           <div className="flex gap-4 pt-4">
-            <button type="submit" className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
+            <button type="submit" className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
               {isEditing ? 'حفظ التعديلات' : 'إضافة'}
             </button>
             <button type="button" onClick={onClose}
-              className="flex-1 px-6 py-3 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg font-semibold transition">
+              className="flex-1 px-6 py-3 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg font-semibold transition">
               إلغاء
             </button>
           </div>

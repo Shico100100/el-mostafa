@@ -16,7 +16,7 @@ export default function WeeklyProductionTable({
   if (records.length === 0) {
     return (
       <div className="bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl py-10 text-center">
-        <p className="text-slate-500">لا توجد سجلات إنتاج في هذه الفترة</p>
+        <p className="text-[#ecfdf5]0">لا توجد سجلات إنتاج في هذه الفترة</p>
       </div>
     );
   }

@@ -40,7 +40,7 @@ export function StatementModal({
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -50,7 +50,7 @@ export function StatementModal({
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => customer && window.open(`/sales/customers/statement/${customer.id}`, '_blank')}
-              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 rounded-xl text-xs font-bold transition border border-blue-500/20 flex items-center gap-1.5">
+              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-blue-300 rounded-xl text-xs font-bold transition border border-emerald-500/20 flex items-center gap-1.5">
               <Printer className="w-3.5 h-3.5" /> طباعة
             </button>
             <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition">
@@ -61,7 +61,7 @@ export function StatementModal({
 
         {/* Filter */}
         <div className="px-5 py-3 border-b border-white/10 flex items-center gap-2 shrink-0">
-          <Filter className="w-3.5 h-3.5 text-slate-500" />
+          <Filter className="w-3.5 h-3.5 text-[#ecfdf5]0" />
           <select value={month} onChange={e => onMonthChange(e.target.value)}
             className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-white">
             <option value="">كل الشهور</option>
@@ -73,7 +73,7 @@ export function StatementModal({
             {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <button onClick={onApplyFilter}
-            className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-bold hover:bg-blue-600/30 transition border border-blue-500/20">
+            className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-bold hover:bg-blue-600/30 transition border border-emerald-500/20">
             تطبيق
           </button>
           {(month || year) && (
@@ -87,7 +87,7 @@ export function StatementModal({
         {/* Table */}
         <div className="flex-1 overflow-auto p-5">
           {loading ? (
-            <div className="text-center py-16 text-slate-500 animate-pulse">جاري تحميل البيانات...</div>
+            <div className="text-center py-16 text-[#ecfdf5]0 animate-pulse">جاري تحميل البيانات...</div>
           ) : (
             <table className="w-full text-right border-collapse">
               <thead className="bg-white/5 sticky top-0">
@@ -101,7 +101,7 @@ export function StatementModal({
               </thead>
               <tbody className="divide-y divide-white/5">
                 {statement.length === 0 ? (
-                  <tr><td colSpan={5} className="p-12 text-center text-slate-500 text-sm">لا توجد معاملات</td></tr>
+                  <tr><td colSpan={5} className="p-12 text-center text-[#ecfdf5]0 text-sm">لا توجد معاملات</td></tr>
                 ) : statement.map((m, i) => (
                   <tr key={i} className="hover:bg-white/5 transition">
                     <td className="p-3 text-xs text-slate-400">{new Date(m.date).toLocaleDateString('ar-EG')}</td>

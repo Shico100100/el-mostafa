@@ -83,10 +83,10 @@ function ActionButton({
 }) {
   const colorClasses: Record<string, string> = {
     green: 'bg-green-500/20 hover:bg-green-500/30 text-green-200',
-    indigo: 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200',
-    blue: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-200',
+    indigo: 'bg-teal-500/20 hover:bg-teal-500/30 text-indigo-200',
+    blue: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200',
     amber: 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200',
-    purple: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-200',
+    purple: 'bg-teal-500/20 hover:bg-teal-500/30 text-purple-200',
     red: 'bg-red-500/20 hover:bg-red-500/30 text-red-200',
   };
 

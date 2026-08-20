@@ -34,7 +34,7 @@ export function StatementModal({ visible, supplier, statement, loading, onClose 
 
         <div className="flex-1 overflow-auto p-6">
           {loading ? (
-            <div className="text-center py-12 text-gray-500 animate-pulse">جاري تحميل البيانات...</div>
+            <div className="text-center py-12 text-[#ecfdf5]0 animate-pulse">جاري تحميل البيانات...</div>
           ) : (
             <table className="w-full text-right border-collapse">
               <thead className="bg-white/5 sticky top-0">
@@ -48,7 +48,7 @@ export function StatementModal({ visible, supplier, statement, loading, onClose 
               </thead>
               <tbody className="divide-y divide-white/5">
                 {statement.length === 0 ? (
-                  <tr><td colSpan={5} className="p-12 text-center text-gray-500">لا توجد معاملات مسجلة</td></tr>
+                  <tr><td colSpan={5} className="p-12 text-center text-[#ecfdf5]0">لا توجد معاملات مسجلة</td></tr>
                 ) : statement.map((m, i) => (
                   <tr key={i} className="hover:bg-white/5 transition">
                     <td className="p-3 text-sm text-gray-400">{new Date(m.date).toLocaleDateString('ar-EG')}</td>

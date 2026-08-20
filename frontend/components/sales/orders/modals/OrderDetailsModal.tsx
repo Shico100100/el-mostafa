@@ -32,14 +32,14 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">بيانات العميل</h3>
             <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
-              <p className="text-white"><span className="text-gray-500 ml-2">الاسم:</span> {order.customer?.name}</p>
-              <p className="text-white"><span className="text-gray-500 ml-2">الهاتف:</span> {order.customer?.phone || 'غير مسجل'}</p>
-              <p className="text-white"><span className="text-gray-500 ml-2">العنوان:</span> {order.customer?.address || 'غير مسجل'}</p>
+              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">الاسم:</span> {order.customer?.name}</p>
+              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">الهاتف:</span> {order.customer?.phone || 'غير مسجل'}</p>
+              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">العنوان:</span> {order.customer?.address || 'غير مسجل'}</p>
             </div>
           </div>
           <div className="space-y-4 text-left">
             <h3 className="text-lg font-semibold text-white">القيم المالية</h3>
-            <div className="bg-blue-600/10 p-4 rounded-xl border border-blue-500/20">
+            <div className="bg-blue-600/10 p-4 rounded-xl border border-emerald-500/20">
               <p className="text-gray-400 text-sm">الإجمالي</p>
               <p className="text-3xl font-black text-blue-400">{Number(order.total_amount).toLocaleString()} <span className="text-sm">ج.م</span></p>
             </div>

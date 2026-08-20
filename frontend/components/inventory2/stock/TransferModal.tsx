@@ -26,14 +26,14 @@ export function TransferModal({ show, item, warehouses, transferForm, onFormChan
           <div className="text-white font-medium">{item.product?.name || `منتج #${item.product_id}`}</div>
           <div className="text-sm text-slate-400 mt-1">من: <span className="text-amber-300">{item.warehouse?.name}</span></div>
           <div className="text-sm text-slate-400 mt-1">الكمية: <span className="text-emerald-400 font-bold">{Number(item.quantity).toLocaleString()}</span></div>
-          <div className="text-xs text-slate-500 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
+          <div className="text-xs text-[#ecfdf5]0 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
         </div>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">المخزن الوجهة</label>
             <select value={transferForm.toWarehouseId}
               onChange={(e) => onFormChange({ ...transferForm, toWarehouseId: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" autoFocus>
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" autoFocus>
               <option value="">اختر المخزن...</option>
               {warehouses.filter((w) => w.id !== item.warehouse_id).map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}
             </select>
@@ -42,7 +42,7 @@ export function TransferModal({ show, item, warehouses, transferForm, onFormChan
             <label className="block text-sm font-medium text-slate-300 mb-2">ملاحظات (اختياري)</label>
             <input type="text" value={transferForm.notes}
               onChange={(e) => onFormChange({ ...transferForm, notes: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
               placeholder="سبب التحويل..." />
           </div>
           <div className="flex gap-3 justify-end pt-4 border-t border-white/10">

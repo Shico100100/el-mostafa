@@ -21,8 +21,8 @@ export function QuickCustomerModal({
           <button onClick={onClose} className="text-gray-400 hover:text-white transition"><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
-          <input placeholder="اسم العميل *" required value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-blue-500 transition" />
-          <input placeholder="رقم الهاتف" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-blue-500 transition" />
+          <input placeholder="اسم العميل *" required value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
+          <input placeholder="رقم الهاتف" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
           <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-900/40">حفظ العميل</button>
         </form>
       </div>

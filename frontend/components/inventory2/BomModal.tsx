@@ -115,7 +115,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
           </p>
 
           {loadingProducts ? (
-            <p className="text-slate-500 text-center py-8">جاري تحميل المنتجات...</p>
+            <p className="text-[#ecfdf5]0 text-center py-8">جاري تحميل المنتجات...</p>
           ) : (
             <>
               {/* Packaging */}
@@ -127,7 +127,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                     min={1}
                     value={form.pcs_per_carton}
                     onChange={(e) => setForm({ ...form, pcs_per_carton: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -137,7 +137,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                     min={1}
                     value={form.pcs_per_box}
                     onChange={(e) => setForm({ ...form, pcs_per_box: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -148,7 +148,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                 <select
                   value={form.carton_product_id}
                   onChange={(e) => setForm({ ...form, carton_product_id: Number(e.target.value) })}
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                 >
                   <option value={0}>بدون كرتونة</option>
                   {allProducts.filter((p) => p.id !== productId).map((p) => (
@@ -163,7 +163,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                 <select
                   value={form.box_product_id}
                   onChange={(e) => setForm({ ...form, box_product_id: Number(e.target.value) })}
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                 >
                   <option value={0}>بدون عبوة</option>
                   {allProducts.filter((p) => p.id !== productId).map((p) => (
@@ -190,7 +190,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                       <select
                         value={item.product_id}
                         onChange={(e) => updateItem(index, 'product_id', Number(e.target.value))}
-                        className="flex-1 px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                        className="flex-1 px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                       >
                         <option value={0}>اختر المنتج...</option>
                         {allProducts.filter((p) => p.id !== productId).map((p) => (
@@ -203,7 +203,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                         step={0.0001}
                         value={item.quantity}
                         onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
-                        className="w-24 px-3 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none text-center"
+                        className="w-24 px-3 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none text-center"
                         placeholder="الكمية"
                       />
                       <button
@@ -215,7 +215,7 @@ export function BomModal({ productId, productName, bom, onClose, onSaved }: BomM
                     </div>
                   ))}
                   {form.items.length === 0 && (
-                    <p className="text-slate-500 text-center py-4 text-sm">لم تضف أي مكونات بعد</p>
+                    <p className="text-[#ecfdf5]0 text-center py-4 text-sm">لم تضف أي مكونات بعد</p>
                   )}
                 </div>
               </div>

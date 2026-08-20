@@ -19,7 +19,7 @@ export function BOMDeleteConfirm({ bom, onClose, onConfirm }: BOMDeleteConfirmPr
           <span className="text-red-400 text-sm">هذا الإجراء لا يمكن التراجع عنه.</span>
         </p>
         <div className="flex gap-3 justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-300 rounded-lg hover:bg-gray-500/30 transition">إلغاء</button>
+          <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-300 rounded-lg hover:bg-[#ecfdf5]0/30 transition">إلغاء</button>
           <button onClick={onConfirm} className="px-4 py-2 bg-red-500/20 text-red-300 rounded-lg border border-red-500/30 hover:bg-red-500/30 transition">حذف</button>
         </div>
       </div>

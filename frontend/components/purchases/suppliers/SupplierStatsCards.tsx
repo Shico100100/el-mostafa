@@ -14,7 +14,7 @@ export function SupplierStatsCards({ suppliers }: SupplierStatsCardsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-purple-600/20 border border-purple-500/30 p-6 rounded-2xl backdrop-blur-sm">
+      <div className="bg-purple-600/20 border border-teal-500/30 p-6 rounded-2xl backdrop-blur-sm">
         <h3 className="text-purple-200 text-sm font-medium mb-2">إجمالي الموردين</h3>
         <p className="text-3xl font-bold text-white">{suppliers.length}</p>
       </div>
@@ -27,7 +27,7 @@ export function SupplierStatsCards({ suppliers }: SupplierStatsCardsProps) {
         <p className="text-3xl font-bold text-white">{totalBalance.toLocaleString()}</p>
         <span className="text-xs text-amber-300">جنيه مصري</span>
       </div>
-      <div className="bg-blue-600/20 border border-blue-500/30 p-6 rounded-2xl backdrop-blur-sm">
+      <div className="bg-blue-600/20 border border-emerald-500/30 p-6 rounded-2xl backdrop-blur-sm">
         <h3 className="text-blue-200 text-sm font-medium mb-2">متوسط المديونية</h3>
         <p className="text-3xl font-bold text-white">{avgDebt}</p>
         <span className="text-xs text-blue-300">جنيه / مورد</span>

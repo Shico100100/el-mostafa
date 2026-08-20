@@ -13,7 +13,7 @@ export function MaintenanceHeader({ onBack, onAdd }: { onBack: () => void; onAdd
       </div>
       <div className="flex gap-3">
         <button onClick={onAdd}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+          className="px-6 py-3 bg-blue-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
           + تسجيل صيانة جديدة
         </button>
         <button onClick={onBack}

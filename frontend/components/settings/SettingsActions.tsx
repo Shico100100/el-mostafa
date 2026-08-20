@@ -26,11 +26,11 @@ export function SettingsActions({
       <h3 className="text-xl font-bold text-white mb-4">إعدادات عامة</h3>
       <div className="space-y-4">
         <button onClick={() => onSetShowPasswordModal(true)}
-          className="w-full px-4 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded-lg transition border border-blue-500/50 text-right">
+          className="w-full px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded-lg transition border border-emerald-500/50 text-right">
           تغيير كلمة المرور
         </button>
         <button onClick={onSyncMolds} disabled={syncLoading}
-          className="w-full px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 rounded-lg transition border border-indigo-500/50 text-right disabled:opacity-50">
+          className="w-full px-4 py-3 bg-teal-500/20 hover:bg-teal-500/30 text-indigo-200 rounded-lg transition border border-teal-500/50 text-right disabled:opacity-50">
           {syncLoading ? 'جاري المزامنة...' : 'مزامنة الأصناف مع الإسطمبات'}
         </button>
       </div>
@@ -59,7 +59,7 @@ export function SettingsActions({
                 <p className="text-red-400 text-sm">كلمتا المرور غير متطابقتين</p>
               )}
               <div className="flex gap-4 justify-end mt-6">
-                <button type="button" onClick={onPasswordClose} className="px-6 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg">إلغاء</button>
+                <button type="button" onClick={onPasswordClose} className="px-6 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg">إلغاء</button>
                 <button type="submit" disabled={!currentPassword || !newPassword || newPassword !== confirmPassword}
                   className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50">حفظ</button>
               </div>

@@ -17,7 +17,7 @@ export function RecentMovements({ movements }: { movements: StockMovement[] }) {
     <div className="bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-500/20 rounded-xl"><ArrowRightLeft className="w-5 h-5 text-blue-400" /></div>
+          <div className="p-2 bg-emerald-500/20 rounded-xl"><ArrowRightLeft className="w-5 h-5 text-blue-400" /></div>
           <h2 className="text-lg font-bold text-white">آخر الحركات</h2>
         </div>
         <button onClick={() => router.push('/inventory2/stock/movements')}
@@ -26,7 +26,7 @@ export function RecentMovements({ movements }: { movements: StockMovement[] }) {
         </button>
       </div>
       <div className="space-y-0">
-        {movements.length === 0 && <p className="text-slate-500 text-center py-8">لا توجد حركات بعد</p>}
+        {movements.length === 0 && <p className="text-[#ecfdf5]0 text-center py-8">لا توجد حركات بعد</p>}
         {movements.map((m, i) => (
           <div key={m.id} className="flex gap-4">
             <div className="flex flex-col items-center">
@@ -42,7 +42,7 @@ export function RecentMovements({ movements }: { movements: StockMovement[] }) {
                   {m.type === 'IN' ? '+' : '-'}{Number(m.quantity).toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">{m.notes || m.reference_type || (
+              <p className="text-xs text-[#ecfdf5]0 mt-0.5">{m.notes || m.reference_type || (
                 m.date ? new Date(m.date).toLocaleDateString('ar-EG') : m.created_at ? new Date(m.created_at).toLocaleDateString('ar-EG') : ''
               )}</p>
             </div>

@@ -76,7 +76,7 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({ relatedType, rela
             {loading ? (
                 <div className="text-center py-4 text-gray-400">جاري التحميل...</div>
             ) : attachments.length === 0 ? (
-                <div className="text-center py-8 bg-white/5 border border-dashed border-white/10 rounded-xl text-gray-500">
+                <div className="text-center py-8 bg-white/5 border border-dashed border-white/10 rounded-xl text-[#ecfdf5]0">
                     لا توجد مستندات مرفقة
                 </div>
             ) : (
@@ -84,7 +84,7 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({ relatedType, rela
                     {attachments.map((file) => (
                         <div key={file.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between group hover:bg-white/10 transition">
                             <div className="flex items-center gap-3 overflow-hidden">
-                                <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                                <div className="p-2 bg-emerald-500/20 rounded-lg text-blue-400">
                                     <File className="w-5 h-5" />
                                 </div>
                                 <div className="overflow-hidden">

@@ -35,7 +35,7 @@ export function AddMaintenanceDialog({ visible, machines, formData, onFormChange
             <div>
               <label className="block text-sm text-slate-400 mb-1">الماكينة</label>
               <select required value={formData.machine_id} onChange={e => onFormChange({ machine_id: e.target.value })}
-                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none">
+                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none">
                 <option value="">اختر الماكينة</option>
                 {machines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
@@ -43,7 +43,7 @@ export function AddMaintenanceDialog({ visible, machines, formData, onFormChange
             <div>
               <label className="block text-sm text-slate-400 mb-1">النوع</label>
               <select value={formData.type} onChange={e => onFormChange({ type: e.target.value })}
-                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none">
+                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none">
                 <option value="SCHEDULED">دورية</option>
                 <option value="BREAKDOWN">عطل مفاجئ</option>
                 <option value="PREVENTIVE">وقائية</option>
@@ -54,24 +54,24 @@ export function AddMaintenanceDialog({ visible, machines, formData, onFormChange
             <div>
               <label className="block text-sm text-slate-400 mb-1">التاريخ</label>
               <input type="date" required value={formData.date} onChange={e => onFormChange({ date: e.target.value })}
-                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none" />
+                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm text-slate-400 mb-1">التكلفة (ج.م)</label>
               <input type="number" value={formData.cost} onChange={e => onFormChange({ cost: e.target.value })}
-                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none" placeholder="0.00" />
+                className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none" placeholder="0.00" />
             </div>
           </div>
           <div>
             <label className="block text-sm text-slate-400 mb-1">الوصف</label>
             <textarea required value={formData.description} onChange={e => onFormChange({ description: e.target.value })}
-              className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none h-24"
+              className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none h-24"
               placeholder="وصف تفصيلي للعملية..." />
           </div>
           <div>
             <label className="block text-sm text-slate-400 mb-1">الحالة</label>
             <select value={formData.status} onChange={e => onFormChange({ status: e.target.value })}
-              className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-blue-500 outline-none">
+              className="w-full bg-slate-800 border border-white/10 rounded-xl p-3 focus:border-emerald-500 outline-none">
               <option value="PENDING">معلق</option>
               <option value="IN_PROGRESS">جاري العمل</option>
               <option value="COMPLETED">مكتمل</option>
@@ -79,7 +79,7 @@ export function AddMaintenanceDialog({ visible, machines, formData, onFormChange
           </div>
           <div className="pt-4 flex gap-3">
             <button type="submit"
-              className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all">
+              className="flex-1 py-4 bg-blue-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all">
               حفظ البيانات
             </button>
             <button type="button" onClick={onClose}

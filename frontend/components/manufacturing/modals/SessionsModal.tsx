@@ -34,7 +34,7 @@ export default function SessionsModal({
               <div className="animate-spin h-8 w-8 border-2 border-violet-500 border-t-transparent rounded-full" />
             </div>
           ) : sessions.length === 0 ? (
-            <p className="text-center text-slate-500 py-12">لا توجد فترات مسجلة</p>
+            <p className="text-center text-[#ecfdf5]0 py-12">لا توجد فترات مسجلة</p>
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
@@ -47,16 +47,16 @@ export default function SessionsModal({
                     <div className="flex items-center gap-3">
                       <span className="text-violet-400 font-bold">#{session.id}</span>
                       <span className="text-slate-300">{session.machine?.name}</span>
-                      <span className="text-slate-500 text-sm">{session.mold?.name}</span>
+                      <span className="text-[#ecfdf5]0 text-sm">{session.mold?.name}</span>
                     </div>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-[#ecfdf5]0">
                       {session.created_at ? new Date(session.created_at).toLocaleDateString('ar-EG') : ''}
                     </span>
                   </div>
                   <div className="flex gap-4 text-sm text-slate-400">
                     <span className="flex items-center gap-1"><Calendar /> {session.start_date} → {session.end_date}</span>
                     <span className="flex items-center gap-1"><Scale /> {Number(session.total_production_kg).toFixed(1)} كجم</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${session.mode === 'distribute' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${session.mode === 'distribute' ? 'bg-emerald-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
                       {session.mode === 'distribute' ? 'توزيع' : 'دفعة واحدة'}
                     </span>
                   </div>

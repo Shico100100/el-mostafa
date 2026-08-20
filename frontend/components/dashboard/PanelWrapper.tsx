@@ -38,12 +38,12 @@ export function PanelWrapper({
     >
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-1 h-5 bg-blue-500 rounded-full shadow-[0_0_8px_#10b981]" />
+          <span className="w-1 h-5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]" />
           <h3 className="text-white font-bold text-sm">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
           {state === 'refetching' && (
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
           )}
           {settings}
         </div>
@@ -93,13 +93,13 @@ function EmptyState({ message, action }: { message: string; action?: { label: st
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
-        <span className="text-slate-500 text-xl">-</span>
+        <span className="text-[#ecfdf5]0 text-xl">-</span>
       </div>
       <p className="text-slate-400 text-sm mb-3">{message}</p>
       {action && (
         <button
           onClick={action.onClick}
-          className="px-4 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 rounded-lg text-xs font-medium transition"
+          className="px-4 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-200 rounded-lg text-xs font-medium transition"
         >
           {action.label}
         </button>

@@ -34,11 +34,11 @@ export function Inventory2ProductsHeader({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>استيراد
           </button>
           <button onClick={onExport}
-            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2.5 rounded-xl border border-blue-500/20 transition flex items-center gap-2">
+            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-4 py-2.5 rounded-xl border border-emerald-500/20 transition flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>تصدير
           </button>
           <button onClick={onBulkPrice}
-            className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 px-4 py-2.5 rounded-xl border border-purple-500/20 transition flex items-center gap-2">
+            className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 px-4 py-2.5 rounded-xl border border-teal-500/20 transition flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>أسعار
           </button>
           <button onClick={onSmartAssign}

@@ -17,7 +17,7 @@ export function MaintenanceStats({ overdueCount, upcomingCount, totalMachines }:
         <h3 className="text-amber-400 font-bold mb-2">صيانة خلال 7 أيام</h3>
         <p className="text-4xl font-black text-white">{upcomingCount}</p>
       </div>
-      <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-3xl">
+      <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-3xl">
         <h3 className="text-blue-400 font-bold mb-2">إجمالي الماكينات</h3>
         <p className="text-4xl font-black text-white">{totalMachines}</p>
       </div>

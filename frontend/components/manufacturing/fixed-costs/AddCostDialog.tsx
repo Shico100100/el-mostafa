@@ -36,13 +36,13 @@ export function AddCostDialog({ show, month, category, amount, notes, onFormChan
             <label className="block text-gray-400 text-sm mb-1">الشهر</label>
             <input type="month" required value={month}
               onChange={(e) => onFormChange({ month: e.target.value, category, amount, notes })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500" />
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500" />
           </div>
           <div>
             <label className="block text-gray-400 text-sm mb-1">البند</label>
             <select required value={category}
               onChange={(e) => onFormChange({ month, category: e.target.value, amount, notes })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
               {categoryOptions.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
@@ -52,14 +52,14 @@ export function AddCostDialog({ show, month, category, amount, notes, onFormChan
             <label className="block text-gray-400 text-sm mb-1">القيمة (ج.م)</label>
             <input type="number" step="0.01" required value={amount}
               onChange={(e) => onFormChange({ month, category, amount: e.target.value, notes })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
               placeholder="0.00" />
           </div>
           <div>
             <label className="block text-gray-400 text-sm mb-1">ملاحظات</label>
             <textarea value={notes}
               onChange={(e) => onFormChange({ month, category, amount, notes: e.target.value })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 h-24"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500 h-24"
               placeholder="تفاصيل إضافية..." />
           </div>
           <div className="flex gap-3 pt-4">

@@ -13,7 +13,7 @@ export function AuditHeader({ onBack }: { onBack: () => void }) {
           <h1 className="text-3xl font-black bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
             سجل العمليات (Audit Log)
           </h1>
-          <p className="text-slate-500 mt-1 font-medium text-sm">تتبع كافة التحركات والتغييرات في النظام</p>
+          <p className="text-[#ecfdf5]0 mt-1 font-medium text-sm">تتبع كافة التحركات والتغييرات في النظام</p>
         </div>
       </div>
     </header>

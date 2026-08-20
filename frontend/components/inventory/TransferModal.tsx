@@ -69,7 +69,7 @@ export default function TransferModal({ isOpen, item, otherWarehouses, onClose, 
           <div className="text-sm text-gray-400">
             الكمية: <span className="text-green-400 font-bold">{item.quantity.toLocaleString()}</span> {item.unit || 'قطعة'}
           </div>
-          <div className="text-xs text-gray-500 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
+          <div className="text-xs text-[#ecfdf5]0 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
         </div>
 
         <div className="space-y-4">
@@ -78,7 +78,7 @@ export default function TransferModal({ isOpen, item, otherWarehouses, onClose, 
             <select
               value={toWarehouseId}
               onChange={(e) => setToWarehouseId(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               autoFocus
             >
               <option value="">اختر المخزن...</option>
@@ -93,13 +93,13 @@ export default function TransferModal({ isOpen, item, otherWarehouses, onClose, 
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
               placeholder="سبب التحويل..."
             />
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-500/20 text-gray-200 rounded-lg hover:bg-gray-500/30 transition" disabled={saving}>إلغاء</button>
+            <button onClick={onClose} className="px-4 py-2 bg-[#ecfdf5]0/20 text-gray-200 rounded-lg hover:bg-[#ecfdf5]0/30 transition" disabled={saving}>إلغاء</button>
             <button onClick={handleTransfer} disabled={saving || !toWarehouseId} className="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 font-bold shadow-lg shadow-amber-900/20 disabled:opacity-50">
               {saving ? 'جاري التحويل...' : 'تأكيد التحويل'}
             </button>

@@ -48,7 +48,7 @@ export function ProductPriceTable({ products, loading, selectedIds, onToggle }: 
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-white font-medium">{product.name}</span>
-                    <div className="text-xs text-slate-500">{product.unit || 'قطعة'}</div>
+                    <div className="text-xs text-[#ecfdf5]0">{product.unit || 'قطعة'}</div>
                   </td>
                   <td className="px-6 py-4"><TypeBadge type={product.type} /></td>
                   <td className="px-6 py-4"><span className="text-white">{price.toFixed(2)} ج.م</span></td>
@@ -58,7 +58,7 @@ export function ProductPriceTable({ products, loading, selectedIds, onToggle }: 
             })}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-16 text-center text-[#ecfdf5]0">
                   <Package className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                   <p>لا توجد منتجات</p>
                 </td>

@@ -23,12 +23,12 @@ export function WarehouseModal({ isOpen, editing, form, saving, onClose, onFormC
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1.5">الاسم *</label>
           <input type="text" value={form.name} onChange={(e) => onFormChange({ ...form, name: e.target.value })}
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" autoFocus />
+            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" autoFocus />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1.5">الموقع / الوصف</label>
           <textarea value={form.description} onChange={(e) => onFormChange({ ...form, description: e.target.value })}
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" rows={3} />
+            className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" rows={3} />
         </div>
         <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
           <button type="button" onClick={onClose} className="px-5 py-2.5 bg-slate-700/50 text-slate-200 rounded-xl hover:bg-slate-700 transition">إلغاء</button>

@@ -73,12 +73,12 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الاسم *</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" placeholder="اسم المنتج" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" placeholder="اسم المنتج" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">النوع</label>
               <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
                 <option value="FINISHED">منتج تام</option>
                 <option value="IMPORTED">مستورد</option>
                 <option value="PACKAGING">تغليف</option>
@@ -90,24 +90,24 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الوحدة</label>
               <input type="text" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" list="units" placeholder="قطعة / كجم" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" list="units" placeholder="قطعة / كجم" />
               <datalist id="units"><option value="piece" /><option value="kg" /><option value="meter" /><option value="box" /></datalist>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">سعر البيع</label>
               <input type="number" step="0.01" min="0" value={form.selling_price || ''} onChange={(e) => setForm({ ...form, selling_price: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الكمية الافتتاحية</label>
               <input type="number" min="0" value={form.stock_quantity || 0} onChange={(e) => setForm({ ...form, stock_quantity: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">المخزن</label>
               <select value={form.warehouse_id || ''} onChange={(e) => setForm({ ...form, warehouse_id: Number(e.target.value) || undefined })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
                 <option value="">اختر...</option>
                 {warehouses.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}
               </select>
@@ -115,17 +115,17 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الحد الأدنى</label>
               <input type="number" min="0" value={form.min_stock ?? ''} onChange={(e) => setForm({ ...form, min_stock: e.target.value ? Number(e.target.value) : null })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">وزن القطعة (جرام)</label>
               <input type="number" step="0.01" min="0" value={form.weight_grams ?? ''} onChange={(e) => setForm({ ...form, weight_grams: e.target.value ? Number(e.target.value) : null })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الوصف</label>
               <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value || null })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" rows={2} />
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" rows={2} />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-300 mb-1.5">الصورة</label>
@@ -136,9 +136,9 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
                     <button type="button" onClick={() => setImagePath('')} className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500/80 text-white rounded-full text-xs flex items-center justify-center"><X className="w-3 h-3" /></button>
                   </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-xl border border-dashed border-white/20 bg-slate-900/30 flex items-center justify-center text-slate-500 text-xs">لا توجد</div>
+                  <div className="w-20 h-20 rounded-xl border border-dashed border-white/20 bg-slate-900/30 flex items-center justify-center text-[#ecfdf5]0 text-xs">لا توجد</div>
                 )}
-                <label className="cursor-pointer px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg border border-blue-500/30 transition text-sm flex items-center gap-1.5">
+                <label className="cursor-pointer px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-300 rounded-lg border border-emerald-500/30 transition text-sm flex items-center gap-1.5">
                   <Upload className="w-4 h-4" />{uploading ? 'جاري...' : 'رفع صورة'}
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                 </label>

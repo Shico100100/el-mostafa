@@ -32,7 +32,7 @@ export default function QuickProductModal({
               onChange={(e) => onDataChange({ ...data, name: e.target.value })}
               required
               autoFocus
-              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-blue-500 outline-none"
+              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-emerald-500 outline-none"
             />
           </div>
           <div>
@@ -40,7 +40,7 @@ export default function QuickProductModal({
             <select
               value={data.unit}
               onChange={(e) => onDataChange({ ...data, unit: e.target.value })}
-              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-blue-500 outline-none"
+              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-emerald-500 outline-none"
             >
               <option value="kg">كيلوجرام</option>
               <option value="piece">قطعة</option>
@@ -56,16 +56,16 @@ export default function QuickProductModal({
               onChange={(e) => onDataChange({ ...data, weight_grams: e.target.value })}
               min="0"
               step="0.01"
-              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-blue-500 outline-none"
+              className="w-full px-4 py-2 bg-slate-900 border border-white/20 rounded-lg text-white focus:border-emerald-500 outline-none"
               placeholder="مثال: 50"
             />
-            <p className="text-xs text-gray-500 mt-1">يساعد في حساب عدد القطع عند الشراء بالكيلو</p>
+            <p className="text-xs text-[#ecfdf5]0 mt-1">يساعد في حساب عدد القطع عند الشراء بالكيلو</p>
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition"
+              className="px-4 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition"
             >
               إلغاء
             </button>

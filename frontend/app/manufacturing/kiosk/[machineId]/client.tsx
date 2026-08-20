@@ -157,7 +157,7 @@ export default function MachineKioskPage({ machineId }: { machineId: string }) {
                             w-full py-8 rounded-3xl text-4xl font-black shadow-2xl transition-all duration-200
                             ${cycleCount > 0
                                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-[1.02] shadow-blue-900/50 text-white cursor-pointer'
-                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                : 'bg-slate-800 text-[#ecfdf5]0 cursor-not-allowed'
                             }
                         `}
                     >

@@ -14,20 +14,20 @@ interface Action {
 }
 
 const actions: Action[] = [
-  { icon: <Package className="w-5 h-5" />, label: 'المنتجات', href: '/inventory2/products', color: 'from-blue-500 to-cyan-500' },
+  { icon: <Package className="w-5 h-5" />, label: 'المنتجات', href: '/inventory2/products', color: 'from-emerald-500 to-cyan-500' },
   { icon: <Users className="w-5 h-5" />, label: 'العملاء', href: '/sales/customers', color: 'from-emerald-500 to-teal-500' },
   { icon: <Receipt className="w-5 h-5" />, label: 'أوامر البيع', href: '/sales/orders', color: 'from-emerald-500 to-green-500' },
   { icon: <ShoppingCart className="w-5 h-5" />, label: 'أوامر الشراء', href: '/purchases/orders', color: 'from-amber-500 to-orange-500' },
   { icon: <Building2 className="w-5 h-5" />, label: 'الإنتاج', href: '/manufacturing', color: 'from-rose-500 to-pink-500' },
-  { icon: <DollarSign className="w-5 h-5" />, label: 'الحسابات', href: '/accounting', color: 'from-violet-500 to-purple-500' },
-  { icon: <BarChart3 className="w-5 h-5" />, label: 'التقارير', href: '/reports', color: 'from-indigo-500 to-blue-500' },
+  { icon: <DollarSign className="w-5 h-5" />, label: 'الحسابات', href: '/accounting', color: 'from-violet-500 to-teal-500' },
+  { icon: <BarChart3 className="w-5 h-5" />, label: 'التقارير', href: '/reports', color: 'from-teal-500 to-emerald-500' },
   { icon: <Radar className="w-5 h-5" />, label: 'برج المراقبة', href: '/dashboard/control-tower', color: 'from-cyan-500 to-teal-500' },
 ];
 
 const adminActions: Action[] = [
   { icon: <User className="w-5 h-5" />, label: 'المستخدمين', href: '/users', color: 'from-rose-500 to-red-500' },
-  { icon: <ScrollText className="w-5 h-5" />, label: 'سجل العمليات', href: '/audit', color: 'from-slate-400 to-slate-500' },
-  { icon: <Cog className="w-5 h-5" />, label: 'الإعدادات', href: '/settings', color: 'from-gray-400 to-gray-500' },
+  { icon: <ScrollText className="w-5 h-5" />, label: 'سجل العمليات', href: '/audit', color: 'from-slate-400 to-[#ecfdf5]0' },
+  { icon: <Cog className="w-5 h-5" />, label: 'الإعدادات', href: '/settings', color: 'from-gray-400 to-[#ecfdf5]0' },
 ];
 
 export function QuickActionsGrid({ isAdmin }: { isAdmin: boolean }) {

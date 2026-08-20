@@ -18,7 +18,7 @@ interface ActionGroup {
 
 const actionGroups: ActionGroup[] = [
   {
-    title: 'المخزون', color: 'border-blue-500/20',
+    title: 'المخزون', color: 'border-emerald-500/20',
     items: [
       { icon: <Package />, label: 'المنتجات', desc: 'إدارة المخزون', onClick: (r) => r.push('/inventory2/products') },
       { icon: <Box />, label: 'مخزن البلاستيك', desc: 'منتجات نصف مصنعة', onClick: (r) => r.push('/inventory2/semi-finished') },
@@ -44,7 +44,7 @@ const actionGroups: ActionGroup[] = [
     ],
   },
   {
-    title: 'المالية والإدارة', color: 'border-purple-500/20',
+    title: 'المالية والإدارة', color: 'border-teal-500/20',
     items: [
       { icon: <DollarSign />, label: 'الحسابات', desc: 'القيود والتقارير', onClick: (r) => r.push('/accounting') },
       { icon: <BarChart3 />, label: 'التقارير', desc: 'تحليلات الأداء', onClick: (r) => r.push('/reports') },
@@ -82,7 +82,7 @@ export function QuickActions({ router, isAdmin }: { router: ReturnType<typeof us
                 <span className="shrink-0 group-hover/btn:scale-110 group-hover/btn:rotate-6 transition-all duration-200">{a.icon}</span>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-white group-hover/btn:text-blue-300 transition-colors truncate">{a.label}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{a.desc}</p>
+                  <p className="text-[10px] text-[#ecfdf5]0 truncate">{a.desc}</p>
                 </div>
               </button>
             ))}

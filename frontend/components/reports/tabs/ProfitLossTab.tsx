@@ -17,7 +17,7 @@ export function ProfitLossTab({ data }: { data: ReportData }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl">
           <h3 className="text-blue-200 mb-2">إجمالي الإيرادات</h3>
           <p className="text-2xl font-bold text-white">{Number(data.totalSales).toLocaleString()} ج.م</p>
         </div>
@@ -61,7 +61,7 @@ export function ProfitLossTab({ data }: { data: ReportData }) {
                 <span className="text-white">{Number(data.totalSales).toLocaleString()}</span>
               </div>
               <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
               </div>
             </div>
             <div>

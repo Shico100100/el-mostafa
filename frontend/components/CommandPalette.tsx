@@ -119,7 +119,7 @@ export function CommandPalette() {
                 <Command.List className="max-h-96 overflow-y-auto p-2">
                     {loading && (
                         <div className="py-8 text-center text-gray-400">
-                            <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                            <div className="animate-spin w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
                             <p className="mt-2 text-sm">جاري البحث...</p>
                         </div>
                     )}
@@ -145,7 +145,7 @@ export function CommandPalette() {
                                             <div className="text-xs text-gray-400 truncate">{item.description}</div>
                                         )}
                                     </div>
-                                    <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded">
+                                    <span className="text-xs px-2 py-1 bg-emerald-500/20 text-blue-300 rounded">
                                         {getTypeLabel(item.type)}
                                     </span>
                                 </Command.Item>
@@ -157,7 +157,7 @@ export function CommandPalette() {
                         <div className="py-8 text-center">
                             <Search className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                             <p className="text-gray-400 text-sm">ابدأ الكتابة للبحث...</p>
-                            <p className="text-gray-500 text-xs mt-2">يمكنك البحث في المنتجات، العملاء، الموردين، والمزيد</p>
+                            <p className="text-[#ecfdf5]0 text-xs mt-2">يمكنك البحث في المنتجات، العملاء، الموردين، والمزيد</p>
                         </div>
                     )}
                 </Command.List>

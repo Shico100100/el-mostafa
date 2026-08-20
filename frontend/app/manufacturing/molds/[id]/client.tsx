@@ -50,7 +50,7 @@ export default function MoldDetailsPage() {
                     <h1 className="text-2xl font-bold text-white">سجل الإسطمبة</h1>
                     <button
                         onClick={() => router.back()}
-                        className="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-200 rounded-lg transition"
+                        className="px-4 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg transition"
                     >
                         عودة
                     </button>

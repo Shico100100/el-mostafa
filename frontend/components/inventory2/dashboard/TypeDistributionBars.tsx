@@ -39,7 +39,7 @@ export function TypeDistributionBars({ typeStats, totalProducts, maxCount }: Typ
               className="w-full group text-right">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-sm text-slate-400 group-hover:text-white transition">{productTypeLabel(stat.type)}</span>
-                <span className="text-sm text-slate-500">{stat.count} منتج ({pct}%)</span>
+                <span className="text-sm text-[#ecfdf5]0">{stat.count} منتج ({pct}%)</span>
               </div>
               <div className="w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all duration-700 ${typeBarColors[stat.type]} opacity-70 group-hover:opacity-100`}

@@ -112,9 +112,9 @@ export default function WarehouseDetailPage() {
   }
 
   const statsCards = [
-    { label: 'عدد الأصناف', value: stock.length, icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-blue-500/20' },
+    { label: 'عدد الأصناف', value: stock.length, icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-emerald-500/20' },
     { label: 'إجمالي القطع', value: totalItems.toLocaleString(), icon: <ShoppingCart className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
-    { label: 'مخازن أخرى', value: otherWarehouses.length, icon: <Truck className="w-6 h-6 text-purple-400" />, color: 'bg-purple-500/20' },
+    { label: 'مخازن أخرى', value: otherWarehouses.length, icon: <Truck className="w-6 h-6 text-purple-400" />, color: 'bg-teal-500/20' },
   ];
 
   return (
@@ -138,10 +138,10 @@ export default function WarehouseDetailPage() {
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-start sm:items-center">
           <div className="relative w-full sm:w-72">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ecfdf5]0" />
             <input type="text" placeholder="بحث في المخزن..." value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pr-10 pl-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+              className="w-full pr-10 pl-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-[#ecfdf5]0 focus:outline-none focus:border-emerald-500" />
           </div>
           <div className="text-sm text-slate-400">عرض {filteredStock.length} من {stock.length} صنف</div>
         </div>
@@ -164,14 +164,14 @@ export default function WarehouseDetailPage() {
                     <tr key={item.product_id} className="hover:bg-white/5 transition">
                       <td className="px-6 py-4">
                         <div className="text-white font-medium">{item.product_name}</div>
-                        {item.product_sku && <div className="text-xs text-slate-500 mt-0.5">SKU: {item.product_sku}</div>}
+                        {item.product_sku && <div className="text-xs text-[#ecfdf5]0 mt-0.5">SKU: {item.product_sku}</div>}
                       </td>
                       <td className="px-6 py-4"><TypeBadge type={item.product_type} /></td>
                       <td className="px-6 py-4">
                         <span className={`text-lg font-bold ${qty > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {qty.toLocaleString()}
                         </span>
-                        <span className="text-xs text-slate-500 mr-1">{item.unit || 'قطعة'}</span>
+                        <span className="text-xs text-[#ecfdf5]0 mr-1">{item.unit || 'قطعة'}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         {otherWarehouses.length > 0 && (
@@ -186,7 +186,7 @@ export default function WarehouseDetailPage() {
                 })}
                 {filteredStock.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-[#ecfdf5]0">
                       <Package className="w-10 h-10 mx-auto mb-2 text-slate-600" />
                       <p>{search ? 'لا توجد نتائج للبحث' : 'هذا المخزن فارغ'}</p>
                     </td>
@@ -211,7 +211,7 @@ export default function WarehouseDetailPage() {
               <div className="text-sm text-slate-400 mt-1">
                 الكمية: <span className="text-emerald-400 font-bold">{Number(transferProduct.quantity).toLocaleString()}</span> {transferProduct.unit || 'قطعة'}
               </div>
-              <div className="text-xs text-slate-500 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
+              <div className="text-xs text-[#ecfdf5]0 mt-1">سيتم نقل كامل الكمية إلى المخزن الجديد</div>
             </div>
 
             <div className="space-y-4">
@@ -219,7 +219,7 @@ export default function WarehouseDetailPage() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">المخزن الوجهة</label>
                 <select value={transferForm.toWarehouseId}
                   onChange={(e) => setTransferForm({ ...transferForm, toWarehouseId: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" autoFocus>
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" autoFocus>
                   <option value="">اختر المخزن...</option>
                   {otherWarehouses.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}
                 </select>
@@ -228,7 +228,7 @@ export default function WarehouseDetailPage() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">ملاحظات (اختياري)</label>
                 <input type="text" value={transferForm.notes}
                   onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
                   placeholder="سبب التحويل..." />
               </div>
 

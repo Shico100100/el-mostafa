@@ -49,7 +49,7 @@ export default function BulkPriceModal({ isOpen, onClose, onSave }: BulkPriceMod
             <select
               value={priceField}
               onChange={(e) => setPriceField(e.target.value as 'selling_price' | 'cost_price')}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="selling_price">سعر البيع</option>
               <option value="cost_price">سعر التكلفة</option>
@@ -60,7 +60,7 @@ export default function BulkPriceModal({ isOpen, onClose, onSave }: BulkPriceMod
             <select
               value={updateType}
               onChange={(e) => setUpdateType(e.target.value as 'percentage' | 'fixed')}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="percentage">نسبة مئوية (%)</option>
               <option value="fixed">قيمة ثابتة</option>
@@ -73,7 +73,7 @@ export default function BulkPriceModal({ isOpen, onClose, onSave }: BulkPriceMod
             <input
               type="number" step="0.01" value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
               placeholder="القيمة..." autoFocus
             />
           </div>
@@ -82,7 +82,7 @@ export default function BulkPriceModal({ isOpen, onClose, onSave }: BulkPriceMod
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none"
             >
               <option value="">كل الأنواع</option>
               <option value="RAW">خام</option>

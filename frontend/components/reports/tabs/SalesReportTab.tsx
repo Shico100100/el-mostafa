@@ -7,11 +7,11 @@ export function SalesReportTab({ data, page, totalPages, onPageChange }: { data:
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl">
           <h3 className="text-blue-200 mb-2">إجمالي المبيعات</h3>
           <p className="text-3xl font-bold text-white">{Number(data.totalSales).toFixed(2)} ج.م</p>
         </div>
-        <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl">
           <h3 className="text-blue-200 mb-2">عدد الطلبات</h3>
           <p className="text-3xl font-bold text-white">{data.salesCount}</p>
         </div>

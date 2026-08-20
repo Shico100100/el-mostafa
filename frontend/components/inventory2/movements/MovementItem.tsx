@@ -28,8 +28,8 @@ export function MovementItem({ movement: m }: MovementItemProps) {
               }`}>
                 {m.type === 'IN' ? 'وارد' : m.type === 'OUT' ? 'صادر' : 'تسوية'}
               </span>
-              {m.notes && <span className="text-xs text-slate-500">{m.notes}</span>}
-              {m.reference_type && <span className="text-xs text-slate-500">مرجع: {m.reference_type}</span>}
+              {m.notes && <span className="text-xs text-[#ecfdf5]0">{m.notes}</span>}
+              {m.reference_type && <span className="text-xs text-[#ecfdf5]0">مرجع: {m.reference_type}</span>}
             </div>
           </div>
         </div>
@@ -37,7 +37,7 @@ export function MovementItem({ movement: m }: MovementItemProps) {
           <span className={`text-xl font-black ${m.type === 'IN' ? 'text-emerald-400' : 'text-red-400'}`}>
             {m.type === 'IN' ? '+' : '-'}{Number(m.quantity).toLocaleString()}
           </span>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#ecfdf5]0 mt-0.5">
             {m.date ? new Date(m.date).toLocaleDateString('ar-EG') : m.created_at ? new Date(m.created_at).toLocaleDateString('ar-EG') : '-'}
           </p>
         </div>

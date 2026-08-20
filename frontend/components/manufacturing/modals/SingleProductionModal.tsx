@@ -35,7 +35,7 @@ export default function SingleProductionModal({
             <select
               value={form.mold_id}
               onChange={(e) => onFieldChange('mold_id', e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             >
               <option value="">اختر إسطمبة</option>
               {molds.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -47,7 +47,7 @@ export default function SingleProductionModal({
             <select
                value={form.product_id}
                   onChange={(e) => onFieldChange('product_id', e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             >
               <option value="">اختر خامة</option>
               {rawMaterials.map(rm => <option key={rm.id} value={rm.id}>{rm.product?.name}</option>)}
@@ -60,7 +60,7 @@ export default function SingleProductionModal({
               type="number"
               value={form.hours_worked}
               onChange={(e) => onFieldChange('hours_worked', e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             />
           </div>
 
@@ -71,7 +71,7 @@ export default function SingleProductionModal({
               value={form.total_production_kg}
               onChange={(e) => onFieldChange('total_production_kg', e.target.value)}
               placeholder="0.0"
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white font-bold text-blue-400"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white font-bold text-blue-400"
             />
             {form.mold_id && form.total_production_kg && (
               <span className="text-xs text-green-400 mt-1 block">
@@ -87,7 +87,7 @@ export default function SingleProductionModal({
               value={form.notes}
               onChange={(e) => onFieldChange('notes', e.target.value)}
               placeholder="..."
-              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-blue-500 text-white"
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-emerald-500 text-white"
             />
           </div>
         </div>

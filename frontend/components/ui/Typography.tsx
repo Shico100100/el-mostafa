@@ -21,7 +21,7 @@ export function Label({ children, className = '' }: { children: React.ReactNode;
 }
 
 export function Caption({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <p className={`text-xs text-gray-500 ${className}`}>{children}</p>;
+  return <p className={`text-xs text-[#ecfdf5]0 ${className}`}>{children}</p>;
 }
 
 export function StatValue({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -45,5 +45,5 @@ export function Text({ children, className = '' }: { children: React.ReactNode; 
 }
 
 export function Muted({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <p className={`text-xs text-gray-500 ${className}`}>{children}</p>;
+  return <p className={`text-xs text-[#ecfdf5]0 ${className}`}>{children}</p>;
 }

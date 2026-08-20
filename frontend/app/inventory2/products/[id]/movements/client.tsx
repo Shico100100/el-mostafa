@@ -99,8 +99,8 @@ export default function ProductMovementsPage() {
   const qty = Number(product?.stock_quantity || 0);
 
   const statsCards = [
-    { label: 'الكمية الحالية', value: qty.toLocaleString(), icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-blue-500/20' },
-    { label: 'إجمالي الحركات', value: movements.length, icon: <BarChart3 className="w-6 h-6 text-purple-400" />, color: 'bg-purple-500/20' },
+    { label: 'الكمية الحالية', value: qty.toLocaleString(), icon: <Package className="w-6 h-6 text-blue-400" />, color: 'bg-emerald-500/20' },
+    { label: 'إجمالي الحركات', value: movements.length, icon: <BarChart3 className="w-6 h-6 text-purple-400" />, color: 'bg-teal-500/20' },
     { label: 'سعر البيع', value: product ? `${Number(product.selling_price).toFixed(2)} ج.م` : '—', icon: <TrendingUp className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
   ];
 
@@ -174,7 +174,7 @@ export default function ProductMovementsPage() {
                       }`}>{balance.toLocaleString()}</td>
                       <td className="px-6 py-4">
                         <div className="flex gap-1.5">
-                          <button onClick={() => openEditModal(movement)} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Edit3 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => openEditModal(movement)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Edit3 className="w-3.5 h-3.5" /></button>
                           <button onClick={() => handleDeleteMovement(movement)} className="p-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-200 rounded-lg transition" title="حذف"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </td>
@@ -184,7 +184,7 @@ export default function ProductMovementsPage() {
               })()}
               {movements.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-slate-500">
+                  <td colSpan={7} className="px-6 py-16 text-center text-[#ecfdf5]0">
                     <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-600" />
                     <p>لا توجد حركات لهذا المنتج</p>
                   </td>
@@ -202,13 +202,13 @@ export default function ProductMovementsPage() {
             <input type="number" required min="0" step="0.01"
               value={editForm.quantity}
               onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">النوع</label>
             <select value={editForm.type}
               onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none">
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
               <option value="IN">إدخال</option>
               <option value="OUT">إخراج</option>
               <option value="ADJUST">تعديل</option>
@@ -218,7 +218,7 @@ export default function ProductMovementsPage() {
             <label className="block text-sm font-medium text-slate-300 mb-1.5">ملاحظات</label>
             <textarea rows={3} value={editForm.notes}
               onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-blue-500 focus:outline-none" />
+              className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
           </div>
           <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
             <button type="button" onClick={() => setShowEditModal(false)} className="px-5 py-2.5 bg-slate-700/50 text-slate-200 rounded-xl hover:bg-slate-700 transition">إلغاء</button>

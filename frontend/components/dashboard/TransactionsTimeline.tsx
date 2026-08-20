@@ -19,7 +19,7 @@ export function TransactionsTimeline({ sales, purchases }: { sales?: any[]; purc
       <div className="space-y-0">
         {latest.map((item, idx) => {
           const isSale = item.type === 'sale';
-          const dotColor = isSale ? 'bg-emerald-500' : 'bg-blue-500';
+          const dotColor = isSale ? 'bg-emerald-500' : 'bg-emerald-500';
           const label = isSale ? 'بيع' : 'شراء';
           const amount = Number(item.total_amount || 0).toLocaleString();
           return (

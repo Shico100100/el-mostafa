@@ -76,7 +76,7 @@ export function RawMaterialsTable({
                   </td>
                   <td className="px-6 py-4 flex gap-2">
                     <button onClick={(e) => { e.stopPropagation(); router.push(`/manufacturing/raw-materials/${rm.id}`); }}
-                      className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm transition" title="التفاصيل"><FileText /></button>
+                      className="p-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-blue-400 rounded-lg text-sm transition" title="التفاصيل"><FileText /></button>
                     <button onClick={(e) => { e.stopPropagation(); onEdit(rm); }}
                       className="p-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg text-sm transition" title="تعديل"><Pencil /></button>
                     <button onClick={(e) => { e.stopPropagation(); onDelete(rm.id); }}
