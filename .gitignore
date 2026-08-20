@@ -16,6 +16,7 @@ Thumbs.db
 
 # Logs
 *.log
+*.log.*
 
 # Uploaded files
 uploads/
@@ -32,6 +33,8 @@ backups/
 *.zip
 *.gz
 *.rar
+*.dump
+*.sql
 
 # Generated lint reports
 lint_check.txt

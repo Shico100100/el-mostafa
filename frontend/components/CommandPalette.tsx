@@ -63,7 +63,7 @@ export function CommandPalette() {
         // Navigate based on type
         switch (item.type) {
             case 'product':
-                router.push(`/inventory2/products`);
+                router.push(`/inventory/products`);
                 break;
             case 'customer':
                 router.push(`/sales/customers`);

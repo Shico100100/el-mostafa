@@ -13,7 +13,7 @@ export class PeachtreeMappingService {
     const parsed = new Date(dateStr);
     return isNaN(parsed.getTime()) ? null : parsed;
   }
-  mapCustomer(ptRow: any) {
+  mapCustomer(ptRow: Record<string, string>) {
     return {
       name: ptRow.Customer_Bill_Name || ptRow.CustomerID || '',
       phone: ptRow.Phone_Number || ptRow.PhoneNumber2 || '',
@@ -23,7 +23,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapSupplier(ptRow: any) {
+  mapSupplier(ptRow: Record<string, string>) {
     return {
       name: ptRow.Name || ptRow.VendorID || '',
       phone: ptRow.PhoneNumber || ptRow.PhoneNumber2 || '',
@@ -33,7 +33,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapProduct(ptRow: any) {
+  mapProduct(ptRow: Record<string, string>) {
     return {
       name: ptRow.ItemDescription || ptRow.ItemID || '',
       sku: ptRow.UPC_SKU || ptRow.ItemID || '',
@@ -48,7 +48,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapGLAccount(ptRow: any) {
+  mapGLAccount(ptRow: Record<string, string>) {
     const at = Number(ptRow.AccountType || 0);
     let type: AccountType;
     if (at >= 0 && at <= 6) {
@@ -73,7 +73,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapJournalEntry(ptRow: any) {
+  mapJournalEntry(ptRow: Record<string, string>) {
     const date = this.parsePeachtreeDate(ptRow.RowDate) || new Date();
     return {
       date,
@@ -91,7 +91,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapBudget(ptRow: any) {
+  mapBudget(ptRow: Record<string, string>) {
     return {
       name: ptRow.BudgetID || 'Unknown',
       period: ptRow.BudgetID || 'unknown',
@@ -100,7 +100,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapBudgetLine(ptRow: any) {
+  mapBudgetLine(ptRow: Record<string, string>) {
     return {
       account_code: '',
       budgeted_amount: 0,
@@ -108,7 +108,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapEmployee(ptRow: any) {
+  mapEmployee(ptRow: Record<string, string>) {
     return {
       firstName: ptRow.Employee_FirstName || ptRow.EmployeeName || '',
       lastName: ptRow.Employee_LastName || '',
@@ -119,7 +119,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapBOMItem(ptRow: any) {
+  mapBOMItem(ptRow: Record<string, string>) {
     return {
       parent_item: String(ptRow.AssemblyRecordNo || ''),
       component_item: String(ptRow.ComponentRecordNo || ''),
@@ -128,7 +128,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapBankAccount(ptRow: any) {
+  mapBankAccount(ptRow: Record<string, string>) {
     return {
       name: ptRow.BankAccount || '',
       bank_name: '',
@@ -137,7 +137,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapJob(ptRow: any) {
+  mapJob(ptRow: Record<string, string>) {
     return {
       name: ptRow.JobDescription || '',
       code: ptRow.JobID || '',
@@ -148,7 +148,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapJobPhase(ptRow: any) {
+  mapJobPhase(ptRow: Record<string, string>) {
     return {
       name: ptRow.PhaseDescription || '',
       code: ptRow.PhaseID || '',
@@ -157,7 +157,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapTaxConfig(ptRow: any) {
+  mapTaxConfig(ptRow: Record<string, string>) {
     return {
       year: new Date().getFullYear(),
       bracket_min: parseFloat(ptRow.GrossMoreThan0 || '0') || 0,
@@ -167,10 +167,10 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapSalesInvoice(ptRow: any) {
+  mapSalesInvoice(ptRow: Record<string, string>) {
     return {
       total_amount: parseFloat(ptRow.MainAmount || '0') || 0,
-      status: ptRow.TrxIsPosted === 1 ? 'COMPLETED' : 'PENDING',
+      status: ptRow.TrxIsPosted === '1' ? 'COMPLETED' : 'PENDING',
       order_date: this.parsePeachtreeDate(ptRow.TransactionDate),
       notes: ptRow.Description || ptRow.TrxName || '',
       invoice_number: ptRow.Reference || ptRow.CustomerInvoiceNo || '',
@@ -180,10 +180,10 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapPurchaseInvoice(ptRow: any) {
+  mapPurchaseInvoice(ptRow: Record<string, string>) {
     return {
       total_amount: parseFloat(ptRow.MainAmount || '0') || 0,
-      status: ptRow.TrxIsPosted === 1 ? 'COMPLETED' : 'PENDING',
+      status: ptRow.TrxIsPosted === '1' ? 'COMPLETED' : 'PENDING',
       order_date: this.parsePeachtreeDate(ptRow.TransactionDate),
       notes: ptRow.Description || ptRow.TrxName || '',
       invoice_number: ptRow.Reference || '',
@@ -193,7 +193,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapSalesInvoiceItem(ptRow: any) {
+  mapSalesInvoiceItem(ptRow: Record<string, string>) {
     return {
       quantity: Math.abs(
         parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0,
@@ -208,7 +208,7 @@ export class PeachtreeMappingService {
     };
   }
 
-  mapPurchaseInvoiceItem(ptRow: any) {
+  mapPurchaseInvoiceItem(ptRow: Record<string, string>) {
     return {
       quantity: Math.abs(
         parseFloat(ptRow.Quantity || ptRow.StockingQuantity || '0') || 0,

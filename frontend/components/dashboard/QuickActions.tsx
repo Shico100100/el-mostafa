@@ -20,9 +20,9 @@ const actionGroups: ActionGroup[] = [
   {
     title: 'المخزون', color: 'border-emerald-500/20',
     items: [
-      { icon: <Package />, label: 'المنتجات', desc: 'إدارة المخزون', onClick: (r) => r.push('/inventory2/products') },
-      { icon: <Box />, label: 'مخزن البلاستيك', desc: 'منتجات نصف مصنعة', onClick: (r) => r.push('/inventory2/semi-finished') },
-      { icon: <BarChart3 />, label: 'لوحة المخزون', desc: 'نظرة شاملة', onClick: (r) => r.push('/inventory2') },
+      { icon: <Package />, label: 'المنتجات', desc: 'إدارة المخزون', onClick: (r) => r.push('/inventory/products') },
+      { icon: <Box />, label: 'مخزن البلاستيك', desc: 'منتجات نصف مصنعة', onClick: (r) => r.push('/inventory/semi-finished') },
+      { icon: <BarChart3 />, label: 'لوحة المخزون', desc: 'نظرة شاملة', onClick: (r) => r.push('/inventory') },
       { icon: <Wrench />, label: 'الصيانة', desc: 'صيانة الماكينات', onClick: (r) => r.push('/manufacturing/maintenance') },
     ],
   },

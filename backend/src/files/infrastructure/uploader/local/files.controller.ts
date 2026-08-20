@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response as ExpressResponse } from 'express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -56,7 +57,7 @@ export class FilesLocalController {
     @UploadedFile() file: Express.Multer.File,
     @Query('relatedType') relatedType?: string,
     @Query('relatedId') relatedId?: string,
-  ): Promise<FileResponseDto | any> {
+  ): Promise<FileResponseDto> {
     const fileData = await this.filesService.create(file);
 
     if (relatedType && relatedId) {
@@ -84,7 +85,7 @@ export class FilesLocalController {
 
   @Get(':path')
   @ApiExcludeEndpoint()
-  download(@Param('path') path: string, @Response() response: any) {
+  download(@Param('path') path: string, @Response() response: ExpressResponse) {
     return response.sendFile(path, { root: './files' });
   }
 }

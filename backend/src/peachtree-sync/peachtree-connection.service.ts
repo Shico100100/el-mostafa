@@ -12,7 +12,7 @@ export class PeachtreeConnectionService {
   private dataPath: string;
   private serverName: string;
   private psScript: string;
-  private queryCache = new Map<string, any[]>();
+  private queryCache = new Map<string, Record<string, string>[]>();
   private cacheEnabled = false;
 
   private readonly defaultDataPath: string;
@@ -62,7 +62,7 @@ export class PeachtreeConnectionService {
     fields?: string,
     where?: string,
     retries = 3,
-  ): Promise<any[]> {
+  ): Promise<Record<string, string>[]> {
     const cacheKey = this.getCacheKey(table, limit, fields, where);
     if (this.cacheEnabled && this.queryCache.has(cacheKey)) {
       this.logger.log(
@@ -114,7 +114,7 @@ export class PeachtreeConnectionService {
       const output = stdout.trim();
       if (!output) return [];
 
-      let parsed: any[];
+      let parsed: Record<string, string>[];
       try {
         const json = JSON.parse(output);
         parsed = Array.isArray(json) ? json : [json];

@@ -14,6 +14,35 @@ import { SalesOrder, OrderStatus } from '../sales/entities/sales-order.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
+type PeachtreeRow = Record<string, string>;
+
+interface MappedCustomer {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  balance: number;
+}
+
+interface MappedSupplier {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  balance: number;
+}
+
+interface MappedProduct {
+  name: string;
+  sku: string;
+  barcode: string;
+  cost_price: number;
+  selling_price: number;
+  unit: string;
+  description: string;
+  type: string;
+}
+
 const BATCH_SIZE = 500;
 
 export interface SyncContext {
@@ -67,7 +96,7 @@ export class PeachtreeSyncMasterService {
     });
     const existingMap = new Map(existing.map((e) => [e.name, e]));
 
-    const toInsert: any[] = [];
+    const toInsert: MappedCustomer[] = [];
     for (const m of mapped) {
       const existingRec = existingMap.get(m.name);
       if (!existingRec) {
@@ -164,7 +193,7 @@ export class PeachtreeSyncMasterService {
     });
     const existingMap = new Map(existing.map((e) => [e.name, e]));
 
-    const toInsert: any[] = [];
+    const toInsert: MappedSupplier[] = [];
     for (const m of mapped) {
       const existingRec = existingMap.get(m.name);
       if (!existingRec) {
@@ -276,7 +305,7 @@ export class PeachtreeSyncMasterService {
       if (p.name && !byName.has(p.name)) byName.set(p.name, p);
     }
 
-    const toInsert: any[] = [];
+    const toInsert: MappedProduct[] = [];
     for (const m of mapped) {
       const existingRec = (m.sku && bySku.get(m.sku)) || byName.get(m.name);
       if (!existingRec) {
@@ -377,9 +406,9 @@ export class PeachtreeSyncMasterService {
     for (const order of orders) {
       try {
         await this.deliverSingleOrder(order.id, runId, result);
-      } catch (error: any) {
+      } catch (error: unknown) {
         result.errors.push(
-          `deliver order ${order.id}: ${error?.message || String(error)}`,
+          `deliver order ${order.id}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }

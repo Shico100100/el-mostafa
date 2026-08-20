@@ -23,7 +23,7 @@ export class PeriodClose {
   closed_at: Date | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  closing_entries: any;
+  closing_entries: Record<string, unknown> | null;
 
   @CreateDateColumn()
   created_at: Date;

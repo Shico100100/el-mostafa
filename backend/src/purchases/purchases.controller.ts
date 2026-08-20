@@ -198,7 +198,7 @@ export class PurchasesController {
   @ApiOperation({ summary: 'Calculate landed cost' })
   @ApiResponse({ status: 200, description: 'Returns landed cost' })
   getLandedCost(@Param('id') id: string) {
-    return this.purchaseOrderService.calculateLandedCost(+id);
+    return this.purchasesService.calculateLandedCost(+id);
   }
 
   @Put('orders/:id/landed-cost')
@@ -208,7 +208,7 @@ export class PurchasesController {
     @Param('id') id: string,
     @Body() updateLandedCostDto: UpdateLandedCostDto,
   ) {
-    return this.purchaseOrderService.updateLandedCost(+id, updateLandedCostDto);
+    return this.purchasesService.updateLandedCost(+id, updateLandedCostDto);
   }
 
   // ==================== PACKING LIST ====================

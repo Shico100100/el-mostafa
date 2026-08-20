@@ -1,6 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ManufacturingController } from './manufacturing.controller';
+import { MachinesController } from './machines.controller';
+import { MoldsController } from './molds.controller';
+import { BOMsController } from './boms.controller';
+import { RawMaterialsController } from './raw-materials.controller';
+import { ManufacturingOrdersController } from './manufacturing-orders.controller';
+import { ProductionController } from './production.controller';
+import { MaintenanceController } from './maintenance.controller';
+import { FixedCostsController } from './fixed-costs.controller';
 import { ManufacturingService } from './manufacturing.service';
 import { MachineService } from './machines/machine.service';
 import { MoldService } from './mold.service';
@@ -57,7 +64,17 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
       UserEntity,
     ]),
   ],
-  controllers: [ManufacturingController, AttendanceController],
+  controllers: [
+    MachinesController,
+    MoldsController,
+    BOMsController,
+    RawMaterialsController,
+    ManufacturingOrdersController,
+    ProductionController,
+    MaintenanceController,
+    FixedCostsController,
+    AttendanceController,
+  ],
   providers: [
     ManufacturingService,
     MachineService,

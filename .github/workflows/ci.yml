@@ -74,8 +74,8 @@ jobs:
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: elmostafa_test
-      DATABASE_SYNCHRONIZE: 'true'
-      DATABASE_MIGRATIONS_RUN: 'false'
+      DATABASE_SYNCHRONIZE: 'false'
+      DATABASE_MIGRATIONS_RUN: 'true'
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       APP_PORT: 3001
@@ -196,3 +196,15 @@ jobs:
             echo
             exit 1
           fi
+
+      - name: Run backend integration tests
+        working-directory: backend
+        run: npm run test:integration
+        env:
+          DATABASE_SYNCHRONIZE: 'false'
+
+      - name: Run backend e2e tests
+        working-directory: backend
+        run: npm run test:e2e
+        env:
+          DATABASE_SYNCHRONIZE: 'false'

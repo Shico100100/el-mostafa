@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PurchaseOrder } from '../entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
 import { Product } from '../../inventory/entities/product.entity';
+import { MovementType } from '../../inventory/entities/stock-movement.entity';
+import { InventoryService } from '../../inventory/inventory.service';
+import { AccountingService } from '../../accounting/accounting.service';
+import { CacheService } from '../../cache/cache.service';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -12,7 +16,12 @@ export class PurchaseOrderService {
     private orderRepo: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderItem)
     private orderItemRepo: Repository<PurchaseOrderItem>,
+    @InjectRepository(Product)
+    private productRepo: Repository<Product>,
     private dataSource: DataSource,
+    private inventoryService: InventoryService,
+    private accountingService: AccountingService,
+    private cache: CacheService,
   ) {}
 
   async getAllOrders(
@@ -73,131 +82,328 @@ export class PurchaseOrderService {
     });
   }
 
-  async calculateLandedCost(orderId: number) {
-    const order = await this.orderRepo.findOne({
-      where: { id: orderId },
-      relations: ['items', 'items.product', 'supplier'],
-    });
-
-    if (!order) throw new NotFoundException('طلب الشراء غير موجود');
-
-    const fxRate = Number(order.exchange_rate) || 1;
-    const freightCost = Number(order.freight_cost) || 0;
-    const customsPercent = Number(order.customs_percent) || 0;
-    const commissionPercent = Number(order.commission_percent) || 0;
-    const totalWeight = Number(order.total_weight_kg) || 0;
-
-    const breakdown = order.items.map((item) => {
-      const baseCost = Number(item.price) * fxRate;
-      const commission = baseCost * (commissionPercent / 100);
-      const customs = baseCost * (customsPercent / 100);
-      const shipping =
-        totalWeight > 0 && Number(item.weight_kg) > 0
-          ? (freightCost / totalWeight) * Number(item.weight_kg)
-          : 0;
-
-      const unitLandedCost = baseCost + commission + customs + shipping;
-      const totalLandedCost = unitLandedCost * Number(item.quantity);
-
-      return {
-        item_id: item.id,
-        product_id: item.product_id,
-        product_name: item.product?.name || `Product #${item.product_id}`,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.price),
-        fx_rate: fxRate,
-        base_cost_egp: baseCost,
-        commission,
-        customs,
-        shipping,
-        unit_landed_cost: unitLandedCost,
-        total_landed_cost: totalLandedCost,
-        weight_kg: Number(item.weight_kg),
-      };
-    });
-
-    const totalLandedCost = breakdown.reduce(
-      (sum, b) => sum + b.total_landed_cost,
-      0,
-    );
-
-    return {
-      order_id: orderId,
-      supplier: order.supplier?.name,
-      invoice: order.invoice_number,
-      currency: order.currency_code || 'EGP',
-      fx_rate: fxRate,
-      freight_cost: freightCost,
-      customs_percent: customsPercent,
-      commission_percent: commissionPercent,
-      total_weight_kg: totalWeight,
-      total_landed_cost: totalLandedCost,
-      breakdown,
-    };
-  }
-
-  async updateLandedCost(
-    orderId: number,
-    data: {
-      freight_cost?: number;
-      customs_percent?: number;
-      commission_percent?: number;
-      total_weight_kg?: number;
-    },
-  ) {
-    const updateData: Partial<{
-      freight_cost: number;
-      customs_percent: number;
-      commission_percent: number;
-      total_weight_kg: number;
-    }> = {};
-    if (data.freight_cost !== undefined)
-      updateData.freight_cost = data.freight_cost;
-    if (data.customs_percent !== undefined)
-      updateData.customs_percent = data.customs_percent;
-    if (data.commission_percent !== undefined)
-      updateData.commission_percent = data.commission_percent;
-    if (data.total_weight_kg !== undefined)
-      updateData.total_weight_kg = data.total_weight_kg;
-
-    const result = await this.calculateLandedCost(orderId);
-
-    // Run all writes in a single transaction so a partial failure cannot
-    // leave item landed costs / product cost prices out of sync.
+  async createOrder(data: {
+    supplier_id: number;
+    total_amount: number;
+    notes?: string;
+    order_date?: string;
+    invoice_number?: string;
+    items: Array<{
+      product_id: number;
+      quantity: number;
+      price: number;
+      total: number;
+    }>;
+  }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    try {
-      if (Object.keys(updateData).length > 0) {
-        await queryRunner.manager.update(PurchaseOrder, orderId, updateData);
-      }
 
-      for (const b of result.breakdown) {
-        await queryRunner.manager.update(PurchaseOrderItem, b.item_id, {
-          landed_cost: b.unit_landed_cost,
+    try {
+      const order = queryRunner.manager.create(PurchaseOrder, {
+        supplier_id: data.supplier_id,
+        total_amount: data.total_amount,
+        notes: data.notes,
+        invoice_number: data.invoice_number,
+        order_date: data.order_date ? new Date(data.order_date) : new Date(),
+      });
+      const savedOrder = await queryRunner.manager.save(PurchaseOrder, order);
+
+      for (const item of data.items) {
+        const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
+          order_id: savedOrder.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total,
         });
-        const product = await queryRunner.manager.findOne(Product, {
-          where: { id: b.product_id },
+        await queryRunner.manager.save(PurchaseOrderItem, orderItem);
+
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: item.product_id,
+            warehouse_id: 1,
+            type: MovementType.IN,
+            quantity: item.quantity,
+            notes: `شراء - أمر رقم ${savedOrder.id}`,
+            date: savedOrder.order_date,
+          },
+          queryRunner.manager,
+        );
+
+        const poProduct = await queryRunner.manager.findOne(Product, {
+          where: { id: item.product_id },
         });
-        if (product && product.type === 'RAW') {
-          await queryRunner.manager.update(Product, b.product_id, {
-            cost_price: b.unit_landed_cost,
+        if (poProduct?.type === 'RAW') {
+          await queryRunner.manager.update(Product, item.product_id, {
+            last_purchase_price: item.price,
+            last_purchase_date: savedOrder.order_date,
+            cost_price: item.price,
           });
         }
       }
 
-      await queryRunner.manager.update(PurchaseOrder, orderId, {
-        total_landed_cost: result.total_landed_cost,
+      await this.accountingService.postAutomaticEntry({
+        type: 'PURCHASE',
+        amount: data.total_amount,
+        reference: `PUR-${savedOrder.id}`,
+        description: `شراء - فاتورة رقم ${savedOrder.invoice_number || savedOrder.id}`,
       });
 
       await queryRunner.commitTransaction();
+      await this.cache.delByPattern('reports:*');
+      return savedOrder;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
     } finally {
       await queryRunner.release();
     }
+  }
 
-    return this.calculateLandedCost(orderId);
+  async updateOrder(
+    id: number,
+    data: {
+      supplier_id?: number;
+      total_amount?: number;
+      notes?: string;
+      order_date?: string;
+      invoice_number?: string;
+      items?: Array<{
+        product_id: number;
+        quantity: number;
+        price: number;
+        total: number;
+      }>;
+    },
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const oldOrder = await queryRunner.manager.findOne(PurchaseOrder, {
+        where: { id },
+      });
+
+      const updateData: Partial<PurchaseOrder> = {};
+      if (data.supplier_id !== undefined)
+        updateData.supplier_id = data.supplier_id;
+      if (data.total_amount !== undefined)
+        updateData.total_amount = data.total_amount;
+      if (data.notes !== undefined) updateData.notes = data.notes;
+      if (data.invoice_number !== undefined)
+        updateData.invoice_number = data.invoice_number;
+      if (data.order_date !== undefined)
+        updateData.order_date = new Date(data.order_date);
+
+      if (Object.keys(updateData).length > 0) {
+        await queryRunner.manager.update(PurchaseOrder, id, updateData);
+      }
+
+      if (data.items) {
+        const oldItems = await queryRunner.manager.find(PurchaseOrderItem, {
+          where: { order_id: id },
+        });
+
+        for (const oldItem of oldItems) {
+          await this.inventoryService.addStockMovement(
+            {
+              product_id: oldItem.product_id,
+              warehouse_id: 1,
+              type: MovementType.OUT,
+              quantity: oldItem.quantity,
+              notes: `تعديل أمر شراء - عكس أمر رقم ${id}`,
+            },
+            queryRunner.manager,
+            true,
+          );
+        }
+
+        await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
+
+        for (const item of data.items) {
+          const orderItem = queryRunner.manager.create(PurchaseOrderItem, {
+            order_id: id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.total,
+          });
+          await queryRunner.manager.save(PurchaseOrderItem, orderItem);
+
+          await this.inventoryService.addStockMovement(
+            {
+              product_id: item.product_id,
+              warehouse_id: 1,
+              type: MovementType.IN,
+              quantity: item.quantity,
+              notes: `تعديل أمر شراء - أمر رقم ${id}`,
+            },
+            queryRunner.manager,
+          );
+
+          const poProduct = await queryRunner.manager.findOne(Product, {
+            where: { id: item.product_id },
+          });
+          if (poProduct?.type === 'RAW') {
+            await queryRunner.manager.update(Product, item.product_id, {
+              last_purchase_price: item.price,
+              last_purchase_date: data.order_date
+                ? new Date(data.order_date)
+                : new Date(),
+              cost_price: item.price,
+            });
+          }
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      if (data.total_amount !== undefined && oldOrder) {
+        await this.accountingService.postAutomaticEntry({
+          type: 'PURCHASE',
+          amount: -Number(oldOrder.total_amount),
+          reference: `REV-PUR-${id}`,
+          description: `عكس شراء - أمر رقم ${id}`,
+        });
+        await this.accountingService.postAutomaticEntry({
+          type: 'PURCHASE',
+          amount: data.total_amount,
+          reference: `PUR-${id}`,
+          description: `تعديل شراء - فاتورة رقم ${id}`,
+        });
+      }
+
+      await this.cache.delByPattern('reports:*');
+
+      return this.orderRepo.findOne({
+        where: { id },
+        relations: ['supplier'],
+      });
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteOrder(id: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const orderToDelete = await queryRunner.manager.findOne(PurchaseOrder, {
+        where: { id },
+      });
+
+      const items = await queryRunner.manager.find(PurchaseOrderItem, {
+        where: { order_id: id },
+      });
+
+      for (const item of items) {
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: item.product_id,
+            warehouse_id: 1,
+            type: MovementType.OUT,
+            quantity: item.quantity,
+            notes: `حذف أمر شراء - عكس أمر رقم ${id}`,
+          },
+          queryRunner.manager,
+          true,
+        );
+      }
+
+      await queryRunner.manager.delete(PurchaseOrderItem, { order_id: id });
+      await queryRunner.manager.delete(PurchaseOrder, id);
+
+      await queryRunner.commitTransaction();
+
+      await this.accountingService.postAutomaticEntry({
+        type: 'PURCHASE',
+        amount: -(orderToDelete ? Number(orderToDelete.total_amount) : 0),
+        reference: `DEL-PUR-${id}`,
+        description: `حذف أمر شراء رقم ${id}`,
+      });
+
+      await this.cache.delByPattern('reports:*');
+
+      return { success: true };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getLatestPurchasePrice(
+    productId: number,
+  ): Promise<{ price: number; date: string | null }> {
+    const row = await this.dataSource
+      .createQueryBuilder()
+      .select([
+        'item.price',
+        'item.landed_cost',
+        'COALESCE(po.order_date, po.created_at) as ref_date',
+      ])
+      .from(PurchaseOrderItem, 'item')
+      .innerJoin('item.order', 'po')
+      .where('item.product_id = :productId', { productId })
+      .orderBy('COALESCE(po.order_date, po.created_at)', 'DESC')
+      .limit(1)
+      .getRawOne();
+
+    if (!row) return { price: 0, date: null };
+
+    return {
+      price:
+        Number(row.landed_cost || 0) > 0
+          ? Number(row.landed_cost)
+          : Number(row.price),
+      date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
+    };
+  }
+
+  async getLatestPurchasePrices(
+    productIds: number[],
+  ): Promise<Record<number, { price: number; date: string | null }>> {
+    if (productIds.length === 0) return {};
+
+    const rows = await this.dataSource
+      .createQueryBuilder()
+      .select([
+        'item.product_id',
+        'item.price',
+        'item.landed_cost',
+        'COALESCE(po.order_date, po.created_at) as ref_date',
+      ])
+      .from(PurchaseOrderItem, 'item')
+      .innerJoin('item.order', 'po')
+      .where('item.product_id IN (:...productIds)', { productIds })
+      .orderBy('COALESCE(po.order_date, po.created_at)', 'DESC')
+      .getRawMany();
+
+    const result: Record<number, { price: number; date: string | null }> = {};
+    for (const id of productIds) {
+      result[id] = { price: 0, date: null };
+    }
+    const seen = new Set<number>();
+    for (const row of rows) {
+      if (!seen.has(row.product_id)) {
+        seen.add(row.product_id);
+        result[row.product_id] = {
+          price:
+            Number(row.landed_cost || 0) > 0
+              ? Number(row.landed_cost)
+              : Number(row.price),
+          date: row.ref_date ? new Date(row.ref_date).toISOString() : null,
+        };
+      }
+    }
+    return result;
   }
 }

@@ -14,7 +14,7 @@ import { Supplier } from '../purchases/entities/supplier.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { SalesOrder, OrderStatus } from '../sales/entities/sales-order.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
-import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
+import { PurchaseOrder, PurchaseOrderStatus } from '../purchases/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
 import { PeachtreeReviewService } from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
@@ -25,6 +25,26 @@ import { PeachtreeSyncMasterService } from './peachtree-sync-master.service';
 import { PeachtreeSyncInvoiceService } from './peachtree-sync-invoice.service';
 
 const SKIP_IF_SYNCED_MS = 60 * 60 * 1000; // 1 hour
+
+interface SyncNewValues extends Record<string, unknown> {
+  phone?: string;
+  email?: string;
+  address?: string;
+  balance?: number;
+  name?: string;
+  sku?: string;
+  cost_price?: number;
+  selling_price?: number;
+  unit?: string;
+  description?: string;
+  type?: string;
+  total_amount?: number;
+  status?: string;
+  order_date?: Date;
+  notes?: string;
+  items?: Array<Record<string, unknown>>;
+  kind?: string;
+}
 
 @Injectable()
 export class PeachtreeSyncService {
@@ -461,7 +481,7 @@ export class PeachtreeSyncService {
           });
           continue;
         }
-        const nv: any = row.new_values || {};
+        const nv: SyncNewValues = (row.new_values as SyncNewValues) || {};
         switch (row.entity) {
           case SyncEntity.CUSTOMERS:
             await this.customerRepo.update(row.db_record_id!, {
@@ -493,8 +513,8 @@ export class PeachtreeSyncService {
           case SyncEntity.SALES_INVOICES:
             await this.salesOrderRepo.update(row.db_record_id!, {
               total_amount: nv.total_amount,
-              status: nv.status,
-              order_date: nv.order_date || null,
+              status: nv.status as OrderStatus,
+              order_date: nv.order_date || undefined,
               notes: nv.notes,
             });
             if (nv.status === OrderStatus.COMPLETED) {
@@ -507,8 +527,8 @@ export class PeachtreeSyncService {
           case SyncEntity.PURCHASE_INVOICES:
             await this.purchaseOrderRepo.update(row.db_record_id!, {
               total_amount: nv.total_amount,
-              status: nv.status,
-              order_date: nv.order_date || null,
+              status: nv.status as PurchaseOrderStatus,
+              order_date: nv.order_date || undefined,
               notes: nv.notes,
             });
             break;
@@ -618,19 +638,19 @@ export class PeachtreeSyncService {
     this.connectionService.setDataPath(dataPath);
   }
 
-  async debugInvoiceLink(): Promise<any> {
+  async debugInvoiceLink(): Promise<Record<string, unknown>> {
     return this.debugService.debugInvoiceLink();
   }
 
-  async debugDryRunItems(): Promise<any> {
+  async debugDryRunItems(): Promise<Record<string, unknown>> {
     return this.debugService.debugDryRunItems();
   }
 
-  async debugLineItemMapping(): Promise<any> {
+  async debugLineItemMapping(): Promise<Record<string, unknown>> {
     return this.debugService.debugLineItemMapping();
   }
 
-  async debugGlAccounts(): Promise<any> {
+  async debugGlAccounts(): Promise<Record<string, unknown>> {
     return this.debugService.debugGlAccounts();
   }
 }

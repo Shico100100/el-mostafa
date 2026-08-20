@@ -75,7 +75,7 @@ import { AllExceptionsFilter } from './utils/exception-filter';
         return new DataSource(options).initialize();
       },
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 30 }]),
     ScheduleModule.forRoot(),
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({

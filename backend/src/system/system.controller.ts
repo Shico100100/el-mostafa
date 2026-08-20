@@ -125,7 +125,7 @@ export class SystemController {
 
   @Post('restore')
   @UseInterceptors(FileInterceptor('file'))
-  async restoreBackup(@UploadedFile() file: any) {
+  async restoreBackup(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }

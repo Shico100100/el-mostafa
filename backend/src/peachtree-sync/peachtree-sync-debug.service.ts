@@ -8,6 +8,8 @@ import { Product } from '../inventory/entities/product.entity';
 import { SalesOrder } from '../sales/entities/sales-order.entity';
 import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
 
+type PeachtreeRow = Record<string, string>;
+
 const normalizeArabic = (text: string): string => {
   return text
     .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
@@ -47,8 +49,8 @@ export class PeachtreeSyncDebugService {
     private purchaseOrderRepo: Repository<PurchaseOrder>,
   ) {}
 
-  async debugInvoiceLink(): Promise<any> {
-    const result: any = {};
+  async debugInvoiceLink(): Promise<Record<string, unknown>> {
+    const result: Record<string, unknown> = {};
 
     const allHeaders = await this.connectionService
       .query(
@@ -63,7 +65,7 @@ export class PeachtreeSyncDebugService {
     result.jrnlHdr_count = allHeaders.length;
 
     const salesHeaders = allHeaders.filter(
-      (h: any) => String(h.Module).trim() === 'R',
+      (h: PeachtreeRow) => String(h.Module).trim() === 'R',
     );
     result.salesHeaders_count = salesHeaders.length;
 
@@ -88,7 +90,7 @@ export class PeachtreeSyncDebugService {
     result.dbPqKey_count = dbPqKeys.size;
 
     let matches = 0;
-    const sampleMatches: any[] = [];
+    const sampleMatches: Array<{ pqKey: string; orderId: number; postOrder: number }> = [];
     for (const [pqKey, orderId] of dbPqKeys) {
       if (hdrPqKeyToPostOrder.has(pqKey)) {
         matches++;
@@ -96,7 +98,7 @@ export class PeachtreeSyncDebugService {
           sampleMatches.push({
             pqKey,
             orderId,
-            postOrder: hdrPqKeyToPostOrder.get(pqKey),
+            postOrder: hdrPqKeyToPostOrder.get(pqKey)!,
           });
         }
       }
@@ -131,40 +133,40 @@ export class PeachtreeSyncDebugService {
       .catch(() => []);
     result.jrnlRowCount = allJrnlRows.length;
     const itemRows = allJrnlRows.filter(
-      (r: any) => parseInt(r.ItemRecordNumber, 10) > 0,
+      (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
     );
     result.jrnlRowWithItems = itemRows.length;
 
     if (sampleMatches.length > 0) {
-      const allPOs = sampleMatches.map((m: any) => m.postOrder);
-      const matchedJORows = allJrnlRows.filter((r: any) =>
+      const allPOs = sampleMatches.map((m) => m.postOrder);
+      const matchedJORows = allJrnlRows.filter((r: PeachtreeRow) =>
         allPOs.includes(parseInt(r.PostOrder, 10)),
       );
       result.matchedPO_jrnlRows_total = matchedJORows.length;
       result.matchedPO_jrnlRows_withItems = matchedJORows.filter(
-        (r: any) => parseInt(r.ItemRecordNumber, 10) > 0,
+        (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
       ).length;
       result.matchedPO_jrnlRows_sample = matchedJORows
-        .filter((r: any) => parseInt(r.ItemRecordNumber, 10) > 0)
+        .filter((r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0)
         .slice(0, 3);
 
       const headerPostOrders = new Set(
-        salesHeaders.map((h: any) => parseInt(h.PostOrder, 10)),
+        salesHeaders.map((h: PeachtreeRow) => parseInt(h.PostOrder, 10)),
       );
-      const jrnlRowsInHeaderPO = allJrnlRows.filter((r: any) =>
+      const jrnlRowsInHeaderPO = allJrnlRows.filter((r: PeachtreeRow) =>
         headerPostOrders.has(parseInt(r.PostOrder, 10)),
       );
       result.jrnlRows_matchingHeaderPO = jrnlRowsInHeaderPO.length;
       result.jrnlRows_matchingHeaderPO_withItems = jrnlRowsInHeaderPO.filter(
-        (r: any) => parseInt(r.ItemRecordNumber, 10) > 0,
+        (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
       ).length;
 
       const jrnlRowPOs = new Set(
         allJrnlRows
-          .filter((r: any) => parseInt(r.ItemRecordNumber, 10) > 0)
-          .map((r: any) => parseInt(r.PostOrder, 10)),
+          .filter((r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0)
+          .map((r: PeachtreeRow) => parseInt(r.PostOrder, 10)),
       );
-      const matchedPOSet = new Set(sampleMatches.map((m: any) => m.postOrder));
+      const matchedPOSet = new Set(sampleMatches.map((m) => m.postOrder));
       const poOverlap = [...jrnlRowPOs].filter((po) => matchedPOSet.has(po));
       result.poOverlapCount = poOverlap.length;
       result.poOverlapSample = poOverlap.slice(0, 5);
@@ -173,8 +175,8 @@ export class PeachtreeSyncDebugService {
     return result;
   }
 
-  async debugDryRunItems(): Promise<any> {
-    const result: any = {};
+  async debugDryRunItems(): Promise<Record<string, unknown>> {
+    const result: Record<string, unknown> = {};
 
     const jrnlRowFields =
       'PostOrder, CustomerRecordNumber, VendorRecordNumber, ItemRecordNumber, Quantity, UnitCost, Amount, GLAcntNumber, RowDescription';
@@ -306,14 +308,14 @@ export class PeachtreeSyncDebugService {
     result.totalJrnlRows = allRawRows.length;
 
     const glAccountSet = new Set([0, 1, 2, 3, 5, 7, 11, 23, 27, 33, 55]);
-    const allRows = allRawRows.filter((r: any) => {
+    const allRows = allRawRows.filter((r: PeachtreeRow) => {
       const itemRec = parseInt(r.ItemRecordNumber, 10);
       const glAcnt = parseInt(r.GLAcntNumber, 10);
       return itemRec > 0 && glAccountSet.has(glAcnt);
     });
     result.filteredJrnlRows = allRows.length;
 
-    const rowsByPostOrder = new Map<number, any[]>();
+    const rowsByPostOrder = new Map<number, PeachtreeRow[]>();
     for (const row of allRows) {
       const po = parseInt(row.PostOrder, 10);
       if (isNaN(po) || po <= 0) continue;
@@ -329,7 +331,15 @@ export class PeachtreeSyncDebugService {
     let purchaseCandidateItems = 0;
     let salesProductHits = 0;
     let salesProductMisses = 0;
-    const sampleSalesItems: any[] = [];
+    const sampleSalesItems: Array<{
+      postOrder: number;
+      salesOrderId: number;
+      recNo: number;
+      productId: number;
+      qty: string;
+      price: string;
+      amount: string;
+    }> = [];
     const missedProductRecNos = new Set<number>();
 
     for (const [postOrder, rows] of rowsByPostOrder) {
@@ -388,8 +398,8 @@ export class PeachtreeSyncDebugService {
     return result;
   }
 
-  async debugLineItemMapping(): Promise<any> {
-    const result: any = {};
+  async debugLineItemMapping(): Promise<Record<string, unknown>> {
+    const result: Record<string, unknown> = {};
 
     const lineItems = await this.connectionService
       .query(
@@ -403,10 +413,10 @@ export class PeachtreeSyncDebugService {
     const targetRecNos = [
       247, 77, 252, 283, 282, 231, 128, 255, 253, 280, 1, 3, 5, 10,
     ];
-    const matched = lineItems.filter((li: any) =>
+    const matched = lineItems.filter((li: PeachtreeRow) =>
       targetRecNos.includes(parseInt(li.ItemRecordNumber, 10)),
     );
-    result.matchedLineItems = matched.map((li: any) => ({
+    result.matchedLineItems = matched.map((li: PeachtreeRow) => ({
       recNo: li.ItemRecordNumber,
       itemID: li.ItemID,
       description: li.ItemDescription,
@@ -430,7 +440,7 @@ export class PeachtreeSyncDebugService {
       if (p.sku) productBySku.set(normalizeArabic(p.sku), p.id);
     }
 
-    const matchResults = matched.map((li: any) => {
+    const matchResults = matched.map((li: PeachtreeRow) => {
       const desc = li.ItemDescription || '';
       const sku = li.UPC_SKU || '';
       const byName = productByName.get(normalizeArabic(desc));
@@ -449,8 +459,8 @@ export class PeachtreeSyncDebugService {
     return result;
   }
 
-  async debugGlAccounts(): Promise<any> {
-    const result: any = {};
+  async debugGlAccounts(): Promise<Record<string, unknown>> {
+    const result: Record<string, unknown> = {};
 
     const allHeaders = await this.connectionService
       .query(
@@ -478,10 +488,10 @@ export class PeachtreeSyncDebugService {
       )
       .catch(() => []);
 
-    const salesRows = allRows.filter((r: any) =>
+    const salesRows = allRows.filter((r: PeachtreeRow) =>
       salesPostOrders.has(parseInt(r.PostOrder, 10)),
     );
-    const purchaseRows = allRows.filter((r: any) =>
+    const purchaseRows = allRows.filter((r: PeachtreeRow) =>
       purchasePostOrders.has(parseInt(r.PostOrder, 10)),
     );
 
@@ -492,18 +502,18 @@ export class PeachtreeSyncDebugService {
     const glSet = [0, 1, 2, 3, 5, 7, 11, 23, 27, 33, 55];
 
     const salesWithItems = salesRows.filter(
-      (r: any) => parseInt(r.ItemRecordNumber, 10) > 0,
+      (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
     );
-    const salesWithItemsFiltered = salesWithItems.filter((r: any) =>
+    const salesWithItemsFiltered = salesWithItems.filter((r: PeachtreeRow) =>
       glSet.includes(parseInt(r.GLAcntNumber, 10)),
     );
     result.salesWithItems = salesWithItems.length;
     result.salesWithItemsAfterGLFilter = salesWithItemsFiltered.length;
 
     const purchaseWithItems = purchaseRows.filter(
-      (r: any) => parseInt(r.ItemRecordNumber, 10) > 0,
+      (r: PeachtreeRow) => parseInt(r.ItemRecordNumber, 10) > 0,
     );
-    const purchaseWithItemsFiltered = purchaseWithItems.filter((r: any) =>
+    const purchaseWithItemsFiltered = purchaseWithItems.filter((r: PeachtreeRow) =>
       glSet.includes(parseInt(r.GLAcntNumber, 10)),
     );
     result.purchaseWithItems = purchaseWithItems.length;
@@ -515,7 +525,7 @@ export class PeachtreeSyncDebugService {
       salesGlDist[gl] = (salesGlDist[gl] || 0) + 1;
     }
     const sortedSalesGl = Object.entries(salesGlDist)
-      .sort((a: any, b: any) => b[1] - a[1])
+      .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
       .slice(0, 20);
     result.salesGlDistribution = sortedSalesGl;
 
@@ -525,7 +535,7 @@ export class PeachtreeSyncDebugService {
       purchaseGlDist[gl] = (purchaseGlDist[gl] || 0) + 1;
     }
     const sortedPurchaseGl = Object.entries(purchaseGlDist)
-      .sort((a: any, b: any) => b[1] - a[1])
+      .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
       .slice(0, 20);
     result.purchaseGlDistribution = sortedPurchaseGl;
 

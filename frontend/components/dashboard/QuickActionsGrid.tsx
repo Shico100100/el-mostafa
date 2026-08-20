@@ -14,7 +14,7 @@ interface Action {
 }
 
 const actions: Action[] = [
-  { icon: <Package className="w-5 h-5" />, label: 'المنتجات', href: '/inventory2/products', color: 'from-emerald-500 to-cyan-500' },
+  { icon: <Package className="w-5 h-5" />, label: 'المنتجات', href: '/inventory/products', color: 'from-emerald-500 to-cyan-500' },
   { icon: <Users className="w-5 h-5" />, label: 'العملاء', href: '/sales/customers', color: 'from-emerald-500 to-teal-500' },
   { icon: <Receipt className="w-5 h-5" />, label: 'أوامر البيع', href: '/sales/orders', color: 'from-emerald-500 to-green-500' },
   { icon: <ShoppingCart className="w-5 h-5" />, label: 'أوامر الشراء', href: '/purchases/orders', color: 'from-amber-500 to-orange-500' },

@@ -9,7 +9,7 @@ describe('Navigation', () => {
     { href: '/manufacturing', label: 'التصنيع' },
     { href: '/accounting', label: 'المحاسبة' },
     { href: '/reports', label: 'التقارير' },
-    { href: '/inventory2', label: 'المخزون' },
+    { href: '/inventory', label: 'المخزون' },
     { href: '/manufacturing/boms', label: 'BOM' },
     { href: '/manufacturing/machines', label: 'الماكينات' },
     { href: '/manufacturing/molds', label: 'القوالب' },

@@ -9,7 +9,7 @@ describe('resolveRoles', () => {
   });
 
   it('returns longest prefix match for nested routes', () => {
-    const roles = resolveRoles('/inventory2/products/bulk-prices');
+    const roles = resolveRoles('/inventory/products/bulk-prices');
     expect(roles).toEqual([1, 3, 5]);
   });
 
@@ -70,7 +70,7 @@ describe('PAGE_PERMISSIONS completeness', () => {
   });
 
   it('viewer cannot access inventory', () => {
-    expect(PAGE_PERMISSIONS['/inventory2']).not.toContain(7);
+    expect(PAGE_PERMISSIONS['/inventory']).not.toContain(7);
   });
 
   it('worker can access manufacturing', () => {
@@ -82,7 +82,7 @@ describe('PAGE_PERMISSIONS completeness', () => {
   });
 
   it('storekeeper can access inventory', () => {
-    expect(PAGE_PERMISSIONS['/inventory2']).toContain(5);
+    expect(PAGE_PERMISSIONS['/inventory']).toContain(5);
   });
 
   it('storekeeper cannot access sales', () => {

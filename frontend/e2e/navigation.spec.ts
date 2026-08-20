@@ -4,7 +4,7 @@ const PAGES: { path: string; label: string }[] = [
   { path: '/dashboard', label: 'لوحة التحكم' },
   { path: '/sales', label: 'المبيعات' },
   { path: '/purchases', label: 'المشتريات' },
-  { path: '/inventory2', label: 'المخزون' },
+  { path: '/inventory', label: 'المخزون' },
   { path: '/manufacturing', label: 'التصنيع' },
   { path: '/accounting', label: 'المحاسبة' },
   { path: '/reports', label: 'التقارير' },

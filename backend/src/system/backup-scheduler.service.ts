@@ -75,19 +75,40 @@ export class BackupSchedulerService {
     });
     let deleted = 0;
 
+    // Collect all backup files with their stats
+    const backups: { file: string; mtime: Date; size: number }[] = [];
     for (const file of fs.readdirSync(this.backupDir)) {
       if (!file.startsWith(dbName) || !file.endsWith('.sql')) continue;
       const filePath = path.join(this.backupDir, file);
       const stat = fs.statSync(filePath);
-      if (stat.mtime < cutoff) {
-        fs.unlinkSync(filePath);
-        deleted++;
+      backups.push({ file, mtime: stat.mtime, size: stat.size });
+    }
+
+    // Sort by modification time (newest first)
+    backups.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+    // Keep max 30 backups regardless of age
+    const MAX_BACKUPS = 30;
+    for (let i = MAX_BACKUPS; i < backups.length; i++) {
+      const filePath = path.join(this.backupDir, backups[i].file);
+      fs.unlinkSync(filePath);
+      deleted++;
+    }
+
+    // Also delete backups older than retention period
+    for (const backup of backups) {
+      if (backup.mtime < cutoff) {
+        const filePath = path.join(this.backupDir, backup.file);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          deleted++;
+        }
       }
     }
 
     if (deleted > 0) {
       this.logger.log(
-        `Cleaned up ${deleted} old backup(s) (retention: ${this.retentionDays} days)`,
+        `Cleaned up ${deleted} old backup(s) (retention: ${this.retentionDays} days, max: ${MAX_BACKUPS})`,
       );
     }
   }

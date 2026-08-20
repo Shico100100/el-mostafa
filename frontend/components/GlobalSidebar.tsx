@@ -47,14 +47,14 @@ const modules: NavItem[] = [
     ],
   },
   {
-    href: '/inventory2', label: 'المخزون', icon: Package,
+    href: '/inventory', label: 'المخزون', icon: Package,
     children: [
-      { href: '/inventory2', label: 'لوحة المخزون' },
-      { href: '/inventory2/products', label: 'المنتجات' },
-      { href: '/inventory2/semi-finished', label: 'البلاستيك' },
-      { href: '/inventory2/stock', label: 'المخزون' },
-      { href: '/inventory2/stock/movements', label: 'الحركات' },
-      { href: '/inventory2/warehouses', label: 'المخازن' },
+      { href: '/inventory', label: 'لوحة المخزون' },
+      { href: '/inventory/products', label: 'المنتجات' },
+      { href: '/inventory/semi-finished', label: 'البلاستيك' },
+      { href: '/inventory/stock', label: 'المخزون' },
+      { href: '/inventory/stock/movements', label: 'الحركات' },
+      { href: '/inventory/warehouses', label: 'المخازن' },
     ],
   },
   {
@@ -219,7 +219,7 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
                       const roles = resolveRoles(child.href);
                       return roles.length === 0 || (roleId != null && roles.includes(roleId as number));
                     }).map((child) => {
-                      const childActive = pathname === child.href || (child.href !== '/inventory2' && pathname.startsWith(child.href));
+                      const childActive = pathname === child.href || (child.href !== '/inventory' && pathname.startsWith(child.href));
                       return (
                         <button
                           key={child.href}

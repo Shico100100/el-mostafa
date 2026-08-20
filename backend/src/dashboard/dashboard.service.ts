@@ -11,6 +11,27 @@ import { Machine } from '../manufacturing/entities/machine.entity';
 import { Attendance } from '../manufacturing/entities/attendance.entity';
 import { SalesOrderItem } from '../sales/entities/sales-order-item.entity';
 
+interface DashboardStats {
+  totalSales: number;
+  totalPurchases: number;
+  treasuryBalance: number;
+  totalStockValue: number;
+  productionCount: number;
+  maintenanceOverdueCount: number;
+  topCustomers: Array<{ name: string; total: string }>;
+  topProducts: Array<{ name: string; total: string }>;
+  attendanceSummary: {
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+  };
+  salesTrend: Array<{ date: string; value: number }>;
+  latestSales: SalesOrder[];
+  latestPurchases: PurchaseOrder[];
+  unreadNotifications: number;
+}
+
 @Injectable()
 export class DashboardService {
   constructor(
@@ -34,7 +55,7 @@ export class DashboardService {
 
   async getStats() {
     const cacheKey = 'dashboard:stats';
-    const cached = await this.cache.get<any>(cacheKey);
+    const cached = await this.cache.get<DashboardStats>(cacheKey);
     if (cached) return cached;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -198,7 +219,7 @@ export class DashboardService {
         late: Number(attendanceSummary?.late) || 0,
         total: Number(attendanceSummary?.total) || 0,
       },
-      salesTrend: (salesTrend || []).map((row: any) => ({
+      salesTrend: (salesTrend || []).map((row: Record<string, string>) => ({
         date: row.date,
         value: Number(row.value) || 0,
       })),

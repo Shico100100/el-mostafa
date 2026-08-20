@@ -19,6 +19,8 @@ import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
 import { PaymentService } from './supplier-payments/payment.service';
 import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
 import { PackingListService } from './packing-lists/packing-list.service';
+import { PurchaseReportsService } from './purchase-reports/purchase-reports.service';
+import { LandedCostService } from './landed-cost/landed-cost.service';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { PackingListService } from './packing-lists/packing-list.service';
     PaymentService,
     PurchaseReturnService,
     PackingListService,
+    PurchaseReportsService,
+    LandedCostService,
   ],
   controllers: [PurchasesController],
   exports: [PurchasesService, TypeOrmModule],

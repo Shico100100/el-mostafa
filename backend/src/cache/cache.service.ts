@@ -26,7 +26,7 @@ export class CacheService implements OnModuleDestroy {
     }
   }
 
-  async set(key: string, value: any, ttl: number = 60): Promise<void> {
+  async set<T>(key: string, value: T, ttl: number = 60): Promise<void> {
     try {
       await this.client.set(key, JSON.stringify(value), 'EX', ttl);
     } catch {

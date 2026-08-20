@@ -86,7 +86,18 @@ export class JobService {
     return saved;
   }
 
-  async getProfitability(id: number): Promise<any> {
+  async getProfitability(
+    id: number,
+  ): Promise<{
+    job_id: number;
+    job_name: string;
+    estimated_cost: number;
+    actual_cost: number;
+    estimated_revenue: number;
+    estimated_profit: number;
+    actual_profit: number;
+    cost_breakdown: Record<string, number>;
+  }> {
     const job = await this.findOne(id);
     const costs = await this.costRepo.find({ where: { job_id: id } });
     const byType = costs.reduce(
@@ -110,7 +121,18 @@ export class JobService {
     };
   }
 
-  async getSummary(): Promise<any[]> {
+  async getSummary(): Promise<
+    Array<{
+      id: number;
+      name: string;
+      code: string;
+      status: string;
+      estimated_cost: number;
+      actual_cost: number;
+      estimated_revenue: number;
+      profit: number;
+    }>
+  > {
     const jobs = await this.jobRepo.find({ order: { created_at: 'DESC' } });
     return jobs.map((j) => ({
       id: j.id,

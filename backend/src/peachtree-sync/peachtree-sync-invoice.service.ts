@@ -19,6 +19,48 @@ import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
 const BATCH_SIZE = 500;
 
+type PeachtreeRow = Record<string, string>;
+
+interface InvoiceData {
+  customer_id?: number;
+  supplier_id?: number;
+  total_amount: number;
+  status: string;
+  order_date?: Date;
+  notes: string;
+  invoice_number: string;
+}
+
+interface SalesInvoiceData extends InvoiceData {
+  customer_id: number;
+  status: OrderStatus;
+}
+
+interface PurchaseInvoiceData extends InvoiceData {
+  supplier_id: number;
+  status: PurchaseOrderStatus;
+}
+
+interface LineItemRow {
+  PostOrder: string;
+  CustomerRecordNumber: string;
+  VendorRecordNumber: string;
+  ItemRecordNumber: string;
+  Quantity: string;
+  UnitCost: string;
+  Amount: string;
+  GLAcntNumber: string;
+  RowDescription: string;
+}
+
+interface ExpectedItem {
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
 const normalizeArabic = (text: string): string => {
   return text
     .replace(/[\u0610-\u061A\u064B-\u065F\u0670]/g, '')
@@ -114,7 +156,7 @@ export class PeachtreeSyncInvoiceService {
     const toCompare: {
       key: string;
       invNum: string;
-      data: any;
+      data: SalesInvoiceData;
     }[] = [];
     const seen = new Set<string>();
     for (const hdr of rows) {
@@ -190,7 +232,7 @@ export class PeachtreeSyncInvoiceService {
       if (m) existingByPq.set(`${m[1]}_${m[2]}_${m[3]}`, o);
     }
 
-    const toInsert: any[] = [];
+    const toInsert: SalesInvoiceData[] = [];
     for (const c of toCompare) {
       const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
       if (!existing) {
@@ -285,7 +327,7 @@ export class PeachtreeSyncInvoiceService {
     const toCompare: {
       key: string;
       invNum: string;
-      data: any;
+      data: PurchaseInvoiceData;
     }[] = [];
     const seen = new Set<string>();
     for (const hdr of rows) {
@@ -361,7 +403,7 @@ export class PeachtreeSyncInvoiceService {
       if (m) existingByPq.set(`${m[1]}_${m[2]}_${m[3]}`, o);
     }
 
-    const toInsert: any[] = [];
+    const toInsert: PurchaseInvoiceData[] = [];
     for (const c of toCompare) {
       const existing = existingByInv.get(c.invNum) || existingByPq.get(c.key);
       if (!existing) {
@@ -589,7 +631,7 @@ export class PeachtreeSyncInvoiceService {
       });
 
     const glAccountSet = new Set([0, 1, 2, 3, 5, 7, 11, 23, 27, 33, 55]);
-    const allRows = allRawRows.filter((r: any) => {
+    const allRows = allRawRows.filter((r: Record<string, string>) => {
       const itemRec = parseInt(r.ItemRecordNumber, 10);
       const glAcnt = parseInt(r.GLAcntNumber, 10);
       return itemRec > 0 && glAccountSet.has(glAcnt);
@@ -598,7 +640,7 @@ export class PeachtreeSyncInvoiceService {
       `JrnlRow: ${allRawRows.length} total, ${allRows.length} with items + valid GL accounts`,
     );
 
-    const rowsByPostOrder = new Map<number, any[]>();
+    const rowsByPostOrder = new Map<number, Record<string, string>[]>();
     for (const row of allRows) {
       const po = parseInt(row.PostOrder, 10);
       if (isNaN(po) || po <= 0) continue;
@@ -610,8 +652,8 @@ export class PeachtreeSyncInvoiceService {
       `JrnlRow grouped: ${rowsByPostOrder.size} unique PostOrders from ${allRows.length} rows`,
     );
 
-    const salesBatch: any[] = [];
-    const purchaseBatch: any[] = [];
+    const salesBatch: ExpectedItem[] = [];
+    const purchaseBatch: ExpectedItem[] = [];
 
     for (const [postOrder, rows] of rowsByPostOrder) {
       const salesOrderId = postOrderToSalesOrderId.get(postOrder);
@@ -859,11 +901,11 @@ export class PeachtreeSyncInvoiceService {
   }
 
   private buildExpectedItems(
-    rows: any[],
+    rows: Record<string, string>[],
     orderId: number,
     recordToProduct: Map<number, number>,
-  ): any[] {
-    const items: any[] = [];
+  ): ExpectedItem[] {
+    const items: ExpectedItem[] = [];
     for (const row of rows) {
       const recNo = parseInt(row.ItemRecordNumber, 10);
       const productId = recordToProduct.get(recNo) || 0;
@@ -883,8 +925,8 @@ export class PeachtreeSyncInvoiceService {
     return items;
   }
 
-  private itemsEqual(a: any[], b: any[]): boolean {
-    const norm = (list: any[]) =>
+  private itemsEqual(a: ExpectedItem[], b: ExpectedItem[]): boolean {
+    const norm = (list: ExpectedItem[]) =>
       list
         .map((i) => ({
           product_id: i.product_id,

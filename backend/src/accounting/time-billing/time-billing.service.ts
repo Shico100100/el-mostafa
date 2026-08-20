@@ -16,7 +16,7 @@ export class TimeBillingService {
     start_date?: string;
     end_date?: string;
   }): Promise<TimeEntry[]> {
-    const where: any = {};
+    const where: Partial<Pick<TimeEntry, 'job_id' | 'user_id'>> = {};
     if (filters?.job_id) where.job_id = filters.job_id;
     if (filters?.user_id) where.user_id = filters.user_id;
     return this.timeRepo.find({
@@ -77,7 +77,16 @@ export class TimeBillingService {
     await this.timeRepo.update(ids, { is_billed: true });
   }
 
-  async getSummaryByJob(jobId: number): Promise<any> {
+  async getSummaryByJob(
+    jobId: number,
+  ): Promise<{
+    job_id: number;
+    totalHours: number;
+    billableHours: number;
+    totalBillable: number;
+    byPhase: Record<string, { hours: number; billable: number }>;
+    entryCount: number;
+  }> {
     const entries = await this.timeRepo.find({
       where: { job_id: jobId },
       relations: ['phase'],

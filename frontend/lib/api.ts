@@ -172,16 +172,14 @@ export const api = {
         } catch {
 
             if (!response.ok) {
-                const msg = `Server Error [${response.status}] ${API_URL}${normalizedEndpoint} - ${text.substring(0, 200)}`;
+                const msg = `Server Error [${response.status}]`;
                 console.error('API Error (Non-JSON):', {
-                    url: `${API_URL}${normalizedEndpoint}`,
                     status: response.status,
-                    body: text,
                 });
                 throw new Error(msg);
             }
-            const msg = `Invalid JSON response from ${API_URL}${normalizedEndpoint}: ${text.substring(0, 200)}`;
-            console.error('Error parsing JSON:', text);
+            const msg = `Invalid JSON response from server`;
+            console.error('Error parsing JSON response');
             throw new Error(msg);
         }
 
@@ -198,7 +196,7 @@ export const api = {
                 payload?.errors ??
                 `HTTP ${response.status}`;
 
-            console.error(`API Error [${response.status}] ${normalizedEndpoint}:`, data);
+            console.error(`API Error [${response.status}]`);
 
             const err = new Error(
                 typeof message === 'string' ? message : JSON.stringify(message)
