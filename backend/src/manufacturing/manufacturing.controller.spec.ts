@@ -42,35 +42,35 @@ describe('Manufacturing Controllers', () => {
     }).compile();
   });
 
-  it('ManufacturingOrdersController should be defined', () => {
+  it('should define ManufacturingOrdersController', () => {
     expect(module.get(ManufacturingOrdersController)).toBeDefined();
   });
 
-  it('ProductionController should be defined', () => {
+  it('should define ProductionController', () => {
     expect(module.get(ProductionController)).toBeDefined();
   });
 
-  it('MachinesController should be defined', () => {
+  it('should define MachinesController', () => {
     expect(module.get(MachinesController)).toBeDefined();
   });
 
-  it('MoldsController should be defined', () => {
+  it('should define MoldsController', () => {
     expect(module.get(MoldsController)).toBeDefined();
   });
 
-  it('BOMsController should be defined', () => {
+  it('should define BOMsController', () => {
     expect(module.get(BOMsController)).toBeDefined();
   });
 
-  it('RawMaterialsController should be defined', () => {
+  it('should define RawMaterialsController', () => {
     expect(module.get(RawMaterialsController)).toBeDefined();
   });
 
-  it('MaintenanceController should be defined', () => {
+  it('should define MaintenanceController', () => {
     expect(module.get(MaintenanceController)).toBeDefined();
   });
 
-  it('FixedCostsController should be defined', () => {
+  it('should define FixedCostsController', () => {
     expect(module.get(FixedCostsController)).toBeDefined();
   });
 });
