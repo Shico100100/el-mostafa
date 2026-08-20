@@ -1,93 +1,49 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import { PurchasesService } from './purchases.service';
-import { InventoryService } from '../inventory/inventory.service';
-import { AccountingService } from '../accounting/accounting.service';
+import { PurchaseReportsService } from './purchase-reports/purchase-reports.service';
+import { PurchaseOrderService } from './purchase-orders/purchase-order.service';
+import { PurchaseReturnService } from './purchase-returns/purchase-return.service';
 import { PaymentService } from './supplier-payments/payment.service';
-import { Supplier } from './entities/supplier.entity';
-import { PurchaseOrder } from './entities/purchase-order.entity';
-import { PurchaseOrderItem } from './entities/purchase-order-item.entity';
-import { SupplierPayment } from './entities/supplier-payment.entity';
-import { PurchaseReturn } from './entities/purchase-return.entity';
-import { PurchaseReturnItem } from './entities/purchase-return-item.entity';
-import { PackingList } from './entities/packing-list.entity';
-import { Product } from '../inventory/entities/product.entity';
-import { Stock } from '../inventory/entities/stock.entity';
-import { CacheService } from '../cache/cache.service';
-
-function daysAgo(n: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+import { LandedCostService } from './landed-cost/landed-cost.service';
+import { PackingListService } from './packing-lists/packing-list.service';
 
 describe('PurchasesService', () => {
   let service: PurchasesService;
-  let supplierRepo: jest.Mocked<{ find: jest.Mock }>;
-  let orderRepo: jest.Mocked<{ find: jest.Mock }>;
-  let paymentRepo: jest.Mocked<{ find: jest.Mock }>;
-  let returnRepo: jest.Mocked<{ find: jest.Mock }>;
-  let cache: jest.Mocked<{ get: jest.Mock; set: jest.Mock }>;
+  let reportsService: jest.Mocked<PurchaseReportsService>;
 
   beforeEach(async () => {
+    const mockReports = {
+      getSupplierAging: jest.fn(),
+      getSupplierBalance: jest.fn(),
+      getStatementOfAccount: jest.fn(),
+      getLatestPurchasePrice: jest.fn(),
+      getLatestPurchasePrices: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: PurchaseReportsService,
+          useValue: mockReports,
+        },
+        {
+          provide: PurchaseOrderService,
+          useValue: {},
+        },
+        {
+          provide: PurchaseReturnService,
+          useValue: {},
+        },
         {
           provide: PaymentService,
           useValue: {},
         },
         {
-          provide: getRepositoryToken(Supplier),
-          useValue: { find: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(PurchaseOrder),
-          useValue: { find: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(PurchaseOrderItem),
+          provide: LandedCostService,
           useValue: {},
         },
         {
-          provide: getRepositoryToken(SupplierPayment),
-          useValue: { find: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(PurchaseReturn),
-          useValue: { find: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(PurchaseReturnItem),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(PackingList),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(Product),
-          useValue: {},
-        },
-        {
-          provide: getRepositoryToken(Stock),
-          useValue: {},
-        },
-        {
-          provide: InventoryService,
-          useValue: {},
-        },
-        {
-          provide: AccountingService,
-          useValue: {},
-        },
-        {
-          provide: CacheService,
-          useValue: { get: jest.fn().mockResolvedValue(null), set: jest.fn() },
-        },
-        {
-          provide: DataSource,
+          provide: PackingListService,
           useValue: {},
         },
         PurchasesService,
@@ -95,11 +51,7 @@ describe('PurchasesService', () => {
     }).compile();
 
     service = module.get<PurchasesService>(PurchasesService);
-    supplierRepo = module.get(getRepositoryToken(Supplier));
-    orderRepo = module.get(getRepositoryToken(PurchaseOrder));
-    paymentRepo = module.get(getRepositoryToken(SupplierPayment));
-    returnRepo = module.get(getRepositoryToken(PurchaseReturn));
-    cache = module.get(CacheService);
+    reportsService = module.get(PurchaseReportsService);
   });
 
   it('should be defined', () => {
@@ -107,96 +59,25 @@ describe('PurchasesService', () => {
   });
 
   describe('getSupplierAging', () => {
-    it('should age a single supplier with one order correctly', async () => {
-      supplierRepo.find.mockResolvedValue([
-        { id: 1, name: 'Supplier A' } as Supplier,
-      ]);
-      orderRepo.find.mockResolvedValue([
+    it('should delegate to PurchaseReportsService', async () => {
+      const expected = [
         {
-          supplier_id: 1,
-          order_date: daysAgo(45),
-          total_amount: 2000,
-        } as PurchaseOrder,
-      ]);
-      paymentRepo.find.mockResolvedValue([]);
-      returnRepo.find.mockResolvedValue([]);
+          id: 1,
+          name: 'Supplier A',
+          total: 2000,
+          current: 0,
+          days1_30: 2000,
+          days31_60: 0,
+          days61_90: 0,
+          over90: 0,
+        },
+      ];
+      reportsService.getSupplierAging.mockResolvedValue(expected as any);
 
       const result = await service.getSupplierAging();
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        id: 1,
-        name: 'Supplier A',
-        total: 2000,
-        current: 0,
-        days1_30: 2000,
-        days31_60: 0,
-        days61_90: 0,
-        over90: 0,
-      });
-    });
-
-    it('should handle supplier with payment credits', async () => {
-      supplierRepo.find.mockResolvedValue([
-        { id: 1, name: 'Supplier A' } as Supplier,
-      ]);
-      orderRepo.find.mockResolvedValue([
-        {
-          supplier_id: 1,
-          order_date: daysAgo(90),
-          total_amount: 1500,
-        } as PurchaseOrder,
-        {
-          supplier_id: 1,
-          order_date: daysAgo(20),
-          total_amount: 1000,
-        } as PurchaseOrder,
-      ]);
-      paymentRepo.find.mockResolvedValue([
-        {
-          supplier_id: 1,
-          payment_date: daysAgo(50),
-          amount: 800,
-        } as SupplierPayment,
-      ]);
-      returnRepo.find.mockResolvedValue([]);
-
-      const result = await service.getSupplierAging();
-
-      expect(result).toHaveLength(1);
-      // Order 1 (90d, 1500) partially paid: 1500-800 = 700 remaining (90 days → days31_60)
-      // Order 2 (20d, 1000) untouched → current
-      expect(result[0].total).toBe(1700);
-      expect(result[0].current).toBe(1000);
-      expect(result[0].days31_60).toBe(700);
-    });
-
-    it('should return cached result without querying repos', async () => {
-      const cached = [{ id: 1, name: 'Supplier A' }];
-      cache.get.mockResolvedValue(cached);
-
-      const result = await service.getSupplierAging();
-
-      expect(result).toEqual(cached);
-      expect(supplierRepo.find).not.toHaveBeenCalled();
-      expect(orderRepo.find).not.toHaveBeenCalled();
-    });
-
-    it('should compute and cache on miss', async () => {
-      supplierRepo.find.mockResolvedValue([
-        { id: 1, name: 'Supplier A' } as Supplier,
-      ]);
-      orderRepo.find.mockResolvedValue([]);
-      paymentRepo.find.mockResolvedValue([]);
-      returnRepo.find.mockResolvedValue([]);
-
-      await service.getSupplierAging();
-
-      expect(cache.set).toHaveBeenCalledWith(
-        'reports:supplier-aging',
-        expect.any(Array),
-        120,
-      );
+      expect(result).toEqual(expected);
+      expect(reportsService.getSupplierAging).toHaveBeenCalled();
     });
   });
 });
