@@ -11,14 +11,14 @@ export class AddQuoteItemsTable1740960000000 implements MigrationInterface {
       `CREATE TABLE IF NOT EXISTS "quote_items" ("id" SERIAL NOT NULL, "quote_id" integer NOT NULL, "product_id" integer NOT NULL, "quantity" numeric(10,2) NOT NULL, "price" numeric(10,2) NOT NULL, "total" numeric(10,2) NOT NULL, CONSTRAINT "PK_quote_items" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_quote" FOREIGN KEY ("quote_id") REFERENCES "quotes"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_quote_items_quote') THEN ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_quote" FOREIGN KEY ("quote_id") REFERENCES "quotes"("id") ON DELETE CASCADE ON UPDATE NO ACTION; END IF; END $$;`,
     );
     const productsExists = await queryRunner.query(
       `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products')`,
     );
     if (productsExists[0]?.exists) {
       await queryRunner.query(
-        `ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+        `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_quote_items_product') THEN ALTER TABLE "quote_items" ADD CONSTRAINT "FK_quote_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION; END IF; END $$;`,
       );
     }
   }
