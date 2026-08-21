@@ -206,7 +206,7 @@ jobs:
 
       - name: Run backend e2e tests
         working-directory: backend
-        run: npm run test:e2e
+        run: npx jest --config ./test/jest-e2e.json
         env:
           DATABASE_SYNCHRONIZE: 'false'
           DATABASE_MIGRATIONS_RUN: 'false'
