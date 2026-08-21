@@ -206,7 +206,11 @@ jobs:
 
       - name: Run backend e2e tests
         working-directory: backend
-        run: npx jest --config ./test/jest-e2e.json --verbose --forceExit
+        run: |
+          npx jest --config ./test/jest-e2e.json --verbose --forceExit 2>&1 | tee e2e-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          cat e2e-output.txt
+          exit $EXIT_CODE
         env:
           DATABASE_SYNCHRONIZE: 'false'
           DATABASE_MIGRATIONS_RUN: 'false'
