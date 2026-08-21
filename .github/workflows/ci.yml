@@ -202,9 +202,11 @@ jobs:
         run: npm run test:integration
         env:
           DATABASE_SYNCHRONIZE: 'false'
+          DATABASE_MIGRATIONS_RUN: 'false'
 
       - name: Run backend e2e tests
         working-directory: backend
         run: npm run test:e2e
         env:
           DATABASE_SYNCHRONIZE: 'false'
+          DATABASE_MIGRATIONS_RUN: 'false'
