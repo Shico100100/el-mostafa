@@ -59,6 +59,20 @@ async function seedTestBasics(dataSource: DataSource): Promise<void> {
         [hash],
       );
     }
+
+    const maxUser: any[] = await qr.query(
+      `SELECT COALESCE(MAX(id), 0) AS mx FROM "user"`,
+    );
+    const nextId = (maxUser[0]?.mx ?? 0) + 1;
+    const seqRows: any[] = await qr.query(
+      `SELECT pg_get_serial_sequence('user', 'id') AS seqname`,
+    );
+    if (seqRows[0]?.seqname) {
+      await qr.query(`SELECT setval($1::regclass, $2)`, [
+        seqRows[0].seqname,
+        nextId,
+      ]);
+    }
   } finally {
     await qr.release();
   }
