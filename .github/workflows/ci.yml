@@ -119,7 +119,7 @@ jobs:
           DATABASE_USERNAME=postgres
           DATABASE_PASSWORD=postgres
           DATABASE_NAME=elmostafa_test
-          DATABASE_SYNCHRONIZE=true
+          DATABASE_SYNCHRONIZE=false
           DATABASE_MIGRATIONS_RUN=false
           REDIS_HOST=localhost
           REDIS_PORT=6379
@@ -206,14 +206,15 @@ jobs:
 
       - name: Run backend e2e tests
         working-directory: backend
-        run: |
-          npx jest --config ./test/jest-e2e.json --verbose --forceExit 2>&1 | tee e2e-output.txt
-          EXIT_CODE=${PIPESTATUS[0]}
-          echo '### E2E Test Output' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          cat e2e-output.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          exit $EXIT_CODE
+        run: npm run test:e2e -- --verbose --forceExit 2>&1 | tee e2e-output.txt; exit ${PIPESTATUS[0]}
         env:
           DATABASE_SYNCHRONIZE: 'false'
           DATABASE_MIGRATIONS_RUN: 'false'
+
+      - name: Upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-output
+          path: backend/e2e-output.txt
+          retention-days: 7
