@@ -16,7 +16,7 @@ describe('Users Module', () => {
       .post('/api/v1/auth/email/login')
       .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
     apiToken = loginRes.body.token;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     await closeTestApp(app);

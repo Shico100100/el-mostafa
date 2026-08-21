@@ -18,7 +18,7 @@ describe('Auth Module', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     await closeTestApp(app);

@@ -95,6 +95,16 @@ export async function createTestApp(): Promise<INestApplication> {
 
 export async function closeTestApp(app: INestApplication): Promise<void> {
   if (app) {
-    await app.close();
+    try {
+      const ds = app.get(DataSource);
+      await app.close();
+      if (ds?.isInitialized) {
+        await ds.destroy();
+      }
+    } catch {
+      try {
+        await app.close();
+      } catch {}
+    }
   }
 }

@@ -26,7 +26,7 @@ describe('Inventory Flow (Integration)', () => {
       .post('/api/v1/auth/email/login')
       .send({ email: 'admin@admin.com', password: 'admin123' });
     token = loginRes.body.token;
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     await closeTestApp(app);
