@@ -3,6 +3,8 @@ import { ReportsService } from './reports.service';
 import { BalanceSheetService } from './reports/balance-sheet.service';
 import { AgedReceivablesService } from './reports/aged-receivables.service';
 import { AgedPayablesService } from './reports/aged-payables.service';
+import { ProfitLossService } from './reports/profit-loss.service';
+import { CashFlowStatementService } from './reports/cash-flow-statement.service';
 
 @Controller('reports')
 export class ReportsController {
@@ -11,6 +13,8 @@ export class ReportsController {
     private readonly balanceSheetService: BalanceSheetService,
     private readonly agedReceivablesService: AgedReceivablesService,
     private readonly agedPayablesService: AgedPayablesService,
+    private readonly profitLossService: ProfitLossService,
+    private readonly cashFlowStatementService: CashFlowStatementService,
   ) {}
 
   @Get('sales')
@@ -99,5 +103,21 @@ export class ReportsController {
   @Get('aged-payables')
   async getAgedPayables() {
     return this.agedPayablesService.generate();
+  }
+
+  @Get('profit-loss-journal')
+  async getProfitLossJournal(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.profitLossService.generate(startDate, endDate);
+  }
+
+  @Get('cash-flow-statement')
+  async getCashFlowStatement(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.cashFlowStatementService.generate(startDate, endDate);
   }
 }

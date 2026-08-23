@@ -7,6 +7,8 @@ import { AnalyticsService } from './reports/analytics.service';
 import { BalanceSheetService } from './reports/balance-sheet.service';
 import { AgedReceivablesService } from './reports/aged-receivables.service';
 import { AgedPayablesService } from './reports/aged-payables.service';
+import { ProfitLossService } from './reports/profit-loss.service';
+import { CashFlowStatementService } from './reports/cash-flow-statement.service';
 import { SalesOrder } from '../sales/entities/sales-order.entity';
 import { Customer } from '../sales/entities/customer.entity';
 import { PurchaseOrder } from '../purchases/entities/purchase-order.entity';
@@ -43,6 +45,8 @@ import { JournalEntry } from '../accounting/entities/journal-entry.entity';
     BalanceSheetService,
     AgedReceivablesService,
     AgedPayablesService,
+    ProfitLossService,
+    CashFlowStatementService,
   ],
 })
 export class ReportsModule {}

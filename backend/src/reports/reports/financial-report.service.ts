@@ -11,8 +11,8 @@ export class FinancialReportService {
     page?: number,
     limit?: number,
   ) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = startDate && startDate.trim() ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate && endDate.trim() ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 
     const summary = await this.dataSource.query(
@@ -70,8 +70,8 @@ export class FinancialReportService {
     page?: number,
     limit?: number,
   ) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = startDate && startDate.trim() ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate && endDate.trim() ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 
     const summary = await this.dataSource.query(
@@ -123,8 +123,8 @@ export class FinancialReportService {
   }
 
   async getProfitLossReport(startDate: string, endDate: string) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = startDate && startDate.trim() ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const end = endDate && endDate.trim() ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 
     const startMonth = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
