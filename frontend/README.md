@@ -28,7 +28,6 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 app/              # Next.js App Router pages
   assembly/       # Assembly (accessories, plastic, packaging, production)
   dashboard/      # Dashboard + Control Tower
-  hr/             # Employees + Payroll
   inventory/      # Products, stock, semi-finished
   manufacturing/  # Daily production, machines, molds, raw-materials, BOM, MRP, QC, schedule, traceability
   purchases/      # Purchase orders, returns, containers, currencies

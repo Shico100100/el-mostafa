@@ -149,6 +149,11 @@ export default function LoginPage() {
                         </button>
                     </form>
 
+                    <div className="mt-4 flex justify-between text-sm">
+                        <button onClick={() => router.push('/forgot-password')} className="text-emerald-400 hover:text-emerald-300 transition">نسيت كلمة المرور؟</button>
+                        <button onClick={() => router.push('/register')} className="text-emerald-400 hover:text-emerald-300 transition">إنشاء حساب جديد</button>
+                    </div>
+
                     <div className="mt-6">
                         <button
                             type="button"

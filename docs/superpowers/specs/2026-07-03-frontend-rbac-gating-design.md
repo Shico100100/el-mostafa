@@ -30,7 +30,6 @@ export const PAGE_PERMISSIONS: Record<string, RoleEnum[]> = {
   '/sales': [1, 3],                             // admin, manager
   '/sales/orders': [1, 3],
   '/sales/customers': [1, 3],
-  '/sales/quotes': [1, 3],
   '/sales/returns': [1, 3],
   '/purchases': [1, 3, 4],                      // + accountant
   '/purchases/suppliers': [1, 3, 4],
@@ -65,9 +64,6 @@ export const PAGE_PERMISSIONS: Record<string, RoleEnum[]> = {
   '/manufacturing/fixed-costs': [1, 3, 4],
   '/accounting': [1, 3, 4],
   '/accounting/journal': [1, 3, 4],
-  '/hr': [1, 3],
-  '/hr/payroll': [1, 3],
-  '/hr/employees': [1, 3],
   '/reports': [1, 3, 4, 5, 7],                  // viewer reads reports
   '/reports/production': [1, 3, 4, 5, 7],
   '/notifications': [1, 3, 4, 5, 6, 7],         // all authenticated

@@ -158,9 +158,8 @@
 | `/assembly/packaging` | كل اللوجيك في page.tsx |
 | `/assembly/plastic` | كل اللوجيك في page.tsx |
 | `/inventory/semi-finished` | كل اللوجيك في page.tsx |
-| `/hr/employees` | كل اللوجيك في page.tsx |
 
-في حين صفحات تانية بتستخدم hooks نظيفة:
+ في حين صفحات تانية بتستخدم hooks نظيفة:
 | `/manufacturing/machines` | useMachines hook |
 | `/purchases/orders` | usePurchaseOrders hook |
 | `/sales/orders` | useSalesOrders hook |
@@ -206,9 +205,8 @@
 - `/manufacturing/maintenance`
 - `/sales/orders`
 - `/assembly`
-- `/sales/quotes`
 
-والباقي بيستخدم:
+ والباقي بيستخدم:
 - `router.back()` (الرجوع للصفحة اللي قبلها)
 - `router.push('/dashboard')` (الرجوع للداشبورد دائمًا)
 - مفيش زر خلف أساسًا في بعض الصفحات
@@ -316,7 +314,6 @@ app/
 ├── inventory/            ← **في واحد بس** (احذف inventory2 أو inventory)
 ├── manufacturing/        ← التصنيع فقط (ادمج assembly جواه)
 ├── accounting/           ← المحاسبة
-├── hr/                   ← الموارد البشرية
 ├── bom/                  ← BOM الموحد (واحد فقط)
 ├── reports/              ← التقارير
 ├── settings/             ← الإعدادات

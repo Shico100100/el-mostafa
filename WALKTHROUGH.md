@@ -354,20 +354,7 @@ npm run cypress:run -- --spec "cypress/e2e/screenshots.spec.ts"
 
 ---
 
-## 8. 👥 الموارد البشرية (HR)
-
-### 8.1 المرتبات
-
-**الصورة:** `30-hr-payroll.png`
-
-- إدارة الموظفين وبياناتهم
-- حساب المرتبات تلقائياً (الراتب الأساسي + البدلات - الخصومات)
-- تسجيل دفعات المرتبات
-- ترحيل محاسبي تلقائي
-
----
-
-## 9. 📊 التقارير (Reports)
+## 8. 📊 التقارير (Reports)
 
 ### 9.1 التقارير العامة
 
@@ -421,7 +408,6 @@ frontend/app/
 ├── assembly/        # التجميع (accessories, plastic, packaging, bom)
 ├── audit/           # التدقيق
 ├── dashboard/       # لوحة التحكم
-├── hr/              # الموارد البشرية
 ├── inventory/       # المخزون (products, stock, semi-finished)
 ├── login/           # تسجيل الدخول
 ├── manufacturing/   # التصنيع (machines, bom, mrp, qc, raw-materials, etc.)
@@ -438,7 +424,6 @@ backend/src/
 ├── auth/            # المصادقة (JWT)
 ├── inventory/       # المخزون
 ├── manufacturing/   # التصنيع (بما في ذلك mrp, accessories, assembly, qc, إلخ)
-├── payroll/         # المرتبات
 ├── purchases/       # المشتريات
 ├── reports/         # التقارير
 ├── sales/           # المبيعات

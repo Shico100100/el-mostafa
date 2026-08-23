@@ -180,7 +180,7 @@
 - **واجهة أمامية:** Next.js 16 + React 19 + TypeScript 5 + TailwindCSS 4
 - **خلفية:** NestJS 11 + TypeORM + PostgreSQL
 - **ملفات الواجهة:** ~50+ صفحة/مكون
-- **موديولات الخلفية:** 18 موديول (auth, users, inventory, sales, purchases, manufacturing, accounting, payroll, reports, dashboard, notifications, audit, وغيرها)
+- **موديولات الخلفية:** 17 موديول (auth, users, inventory, sales, purchases, manufacturing, accounting, reports, dashboard, notifications, audit, وغيرها)
 - **حالة الإنجاز الكلي:** ~92% من البرومبت الأصلي
 
 ### 🛠️ إصلاحات لاحقة
