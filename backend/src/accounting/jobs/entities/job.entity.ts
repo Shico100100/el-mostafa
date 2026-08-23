@@ -5,8 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { JobPhase } from './job-phase.entity';
+import { JobCost } from './job-cost.entity';
+import { Customer } from '../../../sales/entities/customer.entity';
 
 export enum JobStatus {
   ACTIVE = 'ACTIVE',
@@ -32,6 +36,10 @@ export class Job {
   @Column({ nullable: true })
   customer_id: number;
 
+  @ManyToOne(() => Customer, { nullable: true })
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
+
   @Column({ type: 'date', nullable: true })
   start_date: Date;
 
@@ -51,7 +59,10 @@ export class Job {
   status: JobStatus;
 
   @OneToMany(() => JobPhase, (phase) => phase.job)
-  costs: JobPhase[];
+  phases: JobPhase[];
+
+  @OneToMany(() => JobCost, (cost) => cost.job)
+  costs: JobCost[];
 
   @CreateDateColumn()
   created_at: Date;

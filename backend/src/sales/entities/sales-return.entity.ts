@@ -24,12 +24,12 @@ export class SalesReturn {
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 
-  @Column({ type: 'int' })
-  order_id: number;
+  @Column({ type: 'int', nullable: true })
+  order_id: number | null;
 
-  @ManyToOne(() => SalesOrder)
+  @ManyToOne(() => SalesOrder, { nullable: true })
   @JoinColumn({ name: 'order_id' })
-  order: SalesOrder;
+  order: SalesOrder | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;

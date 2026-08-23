@@ -1,9 +1,17 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ReportsService } from './reports.service';
+import { BalanceSheetService } from './reports/balance-sheet.service';
+import { AgedReceivablesService } from './reports/aged-receivables.service';
+import { AgedPayablesService } from './reports/aged-payables.service';
 
 @Controller('reports')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly balanceSheetService: BalanceSheetService,
+    private readonly agedReceivablesService: AgedReceivablesService,
+    private readonly agedPayablesService: AgedPayablesService,
+  ) {}
 
   @Get('sales')
   async getSalesReport(
@@ -76,5 +84,20 @@ export class ReportsController {
     @Query('endDate') endDate?: string,
   ) {
     return this.reportsService.getCashFlowProjection(days, startDate, endDate);
+  }
+
+  @Get('balance-sheet')
+  async getBalanceSheet(@Query('asOfDate') asOfDate?: string) {
+    return this.balanceSheetService.generate(asOfDate);
+  }
+
+  @Get('aged-receivables')
+  async getAgedReceivables() {
+    return this.agedReceivablesService.generate();
+  }
+
+  @Get('aged-payables')
+  async getAgedPayables() {
+    return this.agedPayablesService.generate();
   }
 }

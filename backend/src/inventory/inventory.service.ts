@@ -321,9 +321,10 @@ export class InventoryService {
     product_id: number;
     from_warehouse_id: number;
     to_warehouse_id: number;
+    quantity: number;
     notes?: string;
   }) {
-    const { product_id, from_warehouse_id, to_warehouse_id, notes } = data;
+    const { product_id, from_warehouse_id, to_warehouse_id, quantity, notes } = data;
     const product = await this.productRepo.findOne({
       where: { id: product_id },
     });
@@ -331,41 +332,35 @@ export class InventoryService {
     const stock = await this.stockRepo.findOne({
       where: { product_id, warehouse_id: from_warehouse_id },
     });
-    const qty = stock ? Number(stock.quantity) : 0;
+    const availableQty = stock ? Number(stock.quantity) : 0;
+    const transferQty = Number(quantity);
+
+    if (transferQty > availableQty) {
+      throw new BadRequestException(
+        `المخزون غير كافٍ: المتاح ${availableQty} والمطلوب ${transferQty}`,
+      );
+    }
 
     await this.transactionHelper.runInTransaction(async (manager) => {
-      if (qty > 0) {
+      if (transferQty > 0) {
         await this.addStockMovement(
           {
             product_id,
             warehouse_id: from_warehouse_id,
             type: MovementType.OUT,
-            quantity: qty,
+            quantity: transferQty,
             notes: notes
               ? `نقل إلى المخزن ${to_warehouse_id} - ${notes}`
               : `نقل إلى المخزن ${to_warehouse_id}`,
           },
           manager,
         );
-      }
-      await manager.delete(Stock, {
-        product_id,
-        warehouse_id: from_warehouse_id,
-      });
-      await manager.save(
-        manager.create(Stock, {
-          product_id,
-          warehouse_id: to_warehouse_id,
-          quantity: 0,
-        }),
-      );
-      if (qty > 0) {
         await this.addStockMovement(
           {
             product_id,
             warehouse_id: to_warehouse_id,
             type: MovementType.IN,
-            quantity: qty,
+            quantity: transferQty,
             notes: notes
               ? `نقل من المخزن ${from_warehouse_id} - ${notes}`
               : `نقل من المخزن ${from_warehouse_id}`,
@@ -373,16 +368,13 @@ export class InventoryService {
           manager,
         );
       }
-      await manager.update(Product, product_id, {
-        warehouse_id: to_warehouse_id,
-      });
     });
     return {
       success: true,
       product_id,
       from_warehouse_id,
       to_warehouse_id,
-      quantity: qty,
+      quantity: transferQty,
     };
   }
 

@@ -17,6 +17,11 @@ import { SalesOrderService } from './sales-orders/sales-order.service';
 import { CustomerPaymentService } from './customer-payments/customer-payment.service';
 import { SalesReturnService } from './sales-returns/sales-return.service';
 
+import { SalesCreditMemo } from './entities/sales-credit-memo.entity';
+import { SalesCreditMemoItem } from './entities/sales-credit-memo-item.entity';
+import { SalesCreditMemoController } from './credit-memos/sales-credit-memo.controller';
+import { SalesCreditMemoService } from './credit-memos/sales-credit-memo.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -27,6 +32,8 @@ import { SalesReturnService } from './sales-returns/sales-return.service';
       SalesReturn,
       SalesReturnItem,
       Stock,
+      SalesCreditMemo,
+      SalesCreditMemoItem,
     ]),
     InventoryModule,
     AccountingModule,
@@ -37,8 +44,9 @@ import { SalesReturnService } from './sales-returns/sales-return.service';
     SalesOrderService,
     CustomerPaymentService,
     SalesReturnService,
+    SalesCreditMemoService,
   ],
-  controllers: [SalesController],
+  controllers: [SalesController, SalesCreditMemoController],
   exports: [SalesService, TypeOrmModule],
 })
 export class SalesModule {}

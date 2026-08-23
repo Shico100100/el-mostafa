@@ -15,6 +15,7 @@ import { Warehouse } from './entities/warehouse.entity';
 import { Stock } from './entities/stock.entity';
 import { StockMovement } from './entities/stock-movement.entity';
 import { BOM, BOMItem } from '../manufacturing/entities/bom.entity';
+import { SerialNumberModule } from './serial-numbers/serial-number.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { BOM, BOMItem } from '../manufacturing/entities/bom.entity';
       BOM,
       BOMItem,
     ]),
+    SerialNumberModule,
   ],
   providers: [
     InventoryService,
