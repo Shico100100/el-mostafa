@@ -70,7 +70,9 @@ export class AnalyticsService {
             'تنبيه نقص مخزون',
             `يوجد ${lowStockItems.length} منتجات وصلت للحد الأدنى للمخزون.`,
           );
-        } catch { /* notification failure should not break stock report */ }
+        } catch {
+          /* notification failure should not break stock report */
+        }
       }
 
       return {
@@ -121,7 +123,10 @@ export class AnalyticsService {
   }
 
   async getSalesByCategory(startDate: string, endDate: string) {
-    const start = startDate && startDate.trim() ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const start =
+      startDate && startDate.trim()
+        ? new Date(startDate)
+        : new Date(new Date().getFullYear(), 0, 1);
     const end = endDate && endDate.trim() ? new Date(endDate) : new Date();
     end.setHours(23, 59, 59, 999);
 

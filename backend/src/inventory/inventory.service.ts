@@ -324,7 +324,8 @@ export class InventoryService {
     quantity: number;
     notes?: string;
   }) {
-    const { product_id, from_warehouse_id, to_warehouse_id, quantity, notes } = data;
+    const { product_id, from_warehouse_id, to_warehouse_id, quantity, notes } =
+      data;
     const product = await this.productRepo.findOne({
       where: { id: product_id },
     });

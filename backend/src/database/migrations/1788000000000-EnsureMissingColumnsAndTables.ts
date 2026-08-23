@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInterface {
+export class EnsureMissingColumnsAndTables1788000000000
+  implements MigrationInterface
+{
   name = 'EnsureMissingColumnsAndTables1788000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -108,7 +110,9 @@ export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInte
         "createdAt" TIMESTAMP NOT NULL DEFAULT now()
       );
     `);
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "UQ_exchange_rates_pair" ON "exchange_rates" ("fromCurrency", "toCurrency")`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "UQ_exchange_rates_pair" ON "exchange_rates" ("fromCurrency", "toCurrency")`,
+    );
 
     // 10. budgets table
     await queryRunner.query(`
@@ -136,8 +140,12 @@ export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInte
     `);
 
     // 12. fixed_assets table + enums
-    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "depreciationmethod_enum" AS ENUM ('STRAIGHT_LINE', 'DECLINING_BALANCE'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
-    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "assetstatus_enum" AS ENUM ('ACTIVE', 'DISPOSED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE TYPE "depreciationmethod_enum" AS ENUM ('STRAIGHT_LINE', 'DECLINING_BALANCE'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE TYPE "assetstatus_enum" AS ENUM ('ACTIVE', 'DISPOSED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`,
+    );
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "fixed_assets" (
         "id" SERIAL PRIMARY KEY,
@@ -174,7 +182,9 @@ export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInte
     `);
 
     // 14. jobs table + enum
-    await queryRunner.query(`DO $$ BEGIN CREATE TYPE "jobstatus_enum" AS ENUM ('ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE TYPE "jobstatus_enum" AS ENUM ('ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;`,
+    );
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "jobs" (
         "id" SERIAL PRIMARY KEY,
@@ -283,8 +293,12 @@ export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInte
     `);
 
     // Indexes for peachtree tables
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_peachtree_sync_review_status" ON "peachtree_sync_review" ("status")`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_peachtree_sync_log_run" ON "peachtree_sync_log" ("run_id")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_peachtree_sync_review_status" ON "peachtree_sync_review" ("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_peachtree_sync_log_run" ON "peachtree_sync_log" ("run_id")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -306,13 +320,25 @@ export class EnsureMissingColumnsAndTables1788000000000 implements MigrationInte
     await queryRunner.query(`DROP TABLE IF EXISTS "exchange_rates"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "range_production_sessions"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "documents"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_peachtree_sync_log_run"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_peachtree_sync_review_status"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_peachtree_sync_log_run"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_peachtree_sync_review_status"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "peachtree_sync_log"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "peachtree_sync_review"`);
-    await queryRunner.query(`ALTER TABLE "audit_logs" DROP COLUMN IF EXISTS "entity_type"`);
-    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN IF EXISTS "reorder_point"`);
-    await queryRunner.query(`ALTER TABLE "purchase_orders" DROP COLUMN IF EXISTS "invoice_number"`);
-    await queryRunner.query(`ALTER TABLE "sales_orders" DROP COLUMN IF EXISTS "invoice_number"`);
+    await queryRunner.query(
+      `ALTER TABLE "audit_logs" DROP COLUMN IF EXISTS "entity_type"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" DROP COLUMN IF EXISTS "reorder_point"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "purchase_orders" DROP COLUMN IF EXISTS "invoice_number"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "sales_orders" DROP COLUMN IF EXISTS "invoice_number"`,
+    );
   }
 }
