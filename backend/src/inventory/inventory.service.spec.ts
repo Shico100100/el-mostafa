@@ -387,6 +387,7 @@ describe('InventoryService', () => {
         product_id: 1,
         from_warehouse_id: 1,
         to_warehouse_id: 2,
+        quantity: 50,
       });
 
       expect(result.success).toBe(true);
@@ -401,6 +402,7 @@ describe('InventoryService', () => {
           product_id: 999,
           from_warehouse_id: 1,
           to_warehouse_id: 2,
+          quantity: 10,
         }),
       ).rejects.toThrow('المنتج غير موجود');
     });
