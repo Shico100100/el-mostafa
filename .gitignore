@@ -26,6 +26,7 @@ uploads/
 
 # dependencies (coverage at root level)
 node_modules/
+node_modules.bak/
 
 # Backups / archives
 backups/
@@ -35,6 +36,25 @@ backups/
 *.rar
 *.dump
 *.sql
+
+# Build / runtime artifacts
+*.tsbuildinfo
+dist/
+.next/
+*.pid
+*.pyc
+__pycache__/
+*.db
+
+# Agent tooling artifacts
+.claude-flow/
+.swarm/
+.superpowers/
+graphify-out/
+mockups/
+ruflo/
+query
+package-lock.json.bak
 
 # Generated lint reports
 lint_check.txt

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuditController } from './audit.controller';
 import { AuditService } from './audit.service';
 import { AuditInterceptor } from './audit.interceptor';
 import { AuditController } from './audit.controller';
