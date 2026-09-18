@@ -48,10 +48,6 @@ export class DocumentsService {
     return this.repo.find({ where: { entityType, entityId } });
   }
 
-  async findAll() {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
-  }
-
   async delete(id: number) {
     const doc = await this.findOne(id);
     const filePath = path.join(this.uploadDir, doc.filename);
