@@ -134,9 +134,14 @@ export function BulkReviewDialog({
 interface ReviewJobProgressProps {
   job: ReviewJob;
   running: boolean;
+  onDismiss?: () => void;
 }
 
-export function ReviewJobProgress({ job, running }: ReviewJobProgressProps) {
+export function ReviewJobProgress({
+  job,
+  running,
+  onDismiss,
+}: ReviewJobProgressProps) {
   const isApply = job.action === 'apply';
   const meta = job.currentEntity ? ENTITY_LABELS[job.currentEntity] : null;
   const doneLabel = job.done.toLocaleString('ar-EG');
@@ -152,6 +157,15 @@ export function ReviewJobProgress({ job, running }: ReviewJobProgressProps) {
           {running
             ? isApply ? 'جاري قبول الكل' : 'جاري تجاهل الكل'
             : isApply ? 'انتهى قبول الكل' : 'انتهى تجاهل الكل'}
+          {!running && onDismiss && (
+            <button
+              onClick={onDismiss}
+              aria-label="إخفاء نتيجة العملية"
+              className="text-[#6b8378] hover:text-white transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </span>
         <span className="text-white font-mono text-sm tabular-nums">
           {doneLabel} / {totalLabel}

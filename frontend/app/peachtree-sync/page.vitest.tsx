@@ -943,7 +943,8 @@ describe('PeachtreeSyncPage', () => {
         }),
       );
       const view = render(createElement(PeachtreeSyncPage));
-      await user.click(screen.getAllByRole('checkbox')[0]);
+      // Index 0 is the select-page header checkbox; rows start at 1.
+      await user.click(screen.getAllByRole('checkbox')[1]);
       expect(screen.getByText(/تطبيق المحدد \(1\)/)).toBeDefined();
       mockedHook.mockReturnValue(
         makeHookState({ review: [reviewRow(2, 'customers', 'C-2')] }),
@@ -988,6 +989,106 @@ describe('PeachtreeSyncPage', () => {
       await user.click(screen.getByText(/البنود: 1 ← 1/));
       expect(screen.getByText('الإجمالي')).toBeDefined();
       expect(screen.getByText('30')).toBeDefined();
+    });
+
+    it('selects every row on the page with the header checkbox', async () => {
+      const user = userEvent.setup();
+      mockedHook.mockReturnValue(
+        makeHookState({
+          review: [
+            reviewRow(1, 'customers', 'C-1'),
+            reviewRow(2, 'customers', 'C-2'),
+          ],
+        }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText(/تطبيق المحدد \(0\)/)).toBeDefined();
+      await user.click(
+        screen.getByLabelText('تحديد الكل في الصفحة'),
+      );
+      expect(screen.getByText(/تطبيق المحدد \(2\)/)).toBeDefined();
+      await user.click(
+        screen.getByLabelText('تحديد الكل في الصفحة'),
+      );
+      expect(screen.getByText(/تطبيق المحدد \(0\)/)).toBeDefined();
+    });
+
+    it('keeps history details open while expanding a row diff', async () => {
+      const user = userEvent.setup();
+      mockedHook.mockReturnValue(
+        makeHookState({
+          history: [
+            {
+              id: 's1',
+              status: 'completed',
+              startedAt: '2026-01-01T00:00:00.000Z',
+              records_synced: 5,
+              duration_ms: 1000,
+              results: [
+                {
+                  entity: 'customers',
+                  status: 'completed',
+                  recordsProcessed: 5,
+                  recordsCreated: 3,
+                  recordsUpdated: 0,
+                  recordsSkipped: 2,
+                  errors: [],
+                },
+              ],
+            } as unknown as SyncHistoryEntry,
+          ],
+          review: [reviewRow(1, 'suppliers', 'S-1')],
+        }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      await user.click(screen.getByText(/1 كيان/));
+      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
+      await user.click(screen.getByText(/1 حقل/));
+      expect(screen.getByText('phone')).toBeDefined();
+      // The old shared state closed one when the other opened; both stay now.
+      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('hides a finished job panel on dismiss but never a running one', async () => {
+      const user = userEvent.setup();
+      const reviewJob: ReviewJob = {
+        id: 'revjob_1',
+        action: 'apply',
+        status: 'completed',
+        startedAt: '2026-09-29T10:00:00Z',
+        total: 10,
+        done: 10,
+        applied: 10,
+        skipped: 0,
+        failed: 0,
+        percentComplete: 100,
+        errors: [],
+      };
+      mockedHook.mockReturnValue(
+        makeHookState({ reviewJob, reviewJobRunning: false }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('انتهى قبول الكل')).toBeDefined();
+      await user.click(screen.getByLabelText('إخفاء نتيجة العملية'));
+      expect(screen.queryByText('انتهى قبول الكل')).toBeNull();
+
+      const runningJob: ReviewJob = { ...reviewJob, status: 'running' };
+      mockedHook.mockReturnValue(
+        makeHookState({ reviewJob: runningJob, reviewJobRunning: true }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      expect(
+        screen.queryByLabelText('إخفاء نتيجة العملية'),
+      ).toBeNull();
+    });
+
+    it('wraps the sync buttons instead of overflowing on small screens', () => {
+      mockedHook.mockReturnValue(makeHookState());
+      render(createElement(PeachtreeSyncPage));
+      const container = screen
+        .getByText(/مزامنة شاملة \(6 كيان\)/)
+        .closest('div');
+      expect(container?.className).toMatch(/flex-wrap/);
     });
   });
 });

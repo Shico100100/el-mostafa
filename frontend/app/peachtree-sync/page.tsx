@@ -52,6 +52,9 @@ export default function PeachtreeSyncPage() {
   const [selectedReview, setSelectedReview] = useState<Set<string>>(new Set());
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [bulkAction, setBulkAction] = useState<'apply' | 'skip' | null>(null);
+  const [expandedDiffId, setExpandedDiffId] = useState<string | null>(null);
+  const [expandedItemsId, setExpandedItemsId] = useState<string | null>(null);
+  const [dismissedJobId, setDismissedJobId] = useState<string | null>(null);
   const [reviewEntityFilter, setReviewEntityFilter] = useState<string>('all');
   const [reviewSearch, setReviewSearch] = useState('');
   const [reviewPage, setReviewPage] = useState(0);
@@ -88,6 +91,21 @@ export default function PeachtreeSyncPage() {
     safeReviewPage * REVIEW_PAGE_SIZE,
     (safeReviewPage + 1) * REVIEW_PAGE_SIZE,
   );
+  const allPageSelected =
+    pagedReview.length > 0 &&
+    pagedReview.every((e) => selectedReview.has(e.id));
+  const somePageSelected = pagedReview.some((e) => selectedReview.has(e.id));
+  const togglePageSelection = () => {
+    setSelectedReview((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) {
+        for (const e of pagedReview) next.delete(e.id);
+      } else {
+        for (const e of pagedReview) next.add(e.id);
+      }
+      return next;
+    });
+  };
   useEffect(() => {
     setReviewPage(0);
   }, [reviewEntityFilter, reviewSearch, h.review.length]);
@@ -192,7 +210,7 @@ export default function PeachtreeSyncPage() {
         </div>
 
         {/* Sync Button */}
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           <button
             onClick={() => h.runSync('full')}
             disabled={h.syncing || h.connected !== true}
@@ -284,7 +302,7 @@ export default function PeachtreeSyncPage() {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-emerald-400" />تقرير الفروقات
             </h2>
-            <div className="flex gap-2 md:mr-auto">
+            <div className="flex flex-wrap gap-2 md:mr-auto">
                <button
                   onClick={h.previewSync}
                   disabled={h.previewing || h.syncing}
@@ -328,8 +346,16 @@ export default function PeachtreeSyncPage() {
               تنبيه: المعاينة تشغّل مزامنة كاملة — تُنشأ فروقات جديدة وتُمسح القائمة الحالية والتحديد.
             </p>
 
-            {h.reviewJob && (
-              <ReviewJobProgress job={h.reviewJob} running={h.reviewJobRunning} />
+            {h.reviewJob && h.reviewJob.id !== dismissedJobId && (
+              <ReviewJobProgress
+                job={h.reviewJob}
+                running={h.reviewJobRunning}
+                onDismiss={
+                  h.reviewJobRunning
+                    ? undefined
+                    : () => setDismissedJobId(h.reviewJob!.id)
+                }
+              />
             )}
 
            {bulkAction && (
@@ -390,7 +416,18 @@ export default function PeachtreeSyncPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                    <th className="py-3 px-4 text-right" />
+                    <th className="py-3 px-4 text-right">
+                      <input
+                        type="checkbox"
+                        aria-label="تحديد الكل في الصفحة"
+                        checked={allPageSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = somePageSelected && !allPageSelected;
+                        }}
+                        onChange={togglePageSelection}
+                        className="w-4 h-4"
+                      />
+                    </th>
                     <th className="py-3 px-4 text-right">الكيان</th>
                     <th className="py-3 px-4 text-right">السجل</th>
                     <th className="py-3 px-4 text-right">النوع</th>
@@ -453,15 +490,15 @@ export default function PeachtreeSyncPage() {
                             {lineItemCount ? (
                               <button
                                 onClick={() =>
-                                  setExpandedSync(
-                                    expandedSync === `rv-items-${entry.id}`
+                                  setExpandedItemsId(
+                                    expandedItemsId === entry.id
                                       ? null
-                                      : `rv-items-${entry.id}`,
+                                      : entry.id,
                                   )
                                 }
                                 className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
                               >
-                                {expandedSync === `rv-items-${entry.id}` ? (
+                                {expandedItemsId === entry.id ? (
                                   <ChevronUp className="w-4 h-4" />
                                 ) : (
                                   <ChevronDown className="w-4 h-4" />
@@ -471,15 +508,15 @@ export default function PeachtreeSyncPage() {
                             ) : diffs.length > 0 ? (
                               <button
                                 onClick={() =>
-                                  setExpandedSync(
-                                    expandedSync === `rv-${entry.id}`
+                                  setExpandedDiffId(
+                                    expandedDiffId === entry.id
                                       ? null
-                                      : `rv-${entry.id}`,
+                                      : entry.id,
                                   )
                                 }
                                 className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
                               >
-                                {expandedSync === `rv-${entry.id}` ? (
+                                {expandedDiffId === entry.id ? (
                                   <ChevronUp className="w-4 h-4" />
                                 ) : (
                                   <ChevronDown className="w-4 h-4" />
@@ -513,7 +550,7 @@ export default function PeachtreeSyncPage() {
                             </div>
                           </td>
                         </tr>
-                        {expandedSync === `rv-${entry.id}` &&
+                        {expandedDiffId === entry.id &&
                           diffs.length > 0 && (
                             <tr key={`${entry.id}-details`}>
                               <td colSpan={6} className="px-6 py-4 bg-black/30">
@@ -547,7 +584,7 @@ export default function PeachtreeSyncPage() {
                               </td>
                             </tr>
                           )}
-                        {expandedSync === `rv-items-${entry.id}` &&
+                        {expandedItemsId === entry.id &&
                           lineItemCount && (
                             <tr key={`${entry.id}-items`}>
                               <td colSpan={6} className="px-6 py-4 bg-black/30">
