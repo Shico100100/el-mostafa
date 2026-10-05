@@ -887,6 +887,12 @@ export class PeachtreeSyncInvoiceService {
       if (!m) continue;
       const key = `${m[1]}_${m[2]}_${m[3]}`;
       if (keys.has(key)) continue;
+      if (await this.reviewService.hasAcceptedMissing(entity, o.notes)) {
+        this.logger.debug(
+          `Skipping already-accepted missing ${entity} ${o.notes}`,
+        );
+        continue;
+      }
       await this.reviewService.createReview({
         entity,
         recordKey: o.notes,

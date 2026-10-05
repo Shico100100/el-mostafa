@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, LessThan } from 'typeorm';
 import {
   PeachtreeSyncReview,
   ReviewStatus,
@@ -72,6 +72,51 @@ export class PeachtreeReviewService {
     return changes;
   }
 
+  /**
+   * Whether this missing record was already accepted once. Accepting a
+   * missing row only acknowledges it — the DB row stays — so without this
+   * guard every sync regenerates the identical pending row and accept-all
+   * looks like it did nothing.
+   */
+  async hasAcceptedMissing(
+    entity: SyncEntity,
+    recordKey: string,
+  ): Promise<boolean> {
+    const count = await this.reviewRepo.count({
+      where: {
+        entity,
+        record_key: recordKey,
+        change_type: 'missing',
+        status: ReviewStatus.ACCEPTED,
+      },
+    });
+    return count > 0;
+  }
+
+  /**
+   * Delete decided (accepted/skipped) review rows older than the given days.
+   * The review table grows with every sync and nothing reads decided rows
+   * after the fact, so without retention it slows the page down forever.
+   * Pending rows are never touched.
+   */
+  async pruneDecidedReviews(olderThanDays: number): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+    const res = await this.reviewRepo.delete({
+      status: In([ReviewStatus.ACCEPTED, ReviewStatus.SKIPPED]),
+      decided_at: LessThan(cutoff),
+    });
+    return res.affected ?? 0;
+  }
+
+  /** Delete log rows older than the given days. The log is append-only. */
+  async pruneLogs(olderThanDays: number): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+    const res = await this.logRepo.delete({
+      created_at: LessThan(cutoff),
+    });
+    return res.affected ?? 0;
+  }
+
   async createReview(input: ReviewCreateInput): Promise<PeachtreeSyncReview> {
     const row = this.reviewRepo.create({
       entity: input.entity,
@@ -99,6 +144,29 @@ export class PeachtreeReviewService {
         : null,
     });
     return this.logRepo.save(row);
+  }
+
+  /**
+   * Bulk-insert log rows in one query. Bulk accept/ignore processes rows in
+   * pages of 200; logging each row individually doubles the query count, so
+   * callers collect entries per page and flush once.
+   */
+  async logMany(inputs: LogCreateInput[]): Promise<void> {
+    if (inputs.length === 0) return;
+    await this.logRepo.insert(
+      inputs.map((input) => ({
+        run_id: input.runId,
+        triggered_by: input.triggeredBy,
+        entity: input.entity,
+        action: input.action,
+        record_key: input.recordKey,
+        changes: input.changes
+          ? Object.fromEntries(
+              input.changes.map((c) => [c.field, [c.old, c.new]]),
+            )
+          : null,
+      })),
+    );
   }
 
   async getPendingReview(entity?: SyncEntity): Promise<PeachtreeSyncReview[]> {
