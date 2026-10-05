@@ -19,6 +19,34 @@ import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 
 const BATCH_SIZE = 500;
 
+/**
+ * Normalize any date-like value to a calendar day (YYYY-MM-DD) for
+ * comparison. The order_date columns are date-only, so comparing full
+ * timestamps always reports a phantom diff: the accepted ISO value loses its
+ * time part on write, and the next sync "rediscovers" the same difference.
+ * Values already starting with YYYY-MM-DD are sliced directly to avoid any
+ * timezone shift from a Date round-trip.
+ */
+export function toDayKey(value: unknown): string {
+  if (value == null) return '';
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return '';
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(value).trim();
+  if (s === '') return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 interface InvoiceData {
   customer_id?: number;
   supplier_id?: number;
@@ -781,21 +809,13 @@ export class PeachtreeSyncInvoiceService {
     const oldObj = {
       total_amount: Number(existing.total_amount) || 0,
       status: existing.status,
-      order_date: existing.order_date
-        ? existing.order_date instanceof Date
-          ? existing.order_date.toISOString()
-          : String(existing.order_date)
-        : '',
+      order_date: toDayKey(existing.order_date),
       notes: existing.notes || '',
     };
     const newObj = {
       total_amount: newOrder.total_amount,
       status: newOrder.status,
-      order_date: newOrder.order_date
-        ? newOrder.order_date instanceof Date
-          ? newOrder.order_date.toISOString()
-          : String(newOrder.order_date)
-        : '',
+      order_date: toDayKey(newOrder.order_date),
       notes: newOrder.notes || '',
     };
     const changes = this.reviewService.computeDiff(oldObj, newObj);
