@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Query,
   UseGuards,
   InternalServerErrorException,
   UseInterceptors,
@@ -54,6 +56,26 @@ export class SystemController {
   private readonly logger = new Logger(SystemController.name);
 
   constructor(private readonly systemService: SystemService) {}
+
+  @Get('update/check')
+  async checkForUpdates(@Query('force') force?: string) {
+    return this.systemService.checkForUpdates(
+      force === 'true' || force === '1',
+    );
+  }
+
+  @Post('update')
+  async triggerUpdate() {
+    try {
+      return await this.systemService.triggerUpdate();
+    } catch (error) {
+      this.logger.error('Update trigger failed:', error);
+      const err = error as Error;
+      const message =
+        typeof err?.message === 'string' ? err.message : String(err);
+      throw new InternalServerErrorException(`Update failed: ${message}`);
+    }
+  }
 
   @Post('backup')
   async createBackup() {
@@ -124,7 +146,11 @@ export class SystemController {
   }
 
   @Post('restore')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 100 * 1024 * 1024 },
+    }),
+  )
   async restoreBackup(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');

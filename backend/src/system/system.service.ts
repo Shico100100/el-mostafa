@@ -6,6 +6,16 @@ import { Warehouse } from '../inventory/entities/warehouse.entity';
 import { Account, AccountType } from '../accounting/entities/account.entity';
 import { seedDemoData as seedDemoDataFn } from './seed-data';
 import * as bcrypt from 'bcryptjs';
+import { exec } from 'child_process';
+import * as util from 'util';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const execPromise = util.promisify(exec);
+
+const GITHUB_REPO = 'Shico100100/el-mostafa';
+const GITHUB_RELEASES_LATEST_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 @Injectable()
 export class SystemService {
@@ -141,4 +151,165 @@ export class SystemService {
   async seedDemoData() {
     return seedDemoDataFn(this.dataSource);
   }
+
+  private updateCache: { ts: number; data: UpdateCheckResult } | null = null;
+
+  async checkForUpdates(force = false): Promise<UpdateCheckResult> {
+    const currentVersion = process.env.APP_VERSION || 'dev';
+    if (
+      !force &&
+      this.updateCache &&
+      Date.now() - this.updateCache.ts < CACHE_TTL_MS
+    ) {
+      return { ...this.updateCache.data, currentVersion };
+    }
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(GITHUB_RELEASES_LATEST_URL, {
+        headers: {
+          'User-Agent': 'el-mostafa-erp',
+          Accept: 'application/vnd.github+json',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        throw new Error(`GitHub API responded ${res.status}`);
+      }
+
+      const release = await res.json();
+      const latestVersion =
+        typeof release?.tag_name === 'string' ? release.tag_name : '';
+      const updateAvailable =
+        currentVersion !== 'dev' &&
+        latestVersion !== '' &&
+        isVersionNewer(latestVersion, currentVersion);
+
+      const data: UpdateCheckResult = {
+        currentVersion,
+        latestVersion,
+        updateAvailable,
+        releaseUrl:
+          typeof release?.html_url === 'string' ? release.html_url : null,
+        changelog:
+          typeof release?.body === 'string' ? release.body.slice(0, 2000) : '',
+        publishedAt:
+          typeof release?.published_at === 'string'
+            ? release.published_at
+            : null,
+        checkedAt: new Date().toISOString(),
+        checkFailed: false,
+      };
+      this.updateCache = { ts: Date.now(), data };
+      return data;
+    } catch (error) {
+      this.logger.error('Update check failed:', error);
+      return {
+        currentVersion,
+        latestVersion: this.updateCache?.data.latestVersion ?? null,
+        updateAvailable: false,
+        releaseUrl: this.updateCache?.data.releaseUrl ?? null,
+        changelog: this.updateCache?.data.changelog ?? '',
+        publishedAt: this.updateCache?.data.publishedAt ?? null,
+        checkedAt: new Date().toISOString(),
+        checkFailed: true,
+      };
+    }
+  }
+
+  async triggerUpdate() {
+    const dockerSocket = '/var/run/docker.sock';
+    if (!fs.existsSync(dockerSocket)) {
+      throw new Error(
+        'مقبس Docker غير متاح — تأكد من وجود /var/run/docker.sock داخل الحاوية',
+      );
+    }
+
+    const composeDir = process.env.UPDATE_COMPOSE_DIR || '/host/app';
+    const composeFile = path.join(composeDir, 'docker-compose.yml');
+    if (!fs.existsSync(composeFile)) {
+      throw new Error(
+        `ملف docker-compose.yml غير موجود على المسار: ${composeDir}`,
+      );
+    }
+
+    const namespace =
+      process.env.UPDATE_GHCR_NAMESPACE || 'ghcr.io/shico100100/el-mostafa';
+
+    await execPromise('docker version --format "{{.Server.Version}}"', {
+      timeout: 15000,
+    });
+
+    const pullTag = async (service: string) => {
+      const remote = `${namespace}/${service}:latest`;
+      const local = `elmostafa-${service}:prod`;
+      this.logger.log(`Pulling ${remote}`);
+      await execPromise(`docker pull ${remote}`, {
+        timeout: 300000,
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      this.logger.log(`Tagging ${local}`);
+      await execPromise(`docker tag ${remote} ${local}`, { timeout: 30000 });
+    };
+
+    await pullTag('backend');
+    await pullTag('frontend');
+
+    const run =
+      `docker run -d --rm --name elmostafa-updater ` +
+      `-e UPDATE_COMPOSE_DIR=${composeDir} ` +
+      `-v /var/run/docker.sock:/var/run/docker.sock ` +
+      `-v ${composeDir}:${composeDir}:ro ` +
+      `--workdir ${composeDir} ` +
+      `elmostafa-backend:prod ` +
+      `node /opt/update.mjs`;
+
+    this.logger.log('Spawning updater container');
+    const { stdout, stderr } = await execPromise(run, {
+      timeout: 30000,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+
+    if (stderr) {
+      this.logger.warn('Updater spawn stderr:', stderr);
+    }
+
+    return {
+      started: true,
+      updater: stdout.trim(),
+      message: 'تم بدء الترقية، سيعاد تشغيل النظام خلال لحظات',
+    };
+  }
+}
+
+function parseVersion(v: string): number[] {
+  const clean = v.replace(/^v/i, '').trim();
+  return clean.split('.').map((part) => parseInt(part, 10) || 0);
+}
+
+function isVersionNewer(a: string, b: string): boolean {
+  const A = parseVersion(a);
+  const B = parseVersion(b);
+  const len = Math.max(A.length, B.length);
+  for (let i = 0; i < len; i++) {
+    const aN = A[i] || 0;
+    const bN = B[i] || 0;
+    if (aN > bN) return true;
+    if (aN < bN) return false;
+  }
+  return false;
+}
+
+export interface UpdateCheckResult {
+  currentVersion: string;
+  latestVersion: string | null;
+  updateAvailable: boolean;
+  releaseUrl: string | null;
+  changelog: string;
+  publishedAt: string | null;
+  checkedAt: string;
+  checkFailed: boolean;
 }
