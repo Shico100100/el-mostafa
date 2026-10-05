@@ -60,6 +60,28 @@ interface SyncNewValues extends Record<string, unknown> {
 @Injectable()
 export class PeachtreeSyncService {
   private readonly logger = new Logger(PeachtreeSyncService.name);
+
+  /**
+   * Record a per-entity result, merging into any existing entry for the same
+   * entity. deliverSyncSalesOrders reports SALES_INVOICES too, so a full sync
+   * would otherwise emit two results for it and the UI would render two
+   * half-counted cards under one label.
+   */
+  private recordResult(results: SyncResultDto[], result: SyncResultDto): void {
+    const existing = results.find((r) => r.entity === result.entity);
+    if (!existing) {
+      results.push(result);
+      return;
+    }
+    existing.recordsProcessed += result.recordsProcessed;
+    existing.recordsCreated += result.recordsCreated;
+    existing.recordsUpdated += result.recordsUpdated;
+    existing.recordsSkipped += result.recordsSkipped;
+    existing.errors.push(...result.errors);
+    if (result.status === SyncStatus.FAILED) {
+      existing.status = SyncStatus.FAILED;
+    }
+  }
   private syncHistory: SyncStatusResponseDto[] = [];
   private lastSyncPerEntity = new Map<string, number>();
   private lastSyncCounts = new Map<string, number>();
@@ -161,9 +183,9 @@ export class PeachtreeSyncService {
 
       try {
         const result = await this.syncEntity(entity, syncId);
-        syncStatus.results.push(result);
+        this.recordResult(syncStatus.results, result);
       } catch (error) {
-        syncStatus.results.push({
+        this.recordResult(syncStatus.results, {
           entity,
           status: SyncStatus.FAILED,
           recordsProcessed: 0,
@@ -177,7 +199,7 @@ export class PeachtreeSyncService {
 
     const deliveryResult =
       await this.masterService.deliverSyncSalesOrders(syncId);
-    syncStatus.results.push(deliveryResult);
+    this.recordResult(syncStatus.results, deliveryResult);
 
     syncStatus.percentComplete = 100;
     syncStatus.currentEntity = '';
@@ -235,9 +257,9 @@ export class PeachtreeSyncService {
 
       try {
         const result = await this.syncEntity(entity, syncId);
-        syncStatus.results.push(result);
+        this.recordResult(syncStatus.results, result);
       } catch (error) {
-        syncStatus.results.push({
+        this.recordResult(syncStatus.results, {
           entity,
           status: SyncStatus.FAILED,
           recordsProcessed: 0,
@@ -255,7 +277,7 @@ export class PeachtreeSyncService {
     ) {
       const deliveryResult =
         await this.masterService.deliverSyncSalesOrders(syncId);
-      syncStatus.results.push(deliveryResult);
+      this.recordResult(syncStatus.results, deliveryResult);
     }
 
     syncStatus.percentComplete = 100;
@@ -383,7 +405,7 @@ export class PeachtreeSyncService {
 
       const message = `Re-synced items: ${result.recordsCreated} items created. Now ${finalSales?.cnt || 0} sales orders and ${finalPurchase?.cnt || 0} purchase orders have items.`;
 
-      syncStatus.results.push(result);
+      this.recordResult(syncStatus.results, result);
       syncStatus.completedAt = new Date();
       syncStatus.status =
         result.errors.length > 0 ? SyncStatus.FAILED : SyncStatus.COMPLETED;
