@@ -7,8 +7,9 @@ import {
   Query,
   Logger,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PeachtreeSyncService } from './peachtree-sync.service';
-import { SyncEntity } from './dto/sync-status.dto';
+import { SyncEntity, SyncStatus, ReviewJobAction } from './dto/sync-status.dto';
 
 const VALID_ENTITIES = new Set(Object.values(SyncEntity));
 
@@ -166,6 +167,47 @@ export class PeachtreeSyncController {
   @Post('review/skip')
   async skipReview(@Body() body: { ids?: number[] }) {
     return this.syncService.skipReview(body?.ids || []);
+  }
+
+  @Get('review/pending-summary')
+  async getPendingSummary(@Query() query: { entity?: string | string[] }) {
+    const entities = this.parseEntities(query.entity);
+    return this.syncService.getPendingSummary(entities);
+  }
+
+  /**
+   * Polled roughly once a second while a bulk review job runs. The global
+   * limiter is 30 requests/minute, which a progress poll would trip within a
+   * few seconds. This route only reads in-memory job state — no database, no
+   * side effects — so it is exempt; the endpoints that start work still are not.
+   */
+  @SkipThrottle()
+  @Get('review/job-progress')
+  getReviewJobProgress() {
+    const job = this.syncService.getReviewJob();
+    return {
+      running: !!job && job.status === SyncStatus.RUNNING,
+      job: job || null,
+    };
+  }
+
+  @Post('review/apply-all')
+  async applyAll(@Body() body: { entities?: string[] }) {
+    const entities = this.parseEntities(body?.entities);
+    return this.syncService.startReviewJob(ReviewJobAction.APPLY, entities);
+  }
+
+  @Post('review/skip-all')
+  async skipAll(@Body() body: { entities?: string[] }) {
+    const entities = this.parseEntities(body?.entities);
+    return this.syncService.startReviewJob(ReviewJobAction.SKIP, entities);
+  }
+
+  private parseEntities(input?: string | string[]): SyncEntity[] | undefined {
+    const list = Array.isArray(input) ? input : input ? [input] : [];
+    if (list.length === 0) return undefined;
+    const valid = list.filter((e) => VALID_ENTITIES.has(e as SyncEntity));
+    return valid.length > 0 ? (valid as SyncEntity[]) : undefined;
   }
 
   @Get('log')

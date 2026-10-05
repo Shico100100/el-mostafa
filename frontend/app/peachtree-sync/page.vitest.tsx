@@ -35,11 +35,13 @@ vi.mock('lucide-react', async () => {
     ClipboardList: (p: LucideProps) => <svg data-testid="icon" {...p} />,
     Check: (p: LucideProps) => <svg data-testid="icon" {...p} />,
     EyeOff: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    X: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    AlertTriangle: (p: LucideProps) => <svg data-testid="icon" {...p} />,
   };
 });
 
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
-import type { SyncHistoryEntry, ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import type { SyncHistoryEntry, ReviewEntry, LogEntry, ReviewSummary, ReviewJob } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import PeachtreeSyncPage from './page';
 import { createElement } from 'react';
 
@@ -74,6 +76,12 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     previewSync: vi.fn().mockResolvedValue(undefined),
     applyReview: vi.fn().mockResolvedValue(undefined),
     skipReview: vi.fn().mockResolvedValue(undefined),
+    pendingSummary: null as ReviewSummary | null,
+    reviewJob: null as ReviewJob | null,
+    reviewJobRunning: false,
+    loadPendingSummary: vi.fn().mockResolvedValue(undefined),
+    startReviewJob: vi.fn().mockResolvedValue(undefined),
+    pollReviewJob: vi.fn().mockResolvedValue(false),
     ...overrides,
   };
 }
@@ -727,6 +735,118 @@ describe('PeachtreeSyncPage', () => {
       expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
       await userEvent.click(btn);
       expect(screen.queryByText('العملاء')).toBeNull();
+    });
+  });
+
+  describe('bulk review (accept all / ignore all)', () => {
+    const summary: ReviewSummary = {
+      total: 225,
+      byEntity: [
+        { entity: 'products', count: 113 },
+        { entity: 'customers', count: 112 },
+      ],
+    };
+
+    it('opens a confirmation dialog showing total and per-type breakdown', async () => {
+      mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
+      expect(screen.getByText('سجل تعليق')).toBeDefined();
+      expect(screen.getByText('المنتجات')).toBeDefined();
+      expect(screen.getByText('العملاء')).toBeDefined();
+    });
+
+    it('starts the background job on confirm instead of applying inline', async () => {
+      const startReviewJob = vi.fn().mockResolvedValue(undefined);
+      const applyReview = vi.fn().mockResolvedValue(undefined);
+      mockedHook.mockReturnValue(
+        makeHookState({ pendingSummary: summary, startReviewJob, applyReview }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
+      await userEvent.click(screen.getByRole('button', { name: 'تأكيد القبول' }));
+      expect(startReviewJob).toHaveBeenCalledWith('apply');
+      expect(applyReview).not.toHaveBeenCalled();
+    });
+
+    it('starts a skip job on the ignore-all path', async () => {
+      const startReviewJob = vi.fn().mockResolvedValue(undefined);
+      mockedHook.mockReturnValue(
+        makeHookState({ pendingSummary: summary, startReviewJob }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByRole('button', { name: /تجاهل الكل/ }));
+      await userEvent.click(screen.getByRole('button', { name: 'تأكيد التجاهل' }));
+      expect(startReviewJob).toHaveBeenCalledWith('skip');
+    });
+
+    it('closes the dialog without starting a job on cancel', async () => {
+      const startReviewJob = vi.fn().mockResolvedValue(undefined);
+      mockedHook.mockReturnValue(
+        makeHookState({ pendingSummary: summary, startReviewJob }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
+      await userEvent.click(screen.getByRole('button', { name: 'إلغاء' }));
+      expect(startReviewJob).not.toHaveBeenCalled();
+      expect(screen.queryByText('سجل تعليق')).toBeNull();
+    });
+
+    it('shows done/total, percent and the current record while the job runs', () => {
+      const reviewJob: ReviewJob = {
+        id: 'revjob_1', action: 'apply', status: 'running',
+        startedAt: '2026-09-29T10:00:00Z', total: 225, done: 75, applied: 75,
+        skipped: 0, failed: 0, percentComplete: 33,
+        currentEntity: 'products', currentRecordKey: 'PRD-42', errors: [],
+      };
+      mockedHook.mockReturnValue(
+        makeHookState({ reviewJob, reviewJobRunning: true }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      // done and total render as separate nodes, so assert on the panel text
+      // content rather than a single split string.
+      expect(screen.getByText('33%')).toBeDefined();
+      expect(screen.getByText('PRD-42')).toBeDefined();
+      expect(screen.getByText('المنتجات')).toBeDefined();
+      expect(screen.getByText('جاري قبول الكل')).toBeDefined();
+      // Counts are rendered with toLocaleString('ar-EG'), so compare against
+      // the same formatting rather than ASCII digits.
+      const expected = `${(75).toLocaleString('ar-EG')} / ${(225).toLocaleString('ar-EG')}`;
+      expect(
+        document.body.textContent?.replace(/\s+/g, ' ').includes(expected),
+      ).toBe(true);
+    });
+
+    it('does not render the progress panel when no job has run', () => {
+      mockedHook.mockReturnValue(makeHookState());
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.queryByText(/من 225/)).toBeNull();
+    });
+
+    it('blocks the bulk buttons while the pending count is unknown', () => {
+      // pendingSummary === null means the summary request has not landed (or
+      // failed). Accepting anyway would confirm against a count the server
+      // never reported.
+      mockedHook.mockReturnValue(makeHookState({ pendingSummary: null }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(true);
+      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(true);
+    });
+
+    it('enables the bulk buttons once a real count is known', () => {
+      mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(false);
+      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(false);
+    });
+
+    it('blocks the bulk buttons while a job is already running', () => {
+      mockedHook.mockReturnValue(
+        makeHookState({ pendingSummary: summary, reviewJobRunning: true }),
+      );
+      render(createElement(PeachtreeSyncPage));
+      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(true);
+      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(true);
     });
   });
 });

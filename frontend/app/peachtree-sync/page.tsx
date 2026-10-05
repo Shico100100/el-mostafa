@@ -3,6 +3,7 @@
 import { Fragment, useState } from 'react';
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import type { ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import { BulkReviewDialog, ReviewJobProgress } from '@/components/peachtree-sync/BulkReviewDialog';
 import {
   Link2, Play, CheckCircle2, XCircle, RefreshCw, Database, Settings,
   Users, Truck, Package, FileText, ChevronDown, ChevronUp, ListChecks, ClipboardList,
@@ -48,6 +49,7 @@ export default function PeachtreeSyncPage() {
   const [syncingInvoices, setSyncingInvoices] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Set<string>>(new Set());
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
+  const [bulkAction, setBulkAction] = useState<'apply' | 'skip' | null>(null);
 
   const handleSyncInvoices = async () => {
     setSyncingInvoices(true);
@@ -253,22 +255,42 @@ export default function PeachtreeSyncPage() {
                    <><Check className="w-4 h-4" />تطبيق المحدد ({selectedReview.size})</>
                  )}
                </button>
-              <button
-                onClick={() => h.applyReview(h.review.filter((r) => r.status === 'pending').map((r) => r.id))}
-                disabled={h.applying}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
-              >
-                قبول الكل
-              </button>
-              <button
-                onClick={() => h.skipReview(h.review.filter((r) => r.status === 'pending').map((r) => r.id))}
-                disabled={h.applying}
-                className="px-4 py-2 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
-              >
-                <EyeOff className="w-4 h-4" />تجاهل الكل
-              </button>
-            </div>
-          </div>
+                <button
+                  onClick={() => setBulkAction('apply')}
+                  disabled={h.applying || h.reviewJobRunning || !h.pendingSummary}
+                  title={!h.pendingSummary ? 'لم يتم تحميل عدد الفروقات بعد' : undefined}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  قبول الكل
+                </button>
+                <button
+                  onClick={() => setBulkAction('skip')}
+                  disabled={h.applying || h.reviewJobRunning || !h.pendingSummary}
+                  title={!h.pendingSummary ? 'لم يتم تحميل عدد الفروقات بعد' : undefined}
+                  className="px-4 py-2 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  <EyeOff className="w-4 h-4" />تجاهل الكل
+                </button>
+             </div>
+           </div>
+
+           {h.reviewJob && (
+             <ReviewJobProgress job={h.reviewJob} running={h.reviewJobRunning} />
+           )}
+
+           {bulkAction && (
+             <BulkReviewDialog
+               action={bulkAction}
+               summary={h.pendingSummary}
+               loading={h.loading}
+               onConfirm={async () => {
+                 const action = bulkAction;
+                 setBulkAction(null);
+                 await h.startReviewJob(action);
+               }}
+               onClose={() => setBulkAction(null)}
+             />
+           )}
 
           {h.review.length === 0 ? (
             <p className="text-[#6b8378] text-center py-8">

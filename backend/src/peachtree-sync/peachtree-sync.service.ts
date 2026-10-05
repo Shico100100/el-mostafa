@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PeachtreeConnectionService } from './peachtree-connection.service';
@@ -8,6 +8,8 @@ import {
   SyncResultDto,
   SyncStatus,
   SyncStatusResponseDto,
+  ReviewJobAction,
+  ReviewJobStatusDto,
 } from './dto/sync-status.dto';
 import { Customer } from '../sales/entities/customer.entity';
 import { Supplier } from '../purchases/entities/supplier.entity';
@@ -28,6 +30,12 @@ import { PeachtreeSyncMasterService } from './peachtree-sync-master.service';
 import { PeachtreeSyncInvoiceService } from './peachtree-sync-invoice.service';
 
 const SKIP_IF_SYNCED_MS = 60 * 60 * 1000; // 1 hour
+
+/** Rows fetched per page by a bulk review job. */
+const REVIEW_JOB_PAGE_SIZE = 200;
+
+/** Called once per review row, after it has been decided. */
+type ReviewRowObserver = (row: PeachtreeSyncReview, ok: boolean) => void;
 
 interface SyncNewValues extends Record<string, unknown> {
   phone?: string;
@@ -56,6 +64,11 @@ export class PeachtreeSyncService {
   private lastSyncPerEntity = new Map<string, number>();
   private lastSyncCounts = new Map<string, number>();
   private currentSync: SyncStatusResponseDto | null = null;
+  // Bulk-accept/ignore job state is process-local, so a browser refresh or a
+  // closed tab resumes it but a backend restart drops it mid-flight. Persisting
+  // it (started_at / total / done are already on the DTO) is the follow-up if
+  // that trade-off ever stops being acceptable.
+  private reviewJob: ReviewJobStatusDto | null = null;
 
   constructor(
     private connectionService: PeachtreeConnectionService,
@@ -412,6 +425,7 @@ export class PeachtreeSyncService {
 
   async skipReview(
     ids: number[],
+    onRow?: ReviewRowObserver,
   ): Promise<{ skipped: number; errors: string[] }> {
     const errors: string[] = [];
     let rows:
@@ -433,6 +447,7 @@ export class PeachtreeSyncService {
       try {
         await this.reviewService.markSkippedRow(row);
         skipped++;
+        onRow?.(row, true);
         await this.reviewService.log({
           runId,
           triggeredBy: 'skip',
@@ -441,6 +456,7 @@ export class PeachtreeSyncService {
           recordKey: row.record_key,
         });
       } catch (error: any) {
+        onRow?.(row, false);
         errors.push(
           `${row.entity}:${row.record_key} — ${error?.message || String(error)}`,
         );
@@ -451,6 +467,7 @@ export class PeachtreeSyncService {
 
   async applyReview(
     ids: number[],
+    onRow?: ReviewRowObserver,
   ): Promise<{ applied: number; errors: string[] }> {
     let rows:
       | Awaited<ReturnType<typeof this.reviewService.getPendingByIds>>
@@ -474,6 +491,7 @@ export class PeachtreeSyncService {
         if (row.change_type === 'missing') {
           await this.reviewService.markAccepted(row);
           applied++;
+          onRow?.(row, true);
           await this.reviewService.log({
             runId,
             triggeredBy: 'apply',
@@ -608,7 +626,9 @@ export class PeachtreeSyncService {
           changes,
         });
         applied++;
+        onRow?.(row, true);
       } catch (error: any) {
+        onRow?.(row, false);
         errors.push(
           `${row.entity}:${row.record_key} — ${error?.message || String(error)}`,
         );
@@ -623,6 +643,126 @@ export class PeachtreeSyncService {
 
   getCurrentSync(): SyncStatusResponseDto | null {
     return this.currentSync;
+  }
+
+  getReviewJob(): ReviewJobStatusDto | null {
+    return this.reviewJob;
+  }
+
+  getPendingSummary(entities?: SyncEntity[]) {
+    return this.reviewService.getPendingSummary(entities);
+  }
+
+  /**
+   * Starts a bulk accept/ignore run in the background and returns immediately.
+   * The caller polls getReviewJob() for progress, so closing the browser tab
+   * does not cancel the work.
+   */
+  async startReviewJob(
+    action: ReviewJobAction,
+    entities?: SyncEntity[],
+  ): Promise<ReviewJobStatusDto> {
+    if (this.reviewJob && this.reviewJob.status === SyncStatus.RUNNING) {
+      throw new ConflictException('توجد عملية قبول/تجاهل قيد التنفيذ بالفعل');
+    }
+
+    const { total } = await this.reviewService.getPendingSummary(entities);
+    const job: ReviewJobStatusDto = {
+      id: `revjob_${Date.now()}`,
+      action,
+      status: SyncStatus.RUNNING,
+      startedAt: new Date(),
+      total,
+      done: 0,
+      applied: 0,
+      skipped: 0,
+      failed: 0,
+      percentComplete: 0,
+      currentEntity: undefined,
+      currentRecordKey: undefined,
+      errors: [],
+    };
+    this.reviewJob = job;
+
+    this.runReviewJob(job, entities).catch((err) => {
+      this.logger.error(
+        `Background review job ${job.id} crashed: ${err?.stack || err}`,
+      );
+      job.status = SyncStatus.FAILED;
+      job.completedAt = new Date();
+      job.percentComplete = 100;
+    });
+
+    return job;
+  }
+
+  private async runReviewJob(
+    job: ReviewJobStatusDto,
+    entities?: SyncEntity[],
+  ): Promise<void> {
+    const isApply = job.action === ReviewJobAction.APPLY;
+    const skip = 0;
+
+    // Page by id. Rows already decided drop out of the PENDING filter, so the
+    // next page is read from an ever-shrinking set; `skip` stays at 0 and the
+    // job never steps over a row it has not processed yet.
+    while (job.status === SyncStatus.RUNNING) {
+      const page = await this.reviewService.getPendingPage(
+        entities,
+        skip,
+        REVIEW_JOB_PAGE_SIZE,
+      );
+      if (page.length === 0) break;
+
+      const doneBefore = job.done;
+      const ids = page.map((row) => row.id);
+      const result = isApply
+        ? await this.applyReview(ids, (row, ok) => {
+            this.trackReviewJobRow(job, row, ok, isApply);
+          })
+        : await this.skipReview(ids, (row, ok) => {
+            this.trackReviewJobRow(job, row, ok, isApply);
+          });
+
+      // Counters are advanced per row by the observer; only the error list
+      // has to be folded in here, otherwise applied/skipped double-count.
+      job.errors.push(...result.errors);
+
+      // A row that fails stays PENDING, so a page where nothing succeeded
+      // would hand back the identical rows forever. Stop instead of spinning.
+      if (job.done === doneBefore) {
+        job.errors.push(
+          `توقفت العملية: لم يتم إنجاز أي سجل في آخر ${page.length} محاولة`,
+        );
+        break;
+      }
+    }
+
+    job.status =
+      job.errors.length > 0 ? SyncStatus.FAILED : SyncStatus.COMPLETED;
+    job.completedAt = new Date();
+    job.percentComplete = 100;
+    job.currentEntity = undefined;
+    job.currentRecordKey = undefined;
+  }
+
+  private trackReviewJobRow(
+    job: ReviewJobStatusDto,
+    row: PeachtreeSyncReview,
+    ok: boolean,
+    isApply: boolean,
+  ): void {
+    if (ok) {
+      if (isApply) job.applied += 1;
+      else job.skipped += 1;
+    } else {
+      job.failed += 1;
+    }
+    job.done += 1;
+    job.currentEntity = row.entity;
+    job.currentRecordKey = row.record_key;
+    job.percentComplete =
+      job.total > 0 ? Math.round((job.done / job.total) * 100) : 100;
   }
 
   async testConnection(): Promise<{ connected: boolean; error?: string }> {

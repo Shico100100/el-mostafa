@@ -19,6 +19,7 @@ import {
   Settings,
   Shield,
   TrendingUp,
+  Link2,
 } from 'lucide-react';
 
 interface NavItem {
@@ -89,6 +90,7 @@ const modules: NavItem[] = [
   { href: '/users', label: 'المستخدمين', icon: Shield },
   { href: '/settings', label: 'الإعدادات', icon: Settings },
   { href: '/audit', label: 'سجل التدقيق', icon: FileText },
+  { href: '/peachtree-sync', label: 'ربط Peachtree', icon: Link2 },
 ];
 
 export default function GlobalSidebar({ children }: { children: React.ReactNode }) {

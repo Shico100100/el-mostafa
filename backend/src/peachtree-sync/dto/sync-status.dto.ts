@@ -36,3 +36,26 @@ export class SyncStatusResponseDto {
   currentEntity?: string;
   percentComplete?: number;
 }
+
+export enum ReviewJobAction {
+  APPLY = 'apply',
+  SKIP = 'skip',
+}
+
+export class ReviewJobStatusDto {
+  id: string;
+  action: ReviewJobAction;
+  status: SyncStatus;
+  startedAt: Date;
+  completedAt?: Date;
+  /** Rows chosen when the job started; the denominator of the progress bar. */
+  total: number;
+  done: number;
+  applied: number;
+  skipped: number;
+  failed: number;
+  percentComplete: number;
+  currentEntity?: string;
+  currentRecordKey?: string;
+  errors: string[];
+}

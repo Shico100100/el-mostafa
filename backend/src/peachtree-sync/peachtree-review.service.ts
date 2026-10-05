@@ -149,6 +149,53 @@ export class PeachtreeReviewService {
     await this.reviewRepo.save(row);
   }
 
+  async getPendingSummary(
+    entities?: SyncEntity[],
+  ): Promise<{ total: number; byEntity: { entity: string; count: number }[] }> {
+    const qb = this.reviewRepo
+      .createQueryBuilder('r')
+      .select('r.entity', 'entity')
+      .addSelect('COUNT(*)', 'count')
+      .where('r.status = :status', { status: ReviewStatus.PENDING });
+
+    if (entities?.length) {
+      qb.andWhere('r.entity IN (:...entities)', { entities });
+    }
+
+    const rows = (await qb
+      .groupBy('r.entity')
+      .orderBy('count', 'DESC')
+      .execute()) as {
+      entity: string;
+      count: string;
+    }[];
+
+    return {
+      total: rows.reduce((sum, r) => sum + Number(r.count), 0),
+      byEntity: rows.map((r) => ({ entity: r.entity, count: Number(r.count) })),
+    };
+  }
+
+  /**
+   * One page of pending rows, ordered by id so paging is stable while a
+   * background job is flipping rows to accepted/skipped underneath it.
+   */
+  async getPendingPage(
+    entities: SyncEntity[] | undefined,
+    skip: number,
+    take: number,
+  ): Promise<PeachtreeSyncReview[]> {
+    const qb = this.reviewRepo
+      .createQueryBuilder('r')
+      .where('r.status = :status', { status: ReviewStatus.PENDING });
+
+    if (entities?.length) {
+      qb.andWhere('r.entity IN (:...entities)', { entities });
+    }
+
+    return qb.orderBy('r.id', 'ASC').skip(skip).take(take).getMany();
+  }
+
   async clearPendingForEntity(entity: SyncEntity): Promise<void> {
     await this.reviewRepo
       .createQueryBuilder()

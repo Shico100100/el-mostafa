@@ -46,6 +46,28 @@ export interface LogEntry {
   triggered_by?: string;
 }
 
+export interface ReviewSummary {
+  total: number;
+  byEntity: { entity: string; count: number }[];
+}
+
+export interface ReviewJob {
+  id: string;
+  action: 'apply' | 'skip';
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  startedAt: string;
+  completedAt?: string;
+  total: number;
+  done: number;
+  applied: number;
+  skipped: number;
+  failed: number;
+  percentComplete: number;
+  currentEntity?: string;
+  currentRecordKey?: string;
+  errors: string[];
+}
+
 export function usePeachtreeSync() {
   const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
@@ -63,22 +85,52 @@ export function usePeachtreeSync() {
   const [applying, setApplying] = useState(false);
   const [syncPercent, setSyncPercent] = useState(0);
   const [syncEntity, setSyncEntity] = useState('');
+  const [pendingSummary, setPendingSummary] = useState<ReviewSummary | null>(null);
+  const [reviewJob, setReviewJob] = useState<ReviewJob | null>(null);
+  const [reviewJobRunning, setReviewJobRunning] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [historyData, configData, tablesData, reviewData, logData] =
-        await Promise.all([
-          api.fetchWithAuth<SyncHistoryEntry[]>('/peachtree-sync/status'),
-          api.fetchWithAuth<{ dsn: string }>('/peachtree-sync/config'),
-          api.fetchWithAuth<string[]>('/peachtree-sync/tables').catch(() => []),
-          api.fetchWithAuth<ReviewEntry[]>('/peachtree-sync/review'),
-          api.fetchWithAuth<LogEntry[]>('/peachtree-sync/log'),
-        ]);
+      const [
+        historyData,
+        configData,
+        tablesData,
+        reviewData,
+        logData,
+        summaryData,
+        jobData,
+      ] = await Promise.all([
+        api.fetchWithAuth<SyncHistoryEntry[]>('/peachtree-sync/status'),
+        api.fetchWithAuth<{ dsn: string }>('/peachtree-sync/config'),
+        api.fetchWithAuth<string[]>('/peachtree-sync/tables').catch(() => []),
+        api.fetchWithAuth<ReviewEntry[]>('/peachtree-sync/review'),
+        api.fetchWithAuth<LogEntry[]>('/peachtree-sync/log'),
+        // Bulk-review state is part of the same page load, so a refresh or a
+        // reopened tab picks up a job that is still running server-side.
+        api
+          .fetchWithAuth<ReviewSummary>('/peachtree-sync/review/pending-summary')
+          .catch(() => null),
+        api
+          .fetchWithAuth<{ running: boolean; job: ReviewJob | null }>(
+            '/peachtree-sync/review/job-progress',
+          )
+          .catch(() => null),
+      ]);
       setHistory(historyData || []);
       setDsn(configData?.dsn || '');
       setTables(tablesData || []);
       setReview(reviewData || []);
       setLogs(logData || []);
+      if (summaryData) {
+        setPendingSummary({
+          total: summaryData.total ?? 0,
+          byEntity: summaryData.byEntity ?? [],
+        });
+      }
+      if (jobData) {
+        setReviewJob(jobData.job ?? null);
+        setReviewJobRunning(Boolean(jobData.running));
+      }
     } catch { toast.error('فشل تحميل بيانات المزامنة'); }
     finally { setLoading(false); }
   }, []);
@@ -277,6 +329,98 @@ export function usePeachtreeSync() {
     finally { setApplying(false); }
   };
 
+  const loadPendingSummary = useCallback(async () => {
+    try {
+      const data = await api.fetchWithAuth<ReviewSummary>(
+        '/peachtree-sync/review/pending-summary',
+      );
+      setPendingSummary({ total: data?.total ?? 0, byEntity: data?.byEntity ?? [] });
+      return data;
+    } catch {
+      setPendingSummary({ total: 0, byEntity: [] });
+      return null;
+    }
+  }, []);
+
+  const pollReviewJob = useCallback(async () => {
+    try {
+      const p = await api.fetchWithAuth<{ running: boolean; job: ReviewJob | null }>(
+        '/peachtree-sync/review/job-progress',
+      );
+      setReviewJob(p?.job ?? null);
+      if (p?.running) {
+        setReviewJobRunning(true);
+        return true;
+      }
+      setReviewJobRunning(false);
+      return false;
+    } catch {
+      setReviewJobRunning(false);
+      return false;
+    }
+  }, []);
+
+  const startReviewJob = useCallback(
+    async (action: 'apply' | 'skip') => {
+      setReviewJobRunning(true);
+      setReviewJob({
+        id: 'starting', action, status: 'running', startedAt: new Date().toISOString(),
+        total: pendingSummary?.total ?? 0, done: 0, applied: 0, skipped: 0,
+        failed: 0, percentComplete: 0, currentEntity: '', currentRecordKey: '', errors: [],
+      });
+      try {
+        const endpoint =
+          action === 'apply'
+            ? '/peachtree-sync/review/apply-all'
+            : '/peachtree-sync/review/skip-all';
+        const job = await api.fetchWithAuth<ReviewJob>(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({}),
+        });
+        setReviewJob(job);
+      } catch {
+        setReviewJobRunning(false);
+        setReviewJob(null);
+        toast.error(
+          action === 'apply' ? 'فشل بدء عملية القبول' : 'فشل بدء عملية التجاهل',
+        );
+      }
+    },
+    [pendingSummary?.total],
+  );
+
+  // Resume an already-running job is handled inside loadData, so a refresh or a
+  // reopened tab shows the live job without a second competing request.
+
+  // Poll while running. 1500ms keeps the number readable and the endpoint is
+  // exempt from the global rate limit.
+  useEffect(() => {
+    if (!reviewJobRunning) return;
+    const id = setInterval(async () => {
+      const stillRunning = await pollReviewJob();
+      if (!stillRunning) {
+        clearInterval(id);
+        loadData();
+        loadPendingSummary();
+        const job = (await api.fetchWithAuth<{ job: ReviewJob | null }>(
+          '/peachtree-sync/review/job-progress',
+        ).catch(() => null))?.job;
+        if (job) {
+          const verb = job.action === 'apply' ? 'قبول' : 'تجاهل';
+          if (job.failed > 0) {
+            toast.error(
+              `انتهت عملية ${verb}: ${job.done} من ${job.total}، فشل ${job.failed}`,
+            );
+          } else {
+            toast.success(`انتهت عملية ${verb}: ${job.done} من ${job.total}`);
+          }
+        }
+      }
+    }, 1500);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewJobRunning]);
+
   const saveConfig = async () => {
     try {
       await api.fetchWithAuth('/peachtree-sync/config', { method: 'PUT', body: JSON.stringify({ dsn }) });
@@ -288,8 +432,9 @@ export function usePeachtreeSync() {
     loading, syncing, resyncing, testing, applying, previewing,
     connected, connectionError, history, tables, dsn,
     review, logs, syncPercent, syncEntity,
+    pendingSummary, reviewJob, reviewJobRunning,
     setDsn, testConnection, runSync, runIncrementalSync, resyncItems,
     syncInvoices, saveConfig, previewSync, applyReview, skipReview,
-    loadReview, loadLogs,
+    loadReview, loadLogs, loadPendingSummary, startReviewJob, pollReviewJob,
   };
 }

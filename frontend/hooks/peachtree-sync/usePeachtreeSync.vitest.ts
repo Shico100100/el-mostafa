@@ -31,10 +31,16 @@ vi.mock('sonner', () => ({
 }));
 
 import { usePeachtreeSync } from './usePeachtreeSync';
-import type { ReviewEntry, LogEntry } from './usePeachtreeSync';
+import type { ReviewEntry, LogEntry, ReviewSummary, ReviewJob } from './usePeachtreeSync';
 
 function mockLoadData(
-  overrides: { tables?: string[]; review?: ReviewEntry[]; logs?: LogEntry[] } = {},
+  overrides: {
+    tables?: string[];
+    review?: ReviewEntry[];
+    logs?: LogEntry[];
+    summary?: ReviewSummary;
+    job?: { running: boolean; job: ReviewJob | null };
+  } = {},
 ) {
   mocks.fetchWithAuth
     .mockResolvedValueOnce({ running: false, percentComplete: 0, currentEntity: '', status: 'idle' })
@@ -42,7 +48,12 @@ function mockLoadData(
     .mockResolvedValueOnce({ dsn: 'mos' })
     .mockResolvedValueOnce(overrides.tables ?? ['Chart', 'Customers'])
     .mockResolvedValueOnce(overrides.review ?? [])
-    .mockResolvedValueOnce(overrides.logs ?? []);
+    .mockResolvedValueOnce(overrides.logs ?? [])
+    // loadData also fetches the bulk-review summary and any running job, so a
+    // refresh resumes an in-flight job. These stay last to keep the ordering
+    // of the original five calls untouched.
+    .mockResolvedValueOnce(overrides.summary ?? { total: 0, byEntity: [] })
+    .mockResolvedValueOnce(overrides.job ?? { running: false, job: null });
 }
 
 beforeEach(() => {
@@ -476,6 +487,107 @@ describe('usePeachtreeSync', () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
       expect(result.current.review).toEqual([{ id: '1', entity: 'customers', record_key: 'Acme', change_type: 'insert', old_values: null, new_values: {} }]);
       expect(result.current.logs).toEqual([{ id: '9', run_id: 'sync_1', entity: 'products', action: 'inserted' }]);
+    });
+  });
+
+  describe('bulk review job', () => {
+    const summary: ReviewSummary = {
+      total: 300,
+      byEntity: [
+        { entity: 'customers', count: 60 },
+        { entity: 'products', count: 60 },
+      ],
+    };
+    const runningJob: ReviewJob = {
+      id: 'revjob_1', action: 'apply', status: 'running', startedAt: '2026-01-01T00:00:00.000Z',
+      total: 300, done: 45, applied: 45, skipped: 0, failed: 0,
+      percentComplete: 15, currentEntity: 'customers', currentRecordKey: 'E2E-45', errors: [],
+    };
+
+    it('loads the pending summary on mount', async () => {
+      mockLoadData({ summary });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.pendingSummary).toEqual(summary);
+    });
+
+    it('resumes a job that is already running server-side after a refresh', async () => {
+      mockLoadData({ job: { running: true, job: runningJob } });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.reviewJobRunning).toBe(true);
+      expect(result.current.reviewJob).toEqual(runningJob);
+    });
+
+    it('stays idle when no job is running', async () => {
+      mockLoadData({ job: { running: false, job: null } });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.reviewJobRunning).toBe(false);
+      expect(result.current.reviewJob).toBeNull();
+    });
+
+    it('startReviewJob("apply") posts apply-all and adopts the returned job', async () => {
+      mockLoadData({ summary });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      mocks.fetchWithAuth.mockResolvedValueOnce(runningJob);
+
+      await act(async () => { await result.current.startReviewJob('apply'); });
+
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/review/apply-all', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      expect(result.current.reviewJob).toEqual(runningJob);
+    });
+
+    it('startReviewJob("skip") posts skip-all', async () => {
+      mockLoadData({ summary });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      mocks.fetchWithAuth.mockResolvedValueOnce(runningJob);
+
+      await act(async () => { await result.current.startReviewJob('skip'); });
+
+      expect(mocks.fetchWithAuth).toHaveBeenCalledWith('/peachtree-sync/review/skip-all', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+    });
+
+    it('clears job state and toasts when the job cannot start', async () => {
+      mockLoadData({ summary });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      mocks.fetchWithAuth.mockRejectedValueOnce(new Error('boom'));
+
+      await act(async () => { await result.current.startReviewJob('apply'); });
+
+      expect(result.current.reviewJobRunning).toBe(false);
+      expect(result.current.reviewJob).toBeNull();
+      expect(mocks.toastError).toHaveBeenCalledWith('فشل بدء عملية القبول');
+    });
+
+    it('leaves the summary unknown when the summary endpoint fails', async () => {
+      mocks.fetchWithAuth
+        .mockResolvedValueOnce({ running: false, percentComplete: 0, currentEntity: '', status: 'idle' })
+        .mockResolvedValueOnce([{ id: 'sync1', status: 'completed' }])
+        .mockResolvedValueOnce({ dsn: 'mos' })
+        .mockResolvedValueOnce(['Chart'])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockRejectedValueOnce(new Error('summary down'))
+        .mockResolvedValueOnce({ running: false, job: null });
+
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      // The rest of the page still loads, and the unknown count is left as
+      // null so the page can block the bulk buttons rather than lie about it.
+      expect(result.current.tables).toEqual(['Chart']);
+      expect(result.current.pendingSummary).toBeNull();
+      expect(mocks.toastError).not.toHaveBeenCalled();
     });
   });
 });
