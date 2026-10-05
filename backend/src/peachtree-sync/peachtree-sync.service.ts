@@ -1,4 +1,9 @@
-import { Injectable, Logger, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ConflictException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PeachtreeConnectionService } from './peachtree-connection.service';
@@ -21,10 +26,14 @@ import {
   PurchaseOrderStatus,
 } from '../purchases/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../purchases/entities/purchase-order-item.entity';
-import { PeachtreeReviewService } from './peachtree-review.service';
+import {
+  PeachtreeReviewService,
+  LogCreateInput,
+} from './peachtree-review.service';
 import { SyncLogAction } from './entities/peachtree-sync-log.entity';
 import { PeachtreeSyncReview } from './entities/peachtree-sync-review.entity';
 import { PeachtreeSyncLog } from './entities/peachtree-sync-log.entity';
+import { PeachtreeReviewJob } from './entities/peachtree-review-job.entity';
 import { PeachtreeSyncDebugService } from './peachtree-sync-debug.service';
 import { PeachtreeSyncMasterService } from './peachtree-sync-master.service';
 import { PeachtreeSyncInvoiceService } from './peachtree-sync-invoice.service';
@@ -36,6 +45,50 @@ const REVIEW_JOB_PAGE_SIZE = 200;
 
 /** Called once per review row, after it has been decided. */
 type ReviewRowObserver = (row: PeachtreeSyncReview, ok: boolean) => void;
+
+/**
+ * Map a live job snapshot to its persisted row shape. Kept as pure exported
+ * functions so the mapping is unit-testable without a database.
+ */
+export function toReviewJobRow(
+  job: ReviewJobStatusDto,
+): Omit<PeachtreeReviewJob, 'id' | 'created_at'> {
+  return {
+    job_id: job.id,
+    action: job.action,
+    status: job.status,
+    started_at: new Date(job.startedAt),
+    completed_at: job.completedAt ? new Date(job.completedAt) : null,
+    total: job.total,
+    done: job.done,
+    applied: job.applied,
+    skipped: job.skipped,
+    failed: job.failed,
+    percent_complete: job.percentComplete,
+    current_entity: job.currentEntity ?? null,
+    current_record_key: job.currentRecordKey ?? null,
+    errors: [...job.errors],
+  };
+}
+
+export function fromReviewJobRow(row: PeachtreeReviewJob): ReviewJobStatusDto {
+  return {
+    id: row.job_id,
+    action: row.action as ReviewJobAction,
+    status: row.status as SyncStatus,
+    startedAt: new Date(row.started_at),
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+    total: row.total,
+    done: row.done,
+    applied: row.applied,
+    skipped: row.skipped,
+    failed: row.failed,
+    percentComplete: row.percent_complete,
+    currentEntity: row.current_entity ?? undefined,
+    currentRecordKey: row.current_record_key ?? undefined,
+    errors: [...(row.errors ?? [])],
+  };
+}
 
 interface SyncNewValues extends Record<string, unknown> {
   phone?: string;
@@ -58,7 +111,7 @@ interface SyncNewValues extends Record<string, unknown> {
 }
 
 @Injectable()
-export class PeachtreeSyncService {
+export class PeachtreeSyncService implements OnModuleInit {
   private readonly logger = new Logger(PeachtreeSyncService.name);
 
   /**
@@ -86,15 +139,16 @@ export class PeachtreeSyncService {
   private lastSyncPerEntity = new Map<string, number>();
   private lastSyncCounts = new Map<string, number>();
   private currentSync: SyncStatusResponseDto | null = null;
-  // Bulk-accept/ignore job state is process-local, so a browser refresh or a
-  // closed tab resumes it but a backend restart drops it mid-flight. Persisting
-  // it (started_at / total / done are already on the DTO) is the follow-up if
-  // that trade-off ever stops being acceptable.
+  // Live counters stay in memory while a job runs; every page boundary and
+  // completion is also snapshotted to peachtree_review_job so a restart keeps
+  // the last run visible instead of showing nothing.
   private reviewJob: ReviewJobStatusDto | null = null;
 
   constructor(
     private connectionService: PeachtreeConnectionService,
     private mappingService: PeachtreeMappingService,
+    @InjectRepository(PeachtreeReviewJob)
+    private reviewJobRepo: Repository<PeachtreeReviewJob>,
     @InjectRepository(Customer) private customerRepo: Repository<Customer>,
     @InjectRepository(Supplier) private supplierRepo: Repository<Supplier>,
     @InjectRepository(Product) private productRepo: Repository<Product>,
@@ -445,6 +499,24 @@ export class PeachtreeSyncService {
     return this.reviewService.getReviewLog(runId);
   }
 
+  /**
+   * Flush collected log entries in one bulk insert. A flush failure is
+   * reported but never un-decides rows: the accept/skip already committed.
+   */
+  private async flushReviewLogs(
+    logs: LogCreateInput[],
+    errors: string[],
+  ): Promise<void> {
+    if (logs.length === 0) return;
+    try {
+      await this.reviewService.logMany(logs);
+    } catch (error: any) {
+      errors.push(
+        `review log flush failed: ${error?.message || String(error)}`,
+      );
+    }
+  }
+
   async skipReview(
     ids: number[],
     onRow?: ReviewRowObserver,
@@ -465,12 +537,13 @@ export class PeachtreeSyncService {
     }
     const runId = `skip_${Date.now()}`;
     let skipped = 0;
+    const pendingLogs: LogCreateInput[] = [];
     for (const row of rows) {
       try {
         await this.reviewService.markSkippedRow(row);
         skipped++;
         onRow?.(row, true);
-        await this.reviewService.log({
+        pendingLogs.push({
           runId,
           triggeredBy: 'skip',
           entity: row.entity as SyncEntity,
@@ -484,6 +557,7 @@ export class PeachtreeSyncService {
         );
       }
     }
+    await this.flushReviewLogs(pendingLogs, errors);
     return { skipped, errors };
   }
 
@@ -507,6 +581,7 @@ export class PeachtreeSyncService {
     const runId = `apply_${Date.now()}`;
     let applied = 0;
     const errors: string[] = [];
+    const pendingLogs: LogCreateInput[] = [];
 
     for (const row of rows) {
       try {
@@ -514,7 +589,7 @@ export class PeachtreeSyncService {
           await this.reviewService.markAccepted(row);
           applied++;
           onRow?.(row, true);
-          await this.reviewService.log({
+          pendingLogs.push({
             runId,
             triggeredBy: 'apply',
             entity: row.entity as SyncEntity,
@@ -639,7 +714,7 @@ export class PeachtreeSyncService {
           row.old_values || {},
           nv,
         );
-        await this.reviewService.log({
+        pendingLogs.push({
           runId,
           triggeredBy: 'apply',
           entity: row.entity as SyncEntity,
@@ -656,6 +731,7 @@ export class PeachtreeSyncService {
         );
       }
     }
+    await this.flushReviewLogs(pendingLogs, errors);
     return { applied, errors };
   }
 
@@ -667,8 +743,69 @@ export class PeachtreeSyncService {
     return this.currentSync;
   }
 
-  getReviewJob(): ReviewJobStatusDto | null {
-    return this.reviewJob;
+  /**
+   * A job left RUNNING in the table died with its process: the loop that
+   * advanced it no longer exists, and silently resuming bulk writes after a
+   * deploy would surprise. Mark it failed so the UI tells the user to retry.
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      const stale = await this.reviewJobRepo.find({
+        where: { status: SyncStatus.RUNNING },
+      });
+      for (const row of stale) {
+        row.status = SyncStatus.FAILED;
+        row.completed_at = new Date();
+        row.errors = [
+          ...(row.errors ?? []),
+          'توقفت العملية بسبب إعادة تشغيل الخادم قبل اكتمالها',
+        ];
+        await this.reviewJobRepo.save(row);
+      }
+      if (stale.length > 0) {
+        this.logger.warn(
+          `Marked ${stale.length} interrupted review job(s) as failed`,
+        );
+      }
+    } catch (error) {
+      // Table missing (migration not run yet) or DB down: the job feature
+      // keeps working in memory; only the restart-surviving snapshot is lost.
+      this.logger.warn(
+        `Review job recovery skipped: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Persist a job snapshot. Writes happen on start, on every page boundary
+   * and on completion — never per row. Failures are logged, never thrown, so
+   * persistence can never break a running job.
+   */
+  async persistReviewJob(job: ReviewJobStatusDto): Promise<void> {
+    try {
+      await this.reviewJobRepo.upsert(toReviewJobRow(job), ['job_id']);
+    } catch (error) {
+      this.logger.warn(
+        `Review job snapshot failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * The live in-memory job if one exists, otherwise the latest persisted run
+   * so a restarted backend still shows what happened instead of nothing.
+   */
+  async getReviewJob(): Promise<ReviewJobStatusDto | null> {
+    if (this.reviewJob) return this.reviewJob;
+    try {
+      const latest = await this.reviewJobRepo.find({
+        order: { id: 'DESC' },
+        take: 1,
+      });
+      return latest.length > 0 ? fromReviewJobRow(latest[0]) : null;
+    } catch {
+      return null;
+    }
   }
 
   getPendingSummary(entities?: SyncEntity[]) {
@@ -705,6 +842,7 @@ export class PeachtreeSyncService {
       errors: [],
     };
     this.reviewJob = job;
+    await this.persistReviewJob(job);
 
     this.runReviewJob(job, entities).catch((err) => {
       this.logger.error(
@@ -713,6 +851,7 @@ export class PeachtreeSyncService {
       job.status = SyncStatus.FAILED;
       job.completedAt = new Date();
       job.percentComplete = 100;
+      void this.persistReviewJob(job);
     });
 
     return job;
@@ -758,6 +897,7 @@ export class PeachtreeSyncService {
         );
         break;
       }
+      await this.persistReviewJob(job);
     }
 
     job.status =
@@ -766,6 +906,7 @@ export class PeachtreeSyncService {
     job.percentComplete = 100;
     job.currentEntity = undefined;
     job.currentRecordKey = undefined;
+    await this.persistReviewJob(job);
   }
 
   private trackReviewJobRow(

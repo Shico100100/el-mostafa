@@ -178,13 +178,14 @@ export class PeachtreeSyncController {
   /**
    * Polled roughly once a second while a bulk review job runs. The global
    * limiter is 30 requests/minute, which a progress poll would trip within a
-   * few seconds. This route only reads in-memory job state — no database, no
-   * side effects — so it is exempt; the endpoints that start work still are not.
+   * few seconds. This route only reads job state — memory first, then one
+   * indexed lookup for the latest persisted run — with no side effects, so it
+   * is exempt; the endpoints that start work still are not.
    */
   @SkipThrottle()
   @Get('review/job-progress')
-  getReviewJobProgress() {
-    const job = this.syncService.getReviewJob();
+  async getReviewJobProgress() {
+    const job = await this.syncService.getReviewJob();
     return {
       running: !!job && job.status === SyncStatus.RUNNING,
       job: job || null,
