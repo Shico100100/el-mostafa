@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import type { ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
 import { BulkReviewDialog, ReviewJobProgress } from '@/components/peachtree-sync/BulkReviewDialog';
@@ -19,6 +19,8 @@ const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: st
   purchase_invoices: { label: 'فواتير المشتريات', icon: FileText, color: 'text-rose-400' },
   invoice_line_items: { label: 'بنود الفواتير', icon: Package, color: 'text-teal-400' },
 };
+
+const REVIEW_PAGE_SIZE = 50;
 
 const ACTION_LABELS: Record<string, string> = {
   inserted: 'إضافة جديدة',
@@ -50,6 +52,45 @@ export default function PeachtreeSyncPage() {
   const [selectedReview, setSelectedReview] = useState<Set<string>>(new Set());
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [bulkAction, setBulkAction] = useState<'apply' | 'skip' | null>(null);
+  const [reviewEntityFilter, setReviewEntityFilter] = useState<string>('all');
+  const [reviewSearch, setReviewSearch] = useState('');
+  const [reviewPage, setReviewPage] = useState(0);
+
+  // Selections point at review ids, which vanish on accept and are wiped by
+  // every fresh sync — prune dead ones instead of acting on stale ids.
+  const reviewIds = useMemo(() => new Set(h.review.map((e) => e.id)), [h.review]);
+  useEffect(() => {
+    setSelectedReview((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (reviewIds.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [reviewIds]);
+
+  const filteredReview = useMemo(() => {
+    const q = reviewSearch.trim().toLowerCase();
+    return h.review.filter(
+      (e) =>
+        (reviewEntityFilter === 'all' || e.entity === reviewEntityFilter) &&
+        (q === '' || e.record_key.toLowerCase().includes(q)),
+    );
+  }, [h.review, reviewEntityFilter, reviewSearch]);
+  const reviewPageCount = Math.max(
+    1,
+    Math.ceil(filteredReview.length / REVIEW_PAGE_SIZE),
+  );
+  const safeReviewPage = Math.min(reviewPage, reviewPageCount - 1);
+  const pagedReview = filteredReview.slice(
+    safeReviewPage * REVIEW_PAGE_SIZE,
+    (safeReviewPage + 1) * REVIEW_PAGE_SIZE,
+  );
+  useEffect(() => {
+    setReviewPage(0);
+  }, [reviewEntityFilter, reviewSearch, h.review.length]);
 
   const handleSyncInvoices = async () => {
     setSyncingInvoices(true);
@@ -94,9 +135,13 @@ export default function PeachtreeSyncPage() {
           <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
             <p className="text-[#6b8378] text-sm mb-2">آخر مزامنة</p>
             <p className="text-white font-bold text-lg">
-              {h.history.length > 0
-                ? `${h.history[0].records_synced ?? '-'} سجل`
-                : '-'}
+              {h.history.length === 0
+                ? '-'
+                : h.history[0].status === 'completed'
+                  ? `${h.history[0].records_synced ?? '-'} سجل`
+                  : h.history[0].status === 'failed'
+                    ? 'فشلت — تحقق من السجل'
+                    : 'جارية...'}
             </p>
           </div>
         </div>
@@ -151,6 +196,7 @@ export default function PeachtreeSyncPage() {
           <button
             onClick={() => h.runSync('full')}
             disabled={h.syncing || h.connected !== true}
+            title="مزامنة شاملة لكل الكيانات الستة من Peachtree — قد تستغرق عدة دقائق"
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.syncing || h.connected !== true
                 ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
@@ -166,6 +212,7 @@ export default function PeachtreeSyncPage() {
           <button
             onClick={h.resyncItems}
             disabled={h.resyncing || h.syncing || h.connected !== true}
+            title="إعادة بناء بنود الفواتير فقط من Peachtree — لا يمس العملاء أو المنتجات"
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.resyncing || h.syncing || h.connected !== true
                 ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
@@ -181,6 +228,7 @@ export default function PeachtreeSyncPage() {
           <button
             onClick={() => h.runIncrementalSync()}
             disabled={h.syncing || h.connected !== true}
+            title="مزامنة ذكية: تتخطى الكيانات التي لم يتغير عدد سجلاتها منذ آخر مزامنة"
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               h.syncing || h.connected !== true
                 ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
@@ -192,6 +240,7 @@ export default function PeachtreeSyncPage() {
           <button
             onClick={handleSyncInvoices}
             disabled={syncingInvoices || h.syncing || h.connected !== true}
+            title="مزامنة فواتير المبيعات والمشتريات فقط — لا يمس العملاء أو المنتجات"
             className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
               syncingInvoices || h.syncing || h.connected !== true
                 ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
@@ -237,13 +286,14 @@ export default function PeachtreeSyncPage() {
             </h2>
             <div className="flex gap-2 md:mr-auto">
                <button
-                 onClick={h.previewSync}
-                 disabled={h.previewing || h.syncing}
-                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
-               >
-                 <RefreshCw className={`w-4 h-4 ${h.previewing ? 'animate-spin' : ''}`} />
-                 <span>{h.previewing ? 'جارٍ المعاينة...' : 'معاينة الفروقات'}</span>
-               </button>
+                  onClick={h.previewSync}
+                  disabled={h.previewing || h.syncing}
+                  title="تشغّل مزامنة كاملة من Peachtree ثم تعرض الفروقات — تمسح القائمة الحالية والتحديد"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${h.previewing ? 'animate-spin' : ''}`} />
+                  <span>{h.previewing ? 'جارٍ المزامنة والمعاينة...' : 'مزامنة ومعاينة الفروقات'}</span>
+                </button>
                <button
                  onClick={() => h.applyReview([...selectedReview])}
                  disabled={h.applying || selectedReview.size === 0}
@@ -274,9 +324,13 @@ export default function PeachtreeSyncPage() {
              </div>
            </div>
 
-           {h.reviewJob && (
-             <ReviewJobProgress job={h.reviewJob} running={h.reviewJobRunning} />
-           )}
+            <p className="text-[#6b8378] text-xs mt-3">
+              تنبيه: المعاينة تشغّل مزامنة كاملة — تُنشأ فروقات جديدة وتُمسح القائمة الحالية والتحديد.
+            </p>
+
+            {h.reviewJob && (
+              <ReviewJobProgress job={h.reviewJob} running={h.reviewJobRunning} />
+            )}
 
            {bulkAction && (
              <BulkReviewDialog
@@ -292,9 +346,44 @@ export default function PeachtreeSyncPage() {
              />
            )}
 
-          {h.review.length === 0 ? (
+           {h.review.length > 0 && (
+              <div className="flex flex-col md:flex-row gap-3 mt-4">
+                <select
+                  value={reviewEntityFilter}
+                  onChange={(e) => setReviewEntityFilter(e.target.value)}
+                  aria-label="تصفية حسب الكيان"
+                  className="px-4 py-2 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white text-sm"
+                >
+                  <option value="all">كل الكيانات ({h.review.length})</option>
+                  {Object.entries(ENTITY_LABELS).map(([key, meta]) => (
+                    <option key={key} value={key}>
+                      {meta.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={reviewSearch}
+                  onChange={(e) => setReviewSearch(e.target.value)}
+                  placeholder="بحث برقم السجل..."
+                  aria-label="بحث برقم السجل"
+                  className="px-4 py-2 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white text-sm font-mono flex-1"
+                />
+                {(reviewEntityFilter !== 'all' || reviewSearch.trim() !== '') && (
+                  <span className="text-[#6b8378] text-sm self-center whitespace-nowrap">
+                    نتائج: {filteredReview.length} من {h.review.length}
+                  </span>
+                )}
+              </div>
+            )}
+
+           {h.review.length === 0 ? (
             <p className="text-[#6b8378] text-center py-8">
-              لا توجد فروقات معلقة — اضغط &quot;معاينة الفروقات&quot; للفحص
+              لا توجد فروقات معلقة — اضغط &quot;مزامنة ومعاينة الفروقات&quot; للفحص
+            </p>
+          ) : filteredReview.length === 0 ? (
+            <p className="text-[#6b8378] text-center py-8">
+              لا توجد نتائج مطابقة — غيّر الفلتر أو امسح البحث
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -310,7 +399,7 @@ export default function PeachtreeSyncPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {h.review.map((entry) => {
+                  {pagedReview.map((entry) => {
                     const meta =
                       ENTITY_LABELS[entry.entity] ||
                       ({} as { label: string; icon: LucideIcon; color: string });
@@ -362,9 +451,23 @@ export default function PeachtreeSyncPage() {
                           </td>
                           <td className="py-3 px-4">
                             {lineItemCount ? (
-                              <span className="text-[#6b8378]">
+                              <button
+                                onClick={() =>
+                                  setExpandedSync(
+                                    expandedSync === `rv-items-${entry.id}`
+                                      ? null
+                                      : `rv-items-${entry.id}`,
+                                  )
+                                }
+                                className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                              >
+                                {expandedSync === `rv-items-${entry.id}` ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
                                 البنود: {lineItemCount[0]} ← {lineItemCount[1]}
-                              </span>
+                              </button>
                             ) : diffs.length > 0 ? (
                               <button
                                 onClick={() =>
@@ -444,11 +547,91 @@ export default function PeachtreeSyncPage() {
                               </td>
                             </tr>
                           )}
+                        {expandedSync === `rv-items-${entry.id}` &&
+                          lineItemCount && (
+                            <tr key={`${entry.id}-items`}>
+                              <td colSpan={6} className="px-6 py-4 bg-black/30">
+                                <p className="text-[#6b8378] text-xs mb-2">
+                                  البنود الجديدة التي ستُكتب عند القبول:
+                                </p>
+                                {(
+                                  entry.new_values?.items as
+                                    | Record<string, unknown>[]
+                                    | undefined
+                                )?.length ? (
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="text-[#6b8378] border-b border-[#1f2d26]">
+                                        <th className="py-2 text-right">المنتج</th>
+                                        <th className="py-2 text-right">الكمية</th>
+                                        <th className="py-2 text-right">السعر</th>
+                                        <th className="py-2 text-right">الإجمالي</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(
+                                        entry.new_values?.items as Record<
+                                          string,
+                                          unknown
+                                        >[]
+                                      ).map((it, i) => (
+                                        <tr
+                                          key={`${entry.id}-item-${i}`}
+                                          className="border-b border-[#1f2d26]"
+                                        >
+                                          <td className="py-2 text-white font-mono">
+                                            {String(it.product_id ?? '—')}
+                                          </td>
+                                          <td className="py-2 text-[#ecfdf5]">
+                                            {String(it.quantity ?? '—')}
+                                          </td>
+                                          <td className="py-2 text-[#ecfdf5]">
+                                            {String(it.price ?? '—')}
+                                          </td>
+                                          <td className="py-2 text-green-400">
+                                            {String(it.total ?? '—')}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <span className="text-[#6b8378]">
+                                    لا توجد بنود جديدة — سيتم مسح البنود الحالية
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                       </Fragment>
                     );
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+          {filteredReview.length > REVIEW_PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-[#6b8378] text-sm">
+                صفحة {safeReviewPage + 1} من {reviewPageCount} — عرض{' '}
+                {pagedReview.length} من {filteredReview.length}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={safeReviewPage === 0}
+                  onClick={() => setReviewPage(safeReviewPage - 1)}
+                  className="px-4 py-2 bg-[#121a16] text-white rounded-lg text-sm hover:bg-white/20 transition disabled:opacity-40"
+                >
+                  السابق
+                </button>
+                <button
+                  disabled={safeReviewPage >= reviewPageCount - 1}
+                  onClick={() => setReviewPage(safeReviewPage + 1)}
+                  className="px-4 py-2 bg-[#121a16] text-white rounded-lg text-sm hover:bg-white/20 transition disabled:opacity-40"
+                >
+                  التالي
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -517,11 +700,11 @@ export default function PeachtreeSyncPage() {
                       <tr key={`${entry.id}-details`}>
                         <td colSpan={5} className="px-6 py-4 bg-black/30">
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {entry.results.map((r) => {
+                            {entry.results.map((r, i) => {
                               const meta = ENTITY_LABELS[r.entity] || { label: r.entity, icon: Package, color: 'text-[#6b8378]' };
                               const Icon = meta.icon;
                               return (
-                                <div key={r.entity} className="flex items-center gap-3 bg-[#121a16] rounded-lg p-3">
+                                <div key={`${r.entity}-${i}`} className="flex items-center gap-3 bg-[#121a16] rounded-lg p-3">
                                   <Icon className={`w-5 h-5 ${meta.color}`} />
                                   <div>
                                     <p className="text-white text-sm font-semibold">{meta.label}</p>
