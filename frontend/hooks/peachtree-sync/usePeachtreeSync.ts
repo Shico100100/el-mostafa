@@ -272,6 +272,8 @@ export function usePeachtreeSync() {
       if (start.status === 'running') {
         toast.info('بدأت مزامنة الفواتير في الخلفية...');
         await pollSyncProgress();
+      } else if (start.status === 'error') {
+        toast.error(start.message || 'فشلت مزامنة الفواتير');
       } else {
         toast.success(start.message || 'تمت المزامنة');
         loadData();

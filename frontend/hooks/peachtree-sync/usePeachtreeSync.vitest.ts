@@ -657,3 +657,15 @@ describe('usePeachtreeSync', () => {
       expect(mocks.toastSuccess).not.toHaveBeenCalled();
     });
   });
+
+describe('sync start error handling', () => {
+  it('shows an error toast when partial sync reports an error status', async () => {
+    mockLoadData();
+    mocks.fetchWithAuth.mockResolvedValueOnce({ message: 'No valid entities provided', status: 'error' });
+    const { result } = renderHook(() => usePeachtreeSync());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.syncInvoices(['sales_invoices']); });
+    expect(mocks.toastError).toHaveBeenCalledWith('No valid entities provided');
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+  });
+});
