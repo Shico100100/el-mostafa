@@ -30,7 +30,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-import { usePeachtreeSync } from './usePeachtreeSync';
+import { usePeachtreeSync, MAX_SYNC_POLL_ATTEMPTS } from './usePeachtreeSync';
 import type { ReviewEntry, LogEntry, ReviewSummary, ReviewJob } from './usePeachtreeSync';
 
 function mockLoadData(
@@ -154,7 +154,8 @@ describe('usePeachtreeSync', () => {
 
       expect(result.current.connected).toBe(false);
       expect(result.current.connectionError).toBe('Btrieve Error');
-      expect(mocks.toastSuccess).toHaveBeenCalledWith('فشل الاتصال');
+      expect(mocks.toastError).toHaveBeenCalledWith('فشل الاتصال');
+      expect(mocks.toastSuccess).not.toHaveBeenCalled();
     });
 
     it('handles API exception gracefully', async () => {
@@ -258,7 +259,7 @@ describe('usePeachtreeSync', () => {
       mockLoadData();
       mocks.fetchWithAuth
         .mockResolvedValueOnce({ message: 'Sync started', status: 'running' });
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < MAX_SYNC_POLL_ATTEMPTS; i++) {
         mocks.fetchWithAuth.mockResolvedValueOnce({ running: true, status: 'running', percentComplete: 50 });
       }
 
@@ -268,7 +269,7 @@ describe('usePeachtreeSync', () => {
       await act(async () => {
         result.current.runSync();
       });
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < MAX_SYNC_POLL_ATTEMPTS; i++) {
         await act(async () => {
           await vi.advanceTimersByTimeAsync(3000);
         });
@@ -276,7 +277,7 @@ describe('usePeachtreeSync', () => {
 
       expect(mocks.toastError).toHaveBeenCalledWith('انتهت مهلة الانتظار — المزامنة قد لا تزال تعمل');
       vi.useRealTimers();
-    }, 30000);
+    }, 300000);
 
     it('breaks poll on API error', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -591,3 +592,68 @@ describe('usePeachtreeSync', () => {
     });
   });
 });
+
+  describe('polling and reload robustness', () => {
+    const staleSummary: ReviewSummary = { total: 300, byEntity: [{ entity: 'customers', count: 300 }] };
+    const liveJob: ReviewJob = {
+      id: 'revjob_9', action: 'apply', status: 'running', startedAt: '2026-01-01T00:00:00.000Z',
+      total: 100, done: 10, applied: 10, skipped: 0, failed: 0,
+      percentComplete: 10, currentEntity: 'customers', currentRecordKey: 'C-9', errors: [],
+    };
+    it('keeps polling through a transient poll failure without touching state', async () => {
+      mockLoadData({ job: { running: true, job: liveJob } });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.reviewJobRunning).toBe(true);
+      mocks.fetchWithAuth.mockRejectedValueOnce(new Error('blip'));
+      let stillPolling = false;
+      await act(async () => { stillPolling = await result.current.pollReviewJob(); });
+      expect(stillPolling).toBe(true);
+      expect(result.current.reviewJobRunning).toBe(true);
+      expect(mocks.toastError).not.toHaveBeenCalled();
+    });
+
+    it('gives up after a sustained poll outage and tells the user', async () => {
+      mockLoadData();
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      for (let i = 0; i < 9; i++) {
+        mocks.fetchWithAuth.mockRejectedValueOnce(new Error('down'));
+        let keepGoing = false;
+        await act(async () => { keepGoing = await result.current.pollReviewJob(); });
+        expect(keepGoing).toBe(true);
+      }
+      expect(mocks.toastError).not.toHaveBeenCalled();
+      mocks.fetchWithAuth.mockRejectedValueOnce(new Error('down'));
+      let keepGoing = true;
+      await act(async () => { keepGoing = await result.current.pollReviewJob(); });
+      expect(keepGoing).toBe(false);
+      expect(result.current.reviewJobRunning).toBe(false);
+      expect(mocks.toastError).toHaveBeenCalledWith(
+        'انقطع الاتصال أثناء متابعة العملية — أعد تحميل الصفحة للمتابعة',
+      );
+    });
+
+    it('clears a stale summary when a reload fails', async () => {
+      mockLoadData({ summary: staleSummary });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.pendingSummary).toEqual(staleSummary);
+      mocks.fetchWithAuth
+        .mockResolvedValueOnce({ applied: 1, errors: [] })
+        .mockRejectedValueOnce(new Error('reload down'));
+      await act(async () => { await result.current.applyReview([1]); });
+      expect(result.current.pendingSummary).toBeNull();
+    });
+
+    it('shows an error toast when the connection test reports failure', async () => {
+      mockLoadData();
+      mocks.fetchWithAuth.mockResolvedValueOnce({ connected: false, error: 'nope' });
+      const { result } = renderHook(() => usePeachtreeSync());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      await act(async () => { await result.current.testConnection(); });
+      expect(result.current.connected).toBe(false);
+      expect(mocks.toastError).toHaveBeenCalledWith('فشل الاتصال');
+      expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    });
+  });

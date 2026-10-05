@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -68,6 +68,11 @@ export interface ReviewJob {
   errors: string[];
 }
 
+// Upper bound for sync progress polling (3s interval): 2400 attempts cover
+// ~2h of syncing. Exported so tests assert against the real cap instead of a
+// hardcoded copy that rots on the next change.
+export const MAX_SYNC_POLL_ATTEMPTS = 2400;
+
 export function usePeachtreeSync() {
   const ready = useAuthCheck();
   const [loading, setLoading] = useState(true);
@@ -131,7 +136,12 @@ export function usePeachtreeSync() {
         setReviewJob(jobData.job ?? null);
         setReviewJobRunning(Boolean(jobData.running));
       }
-    } catch { toast.error('فشل تحميل بيانات المزامنة'); }
+    } catch {
+      toast.error('فشل تحميل بيانات المزامنة');
+      // Drop the summary rather than confirming the next bulk action against
+      // a stale number; the bulk buttons stay disabled while it is null.
+      setPendingSummary(null);
+    }
     finally { setLoading(false); }
   }, []);
 
@@ -163,7 +173,8 @@ export function usePeachtreeSync() {
       const result = await api.fetchWithAuth<{ connected: boolean; error?: string }>('/peachtree-sync/test', { method: 'POST' });
       setConnected(result.connected);
       setConnectionError(result.error || '');
-      toast.success(result.connected ? 'تم الاتصال بنجاح' : 'فشل الاتصال');
+      if (result.connected) toast.success('تم الاتصال بنجاح');
+      else toast.error('فشل الاتصال');
     } catch {
       setConnected(false);
       setConnectionError('حدث خطأ غير متوقع');
@@ -210,8 +221,7 @@ export function usePeachtreeSync() {
   };
 
   const pollSyncProgress = async () => {
-    const maxAttempts = 120;
-    for (let i = 0; i < maxAttempts; i++) {
+    for (let i = 0; i < MAX_SYNC_POLL_ATTEMPTS; i++) {
       await new Promise(r => setTimeout(r, 3000));
       try {
         const progress = await api.fetchWithAuth<{ running: boolean; status: string; percentComplete: number; currentEntity: string }>('/peachtree-sync/progress');
@@ -342,11 +352,16 @@ export function usePeachtreeSync() {
     }
   }, []);
 
+  // Consecutive poll failures. A single blip must not end the polling: the
+  // backend keeps working, so the UI keeps the last known state and retries.
+  // Only after sustained outage do we stop and tell the user to reload.
+  const jobPollFails = useRef(0);
   const pollReviewJob = useCallback(async () => {
     try {
       const p = await api.fetchWithAuth<{ running: boolean; job: ReviewJob | null }>(
         '/peachtree-sync/review/job-progress',
       );
+      jobPollFails.current = 0;
       setReviewJob(p?.job ?? null);
       if (p?.running) {
         setReviewJobRunning(true);
@@ -355,8 +370,15 @@ export function usePeachtreeSync() {
       setReviewJobRunning(false);
       return false;
     } catch {
-      setReviewJobRunning(false);
-      return false;
+      jobPollFails.current += 1;
+      if (jobPollFails.current >= 10) {
+        setReviewJobRunning(false);
+        toast.error(
+          'انقطع الاتصال أثناء متابعة العملية — أعد تحميل الصفحة للمتابعة',
+        );
+        return false;
+      }
+      return true;
     }
   }, []);
 

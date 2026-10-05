@@ -6,6 +6,7 @@ import {
   Body,
   Query,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { PeachtreeSyncService } from './peachtree-sync.service';
@@ -208,7 +209,14 @@ export class PeachtreeSyncController {
     const list = Array.isArray(input) ? input : input ? [input] : [];
     if (list.length === 0) return undefined;
     const valid = list.filter((e) => VALID_ENTITIES.has(e as SyncEntity));
-    return valid.length > 0 ? (valid as SyncEntity[]) : undefined;
+    if (valid.length === 0) {
+      // Never widen garbage to "everything" on a bulk path: an unknown
+      // entity filter must fail loudly instead of applying to all rows.
+      throw new BadRequestException(
+        `Unknown entity filter: ${list.join(', ')}. Valid values: ${[...VALID_ENTITIES].join(', ')}`,
+      );
+    }
+    return valid as SyncEntity[];
   }
 
   @Get('log')
