@@ -48,19 +48,20 @@ export class ProductService {
     return this.productPricingService.recalculateProductStock(id);
   }
 
-  async bulkUpdatePrices(data: {
-    productIds?: number[];
-    categoryId?: number;
-    type?: string;
-    priceField: 'selling_price' | 'cost_price';
-    updateType: 'percentage' | 'fixed';
-    value: number;
-  }) {
-    return this.productPricingService.bulkUpdatePrices(data);
-  }
-
   async autoPriceProduct(productId: number) {
     return this.productPricingService.autoPriceProduct(productId);
+  }
+
+  async bulkDeleteProducts(ids: number[]) {
+    return this.productCrudService.bulkDeleteProducts(ids);
+  }
+
+  async bulkAssignCategory(ids: number[], categoryId: number) {
+    return this.productCrudService.bulkAssignCategory(ids, categoryId);
+  }
+
+  async getProductsSummary() {
+    return this.productCrudService.getProductsSummary();
   }
 
   // ---- Excel Export / Import ----

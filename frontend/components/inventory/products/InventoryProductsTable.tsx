@@ -40,6 +40,9 @@ interface Props {
   boms: BOM[];
   latestPrices: Record<number, { price: number }>;
   margin: (p: Product) => { value: number; pct: number };
+  selectedIds: Set<number>;
+  onToggleSelect: (id: number) => void;
+  onToggleSelectPage: () => void;
   page: number;
   totalPages: number;
   totalItems: number;
@@ -53,18 +56,35 @@ export function InventoryProductsTable({
   onMarkDormant, onRestoreProduct,
   onRowClick, boms, latestPrices, margin,
   page, totalPages, totalItems, onPageChange,
+  selectedIds, onToggleSelect, onToggleSelectPage,
 }: Props) {
   if (loading) {
     return <div className="text-center text-slate-400 py-20">جاري التحميل...</div>;
   }
 
+  const allPageSelected = products.length > 0 && products.every((p) => selectedIds.has(p.id));
+  const somePageSelected = products.some((p) => selectedIds.has(p.id));
+
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="bg-white/5 border-b border-white/10">
-              <th className="px-4 py-4 text-right text-white font-semibold text-sm w-14">صورة</th>
+            <thead>
+              <tr className="bg-white/5 border-b border-white/10">
+                <th className="px-4 py-4 text-right w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="تحديد الكل في الصفحة"
+                    checked={allPageSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = somePageSelected && !allPageSelected;
+                    }}
+                    onChange={onToggleSelectPage}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4"
+                  />
+                </th>
+                <th className="px-4 py-4 text-right text-white font-semibold text-sm w-14">صورة</th>
               <SortHeader field="name" label="المنتج" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
               <SortHeader field="type" label="النوع" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
               <SortHeader field="cost_price" label="التكلفة" sortField={sortField} sortDir={sortDir} onToggle={onToggleSort} />
@@ -85,6 +105,15 @@ export function InventoryProductsTable({
               const priceMode = product.type === 'FINISHED' ? 'selling' : (product.type === 'IMPORTED' || product.type === 'PACKAGING' || product.type === 'RAW_PLASTIC' ? 'none' : 'cost');
               return (
                 <tr key={product.id} className="border-t border-white/5 hover:bg-white/5 transition cursor-pointer group" onClick={() => onRowClick(product.id)}>
+                  <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      aria-label={`تحديد ${product.name}`}
+                      checked={selectedIds.has(product.id)}
+                      onChange={() => onToggleSelect(product.id)}
+                      className="w-4 h-4"
+                    />
+                  </td>
                   <td className="px-4 py-4">
                     {product.image_path ? (
                       <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/10 bg-slate-800">

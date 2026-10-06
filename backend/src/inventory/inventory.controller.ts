@@ -31,8 +31,9 @@ import {
   CreateWarehouseDto,
   CreateStockMovementDto,
   TransferStockDto,
-  BulkUpdatePricesDto,
   AdjustStockDto,
+  BulkDeleteDto,
+  BulkAssignCategoryDto,
 } from './dto';
 
 @ApiTags('Inventory')
@@ -136,6 +137,27 @@ export class InventoryController {
   )
   uploadProductImage(@UploadedFile() file: Express.Multer.File) {
     return { url: `/uploads/${file.filename}` };
+  }
+
+  @Get('products/summary')
+  @ApiOperation({ summary: 'Global product totals for the stat cards' })
+  @ApiResponse({ status: 200, description: 'Totals across all products' })
+  getProductsSummary() {
+    return this.inventoryService.getProductsSummary();
+  }
+
+  @Post('products/bulk-delete')
+  @ApiOperation({ summary: 'Delete many products at once' })
+  @ApiResponse({ status: 200, description: 'Delete count returned' })
+  bulkDeleteProducts(@Body() data: BulkDeleteDto) {
+    return this.inventoryService.bulkDeleteProducts(data.ids);
+  }
+
+  @Post('products/bulk-assign-category')
+  @ApiOperation({ summary: 'Move many products to a category' })
+  @ApiResponse({ status: 200, description: 'Update count returned' })
+  bulkAssignCategory(@Body() data: BulkAssignCategoryDto) {
+    return this.inventoryService.bulkAssignCategory(data.ids, data.category_id);
   }
 
   @Get('products/:id')
@@ -287,13 +309,6 @@ export class InventoryController {
   @ApiResponse({ status: 200, description: 'Stock recalculated' })
   recalculateProductStock(@Param('id') id: string) {
     return this.inventoryService.recalculateProductStock(+id);
-  }
-
-  @Post('products/bulk-update-prices')
-  @ApiOperation({ summary: 'Bulk update product prices' })
-  @ApiResponse({ status: 200, description: 'Prices updated' })
-  bulkUpdatePrices(@Body() data: BulkUpdatePricesDto) {
-    return this.inventoryService.bulkUpdatePrices(data);
   }
 
   @Post('products/smart-assign')

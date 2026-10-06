@@ -85,6 +85,12 @@ export function productTypeLabel(type: string): string {
   return displayLabels[type] ?? type;
 }
 
+// Single source of truth for every type dropdown in the inventory UI.
+// Previously three copies existed in three files, each missing something.
+export const PRODUCT_TYPE_OPTIONS: { value: ProductType; label: string }[] = (
+  Object.keys(displayLabels) as ProductType[]
+).map((value) => ({ value, label: displayLabels[value] }));
+
 export function normalizeType(type: string): ProductType {
   if (type === 'RAW_PLASTIC') return 'RAW';
   if (type === 'SEMI_FINISHED') return 'SEMI';

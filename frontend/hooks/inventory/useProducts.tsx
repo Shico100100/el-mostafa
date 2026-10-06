@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ interface Warehouse { id: number; name: string; }
 interface ProductResponse { data: Product[]; total: number; totalPages: number; page: number; limit: number; }
 interface ProductData {
   id?: number; name: string; type: string; unit: string;
+  cost_price?: number | null; category_id?: number;
   selling_price: number; stock_quantity: number;
   min_stock?: number | null; warehouse_id?: number; description?: string | null;
   weight_grams?: number | null; image_path?: string | null;
@@ -17,25 +19,46 @@ interface ProductData {
 
 export function useProducts() {
   const ready = useAuthCheck();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showBulkPrice, setShowBulkPrice] = useState(false);
 
   const [inlineEditingId, setInlineEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ selling_price: '', stock_quantity: '' });
   const [adjustingId, setAdjustingId] = useState<number | null>(null);
 
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedType, setSelectedType] = useState('');
-  const [selectedWarehouse, setSelectedWarehouse] = useState('');
-  const [showLowStock, setShowLowStock] = useState(false);
-  const [page, setPage] = useState(1);
+  // Filter state initializes from the URL so a detail view opened in a new
+  // tab (or back-navigation) restores the list exactly as it was.
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get('search') ?? '');
+  const [selectedType, setSelectedType] = useState(() => searchParams.get('type') ?? '');
+  const [selectedWarehouse, setSelectedWarehouse] = useState(() => searchParams.get('warehouse') ?? '');
+  const [showLowStock, setShowLowStock] = useState(() => searchParams.get('low') === '1');
+  const [page, setPage] = useState(() => {
+    const p = parseInt(searchParams.get('page') || '1', 10);
+    return Number.isFinite(p) && p > 0 ? p : 1;
+  });
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState<{ totalProducts: number; totalValue: number; lowStockCount: number } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // One-way sync state -> URL (replace, no scroll, no remount loop).
+  useEffect(() => {
+    const qs = new URLSearchParams();
+    if (search) qs.set('search', search);
+    if (selectedType) qs.set('type', selectedType);
+    if (selectedWarehouse) qs.set('warehouse', selectedWarehouse);
+    if (showLowStock) qs.set('low', '1');
+    if (page > 1) qs.set('page', String(page));
+    const suffix = qs.toString();
+    router.replace(`/inventory/products${suffix ? `?${suffix}` : ''}`, { scroll: false });
+  }, [search, selectedType, selectedWarehouse, showLowStock, page, router]);
 
   const [sortField, setSortField] = useState<'name' | 'type' | 'cost_price' | 'selling_price' | 'stock_quantity' | 'margin'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -47,6 +70,22 @@ export function useProducts() {
     return () => clearTimeout(t);
   }, [search]);
 
+  // Selections reference row ids, which vanish on accept/delete and are
+  // rebuilt by every fresh sync — prune the dead ones instead of acting on
+  // stale ids.
+  const productIds = useMemo(() => new Set(products.map((p) => p.id)), [products]);
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      let changed = false;
+      const next = new Set<number>();
+      for (const id of prev) {
+        if (productIds.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [productIds]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -56,9 +95,11 @@ export function useProducts() {
       if (showLowStock) qs.append('lowStock', 'true');
       if (selectedWarehouse) qs.append('warehouseId', selectedWarehouse);
 
-      const [productsData, warehousesData] = await Promise.all([
+      const [productsData, warehousesData, categoriesData, summaryData] = await Promise.all([
         api.fetchWithAuth<ProductResponse | Product[]>(`/inventory/products?${qs.toString()}`),
         api.fetchWithAuth<Warehouse[]>('/inventory/warehouses'),
+        api.fetchWithAuth<{ id: number; name: string }[]>('/inventory/categories').catch(() => []),
+        api.fetchWithAuth<{ totalProducts: number; totalValue: number; lowStockCount: number }>('/inventory/products/summary').catch(() => null),
       ]);
 
       if (Array.isArray(productsData)) {
@@ -71,6 +112,8 @@ export function useProducts() {
         setTotalItems(productsData.total || 0);
       }
       setWarehouses(warehousesData || []);
+      setCategories(categoriesData || []);
+      if (summaryData) setSummary(summaryData);
 
       // Fetch latest purchase prices for invoice-priced products
       const prodList = Array.isArray(productsData) ? productsData : (productsData.data || []);
@@ -152,10 +195,11 @@ export function useProducts() {
   // the full Product row (id, warehouse/category objects, timestamps...),
   // and the API rejects unknown props (forbidNonWhitelisted) with 422 — so
   // only known keys may leave the client.
+  // Mirrors CreateProductDto minus sku/barcode (removed from the API: the
+  // edit form spreads the full list row, which still carries them, and the
+  // API rejects unknown props with 422.
   const PRODUCT_PAYLOAD_KEYS = [
     'name',
-    'sku',
-    'barcode',
     'cost_price',
     'selling_price',
     'category_id',
@@ -194,6 +238,73 @@ export function useProducts() {
       setEditingProduct(null);
       loadData();
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'فشل الحفظ'); }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectPage = () => {
+    setSelectedIds((prev) => {
+      const pageIds = products.map((p) => p.id);
+      const allSelected =
+        pageIds.length > 0 && pageIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allSelected) {
+        for (const id of pageIds) next.delete(id);
+      } else {
+        for (const id of pageIds) next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const executeBulkDelete = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    try {
+      const result = await api.fetchWithAuth<{ deleted: number }>('/inventory/products/bulk-delete', {
+        method: 'POST', body: JSON.stringify({ ids }),
+      });
+      toast.success(`تم حذف ${result.deleted} منتج`);
+      clearSelection();
+      loadData();
+    } catch { toast.error('فشل الحذف الجماعي'); }
+  };
+
+  const confirmBulkDelete = () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    toast.custom((t: number | string) => (
+      <div className="bg-slate-800 border border-white/20 rounded-xl p-6 shadow-2xl max-w-sm" dir="rtl">
+        <p className="text-white text-lg font-semibold mb-2">حذف {ids.length} منتج؟</p>
+        <p className="text-slate-400 text-sm mb-4">الحذف نهائي ولا يمكن التراجع عنه.</p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={() => toast.dismiss(t)} className="px-4 py-2 bg-slate-700/50 text-slate-200 rounded-lg hover:bg-slate-700 transition">إلغاء</button>
+          <button onClick={async () => { toast.dismiss(t); await executeBulkDelete(); }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">حذف</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
+  const handleBulkAssignCategory = async (categoryId: number) => {
+    const ids = [...selectedIds];
+    if (ids.length === 0 || !categoryId) return;
+    try {
+      const result = await api.fetchWithAuth<{ updated: number }>('/inventory/products/bulk-assign-category', {
+        method: 'POST', body: JSON.stringify({ ids, category_id: categoryId }),
+      });
+      toast.success(`تم نقل ${result.updated} منتج للفئة`);
+      clearSelection();
+      loadData();
+    } catch { toast.error('فشل نقل الفئة'); }
   };
 
   const handleDelete = (id: number) => {
@@ -239,19 +350,6 @@ export function useProducts() {
       toast.success(data.type === 'IN' ? 'تمت الإضافة' : 'تم الخصم');
       loadData();
     } catch { toast.error('فشل التعديل'); }
-  };
-
-  const handleBulkPriceUpdate = async (data: { priceField: 'cost_price' | 'selling_price'; updateType: 'percentage' | 'fixed'; value: string; categoryId?: string; type?: string }) => {
-    if (!data.value || Number(data.value) <= 0) { toast.error('أدخل قيمة صحيحة'); return; }
-    try {
-      const result = await api.fetchWithAuth<{ updated: number }>('/inventory/products/bulk-update-prices', {
-        method: 'POST',
-        body: JSON.stringify({ priceField: data.priceField, updateType: data.updateType, value: Number(data.value), categoryId: data.categoryId ? parseInt(data.categoryId) : undefined, type: data.type || undefined }),
-      });
-      toast.success(`تم تحديث ${result.updated} منتج`);
-      setShowBulkPrice(false);
-      loadData();
-    } catch { toast.error('فشل التحديث'); }
   };
 
   const handleMarkDormant = async (productId: number) => {
@@ -311,15 +409,16 @@ export function useProducts() {
   };
 
   return {
-    products, warehouses, loading, showModal, editingProduct, showBulkPrice,
+    products, warehouses, categories, loading, showModal, editingProduct, summary, selectedIds,
     inlineEditingId, editForm, adjustingId,
     search, selectedType, selectedWarehouse, showLowStock,
     page, totalPages, totalItems, sortField, sortDir, sortedProducts, latestPrices,
     setSearch, setSelectedType, setSelectedWarehouse, setShowLowStock,
-    setPage, setShowModal, setEditingProduct, setShowBulkPrice,
+    setPage, setShowModal, setEditingProduct,
     setEditForm, setInlineEditingId, setAdjustingId,
     loadData, toggleSort, handleExport, handleImport, handleSaveProduct,
     handleDelete, startInlineEdit, saveInlineEdit, openAdjustment, saveAdjustment,
-    handleBulkPriceUpdate, handleSmartAssign, handleMarkDormant, handleRestoreProduct, margin,
+    handleSmartAssign, handleMarkDormant, handleRestoreProduct, margin,
+    toggleSelect, toggleSelectPage, clearSelection, confirmBulkDelete, executeBulkDelete, handleBulkAssignCategory,
   };
 }

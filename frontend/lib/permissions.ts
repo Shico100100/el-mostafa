@@ -13,7 +13,6 @@ export const PAGE_PERMISSIONS: Record<string, number[]> = {
   '/purchases/returns': [1, 3, 4],
   '/inventory': [1, 3, 5, 6],
   '/inventory/products': [1, 3, 5, 6],
-  '/inventory/products/bulk-prices': [1, 3, 5],
   '/inventory/semi-finished': [1, 3, 5, 6],
   '/inventory/stock': [1, 3, 5, 6],
   '/inventory/stock/movements': [1, 3, 5, 6],

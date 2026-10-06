@@ -99,8 +99,10 @@ describe('InventoryService', () => {
             recalculateProductStock: jest.fn(),
             exportProductsToExcel: jest.fn(),
             importProductsFromExcel: jest.fn(),
-            bulkUpdatePrices: jest.fn(),
             autoPriceProduct: jest.fn(),
+            bulkDeleteProducts: jest.fn(),
+            bulkAssignCategory: jest.fn(),
+            getProductsSummary: jest.fn(),
           },
         },
         {
@@ -434,6 +436,44 @@ describe('InventoryService', () => {
           new_quantity: 10,
         }),
       ).rejects.toThrow('المخزون غير موجود لهذا المنتج');
+    });
+  });
+
+  describe('bulkDeleteProducts', () => {
+    it('should delegate ids to productService', async () => {
+      (productService.bulkDeleteProducts as jest.Mock).mockResolvedValue({
+        deleted: 3,
+      });
+      const result = await service.bulkDeleteProducts([1, 2, 3]);
+      expect(result).toEqual({ deleted: 3 });
+      expect(productService.bulkDeleteProducts).toHaveBeenCalledWith([1, 2, 3]);
+    });
+  });
+
+  describe('bulkAssignCategory', () => {
+    it('should delegate ids and category to productService', async () => {
+      (productService.bulkAssignCategory as jest.Mock).mockResolvedValue({
+        updated: 2,
+      });
+      const result = await service.bulkAssignCategory([1, 2], 5);
+      expect(result).toEqual({ updated: 2 });
+      expect(productService.bulkAssignCategory).toHaveBeenCalledWith([1, 2], 5);
+    });
+  });
+
+  describe('getProductsSummary', () => {
+    it('should return the totals from productService', async () => {
+      (productService.getProductsSummary as jest.Mock).mockResolvedValue({
+        totalProducts: 100,
+        totalValue: 5000,
+        lowStockCount: 7,
+      });
+      const result = await service.getProductsSummary();
+      expect(result).toEqual({
+        totalProducts: 100,
+        totalValue: 5000,
+        lowStockCount: 7,
+      });
     });
   });
 });

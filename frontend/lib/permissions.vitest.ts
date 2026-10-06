@@ -9,8 +9,15 @@ describe('resolveRoles', () => {
   });
 
   it('returns longest prefix match for nested routes', () => {
+    const roles = resolveRoles('/inventory/stock/movements');
+    expect(roles).toEqual([1, 3, 5, 6]);
+  });
+
+  it('falls back to the parent route when the nested route was removed', () => {
+    // /inventory/products/bulk-prices no longer exists; it inherits
+    // /inventory/products instead of becoming public.
     const roles = resolveRoles('/inventory/products/bulk-prices');
-    expect(roles).toEqual([1, 3, 5]);
+    expect(roles).toEqual([1, 3, 5, 6]);
   });
 
   it('falls back to parent prefix when no exact match', () => {

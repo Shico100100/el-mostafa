@@ -7,21 +7,15 @@ import {
   Min,
 } from 'class-validator';
 
+// NOTE: sku/barcode were removed from the API surface (unused by the
+// business) but their columns stay in the products table: the Peachtree
+// sync matches products by SKU, and the Excel import/export plus the search
+// read them. Do not drop the columns without migrating the sync first.
 export class CreateProductDto {
   @ApiProperty({ example: 'منتج أ' })
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  @ApiPropertyOptional({ example: 'SKU-001' })
-  @IsOptional()
-  @IsString()
-  sku?: string;
-
-  @ApiPropertyOptional({ example: 'BARCODE001' })
-  @IsOptional()
-  @IsString()
-  barcode?: string;
 
   @ApiPropertyOptional({ example: 10.5 })
   @IsOptional()

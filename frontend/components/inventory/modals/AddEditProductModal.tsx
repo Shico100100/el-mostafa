@@ -5,21 +5,24 @@ import Image from 'next/image';
 import { X, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { PRODUCT_TYPE_OPTIONS } from '@/components/inventory/types';
 
 interface WH { id: number; name: string; }
 interface ProductData {
   id?: number; name: string; type: string; unit: string;
+  cost_price?: number | null; category_id?: number;
   selling_price: number; stock_quantity: number;
   min_stock?: number | null; warehouse_id?: number; description?: string | null;
   weight_grams?: number | null; image_path?: string | null;
 }
 
-export default function AddEditProductModal({ isOpen, product, warehouses, onClose, onSave }: {
-  isOpen: boolean; product?: ProductData | null; warehouses: WH[];
+export default function AddEditProductModal({ isOpen, product, warehouses, categories, onClose, onSave }: {
+  isOpen: boolean; product?: ProductData | null; warehouses: WH[]; categories: WH[];
   onClose: () => void; onSave: (data: ProductData) => Promise<void>;
 }) {
   const [form, setForm] = useState<ProductData>({
     name: '', type: 'FINISHED', unit: 'piece',
+    cost_price: null, category_id: undefined,
     selling_price: 0, stock_quantity: 0,
     min_stock: null, warehouse_id: undefined, description: null,
     weight_grams: null, image_path: null,
@@ -33,7 +36,7 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
       setForm({ ...product });
       setImagePath(product.image_path || '');
     } else {
-      setForm({ name: '', type: 'FINISHED', unit: 'piece', selling_price: 0, stock_quantity: 0, min_stock: null, warehouse_id: warehouses[0]?.id || undefined, description: null, weight_grams: null, image_path: null });
+      setForm({ name: '', type: 'FINISHED', unit: 'piece', cost_price: null, category_id: undefined, selling_price: 0, stock_quantity: 0, min_stock: null, warehouse_id: warehouses[0]?.id || undefined, description: null, weight_grams: null, image_path: null });
       setImagePath('');
     }
   }, [product, warehouses]);
@@ -80,12 +83,17 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
               <label className="block text-sm font-medium text-slate-300 mb-1.5">النوع</label>
               <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
                 className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
-                <option value="FINISHED">منتج تام</option>
-                <option value="IMPORTED">مستورد</option>
-                <option value="PACKAGING">تغليف</option>
-                <option value="RAW">خام</option>
-                <option value="RAW_PLASTIC">خام بلاستيك</option>
-                <option value="SEMI_FINISHED">نصف مصنع</option>
+                {PRODUCT_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">الفئة</label>
+              <select value={form.category_id || ''} onChange={(e) => setForm({ ...form, category_id: e.target.value ? Number(e.target.value) : undefined })}
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none">
+                <option value="">بدون فئة</option>
+                {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
               </select>
             </div>
             <div>
@@ -93,6 +101,11 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
               <input type="text" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" list="units" placeholder="قطعة / كجم" />
               <datalist id="units"><option value="piece" /><option value="kg" /><option value="meter" /><option value="box" /></datalist>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">سعر التكلفة</label>
+              <input type="number" step="0.01" min="0" value={form.cost_price ?? ''} onChange={(e) => setForm({ ...form, cost_price: e.target.value ? Number(e.target.value) : null })}
+                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">سعر البيع</label>

@@ -74,18 +74,17 @@ export class InventoryService {
   async importProductsFromExcel(buffer: Buffer) {
     return this.productService.importProductsFromExcel(buffer);
   }
-  async bulkUpdatePrices(data: {
-    productIds?: number[];
-    categoryId?: number;
-    type?: string;
-    priceField: 'selling_price' | 'cost_price';
-    updateType: 'percentage' | 'fixed';
-    value: number;
-  }) {
-    return this.productService.bulkUpdatePrices(data);
-  }
   async autoPriceProduct(productId: number) {
     return this.productService.autoPriceProduct(productId);
+  }
+  async bulkDeleteProducts(ids: number[]) {
+    return this.productService.bulkDeleteProducts(ids);
+  }
+  async bulkAssignCategory(ids: number[], categoryId: number) {
+    return this.productService.bulkAssignCategory(ids, categoryId);
+  }
+  async getProductsSummary() {
+    return this.productService.getProductsSummary();
   }
 
   // ==================== WAREHOUSE DELEGATION ====================

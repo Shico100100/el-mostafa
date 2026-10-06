@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Product } from '../entities/product.entity';
@@ -153,5 +153,59 @@ export class ProductCrudService {
 
   async deleteProduct(id: number) {
     return this.productRepo.delete(id);
+  }
+
+  /**
+   * Hard-delete many products at once. Same semantics as the single delete
+   * (no soft-delete layer exists), so the UI must confirm with a count.
+   */
+  async bulkDeleteProducts(ids: number[]): Promise<{ deleted: number }> {
+    const res = await this.productRepo.delete(ids);
+    return { deleted: res.affected ?? 0 };
+  }
+
+  async bulkAssignCategory(
+    ids: number[],
+    categoryId: number,
+  ): Promise<{ updated: number }> {
+    const category = await this.categoryRepo.findOne({
+      where: { id: categoryId },
+    });
+    if (!category) throw new NotFoundException('الفئة غير موجودة');
+    const res = await this.productRepo.update(ids, {
+      category_id: categoryId,
+    });
+    return { updated: res.affected ?? 0 };
+  }
+
+  /**
+   * Global totals over the same scope the list page browses by default
+   * (SEMI_FINISHED and DORMANT excluded), so the stat cards agree with the
+   * table instead of summing only the visible page.
+   */
+  async getProductsSummary(): Promise<{
+    totalProducts: number;
+    totalValue: number;
+    lowStockCount: number;
+  }> {
+    const raw = await this.dataSource.query(
+      `SELECT COUNT(*) AS total,
+        COALESCE(SUM(p.cost_price * COALESCE(s.stock_total, 0)), 0) AS value,
+        COALESCE(SUM(CASE WHEN COALESCE(s.stock_total, 0) <= COALESCE(p.min_stock, 0) THEN 1 ELSE 0 END), 0) AS low
+       FROM products p
+       LEFT JOIN (
+         SELECT product_id,
+           COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE 0 END), 0) -
+           COALESCE(SUM(CASE WHEN type = 'OUT' THEN quantity ELSE 0 END), 0) AS stock_total
+         FROM stock_movements GROUP BY product_id
+       ) s ON s.product_id = p.id
+       WHERE p.type NOT IN ('SEMI_FINISHED', 'DORMANT')`,
+    );
+    const row = raw?.[0] || {};
+    return {
+      totalProducts: Number(row.total) || 0,
+      totalValue: Number(row.value) || 0,
+      lowStockCount: Number(row.low) || 0,
+    };
   }
 }
