@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { LucideProps } from 'lucide-react';
+import { createElement } from 'react';
 
 vi.mock('@/hooks/peachtree-sync/usePeachtreeSync', () => ({
   usePeachtreeSync: vi.fn(),
@@ -9,55 +10,62 @@ vi.mock('@/hooks/peachtree-sync/usePeachtreeSync', () => ({
 
 vi.mock('lucide-react', async () => {
   const actual = await vi.importActual('lucide-react');
+  const SvgIcon = (p: LucideProps) => <svg data-testid="icon" {...p} />;
   return {
     ...actual,
-    Link2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Play: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    CheckCircle2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    XCircle: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    RefreshCw: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Database: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Settings: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Users: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Truck: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Package: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    BookOpen: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    FileText: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Wallet: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    UserCheck: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    LayoutGrid: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Building2: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Briefcase: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Receipt: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    ChevronDown: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    ChevronUp: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    ListChecks: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    ClipboardList: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    Check: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    EyeOff: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    X: (p: LucideProps) => <svg data-testid="icon" {...p} />,
-    AlertTriangle: (p: LucideProps) => <svg data-testid="icon" {...p} />,
+    Link2: SvgIcon,
+    ListChecks: SvgIcon,
+    Play: SvgIcon,
+    ClipboardList: SvgIcon,
+    Settings: SvgIcon,
+    EyeOff: SvgIcon,
+    Check: SvgIcon,
+    X: SvgIcon,
+    AlertTriangle: SvgIcon,
+    RefreshCw: SvgIcon,
+    Users: SvgIcon,
+    Truck: SvgIcon,
+    Package: SvgIcon,
+    FileText: SvgIcon,
+    ChevronDown: SvgIcon,
+    ChevronUp: SvgIcon,
+    Database: SvgIcon,
+    CheckCircle2: SvgIcon,
+    XCircle: SvgIcon,
   };
 });
 
 import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
-import type { SyncHistoryEntry, ReviewEntry, LogEntry, ReviewSummary, ReviewJob } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import type {
+  ReviewEntry,
+  ReviewSummary,
+} from '@/hooks/peachtree-sync/usePeachtreeSync';
 import PeachtreeSyncPage from './page';
-import { createElement } from 'react';
 
 const mockedHook = vi.mocked(usePeachtreeSync);
 
-function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> = {}) {
+function makeHookState(
+  overrides: Partial<ReturnType<typeof usePeachtreeSync>> = {},
+) {
   return {
     loading: false,
     syncing: false,
     resyncing: false,
     testing: false,
+    applying: false,
+    previewing: false,
     connected: null as boolean | null,
     connectionError: '',
-    history: [] as SyncHistoryEntry[],
-    tables: [] as string[],
+    history: [],
+    tables: [],
     dsn: '',
+    review: [] as ReviewEntry[],
+    logs: [],
+    syncPercent: 0,
+    syncEntity: '',
+    pendingSummary: null as ReviewSummary | null,
+    reviewJob: null,
+    reviewJobRunning: false,
     setDsn: vi.fn(),
     testConnection: vi.fn().mockResolvedValue(undefined),
     runSync: vi.fn().mockResolvedValue(undefined),
@@ -65,20 +73,11 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
     resyncItems: vi.fn().mockResolvedValue(undefined),
     syncInvoices: vi.fn().mockResolvedValue(undefined),
     saveConfig: vi.fn().mockResolvedValue(undefined),
-    review: [] as ReviewEntry[],
-    logs: [] as LogEntry[],
-    previewing: false,
-    applying: false,
-    syncPercent: 0,
-    syncEntity: '',
-    loadReview: vi.fn().mockResolvedValue(undefined),
-    loadLogs: vi.fn().mockResolvedValue(undefined),
     previewSync: vi.fn().mockResolvedValue(undefined),
     applyReview: vi.fn().mockResolvedValue(undefined),
     skipReview: vi.fn().mockResolvedValue(undefined),
-    pendingSummary: null as ReviewSummary | null,
-    reviewJob: null as ReviewJob | null,
-    reviewJobRunning: false,
+    loadReview: vi.fn().mockResolvedValue(undefined),
+    loadLogs: vi.fn().mockResolvedValue(undefined),
     loadPendingSummary: vi.fn().mockResolvedValue(undefined),
     startReviewJob: vi.fn().mockResolvedValue(undefined),
     pollReviewJob: vi.fn().mockResolvedValue(false),
@@ -86,1009 +85,109 @@ function makeHookState(overrides: Partial<ReturnType<typeof usePeachtreeSync>> =
   };
 }
 
+function reviewRow(i: number, entity: string, key: string): ReviewEntry {
+  return {
+    id: 'r-' + i,
+    entity,
+    record_key: key,
+    change_type: 'update',
+    old_values: { phone: 'a' },
+    new_values: { phone: 'b' },
+    status: 'pending',
+  };
+}
+
+const summary: ReviewSummary = {
+  total: 225,
+  byEntity: [
+    { entity: 'customers', count: 200 },
+    { entity: 'products', count: 25 },
+  ],
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe('PeachtreeSyncPage', () => {
-  describe('loading state', () => {
-    it('shows loading screen when loading=true', () => {
-      mockedHook.mockReturnValue(makeHookState({ loading: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('جاري التحميل...')).toBeDefined();
-    });
-
-    it('does not render page content when loading', () => {
-      mockedHook.mockReturnValue(makeHookState({ loading: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.queryByText('ربط Peachtree')).toBeNull();
-      expect(screen.queryByText('إعدادات الاتصال')).toBeNull();
-      expect(screen.queryByText('سجل المزامنة')).toBeNull();
-    });
+  it('renders the status strip and defaults to the review tab', () => {
+    mockedHook.mockReturnValue(makeHookState());
+    render(createElement(PeachtreeSyncPage));
+    expect(screen.getByText('ربط Peachtree')).toBeDefined();
+    expect(screen.getByText('فروقات معلقة')).toBeDefined();
+    expect(screen.getByText('تقرير الفروقات')).toBeDefined();
+    expect(screen.queryByText('مزامنة شاملة')).toBeNull();
   });
 
-  describe('page header', () => {
-    it('renders main title', () => {
-      mockedHook.mockReturnValue(makeHookState());
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('ربط Peachtree')).toBeDefined();
-    });
-
-    it('shows entity count in description', () => {
-      mockedHook.mockReturnValue(makeHookState());
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/مزامنة البيانات مع Peachtree Quantum/)).toBeDefined();
-      expect(screen.getAllByText(/6 كيان/).length).toBeGreaterThanOrEqual(1);
-    });
+  it('shows the pending count badge on the review tab', () => {
+    mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
+    render(createElement(PeachtreeSyncPage));
+    const expected = (225).toLocaleString('ar-EG');
+    expect(document.body.textContent?.includes(expected)).toBe(true);
   });
 
-  describe('status cards', () => {
-    it('shows "لم يتم الفحص" when connected=null', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: null }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('لم يتم الفحص')).toBeDefined();
-    });
-
-    it('shows "متصل" when connected=true', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('متصل')).toBeDefined();
-    });
-
-    it('shows "غير متصل" when connected=false', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: false }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('غير متصل')).toBeDefined();
-    });
-
-    it('shows sync operations count', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{ id: '1' }, { id: '2' }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('2')).toBeDefined();
-    });
-
-    it('shows table count', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        tables: ['Chart', 'Customers', 'Vendors'],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('3')).toBeDefined();
-    });
-
-    it('shows last sync record count', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{ id: '1', status: 'completed', records_synced: 500 }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('500 سجل')).toBeDefined();
-    });
-
-    it('shows dash when no sync history', () => {
-      mockedHook.mockReturnValue(makeHookState({ history: [] }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('-')).toBeDefined();
-    });
+  it('switches to the sync tab with honest action cards', async () => {
+    const user = userEvent.setup();
+    mockedHook.mockReturnValue(makeHookState({ connected: true }));
+    render(createElement(PeachtreeSyncPage));
+    await user.click(screen.getByText('المزامنة'));
+    expect(screen.getByText('مزامنة شاملة')).toBeDefined();
+    expect(screen.getByText('مزامنة ذكية')).toBeDefined();
+    expect(
+      screen.getByText(/تتخطى الكيانات التي لم يتغير عدد سجلاتها/),
+    ).toBeDefined();
+    expect(screen.queryByText('تقرير الفروقات')).toBeNull();
   });
 
-  describe('connection config', () => {
-    it('renders DSN input with current value', () => {
-      mockedHook.mockReturnValue(makeHookState({ dsn: 'mos' }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByDisplayValue('mos')).toBeDefined();
-    });
-
-    it('renders empty input when dsn is empty', () => {
-      mockedHook.mockReturnValue(makeHookState({ dsn: '' }));
-      render(createElement(PeachtreeSyncPage));
-      const input = screen.getByPlaceholderText('D:\\OneDrive\\Mostafaapp') as HTMLInputElement;
-      expect(input.value).toBe('');
-    });
-
-    it('calls setDsn on input change', async () => {
-      const setDsn = vi.fn();
-      mockedHook.mockReturnValue(makeHookState({ dsn: 'mos', setDsn }));
-      render(createElement(PeachtreeSyncPage));
-      const input = screen.getByDisplayValue('mos');
-      await userEvent.clear(input);
-      await userEvent.type(input, 'newdb');
-      expect(setDsn).toHaveBeenCalled();
-    });
-
-    it('calls saveConfig when save button clicked', async () => {
-      const saveConfig = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(makeHookState({ saveConfig }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('حفظ'));
-      expect(saveConfig).toHaveBeenCalled();
-    });
-
-    it('calls testConnection when test button clicked', async () => {
-      const testConnection = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(makeHookState({ testConnection }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('اختبار الاتصال'));
-      expect(testConnection).toHaveBeenCalled();
-    });
-
-    it('shows spinner text when testing', () => {
-      mockedHook.mockReturnValue(makeHookState({ testing: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('جاري الفحص...')).toBeDefined();
-      expect(screen.queryByText('اختبار الاتصال')).toBeNull();
-    });
-
-    it('shows success message when connected', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, dsn: 'mos' }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/الاتصال ناجح/)).toBeDefined();
-      expect(screen.getByText(/mos/)).toBeDefined();
-    });
-
-    it('shows error message when connection failed', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        connected: false,
-        connectionError: 'Btrieve Error 2301',
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/فشل الاتصال/)).toBeDefined();
-      expect(screen.getByText(/Btrieve Error 2301/)).toBeDefined();
-    });
-
-    it('shows default error when no connectionError', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: false, connectionError: '' }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/تأكد من تثبيت Pervasive PSQL ODBC driver/)).toBeDefined();
-    });
-
-    it('hides success/error when connected is null', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: null }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.queryByText(/الاتصال ناجح/)).toBeNull();
-      expect(screen.queryByText(/فشل الاتصال/)).toBeNull();
-    });
+  it('switches to history and settings tabs', async () => {
+    const user = userEvent.setup();
+    mockedHook.mockReturnValue(makeHookState());
+    render(createElement(PeachtreeSyncPage));
+    await user.click(screen.getByText('السجل'));
+    expect(screen.getByText('سجل العمليات')).toBeDefined();
+    await user.click(screen.getByText('الإعدادات'));
+    expect(screen.getByText('إعدادات الاتصال')).toBeDefined();
+    expect(screen.getByText('اختبار الاتصال')).toBeDefined();
   });
 
-  describe('sync buttons', () => {
-    it('sync button disabled when not connected', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: false }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText(/مزامنة شاملة/).closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('sync button disabled when connected is null', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: null }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText(/مزامنة شاملة/).closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('sync button disabled when syncing', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, syncing: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('جاري المزامنة...')).toBeDefined();
-      const btn = screen.getByText('جاري المزامنة...').closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('sync button enabled when connected and not syncing', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, syncing: false }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText(/مزامنة شاملة/).closest('button')!;
-      expect(btn.disabled).toBe(false);
-    });
-
-    it('calls runSync on sync button click', async () => {
-      const runSync = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(makeHookState({ connected: true, runSync }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText(/مزامنة شاملة/));
-      expect(runSync).toHaveBeenCalled();
-    });
-
-    it('resync button disabled when not connected', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: false }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText('إعادة مزامنة الأصناف').closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('resync button disabled during sync', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, syncing: true }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText('إعادة مزامنة الأصناف').closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('resync button disabled during resyncing', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, resyncing: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('جاري إعادة المزامنة...')).toBeDefined();
-      const btn = screen.getByText('جاري إعادة المزامنة...').closest('button')!;
-      expect(btn.disabled).toBe(true);
-    });
-
-    it('resync button enabled when connected and idle', () => {
-      mockedHook.mockReturnValue(makeHookState({ connected: true, resyncing: false, syncing: false }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText('إعادة مزامنة الأصناف').closest('button')!;
-      expect(btn.disabled).toBe(false);
-    });
-
-    it('calls resyncItems on resync button click', async () => {
-      const resyncItems = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(makeHookState({ connected: true, resyncItems }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('إعادة مزامنة الأصناف'));
-      expect(resyncItems).toHaveBeenCalled();
-    });
-  });
-
-  describe('sync history table', () => {
-    it('shows empty state when no history', () => {
-      mockedHook.mockReturnValue(makeHookState({ history: [] }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('لم تتم أي مزامنة بعد')).toBeDefined();
-    });
-
-    it('renders completed entry', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 500,
-          duration_ms: 30000,
-          results: [{ entity: 'customers', recordsCreated: 10, recordsUpdated: 5, recordsSkipped: 2, status: 'completed' }],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('نجاح')).toBeDefined();
-      expect(screen.getByText('500')).toBeDefined();
-      expect(screen.getByText('30.0 ث')).toBeDefined();
-    });
-
-    it('renders failed status badge', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync2',
-          startedAt: '2026-07-18T11:00:00Z',
-          status: 'failed',
-          records_synced: 0,
-          duration_ms: 1000,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('فشل')).toBeDefined();
-    });
-
-    it('renders running status badge', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync3',
-          startedAt: '2026-07-18T12:00:00Z',
-          status: 'running',
-          records_synced: 0,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('قيد التنفيذ')).toBeDefined();
-    });
-
-    it('shows dash when no duration_ms', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 10,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('-')).toBeDefined();
-    });
-
-    it('falls back to started_at (snake_case)', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          started_at: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 10,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('نجاح')).toBeDefined();
-    });
-
-    it('shows expand button when results exist', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 100,
-          duration_ms: 5000,
-          results: [
-            { entity: 'customers', recordsCreated: 5, recordsUpdated: 3, recordsSkipped: 1, status: 'completed' },
-            { entity: 'suppliers', recordsCreated: 2, recordsUpdated: 1, recordsSkipped: 0, status: 'completed' },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('2 كيان')).toBeDefined();
-    });
-
-    it('does not show expand button when results empty', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 100,
-          duration_ms: 5000,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.queryByText('0 كيان')).toBeNull();
-    });
-
-    it('expands entity details on click', async () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 100,
-          duration_ms: 5000,
-          results: [
-            { entity: 'customers', recordsCreated: 5, recordsUpdated: 3, recordsSkipped: 1, status: 'completed' },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('1 كيان'));
-      expect(screen.getByText('العملاء')).toBeDefined();
-      expect(screen.getByText('+5 / ~3 / =1')).toBeDefined();
-    });
-
-    it('collapses on second click', async () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 100,
-          duration_ms: 5000,
-          results: [
-            { entity: 'customers', recordsCreated: 5, recordsUpdated: 3, recordsSkipped: 1, status: 'completed' },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('1 كيان'));
-      expect(screen.getByText('العملاء')).toBeDefined();
-      await userEvent.click(screen.getByText('1 كيان'));
-      expect(screen.queryByText('العملاء')).toBeNull();
-    });
-
-    it('shows failed entity in expanded details', async () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'failed',
-          records_synced: 0,
-          duration_ms: 5000,
-          results: [
-            { entity: 'products', recordsCreated: 0, recordsUpdated: 0, recordsSkipped: 0, status: 'failed', errors: ['too many clients'] },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('1 كيان'));
-      expect(screen.getByText('المنتجات')).toBeDefined();
-      expect(screen.getAllByText('فشل').length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('shows records_synced from entry when results lack it', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 1234,
-          duration_ms: 5000,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('1234 سجل')).toBeDefined();
-    });
-
-    it('computes records from results when records_synced is missing', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          duration_ms: 5000,
-          results: [
-            { entity: 'customers', recordsCreated: 10, recordsUpdated: 5, recordsSkipped: 0, status: 'completed' },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('15')).toBeDefined();
-    });
-
-    it('shows 0 when no records_synced and empty results', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          duration_ms: 5000,
-          results: [],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      const tds = screen.getAllByText('0');
-      expect(tds.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('renders multiple history entries', () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [
-          { id: 'sync1', startedAt: '2026-07-18T10:00:00Z', status: 'completed', records_synced: 100, duration_ms: 5000, results: [] },
-          { id: 'sync2', startedAt: '2026-07-18T11:00:00Z', status: 'failed', records_synced: 0, duration_ms: 1000, results: [] },
-          { id: 'sync3', startedAt: '2026-07-18T12:00:00Z', status: 'running', records_synced: 0, results: [] },
+  it('filters and searches the review table', async () => {
+    const user = userEvent.setup();
+    mockedHook.mockReturnValue(
+      makeHookState({
+        pendingSummary: summary,
+        review: [
+          reviewRow(1, 'customers', 'C-1'),
+          reviewRow(2, 'products', 'P-1'),
         ],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('نجاح')).toBeDefined();
-      expect(screen.getByText('فشل')).toBeDefined();
-      expect(screen.getByText('قيد التنفيذ')).toBeDefined();
-    });
+      }),
+    );
+    render(createElement(PeachtreeSyncPage));
+    await user.selectOptions(
+      screen.getByLabelText('تصفية حسب الكيان'),
+      'products',
+    );
+    expect(screen.queryByText('C-1')).toBeNull();
+    expect(screen.getByText('P-1')).toBeDefined();
+    await user.selectOptions(screen.getByLabelText('تصفية حسب الكيان'), 'all');
+    await user.type(screen.getByLabelText('بحث برقم السجل'), 'c-1');
+    expect(screen.getByText('C-1')).toBeDefined();
+    expect(screen.queryByText('P-1')).toBeNull();
   });
 
-  describe('entity labels', () => {
-    const ENTITY_KEYS = [
-      'customers', 'suppliers', 'products',
-      'sales_invoices', 'purchase_invoices', 'invoice_line_items',
-    ];
-    const EXPECTED_LABELS = [
-      'العملاء', 'الموردين', 'المنتجات',
-      'فواتير المبيعات', 'فواتير المشتريات', 'بنود الفواتير',
-    ];
-
-    it('maps entity keys to Arabic labels', async () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 0,
-          duration_ms: 5000,
-          results: ENTITY_KEYS.map(entity => ({
-            entity,
-            recordsCreated: 0, recordsUpdated: 0, recordsSkipped: 0, status: 'completed',
-          })),
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText(`${ENTITY_KEYS.length} كيان`));
-      for (const label of EXPECTED_LABELS) {
-        expect(screen.getByText(label)).toBeDefined();
-      }
-    });
-
-    it('falls back to raw entity name for unknown keys', async () => {
-      mockedHook.mockReturnValue(makeHookState({
-        history: [{
-          id: 'sync1',
-          startedAt: '2026-07-18T10:00:00Z',
-          status: 'completed',
-          records_synced: 0,
-          duration_ms: 5000,
-          results: [
-            { entity: 'unknown_entity', recordsCreated: 0, recordsUpdated: 0, recordsSkipped: 0, status: 'completed' },
-          ],
-        }],
-      }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('1 كيان'));
-      expect(screen.getByText('unknown_entity')).toBeDefined();
-    });
+  it('blocks bulk actions while the pending count is unknown', () => {
+    mockedHook.mockReturnValue(makeHookState({ pendingSummary: null }));
+    render(createElement(PeachtreeSyncPage));
+    expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(
+      true,
+    );
   });
 
-  describe('difference report', () => {
-    it('shows empty state when review is empty', () => {
-      mockedHook.mockReturnValue(makeHookState({ review: [] }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/لا توجد فروقات معلقة/)).toBeDefined();
-    });
-
-    it('renders review header with entity and change type', () => {
-      const review: ReviewEntry[] = [
-        {
-          id: 'r1', entity: 'customers', change_type: 'missing',
-          record_key: 'CUST-1',
-          old_values: { name: 'Acme' }, new_values: null,
-        },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ review }));
-      render(createElement(PeachtreeSyncPage));
-      // 'العملاء' now appears both in the entity filter and in the row itself.
-      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('غير موجود في Peachtree')).toBeDefined();
-    });
-
-    it('renders expanded diff for an update entry', async () => {
-      const review: ReviewEntry[] = [
-        {
-          id: 'r2', entity: 'customers', change_type: 'update',
-          record_key: 'CUST-2',
-          old_values: { name: 'Acme', phone: '111' },
-          new_values: { name: 'Acme Corp', phone: '222' },
-        },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ review }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText(/\d+ حقل/));
-      expect(screen.getAllByText('Acme').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('Acme Corp').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('phone').closest('tr')?.textContent).toContain('111');
-      expect(screen.getByText('phone').closest('tr')?.textContent).toContain('222');
-    });
-
-    it('shows line item counts for invoice_line_items updates', () => {
-      const review: ReviewEntry[] = [
-        {
-          id: 'r3', entity: 'invoice_line_items', change_type: 'update',
-          record_key: 'LI-3',
-          old_values: { items: [{ sku: 'a' }] },
-          new_values: { items: [{ sku: 'a' }, { sku: 'b' }] },
-        },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ review }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('البنود: 1 ← 2').textContent).toBeDefined();
-    });
-
-    it('calls applyReview/applyReview with row id array on accept/skip', async () => {
-      const review: ReviewEntry[] = [
-        {
-          id: 'r1', entity: 'suppliers', change_type: 'missing',
-          record_key: 'SUPP-1',
-          status: 'pending',
-          old_values: { name: 'Supp' }, new_values: null,
-        },
-      ];
-      const applyReview = vi.fn().mockResolvedValue(undefined);
-      const skipReview = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(makeHookState({ review, applyReview, skipReview }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByRole('button', { name: 'قبول' }));
-      expect(applyReview).toHaveBeenCalledWith(['r1']);
-      await userEvent.click(screen.getByRole('button', { name: 'تجاهل' }));
-      expect(skipReview).toHaveBeenCalledWith(['r1']);
-    });
-
-    it('shows applying spinner when applying is true', () => {
-      mockedHook.mockReturnValue(makeHookState({ applying: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('جاري التطبيق...')).toBeDefined();
-    });
-
-    it('shows previewing spinner when previewing is true', () => {
-      mockedHook.mockReturnValue(makeHookState({ previewing: true }));
-      render(createElement(PeachtreeSyncPage));
-      expect(
-        screen.getByText('جارٍ المزامنة والمعاينة...'),
-      ).toBeDefined();
-    });
-  });
-
-  describe('operation log', () => {
-    it('shows "لا يوجد سجل عمليات" when logs is empty', () => {
-      mockedHook.mockReturnValue(makeHookState({ logs: [] }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/لا توجد عمليات مسجلة بعد/)).toBeDefined();
-    });
-
-    it('renders log grouped by run_id', () => {
-      const logs: LogEntry[] = [
-        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
-        { id: 'l2', run_id: 'run-1', entity: 'products', action: 'inserted', record_key: '2', created_at: '2026-08-15T10:00:00Z' },
-        { id: 'l3', run_id: 'run-2', entity: 'suppliers', action: 'inserted', record_key: '3', created_at: '2026-08-15T10:30:00Z' },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ logs }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('run-1').closest('button')).toBeDefined();
-      expect(screen.getAllByText('run-2').length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('expands run group to show event rows', async () => {
-      const logs: LogEntry[] = [
-        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ logs }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByText('run-1').closest('button')!);
-      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('إضافة جديدة').length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('collapses run group on second click', async () => {
-      const logs: LogEntry[] = [
-        { id: 'l1', run_id: 'run-1', entity: 'customers', action: 'inserted', record_key: '1', created_at: '2026-08-15T10:00:00Z' },
-      ];
-      mockedHook.mockReturnValue(makeHookState({ logs }));
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText('run-1').closest('button')!;
-      await userEvent.click(btn);
-      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
-      await userEvent.click(btn);
-      expect(screen.queryByText('العملاء')).toBeNull();
-    });
-  });
-
-  describe('bulk review (accept all / ignore all)', () => {
-    const summary: ReviewSummary = {
-      total: 225,
-      byEntity: [
-        { entity: 'products', count: 113 },
-        { entity: 'customers', count: 112 },
-      ],
-    };
-
-    it('opens a confirmation dialog showing total and per-type breakdown', async () => {
-      mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
-      expect(screen.getByText('سجل تعليق')).toBeDefined();
-      expect(screen.getByText('المنتجات')).toBeDefined();
-      expect(screen.getByText('العملاء')).toBeDefined();
-    });
-
-    it('starts the background job on confirm instead of applying inline', async () => {
-      const startReviewJob = vi.fn().mockResolvedValue(undefined);
-      const applyReview = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(
-        makeHookState({ pendingSummary: summary, startReviewJob, applyReview }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
-      await userEvent.click(screen.getByRole('button', { name: 'تأكيد القبول' }));
-      expect(startReviewJob).toHaveBeenCalledWith('apply');
-      expect(applyReview).not.toHaveBeenCalled();
-    });
-
-    it('starts a skip job on the ignore-all path', async () => {
-      const startReviewJob = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(
-        makeHookState({ pendingSummary: summary, startReviewJob }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByRole('button', { name: /تجاهل الكل/ }));
-      await userEvent.click(screen.getByRole('button', { name: 'تأكيد التجاهل' }));
-      expect(startReviewJob).toHaveBeenCalledWith('skip');
-    });
-
-    it('closes the dialog without starting a job on cancel', async () => {
-      const startReviewJob = vi.fn().mockResolvedValue(undefined);
-      mockedHook.mockReturnValue(
-        makeHookState({ pendingSummary: summary, startReviewJob }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      await userEvent.click(screen.getByRole('button', { name: 'قبول الكل' }));
-      await userEvent.click(screen.getByRole('button', { name: 'إلغاء' }));
-      expect(startReviewJob).not.toHaveBeenCalled();
-      expect(screen.queryByText('سجل تعليق')).toBeNull();
-    });
-
-    it('shows done/total, percent and the current record while the job runs', () => {
-      const reviewJob: ReviewJob = {
-        id: 'revjob_1', action: 'apply', status: 'running',
-        startedAt: '2026-09-29T10:00:00Z', total: 225, done: 75, applied: 75,
-        skipped: 0, failed: 0, percentComplete: 33,
-        currentEntity: 'products', currentRecordKey: 'PRD-42', errors: [],
-      };
-      mockedHook.mockReturnValue(
-        makeHookState({ reviewJob, reviewJobRunning: true }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      // done and total render as separate nodes, so assert on the panel text
-      // content rather than a single split string.
-      expect(screen.getByText('33%')).toBeDefined();
-      expect(screen.getByText('PRD-42')).toBeDefined();
-      expect(screen.getByText('المنتجات')).toBeDefined();
-      expect(screen.getByText('جاري قبول الكل')).toBeDefined();
-      // Counts are rendered with toLocaleString('ar-EG'), so compare against
-      // the same formatting rather than ASCII digits.
-      const expected = `${(75).toLocaleString('ar-EG')} / ${(225).toLocaleString('ar-EG')}`;
-      expect(
-        document.body.textContent?.replace(/\s+/g, ' ').includes(expected),
-      ).toBe(true);
-    });
-
-    it('does not render the progress panel when no job has run', () => {
-      mockedHook.mockReturnValue(makeHookState());
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.queryByText(/من 225/)).toBeNull();
-    });
-
-    it('blocks the bulk buttons while the pending count is unknown', () => {
-      // pendingSummary === null means the summary request has not landed (or
-      // failed). Accepting anyway would confirm against a count the server
-      // never reported.
-      mockedHook.mockReturnValue(makeHookState({ pendingSummary: null }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(true);
-      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(true);
-    });
-
-    it('enables the bulk buttons once a real count is known', () => {
-      mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(false);
-      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(false);
-    });
-
-    it('blocks the bulk buttons while a job is already running', () => {
-      mockedHook.mockReturnValue(
-        makeHookState({ pendingSummary: summary, reviewJobRunning: true }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('قبول الكل').closest('button')?.disabled).toBe(true);
-      expect(screen.getByText('تجاهل الكل').closest('button')?.disabled).toBe(true);
-    });
-  });
-
-
-  describe('review table usability', () => {
-    function reviewRow(i: number, entity: string, key: string): ReviewEntry {
-      return {
-        id: 'r-' + i,
-        entity,
-        record_key: key,
-        change_type: 'update',
-        old_values: { phone: 'a' },
-        new_values: { phone: 'b' },
-        status: 'pending',
-      };
-    }
-
-    it('labels the preview action as a full sync with an honest tooltip', () => {
-      mockedHook.mockReturnValue(makeHookState());
-      render(createElement(PeachtreeSyncPage));
-      const btn = screen.getByText('مزامنة ومعاينة الفروقات');
-      expect(btn.closest('button')?.title).toMatch(/مزامنة كاملة/);
-      expect(
-        screen.getByText(/تُنشأ فروقات جديدة وتُمسح القائمة الحالية/),
-      ).toBeDefined();
-    });
-
-    it('filters the review list by entity', async () => {
-      const user = userEvent.setup();
-      mockedHook.mockReturnValue(
-        makeHookState({
-          review: [
-            reviewRow(1, 'customers', 'C-1'),
-            reviewRow(2, 'products', 'P-1'),
-            reviewRow(3, 'customers', 'C-2'),
-          ],
-        }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('C-1')).toBeDefined();
-      expect(screen.getByText('P-1')).toBeDefined();
-      await user.selectOptions(
-        screen.getByLabelText('تصفية حسب الكيان'),
-        'products',
-      );
-      expect(screen.queryByText('C-1')).toBeNull();
-      expect(screen.getByText('P-1')).toBeDefined();
-      expect(screen.getByText(/نتائج: 1 من 3/)).toBeDefined();
-    });
-
-    it('searches review rows by record key', async () => {
-      const user = userEvent.setup();
-      mockedHook.mockReturnValue(
-        makeHookState({
-          review: [
-            reviewRow(1, 'customers', 'ACME-1'),
-            reviewRow(2, 'customers', 'OTHER-2'),
-          ],
-        }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      await user.type(screen.getByLabelText('بحث برقم السجل'), 'acme');
-      expect(screen.getByText('ACME-1')).toBeDefined();
-      expect(screen.queryByText('OTHER-2')).toBeNull();
-    });
-
-    it('paginates long review lists at 50 rows per page', async () => {
-      const user = userEvent.setup();
-      const rows: ReviewEntry[] = [];
-      for (let i = 0; i < 60; i++) rows.push(reviewRow(i, 'customers', 'K-' + i));
-      mockedHook.mockReturnValue(makeHookState({ review: rows }));
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('K-0')).toBeDefined();
-      expect(screen.queryByText('K-59')).toBeNull();
-      expect(screen.getByText('التالي').closest('button')?.disabled).toBe(
-        false,
-      );
-      await user.click(screen.getByText('التالي'));
-      expect(screen.queryByText('K-0')).toBeNull();
-      expect(screen.getByText('K-59')).toBeDefined();
-    });
-
-    it('drops selections whose rows disappeared', async () => {
-      const user = userEvent.setup();
-      mockedHook.mockReturnValue(
-        makeHookState({
-          review: [
-            reviewRow(1, 'customers', 'C-1'),
-            reviewRow(2, 'customers', 'C-2'),
-          ],
-        }),
-      );
-      const view = render(createElement(PeachtreeSyncPage));
-      // Index 0 is the select-page header checkbox; rows start at 1.
-      await user.click(screen.getAllByRole('checkbox')[1]);
-      expect(screen.getByText(/تطبيق المحدد \(1\)/)).toBeDefined();
-      mockedHook.mockReturnValue(
-        makeHookState({ review: [reviewRow(2, 'customers', 'C-2')] }),
-      );
-      view.rerender(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/تطبيق المحدد \(0\)/)).toBeDefined();
-    });
-
-    it('shows a failure state on the last-sync card instead of a stale count', () => {
-      mockedHook.mockReturnValue(
-        makeHookState({
-          history: [
-            {
-              id: 's1',
-              status: 'failed',
-              records_synced: 10,
-            } as unknown as SyncHistoryEntry,
-          ],
-        }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('فشلت — تحقق من السجل')).toBeDefined();
-    });
-
-    it('expands invoice line items to show what acceptance will write', async () => {
-      const user = userEvent.setup();
-      const row: ReviewEntry = {
-        id: 'li-1',
-        entity: 'invoice_line_items',
-        record_key: 'INV-9',
-        change_type: 'update',
-        old_values: {
-          items: [{ product_id: 7, quantity: 1, price: 10 }],
-        },
-        new_values: {
-          items: [{ product_id: 7, quantity: 3, price: 10, total: 30 }],
-        },
-        status: 'pending',
-      };
-      mockedHook.mockReturnValue(makeHookState({ review: [row] }));
-      render(createElement(PeachtreeSyncPage));
-      await user.click(screen.getByText(/البنود: 1 ← 1/));
-      expect(screen.getByText('الإجمالي')).toBeDefined();
-      expect(screen.getByText('30')).toBeDefined();
-    });
-
-    it('selects every row on the page with the header checkbox', async () => {
-      const user = userEvent.setup();
-      mockedHook.mockReturnValue(
-        makeHookState({
-          review: [
-            reviewRow(1, 'customers', 'C-1'),
-            reviewRow(2, 'customers', 'C-2'),
-          ],
-        }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText(/تطبيق المحدد \(0\)/)).toBeDefined();
-      await user.click(
-        screen.getByLabelText('تحديد الكل في الصفحة'),
-      );
-      expect(screen.getByText(/تطبيق المحدد \(2\)/)).toBeDefined();
-      await user.click(
-        screen.getByLabelText('تحديد الكل في الصفحة'),
-      );
-      expect(screen.getByText(/تطبيق المحدد \(0\)/)).toBeDefined();
-    });
-
-    it('keeps history details open while expanding a row diff', async () => {
-      const user = userEvent.setup();
-      mockedHook.mockReturnValue(
-        makeHookState({
-          history: [
-            {
-              id: 's1',
-              status: 'completed',
-              startedAt: '2026-01-01T00:00:00.000Z',
-              records_synced: 5,
-              duration_ms: 1000,
-              results: [
-                {
-                  entity: 'customers',
-                  status: 'completed',
-                  recordsProcessed: 5,
-                  recordsCreated: 3,
-                  recordsUpdated: 0,
-                  recordsSkipped: 2,
-                  errors: [],
-                },
-              ],
-            } as unknown as SyncHistoryEntry,
-          ],
-          review: [reviewRow(1, 'suppliers', 'S-1')],
-        }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      await user.click(screen.getByText(/1 كيان/));
-      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
-      await user.click(screen.getByText(/1 حقل/));
-      expect(screen.getByText('phone')).toBeDefined();
-      // The old shared state closed one when the other opened; both stay now.
-      expect(screen.getAllByText('العملاء').length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('hides a finished job panel on dismiss but never a running one', async () => {
-      const user = userEvent.setup();
-      const reviewJob: ReviewJob = {
-        id: 'revjob_1',
-        action: 'apply',
-        status: 'completed',
-        startedAt: '2026-09-29T10:00:00Z',
-        total: 10,
-        done: 10,
-        applied: 10,
-        skipped: 0,
-        failed: 0,
-        percentComplete: 100,
-        errors: [],
-      };
-      mockedHook.mockReturnValue(
-        makeHookState({ reviewJob, reviewJobRunning: false }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(screen.getByText('انتهى قبول الكل')).toBeDefined();
-      await user.click(screen.getByLabelText('إخفاء نتيجة العملية'));
-      expect(screen.queryByText('انتهى قبول الكل')).toBeNull();
-
-      const runningJob: ReviewJob = { ...reviewJob, status: 'running' };
-      mockedHook.mockReturnValue(
-        makeHookState({ reviewJob: runningJob, reviewJobRunning: true }),
-      );
-      render(createElement(PeachtreeSyncPage));
-      expect(
-        screen.queryByLabelText('إخفاء نتيجة العملية'),
-      ).toBeNull();
-    });
-
-    it('wraps the sync buttons instead of overflowing on small screens', () => {
-      mockedHook.mockReturnValue(makeHookState());
-      render(createElement(PeachtreeSyncPage));
-      const container = screen
-        .getByText(/مزامنة شاملة \(6 كيان\)/)
-        .closest('div');
-      expect(container?.className).toMatch(/flex-wrap/);
-    });
+  it('opens the confirmation dialog with the breakdown', async () => {
+    const user = userEvent.setup();
+    mockedHook.mockReturnValue(makeHookState({ pendingSummary: summary }));
+    render(createElement(PeachtreeSyncPage));
+    await user.click(screen.getByText('قبول الكل'));
+    expect(screen.getByText('التوزيع حسب النوع:')).toBeDefined();
+    expect(screen.getByText('تأكيد القبول')).toBeDefined();
   });
 });

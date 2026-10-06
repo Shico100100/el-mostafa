@@ -1,349 +1,195 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
-import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
-import type { ReviewEntry, LogEntry } from '@/hooks/peachtree-sync/usePeachtreeSync';
-import { BulkReviewDialog, ReviewJobProgress } from '@/components/peachtree-sync/BulkReviewDialog';
+import { useState } from 'react';
 import {
-  Link2, Play, CheckCircle2, XCircle, RefreshCw, Database, Settings,
-  Users, Truck, Package, FileText, ChevronDown, ChevronUp, ListChecks, ClipboardList,
-  Check, EyeOff,
+  Link2,
+  ListChecks,
+  Play,
+  ClipboardList,
+  Settings,
+  EyeOff,
   type LucideIcon,
 } from 'lucide-react';
+import { usePeachtreeSync } from '@/hooks/peachtree-sync/usePeachtreeSync';
+import {
+  BulkReviewDialog,
+  ReviewJobProgress,
+} from '@/components/peachtree-sync/BulkReviewDialog';
+import { ReviewTable } from '@/components/peachtree-sync/ReviewTable';
+import { SyncPanel } from '@/components/peachtree-sync/SyncPanel';
+import { ActivityPanel } from '@/components/peachtree-sync/ActivityPanel';
+import { SettingsPanel } from '@/components/peachtree-sync/SettingsPanel';
 
-const ENTITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
-  customers: { label: 'العملاء', icon: Users, color: 'text-emerald-400' },
-  suppliers: { label: 'الموردين', icon: Truck, color: 'text-orange-400' },
-  products: { label: 'المنتجات', icon: Package, color: 'text-green-400' },
-  sales_invoices: { label: 'فواتير المبيعات', icon: FileText, color: 'text-emerald-400' },
-  purchase_invoices: { label: 'فواتير المشتريات', icon: FileText, color: 'text-rose-400' },
-  invoice_line_items: { label: 'بنود الفواتير', icon: Package, color: 'text-teal-400' },
-};
+type TabId = 'review' | 'sync' | 'history' | 'settings';
 
-const REVIEW_PAGE_SIZE = 50;
-
-const ACTION_LABELS: Record<string, string> = {
-  inserted: 'إضافة جديدة',
-  different: 'اختلاف',
-  skipped: 'مطابق',
-  missing: 'غير موجود في Peachtree',
-  updated: 'تم التحديث',
-  skipped_review: 'تم التجاهل',
-};
-
-function reviewDiff(entry: ReviewEntry): { field: string; old: string; new: string }[] {
-  const oldV = entry.old_values || {};
-  const newV = entry.new_values || {};
-  const keys = new Set([...Object.keys(oldV), ...Object.keys(newV)]);
-  const out: { field: string; old: string; new: string }[] = [];
-  for (const k of keys) {
-    if (k === 'items' || k === 'kind') continue;
-    const o = JSON.stringify(oldV[k] ?? '');
-    const n = JSON.stringify(newV[k] ?? '');
-    if (o !== n) out.push({ field: k, old: String(oldV[k] ?? ''), new: String(newV[k] ?? '') });
-  }
-  return out;
-}
+const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
+  { id: 'review', label: 'المراجعة', icon: ListChecks },
+  { id: 'sync', label: 'المزامنة', icon: Play },
+  { id: 'history', label: 'السجل', icon: ClipboardList },
+  { id: 'settings', label: 'الإعدادات', icon: Settings },
+];
 
 export default function PeachtreeSyncPage() {
   const h = usePeachtreeSync();
-  const [expandedSync, setExpandedSync] = useState<string | null>(null);
-  const [syncingInvoices, setSyncingInvoices] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<Set<string>>(new Set());
-  const [expandedRun, setExpandedRun] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabId>('review');
   const [bulkAction, setBulkAction] = useState<'apply' | 'skip' | null>(null);
-  const [expandedDiffId, setExpandedDiffId] = useState<string | null>(null);
-  const [expandedItemsId, setExpandedItemsId] = useState<string | null>(null);
   const [dismissedJobId, setDismissedJobId] = useState<string | null>(null);
-  const [reviewEntityFilter, setReviewEntityFilter] = useState<string>('all');
-  const [reviewSearch, setReviewSearch] = useState('');
-  const [reviewPage, setReviewPage] = useState(0);
 
-  // Selections point at review ids, which vanish on accept and are wiped by
-  // every fresh sync — prune dead ones instead of acting on stale ids.
-  const reviewIds = useMemo(() => new Set(h.review.map((e) => e.id)), [h.review]);
-  useEffect(() => {
-    setSelectedReview((prev) => {
-      let changed = false;
-      const next = new Set<string>();
-      for (const id of prev) {
-        if (reviewIds.has(id)) next.add(id);
-        else changed = true;
-      }
-      return changed ? next : prev;
-    });
-  }, [reviewIds]);
-
-  const filteredReview = useMemo(() => {
-    const q = reviewSearch.trim().toLowerCase();
-    return h.review.filter(
-      (e) =>
-        (reviewEntityFilter === 'all' || e.entity === reviewEntityFilter) &&
-        (q === '' || e.record_key.toLowerCase().includes(q)),
+  if (h.loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
+        <div className="text-white text-xl">جاري التحميل...</div>
+      </div>
     );
-  }, [h.review, reviewEntityFilter, reviewSearch]);
-  const reviewPageCount = Math.max(
-    1,
-    Math.ceil(filteredReview.length / REVIEW_PAGE_SIZE),
-  );
-  const safeReviewPage = Math.min(reviewPage, reviewPageCount - 1);
-  const pagedReview = filteredReview.slice(
-    safeReviewPage * REVIEW_PAGE_SIZE,
-    (safeReviewPage + 1) * REVIEW_PAGE_SIZE,
-  );
-  const allPageSelected =
-    pagedReview.length > 0 &&
-    pagedReview.every((e) => selectedReview.has(e.id));
-  const somePageSelected = pagedReview.some((e) => selectedReview.has(e.id));
-  const togglePageSelection = () => {
-    setSelectedReview((prev) => {
-      const next = new Set(prev);
-      if (allPageSelected) {
-        for (const e of pagedReview) next.delete(e.id);
-      } else {
-        for (const e of pagedReview) next.add(e.id);
-      }
-      return next;
-    });
-  };
-  useEffect(() => {
-    setReviewPage(0);
-  }, [reviewEntityFilter, reviewSearch, h.review.length]);
 
-  const handleSyncInvoices = async () => {
-    setSyncingInvoices(true);
-    try {
-      await h.syncInvoices(['sales_invoices', 'purchase_invoices']);
-    } finally {
-      setSyncingInvoices(false);
-    }
-  };
-
-  if (h.loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0f0d]">
-      <div className="text-white text-xl">جاري التحميل...</div>
-    </div>
-  );
+  const pendingTotal = h.pendingSummary?.total ?? 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]" dir="rtl">
+    <div
+      className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0f1714] to-[#0a0f0d]"
+      dir="rtl"
+    >
       <div className="container mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-          <Link2 className="w-8 h-8 text-sky-400" />ربط Peachtree
+          <Link2 className="w-8 h-8 text-sky-400" />
+          ربط Peachtree
         </h1>
-        <p className="text-[#6b8378] mb-8">مزامنة البيانات مع Peachtree Quantum — {Object.keys(ENTITY_LABELS).length} كيان</p>
+        <p className="text-[#6b8378] mb-6">
+          مزامنة البيانات مع Peachtree Quantum — مراجعة ثم تنفيذ
+        </p>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`w-3 h-3 rounded-full ${h.connected === true ? 'bg-green-500' : h.connected === false ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`} />
-              <span className="text-[#6b8378] text-sm">الاتصال</span>
+        {/* Status strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl px-4 py-3 flex items-center gap-3">
+            <div
+              className={`w-3 h-3 rounded-full shrink-0 ${h.connected === true ? 'bg-green-500' : h.connected === false ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`}
+            />
+            <div>
+              <p className="text-[#6b8378] text-xs">الاتصال</p>
+              <p className="text-white font-semibold text-sm">
+                {h.connected === true
+                  ? 'متصل'
+                  : h.connected === false
+                    ? 'غير متصل'
+                    : 'لم يتم الفحص'}
+              </p>
             </div>
-            <p className="text-white font-bold">{h.connected === true ? 'متصل' : h.connected === false ? 'غير متصل' : 'لم يتم الفحص'}</p>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
-            <p className="text-[#6b8378] text-sm mb-2">عمليات المزامنة</p>
-            <p className="text-white font-bold text-2xl">{h.history.length}</p>
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl px-4 py-3">
+            <p className="text-[#6b8378] text-xs">فروقات معلقة</p>
+            <p className="text-white font-bold text-xl tabular-nums">
+              {h.pendingSummary
+                ? pendingTotal.toLocaleString('ar-EG')
+                : '—'}
+            </p>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
-            <p className="text-[#6b8378] text-sm mb-2">جداول Peachtree</p>
-            <p className="text-white font-bold text-2xl">{h.tables.length}</p>
-          </div>
-          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
-            <p className="text-[#6b8378] text-sm mb-2">آخر مزامنة</p>
-            <p className="text-white font-bold text-lg">
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl px-4 py-3">
+            <p className="text-[#6b8378] text-xs">آخر مزامنة</p>
+            <p className="text-white font-semibold text-sm">
               {h.history.length === 0
-                ? '-'
+                ? '—'
                 : h.history[0].status === 'completed'
                   ? `${h.history[0].records_synced ?? '-'} سجل`
                   : h.history[0].status === 'failed'
-                    ? 'فشلت — تحقق من السجل'
+                    ? 'فشلت'
                     : 'جارية...'}
             </p>
           </div>
-        </div>
-
-        {/* Connection Config */}
-        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-            <Settings className="w-5 h-5 text-sky-400" />إعدادات الاتصال
-          </h2>
-          <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1 w-full">
-              <label className="text-[#6b8378] text-sm">DSN / مسار قاعدة البيانات</label>
-              <input
-                type="text"
-                value={h.dsn}
-                onChange={e => h.setDsn(e.target.value)}
-                placeholder="D:\OneDrive\Mostafaapp"
-                className="w-full mt-1 px-4 py-3 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white font-mono text-sm"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={h.saveConfig}
-                className="px-6 py-3 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition whitespace-nowrap"
-              >
-                حفظ
-              </button>
-              <button
-                onClick={h.testConnection}
-                disabled={h.testing}
-                className="px-6 py-3 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition whitespace-nowrap flex items-center gap-2"
-              >
-                {h.testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-                <span>{h.testing ? 'جاري الفحص...' : 'اختبار الاتصال'}</span>
-              </button>
-            </div>
-          </div>
-          {h.connected === true && (
-            <p className="text-green-400 text-sm mt-3 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />الاتصال ناجح — DSN: {h.dsn}
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl px-4 py-3">
+            <p className="text-[#6b8378] text-xs">عملية جماعية</p>
+            <p className="text-white font-semibold text-sm">
+              {h.reviewJobRunning && h.reviewJob
+                ? `جارية ${h.reviewJob.percentComplete}%`
+                : h.reviewJob
+                  ? 'انتهت'
+                  : 'لا يوجد'}
             </p>
-          )}
-          {h.connected === false && (
-            <p className="text-red-400 text-sm mt-3 flex items-center gap-2">
-              <XCircle className="w-4 h-4" />فشل الاتصال — {h.connectionError || 'تأكد من تثبيت Pervasive PSQL ODBC driver'}
-            </p>
-          )}
-        </div>
-
-        {/* Sync Button */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <button
-            onClick={() => h.runSync('full')}
-            disabled={h.syncing || h.connected !== true}
-            title="مزامنة شاملة لكل الكيانات الستة من Peachtree — قد تستغرق عدة دقائق"
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
-              h.syncing || h.connected !== true
-                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
-                : 'bg-gradient-to-r from-sky-600 to-emerald-600 text-white hover:from-sky-700 hover:to-emerald-700'
-            }`}
-          >
-            {h.syncing ? (
-              <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5 animate-spin" />جاري المزامنة...</span>
-            ) : (
-              <span className="flex items-center gap-2"><Play className="w-5 h-5" />مزامنة شاملة ({Object.keys(ENTITY_LABELS).length} كيان)</span>
-            )}
-          </button>
-          <button
-            onClick={h.resyncItems}
-            disabled={h.resyncing || h.syncing || h.connected !== true}
-            title="إعادة بناء بنود الفواتير فقط من Peachtree — لا يمس العملاء أو المنتجات"
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
-              h.resyncing || h.syncing || h.connected !== true
-                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700'
-            }`}
-          >
-            {h.resyncing ? (
-              <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5 animate-spin" />جاري إعادة المزامنة...</span>
-            ) : (
-              <span className="flex items-center gap-2"><Package className="w-5 h-5" />إعادة مزامنة الأصناف</span>
-            )}
-          </button>
-          <button
-            onClick={() => h.runIncrementalSync()}
-            disabled={h.syncing || h.connected !== true}
-            title="مزامنة ذكية: تتخطى الكيانات التي لم يتغير عدد سجلاتها منذ آخر مزامنة"
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
-              h.syncing || h.connected !== true
-                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700'
-            }`}
-          >
-            <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5" />إعادة مزامنة ذكية</span>
-          </button>
-          <button
-            onClick={handleSyncInvoices}
-            disabled={syncingInvoices || h.syncing || h.connected !== true}
-            title="مزامنة فواتير المبيعات والمشتريات فقط — لا يمس العملاء أو المنتجات"
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition flex items-center gap-3 ${
-              syncingInvoices || h.syncing || h.connected !== true
-                ? 'bg-[#16241d] text-[#6b8378] cursor-not-allowed'
-                : 'bg-gradient-to-r from-violet-600 to-teal-600 text-white hover:from-violet-700 hover:to-teal-600'
-            }`}
-          >
-            {syncingInvoices ? (
-              <span className="flex items-center gap-2"><RefreshCw className="w-5 h-5 animate-spin" />جاري مزامنة الفواتير...</span>
-            ) : (
-              <span className="flex items-center gap-2"><FileText className="w-5 h-5" />مزامنة الفواتير فقط</span>
-            )}
-          </button>
-        </div>
-
-        {/* Sync Progress Bar */}
-        {(h.syncing || h.resyncing || h.previewing) && (
-          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-white font-semibold flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
-                {h.previewing ? 'جاري المعاينة' : 'جاري المزامنة'} — {h.syncPercent}%
-              </span>
-              <span className="text-[#6b8378] text-sm">
-                {h.syncEntity && ENTITY_LABELS[h.syncEntity]
-                  ? ENTITY_LABELS[h.syncEntity].label
-                  : h.syncEntity || 'جاري التجهيز...'}
-              </span>
-            </div>
-            <div className="w-full h-3 bg-[#121a16] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${h.syncPercent}%` }}
-              />
-            </div>
           </div>
-        )}
+        </div>
 
-        {/* Review Differences */}
-        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <ListChecks className="w-5 h-5 text-emerald-400" />تقرير الفروقات
-            </h2>
-            <div className="flex flex-wrap gap-2 md:mr-auto">
-               <button
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-[#1f2d26] overflow-x-auto">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-5 py-3 font-semibold text-sm flex items-center gap-2 whitespace-nowrap transition border-b-2 -mb-px ${
+                  active
+                    ? 'text-white border-sky-400'
+                    : 'text-[#6b8378] border-transparent hover:text-white'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {t.label}
+                {t.id === 'review' && pendingTotal > 0 && (
+                  <span className="bg-emerald-600 text-white text-xs rounded-full px-2 py-0.5 tabular-nums">
+                    {pendingTotal.toLocaleString('ar-EG')}
+                  </span>
+                )}
+                {t.id === 'sync' &&
+                  (h.syncing || h.reviewJobRunning) && (
+                    <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                  )}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === 'review' && (
+          <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl p-6">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <ListChecks className="w-5 h-5 text-emerald-400" />
+                تقرير الفروقات
+              </h2>
+              <div className="flex flex-wrap gap-2 md:mr-auto">
+                <button
                   onClick={h.previewSync}
                   disabled={h.previewing || h.syncing}
                   title="تشغّل مزامنة كاملة من Peachtree ثم تعرض الفروقات — تمسح القائمة الحالية والتحديد"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-4 h-4 ${h.previewing ? 'animate-spin' : ''}`} />
-                  <span>{h.previewing ? 'جارٍ المزامنة والمعاينة...' : 'مزامنة ومعاينة الفروقات'}</span>
+                  {h.previewing
+                    ? 'جارٍ المزامنة والمعاينة...'
+                    : 'مزامنة ومعاينة الفروقات'}
                 </button>
-               <button
-                 onClick={() => h.applyReview([...selectedReview])}
-                 disabled={h.applying || selectedReview.size === 0}
-                 className="px-4 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition disabled:opacity-50 flex items-center gap-2"
-               >
-                 {h.applying ? (
-                   <span className="flex items-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" />جاري التطبيق...</span>
-                 ) : (
-                   <><Check className="w-4 h-4" />تطبيق المحدد ({selectedReview.size})</>
-                 )}
-               </button>
                 <button
                   onClick={() => setBulkAction('apply')}
-                  disabled={h.applying || h.reviewJobRunning || !h.pendingSummary}
-                  title={!h.pendingSummary ? 'لم يتم تحميل عدد الفروقات بعد' : undefined}
+                  disabled={
+                    h.applying || h.reviewJobRunning || !h.pendingSummary
+                  }
+                  title={
+                    !h.pendingSummary
+                      ? 'لم يتم تحميل عدد الفروقات بعد'
+                      : 'قبول كل الفروقات المعلقة في عملية خلفية'
+                  }
                   className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
                 >
                   قبول الكل
                 </button>
                 <button
                   onClick={() => setBulkAction('skip')}
-                  disabled={h.applying || h.reviewJobRunning || !h.pendingSummary}
-                  title={!h.pendingSummary ? 'لم يتم تحميل عدد الفروقات بعد' : undefined}
+                  disabled={
+                    h.applying || h.reviewJobRunning || !h.pendingSummary
+                  }
+                  title={
+                    !h.pendingSummary
+                      ? 'لم يتم تحميل عدد الفروقات بعد'
+                      : 'تجاهل كل الفروقات المعلقة في عملية خلفية'
+                  }
                   className="px-4 py-2 bg-[#121a16] text-white rounded-lg font-semibold hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  <EyeOff className="w-4 h-4" />تجاهل الكل
+                  <EyeOff className="w-4 h-4" />
+                  تجاهل الكل
                 </button>
-             </div>
-           </div>
-
-            <p className="text-[#6b8378] text-xs mt-3">
-              تنبيه: المعاينة تشغّل مزامنة كاملة — تُنشأ فروقات جديدة وتُمسح القائمة الحالية والتحديد.
+              </div>
+            </div>
+            <p className="text-[#6b8378] text-xs mb-4">
+              تنبيه: المعاينة تشغّل مزامنة كاملة — تُنشأ فروقات جديدة وتُمسح
+              القائمة الحالية والتحديد.
             </p>
 
             {h.reviewJob && h.reviewJob.id !== dismissedJobId && (
@@ -358,526 +204,29 @@ export default function PeachtreeSyncPage() {
               />
             )}
 
-           {bulkAction && (
-             <BulkReviewDialog
-               action={bulkAction}
-               summary={h.pendingSummary}
-               loading={h.loading}
-               onConfirm={async () => {
-                 const action = bulkAction;
-                 setBulkAction(null);
-                 await h.startReviewJob(action);
-               }}
-               onClose={() => setBulkAction(null)}
-             />
-           )}
-
-           {h.review.length > 0 && (
-              <div className="flex flex-col md:flex-row gap-3 mt-4">
-                <select
-                  value={reviewEntityFilter}
-                  onChange={(e) => setReviewEntityFilter(e.target.value)}
-                  aria-label="تصفية حسب الكيان"
-                  className="px-4 py-2 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white text-sm"
-                >
-                  <option value="all">كل الكيانات ({h.review.length})</option>
-                  {Object.entries(ENTITY_LABELS).map(([key, meta]) => (
-                    <option key={key} value={key}>
-                      {meta.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={reviewSearch}
-                  onChange={(e) => setReviewSearch(e.target.value)}
-                  placeholder="بحث برقم السجل..."
-                  aria-label="بحث برقم السجل"
-                  className="px-4 py-2 bg-[#121a16] border border-[#1f2d26] rounded-lg text-white text-sm font-mono flex-1"
-                />
-                {(reviewEntityFilter !== 'all' || reviewSearch.trim() !== '') && (
-                  <span className="text-[#6b8378] text-sm self-center whitespace-nowrap">
-                    نتائج: {filteredReview.length} من {h.review.length}
-                  </span>
-                )}
-              </div>
+            {bulkAction && (
+              <BulkReviewDialog
+                action={bulkAction}
+                summary={h.pendingSummary}
+                loading={h.loading}
+                onConfirm={async () => {
+                  const action = bulkAction;
+                  setBulkAction(null);
+                  await h.startReviewJob(action);
+                }}
+                onClose={() => setBulkAction(null)}
+              />
             )}
 
-           {h.review.length === 0 ? (
-            <p className="text-[#6b8378] text-center py-8">
-              لا توجد فروقات معلقة — اضغط &quot;مزامنة ومعاينة الفروقات&quot; للفحص
-            </p>
-          ) : filteredReview.length === 0 ? (
-            <p className="text-[#6b8378] text-center py-8">
-              لا توجد نتائج مطابقة — غيّر الفلتر أو امسح البحث
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                    <th className="py-3 px-4 text-right">
-                      <input
-                        type="checkbox"
-                        aria-label="تحديد الكل في الصفحة"
-                        checked={allPageSelected}
-                        ref={(el) => {
-                          if (el) el.indeterminate = somePageSelected && !allPageSelected;
-                        }}
-                        onChange={togglePageSelection}
-                        className="w-4 h-4"
-                      />
-                    </th>
-                    <th className="py-3 px-4 text-right">الكيان</th>
-                    <th className="py-3 px-4 text-right">السجل</th>
-                    <th className="py-3 px-4 text-right">النوع</th>
-                    <th className="py-3 px-4 text-right">التفاصيل</th>
-                    <th className="py-3 px-4 text-right">إجراء</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedReview.map((entry) => {
-                    const meta =
-                      ENTITY_LABELS[entry.entity] ||
-                      ({} as { label: string; icon: LucideIcon; color: string });
-                    const Icon = (meta.icon || Package) as LucideIcon;
-                    const diffs = reviewDiff(entry);
-                    const lineItemCount =
-                      entry.change_type === 'update' &&
-                      entry.entity === 'invoice_line_items'
-                        ? [
-                            (entry.old_values?.items as Record<string, unknown>[] | undefined)?.length ?? 0,
-                            (entry.new_values?.items as Record<string, unknown>[] | undefined)?.length ?? 0,
-                          ]
-                        : null;
-                    return (
-                      <Fragment key={entry.id}>
-                        <tr className="border-b border-[#1f2d26] hover:bg-[#121a16] transition">
-                          <td className="py-3 px-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedReview.has(entry.id)}
-                              onChange={() => {
-                                const next = new Set(selectedReview);
-                                if (next.has(entry.id)) next.delete(entry.id);
-                                else next.add(entry.id);
-                                setSelectedReview(next);
-                              }}
-                              className="w-4 h-4"
-                            />
-                          </td>
-                          <td className="py-3 px-4 text-white flex items-center gap-2">
-                            <Icon className={`w-5 h-5 ${meta.color || 'text-[#6b8378]'}`} />
-                            {meta.label || entry.entity}
-                          </td>
-                          <td className="py-3 px-4 text-[#6b8378] font-mono text-xs">
-                            {entry.record_key}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                entry.change_type === 'missing'
-                                  ? 'bg-amber-500/20 text-amber-400'
-                                  : 'bg-sky-500/20 text-sky-400'
-                              }`}
-                            >
-                              {entry.change_type === 'missing'
-                                ? 'غير موجود في Peachtree'
-                                : 'تحديث'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            {lineItemCount ? (
-                              <button
-                                onClick={() =>
-                                  setExpandedItemsId(
-                                    expandedItemsId === entry.id
-                                      ? null
-                                      : entry.id,
-                                  )
-                                }
-                                className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
-                              >
-                                {expandedItemsId === entry.id ? (
-                                  <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4" />
-                                )}
-                                البنود: {lineItemCount[0]} ← {lineItemCount[1]}
-                              </button>
-                            ) : diffs.length > 0 ? (
-                              <button
-                                onClick={() =>
-                                  setExpandedDiffId(
-                                    expandedDiffId === entry.id
-                                      ? null
-                                      : entry.id,
-                                  )
-                                }
-                                className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
-                              >
-                                {expandedDiffId === entry.id ? (
-                                  <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4" />
-                                )}
-                                {diffs.length} حقل
-                              </button>
-                            ) : (
-                              <span className="text-[#6b8378]">—</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => h.applyReview([entry.id])}
-                                disabled={
-                                  h.applying || entry.status !== 'pending'
-                                }
-                                className="px-2 py-1 rounded text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-40"
-                              >
-                                قبول
-                              </button>
-                              <button
-                                onClick={() => h.skipReview([entry.id])}
-                                disabled={
-                                  h.applying || entry.status !== 'pending'
-                                }
-                                className="px-2 py-1 rounded text-xs bg-[#121a16] text-white hover:bg-white/20 disabled:opacity-40"
-                              >
-                                تجاهل
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        {expandedDiffId === entry.id &&
-                          diffs.length > 0 && (
-                            <tr key={`${entry.id}-details`}>
-                              <td colSpan={6} className="px-6 py-4 bg-black/30">
-                                <table className="w-full text-xs">
-                                  <thead>
-                                    <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                                      <th className="py-2 text-right">الحقل</th>
-                                      <th className="py-2 text-right">القديم</th>
-                                      <th className="py-2 text-right">الجديد</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {diffs.map((d) => (
-                                      <tr
-                                        key={d.field}
-                                        className="border-b border-[#1f2d26]"
-                                      >
-                                        <td className="py-2 text-[#6b8378]">
-                                          {d.field}
-                                        </td>
-                                        <td className="py-2 text-[#ecfdf5]">
-                                          {d.old || '—'}
-                                        </td>
-                                        <td className="py-2 text-green-400">
-                                          {d.new || '—'}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
-                          )}
-                        {expandedItemsId === entry.id &&
-                          lineItemCount && (
-                            <tr key={`${entry.id}-items`}>
-                              <td colSpan={6} className="px-6 py-4 bg-black/30">
-                                <p className="text-[#6b8378] text-xs mb-2">
-                                  البنود الجديدة التي ستُكتب عند القبول:
-                                </p>
-                                {(
-                                  entry.new_values?.items as
-                                    | Record<string, unknown>[]
-                                    | undefined
-                                )?.length ? (
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                                        <th className="py-2 text-right">المنتج</th>
-                                        <th className="py-2 text-right">الكمية</th>
-                                        <th className="py-2 text-right">السعر</th>
-                                        <th className="py-2 text-right">الإجمالي</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {(
-                                        entry.new_values?.items as Record<
-                                          string,
-                                          unknown
-                                        >[]
-                                      ).map((it, i) => (
-                                        <tr
-                                          key={`${entry.id}-item-${i}`}
-                                          className="border-b border-[#1f2d26]"
-                                        >
-                                          <td className="py-2 text-white font-mono">
-                                            {String(it.product_id ?? '—')}
-                                          </td>
-                                          <td className="py-2 text-[#ecfdf5]">
-                                            {String(it.quantity ?? '—')}
-                                          </td>
-                                          <td className="py-2 text-[#ecfdf5]">
-                                            {String(it.price ?? '—')}
-                                          </td>
-                                          <td className="py-2 text-green-400">
-                                            {String(it.total ?? '—')}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                ) : (
-                                  <span className="text-[#6b8378]">
-                                    لا توجد بنود جديدة — سيتم مسح البنود الحالية
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {filteredReview.length > REVIEW_PAGE_SIZE && (
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-[#6b8378] text-sm">
-                صفحة {safeReviewPage + 1} من {reviewPageCount} — عرض{' '}
-                {pagedReview.length} من {filteredReview.length}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={safeReviewPage === 0}
-                  onClick={() => setReviewPage(safeReviewPage - 1)}
-                  className="px-4 py-2 bg-[#121a16] text-white rounded-lg text-sm hover:bg-white/20 transition disabled:opacity-40"
-                >
-                  السابق
-                </button>
-                <button
-                  disabled={safeReviewPage >= reviewPageCount - 1}
-                  onClick={() => setReviewPage(safeReviewPage + 1)}
-                  className="px-4 py-2 bg-[#121a16] text-white rounded-lg text-sm hover:bg-white/20 transition disabled:opacity-40"
-                >
-                  التالي
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+            <ReviewTable h={h} />
+          </div>
+        )}
 
-        {/* Sync History */}
-        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#1f2d26]">
-            <h2 className="text-lg font-bold text-white">سجل المزامنة</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                  <th className="py-3 px-4 text-right">التاريخ</th>
-                  <th className="py-3 px-4 text-right">الحالة</th>
-                  <th className="py-3 px-4 text-right">السجلات</th>
-                  <th className="py-3 px-4 text-right">المدة</th>
-                  <th className="py-3 px-4 text-right">التفاصيل</th>
-                </tr>
-              </thead>
-              <tbody>
-                {h.history.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-12 text-center text-[#6b8378]">
-                      لم تتم أي مزامنة بعد
-                    </td>
-                  </tr>
-                ) : h.history.map((entry) => (
-                  <Fragment key={entry.id}>
-                    <tr className="border-b border-[#1f2d26] hover:bg-[#121a16] transition">
-                      <td className="py-3 px-4 text-white">
-                        {new Date((entry.startedAt || entry.started_at) as string).toLocaleString('ar-EG')}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          entry.status === 'completed'
-                            ? 'bg-green-500/20 text-green-400'
-                            : entry.status === 'failed'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {entry.status === 'completed' ? 'نجاح' : entry.status === 'failed' ? 'فشل' : 'قيد التنفيذ'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-emerald-400 font-semibold">
-                        {entry.records_synced ?? entry.results?.reduce?.(
-                          (s: number, r) => s + (r.recordsCreated || 0) + (r.recordsUpdated || 0), 0
-                        ) ?? '-'}
-                      </td>
-                      <td className="py-3 px-4 text-[#6b8378]">
-                        {entry.duration_ms ? `${(entry.duration_ms / 1000).toFixed(1)} ث` : '-'}
-                      </td>
-                      <td className="py-3 px-4">
-                        {entry.results && entry.results.length > 0 && (
-                          <button
-                            onClick={() => setExpandedSync(expandedSync === entry.id ? null : entry.id)}
-                            className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
-                          >
-                            {expandedSync === entry.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            {entry.results.length} كيان
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                    {expandedSync === entry.id && entry.results && (
-                      <tr key={`${entry.id}-details`}>
-                        <td colSpan={5} className="px-6 py-4 bg-black/30">
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {entry.results.map((r, i) => {
-                              const meta = ENTITY_LABELS[r.entity] || { label: r.entity, icon: Package, color: 'text-[#6b8378]' };
-                              const Icon = meta.icon;
-                              return (
-                                <div key={`${r.entity}-${i}`} className="flex items-center gap-3 bg-[#121a16] rounded-lg p-3">
-                                  <Icon className={`w-5 h-5 ${meta.color}`} />
-                                  <div>
-                                    <p className="text-white text-sm font-semibold">{meta.label}</p>
-                                    <p className="text-[#6b8378] text-xs">
-                                      +{r.recordsCreated} / ~{r.recordsUpdated} / ={r.recordsSkipped}
-                                      {r.status === 'failed' && <span className="text-red-400 mr-2">فشل</span>}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {tab === 'sync' && <SyncPanel h={h} />}
 
-        {/* Audit Log */}
-        <div className="bg-black/40 backdrop-blur-xl border border-[#1f2d26] rounded-xl overflow-hidden mt-8">
-          <div className="px-6 py-4 border-b border-[#1f2d26] flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-violet-400" />سجل العمليات
-            </h2>
-            <button
-              onClick={h.loadLogs}
-              className="text-sky-400 hover:text-sky-300 text-sm"
-            >
-              تحديث السجل
-            </button>
-          </div>
-          {h.logs.length === 0 ? (
-            <p className="py-8 text-center text-[#6b8378]">
-              لا توجد عمليات مسجلة بعد
-            </p>
-          ) : (
-            <div className="divide-y divide-white/5">
-              {Object.entries(
-                h.logs.reduce<Record<string, LogEntry[]>>((acc, e) => {
-                  ;(acc[e.run_id] ||= []).push(e);
-                  return acc;
-                }, {}),
-              ).map(([runId, events]) => (
-                <Fragment key={runId}>
-                  <button
-                    onClick={() =>
-                      setExpandedRun(
-                        expandedRun === runId ? null : runId,
-                      )
-                    }
-                    className="w-full text-right px-6 py-3 hover:bg-[#121a16] flex items-center justify-between gap-3"
-                  >
-                    <div>
-                      <p className="text-white font-mono text-xs">{runId}</p>
-                      <p className="text-[#6b8378] text-xs">
-                        {events.length} حدث — {events[0].triggered_by}
-                        {events[0].created_at
-                          ? ` — ${new Date(events[0].created_at).toLocaleString('ar-EG')}`
-                          : ''}
-                      </p>
-                    </div>
-                    {expandedRun === runId ? (
-                      <ChevronUp className="w-4 h-4 text-[#6b8378]" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-[#6b8378]" />
-                    )}
-                  </button>
-                  {expandedRun === runId && (
-                    <div className="px-6 pb-4 bg-black/30">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="text-[#6b8378] border-b border-[#1f2d26]">
-                            <th className="py-2 text-right">الكيان</th>
-                            <th className="py-2 text-right">الإجراء</th>
-                            <th className="py-2 text-right">السجل</th>
-                            <th className="py-2 text-right">التغييرات</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {events.map((e) => {
-                            const meta =
-                              ENTITY_LABELS[e.entity] ||
-                              ({} as {
-                                label: string;
-                                icon: LucideIcon;
-                                color: string;
-                              });
-                            const Icon = (meta.icon || Package) as LucideIcon;
-                            return (
-                              <tr
-                                key={e.id}
-                                className="border-b border-[#1f2d26]"
-                              >
-                                <td className="py-2 text-white flex items-center gap-2">
-                                  <Icon
-                                    className={`w-4 h-4 ${meta.color || 'text-[#6b8378]'}`}
-                                  />
-                                  {meta.label || e.entity}
-                                </td>
-                                <td className="py-2 text-[#ecfdf5]">
-                                  {ACTION_LABELS[e.action] || e.action}
-                                </td>
-                                <td className="py-2 text-[#6b8378] font-mono">
-                                  {e.record_key}
-                                </td>
-                                <td className="py-2 text-[#6b8378]">
-                                  {e.changes
-                                    ? (Object.entries(e.changes) as [
-                                        string,
-                                        [unknown, unknown],
-                                      ][]).map(([f, [o, n]]) => (
-                                        <span key={f} className="block">
-                                          <span className="text-[#6b8378]">
-                                            {f}:
-                                          </span>{' '}
-                                          {String(o)} ← {String(n)}
-                                        </span>
-                                      ))
-                                    : '—'}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </Fragment>
-              ))}
-            </div>
-          )}
-        </div>
+        {tab === 'history' && <ActivityPanel h={h} />}
+
+        {tab === 'settings' && <SettingsPanel h={h} />}
       </div>
     </div>
   );
