@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import Image from 'next/image';
 import { Package, Box, Gauge, Check, Zap, Pencil, ClipboardList, Trash2, PowerOff, RotateCcw } from 'lucide-react';
 import { TypeBadge, StockBadge } from '@/components/inventory/Badge';
 import type { BOM, Product } from '@/components/inventory/types';
@@ -85,7 +86,13 @@ export function InventoryProductsTable({
               return (
                 <tr key={product.id} className="border-t border-white/5 hover:bg-white/5 transition cursor-pointer group" onClick={() => onRowClick(product.id)}>
                   <td className="px-4 py-4">
-                    <div className="w-10 h-10 bg-slate-800 rounded-xl border border-white/10 flex items-center justify-center text-xs text-[#ecfdf5]0">—</div>
+                    {product.image_path ? (
+                      <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/10 bg-slate-800">
+                        <Image src={product.image_path} alt={product.name} fill className="object-cover" sizes="40px" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-slate-800 rounded-xl border border-white/10 flex items-center justify-center text-xs text-[#ecfdf5]0">—</div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -131,7 +138,7 @@ export function InventoryProductsTable({
                       : `${(cost * qty).toLocaleString()}`}
                   </td>
                   <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                    <div className="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 max-md:opacity-100 transition">
                       {inlineEditingId === product.id ? (
                         <button onClick={() => onSaveInlineEdit(product.id)} className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-200 rounded-lg transition" title="حفظ"><Check className="w-3.5 h-3.5" /></button>
                       ) : (

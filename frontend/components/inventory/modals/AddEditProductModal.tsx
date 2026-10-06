@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
 interface WH { id: number; name: string; }
@@ -48,7 +49,7 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
       fd.append('image', file);
       const res = await api.fetchWithAuth<{ url: string }>('/inventory/products/upload-image', { method: 'POST', body: fd });
       setImagePath(res.url);
-    } catch { /* ignore */ }
+    } catch { toast.error('فشل رفع الصورة'); }
     finally { setUploading(false); }
   };
 
@@ -99,11 +100,24 @@ export default function AddEditProductModal({ isOpen, product, warehouses, onClo
                 className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">الكمية الافتتاحية</label>
-              <input type="number" min="0" value={form.stock_quantity || 0} onChange={(e) => setForm({ ...form, stock_quantity: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
-            </div>
+            {product?.id ? (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">المخزون الحالي</label>
+                <input
+                  type="number"
+                  value={form.stock_quantity || 0}
+                  disabled
+                  title="المخزون يتعدل من التسوية أو التعديل السريع — تغييره هنا لن يُحفظ"
+                  className="w-full px-4 py-2.5 bg-slate-900/30 border border-white/10 rounded-xl text-slate-400 cursor-not-allowed"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">الكمية الافتتاحية</label>
+                <input type="number" min="0" value={form.stock_quantity || 0} onChange={(e) => setForm({ ...form, stock_quantity: Number(e.target.value) })}
+                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/20 rounded-xl text-white focus:border-emerald-500 focus:outline-none" />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">المخزن</label>
               <select value={form.warehouse_id || ''} onChange={(e) => setForm({ ...form, warehouse_id: Number(e.target.value) || undefined })}

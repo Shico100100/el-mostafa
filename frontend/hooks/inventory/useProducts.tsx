@@ -177,11 +177,17 @@ export function useProducts() {
       for (const k of PRODUCT_PAYLOAD_KEYS) {
         if (source[k] !== undefined) payload[k] = source[k];
       }
-      if (editingProduct) {
+      // Route by id like the modal does (product?.id): a duplicate carries
+      // id 0 and must POST as new, not PUT over product 0.
+      if (editingProduct?.id) {
         await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast.success('تم التحديث');
       } else {
-        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify({ ...payload, initial_stock: data.stock_quantity }) });
+        const initialStock =
+          data.stock_quantity === undefined
+            ? undefined
+            : Number(data.stock_quantity);
+        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify({ ...payload, initial_stock: initialStock }) });
         toast.success('تمت الإضافة');
       }
       setShowModal(false);

@@ -20,6 +20,8 @@ const typeOptions = [
   { value: 'IMPORTED', label: 'مستورد' },
   { value: 'PACKAGING', label: 'تغليف' },
   { value: 'RAW', label: 'خام' },
+  { value: 'RAW_PLASTIC', label: 'خام بلاستيك' },
+  { value: 'SEMI', label: 'نصف مصنع' },
   { value: 'SEMI_FINISHED', label: 'نصف مصنع' },
   { value: 'DORMANT', label: 'خامل' },
 ];
