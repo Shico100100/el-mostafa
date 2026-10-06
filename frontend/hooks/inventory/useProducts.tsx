@@ -148,14 +148,40 @@ export function useProducts() {
     e.target.value = '';
   };
 
+  // Exactly the keys CreateProductDto accepts. The edit form is spread from
+  // the full Product row (id, warehouse/category objects, timestamps...),
+  // and the API rejects unknown props (forbidNonWhitelisted) with 422 — so
+  // only known keys may leave the client.
+  const PRODUCT_PAYLOAD_KEYS = [
+    'name',
+    'sku',
+    'barcode',
+    'cost_price',
+    'selling_price',
+    'category_id',
+    'warehouse_id',
+    'unit',
+    'type',
+    'description',
+    'min_stock',
+    'weight_grams',
+    'image_path',
+    'raw_material_type',
+    'initial_stock',
+  ] as const;
+
   const handleSaveProduct = async (data: ProductData) => {
     try {
-      const { stock_quantity, ...clean } = data;
+      const source = data as unknown as Record<string, unknown>;
+      const payload: Record<string, unknown> = {};
+      for (const k of PRODUCT_PAYLOAD_KEYS) {
+        if (source[k] !== undefined) payload[k] = source[k];
+      }
       if (editingProduct) {
-        await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(clean) });
+        await api.fetchWithAuth(`/inventory/products/${editingProduct.id}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast.success('تم التحديث');
       } else {
-        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify({ ...clean, initial_stock: stock_quantity }) });
+        await api.fetchWithAuth('/inventory/products', { method: 'POST', body: JSON.stringify({ ...payload, initial_stock: data.stock_quantity }) });
         toast.success('تمت الإضافة');
       }
       setShowModal(false);
