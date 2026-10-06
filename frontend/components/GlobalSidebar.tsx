@@ -20,7 +20,11 @@ import {
   Shield,
   TrendingUp,
   Link2,
+  Pin,
+  PinOff,
 } from 'lucide-react';
+
+const SIDEBAR_PIN_KEY = 'sidebar-pinned';
 
 interface NavItem {
   href: string;
@@ -98,6 +102,31 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  // Pinned = always-visible sidebar (the old behavior). Unpinned = the
+  // sidebar hides and slides in as an overlay when the pointer reaches the
+  // screen edge. Preference survives reloads.
+  const [pinned, setPinned] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem(SIDEBAR_PIN_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const togglePin = () => {
+    setPinned((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SIDEBAR_PIN_KEY, next ? '1' : '0');
+      } catch {
+        // Storage unavailable (private mode) — the toggle still works
+        // for this session.
+      }
+      if (!next) setOpen(false);
+      return next;
+    });
+  };
 
   const { roleId } = usePermission();
   const allowedRoles = useMemo(() => resolveRoles(pathname), [pathname]);
@@ -158,11 +187,23 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
         <Menu className="w-5 h-5" />
       </button>
 
+      {/* Desktop hover strip: reveals the sidebar when it is unpinned */}
+      {!pinned && !open && (
+        <div
+          aria-hidden
+          onMouseEnter={() => setOpen(true)}
+          className="hidden lg:block fixed top-0 right-0 h-full w-3 z-40"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 z-50 h-screen bg-[#0f1714]/95 backdrop-blur-xl border-l border-[#1f2d26] flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 w-64 ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        onMouseLeave={() => {
+          if (!pinned) setOpen(false);
+        }}
+        className={`fixed top-0 z-50 h-screen bg-[#0f1714]/95 backdrop-blur-xl border-l border-[#1f2d26] flex flex-col shrink-0 transition-transform duration-300 w-64 ${
+          pinned ? 'lg:sticky lg:translate-x-0' : ''
+        } ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#1f2d26]">
@@ -175,9 +216,23 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
               <p className="text-[8px] text-[#6b8378] -mt-0.5">نظام إدارة متكامل</p>
             </div>
           </div>
-          <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-[#6b8378] hover:text-white rounded-lg hover:bg-white/5 transition">
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={togglePin}
+              title={
+                pinned ? 'إلغاء التثبيت — إخفاء تلقائي' : 'تثبيت القائمة الجانبية'
+              }
+              aria-label={
+                pinned ? 'إلغاء تثبيت القائمة' : 'تثبيت القائمة الجانبية'
+              }
+              className="hidden lg:block p-1.5 text-[#6b8378] hover:text-white rounded-lg hover:bg-white/5 transition"
+            >
+              {pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+            </button>
+            <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 text-[#6b8378] hover:text-white rounded-lg hover:bg-white/5 transition">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Nav */}
