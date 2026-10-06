@@ -196,14 +196,16 @@ export default function GlobalSidebar({ children }: { children: React.ReactNode 
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar. It docks on the right, so hiding means shifting RIGHT
+          (translate-x-full); the old -translate-x-full shifted it left into
+          the viewport, leaving a floating panel instead of hiding it. */}
       <aside
         onMouseLeave={() => {
           if (!pinned) setOpen(false);
         }}
-        className={`fixed top-0 z-50 h-screen bg-[#0f1714]/95 backdrop-blur-xl border-l border-[#1f2d26] flex flex-col shrink-0 transition-transform duration-300 w-64 ${
+        className={`fixed top-0 right-0 z-50 h-screen bg-[#0f1714]/95 backdrop-blur-xl border-l border-[#1f2d26] flex flex-col shrink-0 transition-transform duration-300 w-64 ${
           pinned ? 'lg:sticky lg:translate-x-0' : ''
-        } ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        } ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#1f2d26]">

@@ -57,7 +57,9 @@ describe('GlobalSidebar auto-hide', () => {
     const user = userEvent.setup();
     const { container } = render(createElement(GlobalSidebar, null, 'x'));
     const aside = container.querySelector('aside');
-    expect(aside?.className).toMatch(/-translate-x-full/);
+    // Hidden = shifted RIGHT off-screen (positive translate). The old
+    // negative value shifted it left into the viewport instead.
+    expect(aside?.className).toMatch(/(^| )translate-x-full($| )/);
 
     const strip = container.querySelector('div[aria-hidden="true"]');
     expect(strip).not.toBeNull();
@@ -65,7 +67,7 @@ describe('GlobalSidebar auto-hide', () => {
     expect(aside?.className).toMatch(/translate-x-0/);
 
     fireEvent.mouseLeave(aside!);
-    expect(aside?.className).toMatch(/-translate-x-full/);
+    expect(aside?.className).toMatch(/(^| )translate-x-full($| )/);
     void user;
   });
 
