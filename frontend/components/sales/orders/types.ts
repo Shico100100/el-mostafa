@@ -7,6 +7,8 @@ export interface Customer {
   phone?: string;
   email?: string;
   address?: string;
+  balance?: number;
+  credit_limit?: number | null;
 }
 
 export interface OrderItem {
@@ -26,6 +28,11 @@ export interface Order {
   discount_value?: number;
   paid_amount?: number;
   remaining?: number;
+  invoice_number?: string;
+  created_by_name?: string | null;
+  updated_by_name?: string | null;
+  delivered_by_name?: string | null;
+  cancelled_by_name?: string | null;
   order_date?: string;
   created_at: string;
   status: string;

@@ -5,7 +5,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect';
 import type { Customer, Product, Warehouse, NewOrderData } from '../types';
 
 export function CreateSalesOrderModal({
-  show, onClose, customers, products, warehouses, newOrder, setNewOrder, onAddItem, onRemoveItem, onItemChange, onSubmit, calculateTotal, onOpenQuickCustomer,
+  show, onClose, customers, products, warehouses, newOrder, setNewOrder, onAddItem, onRemoveItem, onItemChange, onSubmit, calculateTotal, onOpenQuickCustomer, editMode,
 }: {
   show: boolean;
   onClose: () => void;
@@ -20,16 +20,31 @@ export function CreateSalesOrderModal({
   onSubmit: (e: React.FormEvent) => void;
   calculateTotal: () => number;
   onOpenQuickCustomer: () => void;
+  editMode?: boolean;
 }) {
   if (!show) return null;
+
+  const selectedCustomer = customers.find(c => c.id === Number(newOrder.customer_id));
+  const projectedBalance = (Number(selectedCustomer?.balance) || 0) + calculateTotal();
+  const overLimit = selectedCustomer?.credit_limit != null && projectedBalance > Number(selectedCustomer.credit_limit);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-4xl border border-white/20 max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-white">إنشاء أمر بيع جديد</h2>
+          <h2 className="text-2xl font-bold text-white">{editMode ? 'تعديل أمر البيع' : 'إنشاء أمر بيع جديد'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition text-2xl"><X className="w-6 h-6" /></button>
         </div>
+        {selectedCustomer && selectedCustomer.credit_limit != null && (
+          <div className={`mb-6 p-4 rounded-xl border text-sm ${overLimit ? 'bg-red-600/10 border-red-500/30 text-red-300' : 'bg-white/5 border-white/10 text-gray-300'}`}>
+            رصيد العميل الحالي: {(Number(selectedCustomer.balance) || 0).toLocaleString()} ج.م
+            <span className="mx-2">•</span>
+            الحد الائتماني: {Number(selectedCustomer.credit_limit).toLocaleString()} ج.م
+            <span className="mx-2">•</span>
+            المتوقع بعد الطلب: {projectedBalance.toLocaleString()} ج.م
+            {overLimit && <span className="block font-bold mt-1">⚠️ تحذير: هذا الطلب يتجاوز الحد الائتماني للعميل</span>}
+          </div>
+        )}
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -49,7 +64,9 @@ export function CreateSalesOrderModal({
                 onChange={(val) => setNewOrder({ ...newOrder, customer_id: val.toString() })}
                 placeholder="اختر العميل..."
                 className="w-full"
+                disabled={editMode}
               />
+              {editMode && <p className="text-xs text-gray-500">لا يمكن تغيير العميل عند التعديل</p>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">تاريخ الطلب</label>
@@ -58,7 +75,8 @@ export function CreateSalesOrderModal({
                 value={newOrder.date}
                 onChange={(e) => setNewOrder({ ...newOrder, date: e.target.value })}
                 required
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition"
+                disabled={editMode}
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition disabled:opacity-50"
               />
             </div>
           </div>
@@ -197,7 +215,7 @@ export function CreateSalesOrderModal({
                 disabled={newOrder.items.length === 0}
                 className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-900/40 transition disabled:opacity-50"
               >
-                حفظ الطلب
+                {editMode ? 'حفظ التعديل' : 'حفظ الطلب'}
               </button>
             </div>
           </div>

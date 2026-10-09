@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { SalesOrderFilters } from '@/components/sales/orders/SalesOrderFilters';
 import { SalesOrdersTable } from '@/components/sales/orders/SalesOrdersTable';
 import { SalesOrderPrintTemplate } from '@/components/sales/orders/SalesOrderPrintTemplate';
+import { SalesOrderReceiptTemplate } from '@/components/sales/orders/SalesOrderReceiptTemplate';
 import { CreateSalesOrderModal } from '@/components/sales/orders/modals/CreateSalesOrderModal';
 import { OrderDetailsModal } from '@/components/sales/orders/modals/OrderDetailsModal';
 import { PaymentModal } from '@/components/sales/orders/modals/PaymentModal';
@@ -26,18 +27,21 @@ export default function SalesOrdersPage() {
     quickCustomerData, setQuickCustomerData,
     newOrder, setNewOrder,
     paymentData, setPaymentData,
-    componentRef, orderToPrint,
+    componentRef, receiptRef, orderToPrint,
 
     resetFilters, loadData,
     handleAddItem, handleRemoveItem, handleItemChange,
     calculateTotal,
     handleQuickCustomerSubmit,
     handlePaymentSubmit,
-    handleSubmit,
+    handleSubmit, handleUpdate,
     handleDuplicateOrder,
+    openEdit,
     handleDeliver, handleCancel, handleDelete,
     handleExport,
-    openPayment, openDetails, closeDetails, openPrint,
+    openPayment, openDetails, closeDetails, openPrint, openReceipt,
+    shareWhatsApp, openReturn,
+    closeCreateModal, editingOrderId,
   } = useSalesOrders();
 
   return (
@@ -77,20 +81,25 @@ export default function SalesOrdersPage() {
           onDuplicate={handleDuplicateOrder}
           onOpenPayment={openPayment}
           onPrint={openPrint}
+          onReceipt={openReceipt}
           onDeliver={handleDeliver}
           onCancel={handleCancel}
           onDelete={handleDelete}
+          onEdit={openEdit}
+          onReturn={openReturn}
+          onShare={shareWhatsApp}
         />
       </main>
 
       <CreateSalesOrderModal
-        show={showModal} onClose={() => setShowModal(false)}
+        show={showModal} onClose={closeCreateModal}
         customers={customers} products={products} warehouses={warehouses}
         newOrder={newOrder} setNewOrder={setNewOrder}
         onAddItem={handleAddItem} onRemoveItem={handleRemoveItem}
-        onItemChange={handleItemChange} onSubmit={handleSubmit}
+        onItemChange={handleItemChange} onSubmit={editingOrderId ? handleUpdate : handleSubmit}
         calculateTotal={calculateTotal}
         onOpenQuickCustomer={() => setShowQuickCustomerModal(true)}
+        editMode={editingOrderId !== null}
       />
 
       <OrderDetailsModal order={selectedOrder} onClose={closeDetails} />
@@ -110,6 +119,7 @@ export default function SalesOrdersPage() {
       />
 
       <SalesOrderPrintTemplate order={orderToPrint} ref={componentRef} />
+      <SalesOrderReceiptTemplate order={orderToPrint} ref={receiptRef} />
     </div>
     </ErrorBoundary>
   );

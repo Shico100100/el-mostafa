@@ -7,11 +7,13 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
   Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
+import type { Request } from 'express';
 import { SalesService } from './sales.service';
 import { CustomerService } from './customers/customer.service';
 import { SalesOrderService } from './sales-orders/sales-order.service';
@@ -23,6 +25,7 @@ import { RolesGuard } from '../roles/roles.guard';
 import { RoleEnum } from '../roles/roles.enum';
 import {
   CreateOrderDto,
+  UpdateOrderDto,
   CreateCustomerDto,
   CreateCustomerPaymentDto,
   CreateSalesReturnDto,
@@ -123,8 +126,21 @@ export class SalesController {
   @Post('orders')
   @ApiOperation({ summary: 'Create a sales order' })
   @ApiResponse({ status: 201, description: 'Order created' })
-  createOrder(@Body() data: CreateOrderDto) {
-    return this.salesService.createOrder(data);
+  createOrder(@Body() data: CreateOrderDto, @Req() req: Request) {
+    const user = req.user as { id?: number };
+    return this.salesService.createOrder(data, user?.id);
+  }
+
+  @Put('orders/:id')
+  @ApiOperation({ summary: 'Update a sales order (full line replacement)' })
+  @ApiResponse({ status: 200, description: 'Order updated' })
+  updateOrder(
+    @Param('id') id: string,
+    @Body() data: UpdateOrderDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id?: number };
+    return this.salesService.updateOrder(+id, data, user?.id);
   }
 
   @Get('orders/:id/items')
@@ -151,15 +167,17 @@ export class SalesController {
   @Post('orders/:id/deliver')
   @ApiOperation({ summary: 'Mark a sales order as delivered' })
   @ApiResponse({ status: 200, description: 'Order marked delivered' })
-  deliverOrder(@Param('id') id: string) {
-    return this.salesService.deliverOrder(+id);
+  deliverOrder(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as { id?: number };
+    return this.salesService.deliverOrder(+id, user?.id);
   }
 
   @Post('orders/:id/cancel')
   @ApiOperation({ summary: 'Cancel a sales order (restores stock)' })
   @ApiResponse({ status: 200, description: 'Order cancelled' })
-  cancelOrder(@Param('id') id: string) {
-    return this.salesService.cancelOrder(+id);
+  cancelOrder(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as { id?: number };
+    return this.salesService.cancelOrder(+id, user?.id);
   }
 
   @Delete('orders/:id')

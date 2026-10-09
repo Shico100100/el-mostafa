@@ -1,12 +1,21 @@
 'use client';
 
+import { Suspense, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSalesReturns } from '@/hooks/sales/useSalesReturns';
 import { SalesReturnsHeader } from '@/components/sales/returns/SalesReturnsHeader';
 import { ReturnsTable } from '@/components/sales/returns/ReturnsTable';
 import { NewReturnModal } from '@/components/sales/returns/NewReturnModal';
 
-export default function SalesReturnsPage() {
+function SalesReturnsContent() {
   const h = useSalesReturns();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const orderId = searchParams.get('orderId');
+    if (orderId) h.openForOrder(orderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0f0d] via-[#0a0f0d] to-[#0a0f0d] text-[#ecfdf5] p-8 pt-24" dir="rtl">
@@ -31,5 +40,13 @@ export default function SalesReturnsPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function SalesReturnsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen text-center py-20 text-gray-400" dir="rtl">جاري التحميل...</div>}>
+      <SalesReturnsContent />
+    </Suspense>
   );
 }

@@ -6,7 +6,7 @@ import type { Customer } from '@/components/sales/customers/types';
 interface AddEditCustomerDialogProps {
   visible: boolean;
   editingCustomer: Customer | null;
-  onSave: (data: { name: string; phone?: string; email?: string; address?: string }) => void;
+  onSave: (data: { name: string; phone?: string; email?: string; address?: string; credit_limit?: number | null }) => void;
   onClose: () => void;
 }
 
@@ -15,6 +15,7 @@ export function AddEditCustomerDialog({ visible, editingCustomer, onSave, onClos
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [creditLimit, setCreditLimit] = useState('');
 
   useEffect(() => {
     if (visible) {
@@ -22,6 +23,7 @@ export function AddEditCustomerDialog({ visible, editingCustomer, onSave, onClos
       setPhone(editingCustomer?.phone || '');
       setEmail(editingCustomer?.email || '');
       setAddress(editingCustomer?.address || '');
+      setCreditLimit(editingCustomer?.credit_limit != null ? String(editingCustomer.credit_limit) : '');
     }
   }, [visible, editingCustomer]);
 
@@ -29,7 +31,7 @@ export function AddEditCustomerDialog({ visible, editingCustomer, onSave, onClos
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ name, phone, email, address });
+    onSave({ name, phone, email, address, credit_limit: creditLimit === '' ? null : Number(creditLimit) });
   };
 
   return (
@@ -57,9 +59,15 @@ export function AddEditCustomerDialog({ visible, editingCustomer, onSave, onClos
             <textarea value={address} onChange={e => setAddress(e.target.value)} rows={3}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2">الحد الائتماني (ج.م) — فارغ = بلا حد</label>
+            <input type="number" min="0" value={creditLimit} onChange={e => setCreditLimit(e.target.value)}
+              placeholder="بلا حد"
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white" />
+          </div>
           <div className="flex gap-4 justify-end">
             <button type="button" onClick={onClose}
-              className="px-6 py-2 bg-[#ecfdf5]0/20 hover:bg-[#ecfdf5]0/30 text-gray-200 rounded-lg">إلغاء</button>
+              className="px-6 py-2 bg-slate-600/40 hover:bg-slate-600/60 text-gray-200 rounded-lg">إلغاء</button>
             <button type="submit"
               className="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700">
               {editingCustomer ? 'تحديث' : 'إضافة'}

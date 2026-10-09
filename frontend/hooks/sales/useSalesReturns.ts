@@ -116,11 +116,47 @@ export function useSalesReturns() {
     }
   };
 
+  // Deep link from an order: preselect customer + order lines, open the modal.
+  const openForOrder = async (orderId: string) => {
+    try {
+      const order = await api.fetchWithAuth(`/sales/orders/${orderId}`);
+      if (!order?.customer_id) return;
+      const customerId = String(order.customer_id);
+      setNewReturn({ ...emptyForm(), customer_id: customerId, order_id: String(orderId) });
+      try {
+        const ordersData = await api.fetchWithAuth(`/sales/orders?customer_id=${customerId}`);
+        const list = ordersData.items || [];
+        setOrders(list.some((o: { id: number }) => String(o.id) === String(orderId)) ? list : [order, ...list]);
+      } catch {
+        setOrders([order]);
+      }
+      interface OrderItemRaw { product_id: number; product: { name: string }; quantity: number; price: number }
+      const raw: OrderItemRaw[] = await api.fetchWithAuth(`/sales/orders/${orderId}/items`);
+      setNewReturn({
+        ...emptyForm(),
+        customer_id: customerId,
+        order_id: String(orderId),
+        items: raw.map(it => ({
+          product_id: it.product_id,
+          name: it.product?.name ?? '',
+          original_qty: it.quantity,
+          quantity: 0,
+          unit_price: it.price,
+          total: 0,
+        })),
+      });
+      setShowNewModal(true);
+    } catch (err) {
+      console.error('Error opening return for order:', err);
+      toast.error('فشل فتح المرتجع للطلب');
+    }
+  };
+
   return {
     returns, customers, orders, loading,
     showNewModal, setShowNewModal,
     newReturn, setNewReturn,
-    openModal,
+    openModal, openForOrder,
     handleCustomerChange, handleOrderChange,
     updateItemQty, calculateTotal, handleSubmit,
   };

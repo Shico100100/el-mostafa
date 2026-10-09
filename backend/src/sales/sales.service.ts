@@ -7,13 +7,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { SalesOrder, OrderStatus } from './entities/sales-order.entity';
+import { ManualInvoiceSeq } from './entities/manual-invoice-seq.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
 import { CustomerPayment } from './entities/customer-payment.entity';
 import { SalesReturn } from './entities/sales-return.entity';
 import { SalesReturnItem } from './entities/sales-return-item.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
-import { MovementType } from '../inventory/entities/stock-movement.entity';
+import {
+  StockMovement,
+  MovementType,
+} from '../inventory/entities/stock-movement.entity';
 import { Stock } from '../inventory/entities/stock.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { CacheService } from '../cache/cache.service';
@@ -217,25 +221,49 @@ export class SalesService {
 
   // ---- Complex Order Transaction ----
 
-  async createOrder(data: {
-    customer_id: number;
-    total_amount: number;
-    notes?: string;
-    order_date?: string;
-    discount_type?: string;
-    discount_value?: number;
-    items: Array<{
-      product_id: number;
-      quantity: number;
-      price: number;
-      total: number;
-      warehouse_id?: number;
-    }>;
-  }) {
-    if (!data.customer_id) throw new BadRequestException('معرف العميل مطلوب');
-    if (!data.items || data.items.length === 0)
+  // ---- Order totals (single source of truth, shared by create/update) ----
+
+  private computeTotals(
+    items: Array<{ quantity: number; price: number }>,
+    discountType?: string,
+    discountValue?: number,
+  ): {
+    subtotal: number;
+    discountType: string;
+    discountValue: number;
+    total: number;
+  } {
+    const type = ['percentage', 'fixed'].includes(discountType || '')
+      ? (discountType as string)
+      : 'none';
+    const value = Math.max(0, Number(discountValue) || 0);
+    const subtotal =
+      Math.round(
+        items.reduce(
+          (sum, item) => sum + Number(item.quantity) * Number(item.price),
+          0,
+        ) * 100,
+      ) / 100;
+    let discountAmount = 0;
+    if (type === 'percentage') {
+      discountAmount = subtotal * (Math.min(value, 100) / 100);
+    } else if (type === 'fixed') {
+      discountAmount = Math.min(value, subtotal);
+    }
+    return {
+      subtotal,
+      discountType: type,
+      discountValue: type === 'none' ? 0 : Math.round(value * 100) / 100,
+      total: Math.round((subtotal - discountAmount) * 100) / 100,
+    };
+  }
+
+  private validateOrderItems(
+    items: Array<{ product_id: number; quantity: number; price: number }>,
+  ) {
+    if (!items || items.length === 0)
       throw new BadRequestException('يجب إضافة صنف واحد على الأقل');
-    for (const item of data.items) {
+    for (const item of items) {
       if (!item.product_id)
         throw new BadRequestException('معرف المنتج مطلوب لجميع الأصناف');
       if (!item.quantity || item.quantity <= 0)
@@ -243,24 +271,34 @@ export class SalesService {
       if (item.price == null || item.price < 0)
         throw new BadRequestException('السعر غير صالح');
     }
-    const discountType = ['percentage', 'fixed'].includes(
-      data.discount_type || '',
-    )
-      ? (data.discount_type as string)
-      : 'none';
-    const discountValue = Math.max(0, Number(data.discount_value) || 0);
+  }
 
-    const subtotal = data.items.reduce(
-      (sum, item) => sum + Number(item.quantity) * Number(item.price),
-      0,
+  async createOrder(
+    data: {
+      customer_id: number;
+      total_amount: number;
+      notes?: string;
+      order_date?: string;
+      discount_type?: string;
+      discount_value?: number;
+      items: Array<{
+        product_id: number;
+        quantity: number;
+        price: number;
+        total: number;
+        warehouse_id?: number;
+      }>;
+    },
+    userId?: number,
+  ) {
+    if (!data.customer_id) throw new BadRequestException('معرف العميل مطلوب');
+    this.validateOrderItems(data.items);
+    const computed = this.computeTotals(
+      data.items,
+      data.discount_type,
+      data.discount_value,
     );
-    let discountAmount = 0;
-    if (discountType === 'percentage') {
-      discountAmount = subtotal * (Math.min(discountValue, 100) / 100);
-    } else if (discountType === 'fixed') {
-      discountAmount = Math.min(discountValue, subtotal);
-    }
-    const totalAmount = Math.round((subtotal - discountAmount) * 100) / 100;
+    const totalAmount = computed.total;
     // NOTE: the client-computed total_amount is intentionally ignored — the
     // server is the source of truth so stored totals can never diverge.
 
@@ -272,12 +310,30 @@ export class SalesService {
       const customerRepo = manager.getRepository(Customer);
       const productRepo = manager.getRepository(Product);
 
+      // Yearly manual invoice number, race-safe via row lock.
+      const year = new Date(
+        data.order_date ? data.order_date : Date.now(),
+      ).getFullYear();
+      await manager.query(
+        `INSERT INTO manual_invoice_seq(year, last_no) VALUES ($1, 0) ON CONFLICT (year) DO NOTHING`,
+        [year],
+      );
+      const seq = await manager
+        .getRepository(ManualInvoiceSeq)
+        .findOne({ where: { year }, lock: { mode: 'pessimistic_write' } });
+      const invoiceNo = `M-${year}-${String((seq?.last_no || 0) + 1).padStart(4, '0')}`;
+      if (seq) {
+        seq.last_no = (seq.last_no || 0) + 1;
+        await manager.save(ManualInvoiceSeq, seq);
+      }
+
       const order = orderRepo.create({
         customer_id: data.customer_id,
         total_amount: totalAmount,
-        discount_type: discountType,
-        discount_value:
-          discountType === 'none' ? 0 : Math.round(discountValue * 100) / 100,
+        discount_type: computed.discountType,
+        discount_value: computed.discountValue,
+        invoice_number: invoiceNo,
+        created_by: userId ?? null,
         notes: data.notes,
         order_date: data.order_date ? new Date(data.order_date) : new Date(),
       });
@@ -421,7 +477,7 @@ export class SalesService {
   // ---- Deliver: stock was already deducted at creation, so delivery only
   // stamps delivered_at (mirrors the Peachtree sync semantics where a
   // delivered order is COMPLETED).
-  async deliverOrder(id: number) {
+  async deliverOrder(id: number, userId?: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('الفاتورة غير موجودة');
     if (order.status === OrderStatus.CANCELLED)
@@ -430,6 +486,7 @@ export class SalesService {
       throw new BadRequestException('الفاتورة مسلّمة بالفعل');
     order.delivered_at = new Date();
     order.status = OrderStatus.COMPLETED;
+    order.delivered_by = userId ?? null;
     await this.orderRepo.save(order);
     await this.cache.delByPattern('reports:*');
     return order;
@@ -438,7 +495,7 @@ export class SalesService {
   // ---- Cancel: keeps the row for audit, restores stock, reverses the
   // customer balance and posts a reversing accounting entry (same math as
   // deleteOrder, without deleting history).
-  async cancelOrder(id: number) {
+  async cancelOrder(id: number, userId?: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('الفاتورة غير موجودة');
     if (order.status === OrderStatus.CANCELLED)
@@ -485,6 +542,7 @@ export class SalesService {
       }
 
       order.status = OrderStatus.CANCELLED;
+      order.cancelled_by = userId ?? null;
       await manager.save(SalesOrder, order);
     });
 
@@ -495,6 +553,152 @@ export class SalesService {
       reference: `CANCEL-ORD-${id}`,
       description: `إلغاء فاتورة بيع رقم ${id}`,
     });
+
+    await this.cache.delByPattern('reports:*');
+    return this.orderRepo.findOne({ where: { id } });
+  }
+
+  // ---- Update: full line replacement with exact reversal.
+  // Restores the original OUT movements (same warehouses), deletes old
+  // lines, then applies the new lines like createOrder. The customer
+  // balance and accounting move by the DELTA only — never double-counted.
+  async updateOrder(
+    id: number,
+    data: {
+      notes?: string;
+      discount_type?: string;
+      discount_value?: number;
+      items: Array<{
+        product_id: number;
+        quantity: number;
+        price: number;
+        total?: number;
+        warehouse_id?: number;
+      }>;
+    },
+    userId?: number,
+  ) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('الفاتورة غير موجودة');
+    if (order.status === OrderStatus.CANCELLED)
+      throw new BadRequestException('لا يمكن تعديل فاتورة ملغية');
+    if (order.delivered_at)
+      throw new BadRequestException(
+        'لا يمكن تعديل فاتورة تم تسليمها — استخدم المرتجع بدلاً من ذلك',
+      );
+    this.validateOrderItems(data.items);
+    const computed = this.computeTotals(
+      data.items,
+      data.discount_type,
+      data.discount_value,
+    );
+
+    const oldTotal = Number(order.total_amount);
+    const defaultWhId = await this.inventoryService.getDefaultWarehouseId();
+
+    const result = await this.dataSource.transaction(async (manager) => {
+      const oldItems = await manager.find(SalesOrderItem, {
+        where: { order: { id: id } },
+      });
+      const productRepo = manager.getRepository(Product);
+      let oldCogs = 0;
+      for (const item of oldItems) {
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
+        oldCogs += Number(item.quantity) * Number(product?.cost_price || 0);
+      }
+
+      // Restore exactly what creation deducted (same warehouses).
+      const outMovements = await manager.find(StockMovement, {
+        where: {
+          notes: `بيع - فاتورة رقم ${id}`,
+          type: MovementType.OUT,
+        },
+      });
+      for (const mov of outMovements) {
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: mov.product_id,
+            warehouse_id: mov.warehouse_id,
+            type: MovementType.IN,
+            quantity: mov.quantity,
+            notes: `تعديل فاتورة - استرجاع ${id}`,
+          },
+          manager,
+        );
+      }
+      await manager.delete(SalesOrderItem, { order_id: id });
+
+      const orderItemRepo = manager.getRepository(SalesOrderItem);
+      let newCogs = 0;
+      for (const item of data.items) {
+        const orderItem = orderItemRepo.create({
+          order_id: id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          total:
+            Math.round(Number(item.quantity) * Number(item.price) * 100) / 100,
+        });
+        await orderItemRepo.save(orderItem);
+
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
+        newCogs += Number(item.quantity) * Number(product?.cost_price || 0);
+
+        await this.inventoryService.addStockMovement(
+          {
+            product_id: item.product_id,
+            warehouse_id: item.warehouse_id || defaultWhId,
+            type: MovementType.OUT,
+            quantity: item.quantity,
+            notes: `بيع - فاتورة رقم ${id}`,
+          },
+          manager,
+        );
+      }
+
+      const delta = Math.round((computed.total - oldTotal) * 100) / 100;
+      const customer = await manager.findOne(Customer, {
+        where: { id: order.customer_id },
+      });
+      if (customer) {
+        customer.balance = Number(customer.balance) + delta;
+        await manager.save(Customer, customer);
+      }
+
+      order.total_amount = computed.total;
+      order.discount_type = computed.discountType;
+      order.discount_value = computed.discountValue;
+      if (data.notes !== undefined) {
+        // Preserve the Peachtree sync key: it lives as a notes prefix and
+        // the sync matches on it — dropping it would orphan the order.
+        const pqPrefix = /^\[PQ-[^\]]+\]\s*/.exec(order.notes || '')?.[0] || '';
+        order.notes =
+          pqPrefix && !data.notes.startsWith('[PQ-')
+            ? `${pqPrefix}${data.notes}`
+            : data.notes;
+      }
+      order.updated_by = userId ?? null;
+      await manager.save(SalesOrder, order);
+
+      return {
+        delta,
+        cogsDelta: Math.round((newCogs - oldCogs) * 100) / 100,
+      };
+    });
+
+    if (Math.abs(result.delta) > 0.005 || Math.abs(result.cogsDelta) > 0.005) {
+      await this.accountingService.postAutomaticEntry({
+        type: 'SALE',
+        amount: result.delta,
+        cogsAmount: result.cogsDelta,
+        reference: `ADJ-ORD-${id}`,
+        description: `تعديل فاتورة بيع رقم ${id}`,
+      });
+    }
 
     await this.cache.delByPattern('reports:*');
     return this.orderRepo.findOne({ where: { id } });

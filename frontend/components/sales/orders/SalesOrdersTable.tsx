@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, DollarSign, Printer, ClipboardList, Truck, Ban, Trash2 } from 'lucide-react';
+import { Eye, DollarSign, Printer, ClipboardList, Truck, Ban, Trash2, Pencil, Undo2, MessageCircle, Receipt } from 'lucide-react';
 import type { Order, Filters } from './types';
 
 function DeliveryBadge({ order }: { order: Order }) {
@@ -38,8 +38,8 @@ function DeliveryBadge({ order }: { order: Order }) {
 
 export function SalesOrdersTable({
   orders, loading, filters, totalPages, totalItems,
-  onPageChange, onOpenDetails, onDuplicate, onOpenPayment, onPrint,
-  onDeliver, onCancel, onDelete,
+  onPageChange, onOpenDetails, onDuplicate, onOpenPayment, onPrint, onReceipt,
+  onDeliver, onCancel, onDelete, onEdit, onReturn, onShare,
 }: {
   orders: Order[];
   loading: boolean;
@@ -51,9 +51,13 @@ export function SalesOrdersTable({
   onDuplicate: (order: Order) => void;
   onOpenPayment: (order: Order) => void;
   onPrint: (order: Order) => void;
+  onReceipt: (order: Order) => void;
   onDeliver: (order: Order) => void;
   onCancel: (order: Order) => void;
   onDelete: (order: Order) => void;
+  onEdit: (order: Order) => void;
+  onReturn: (order: Order) => void;
+  onShare: (order: Order) => void;
 }) {
   // Two-step confirm for destructive actions: first click arms, second executes.
   const [armed, setArmed] = useState<{ id: number; action: 'cancel' | 'delete' } | null>(null);
@@ -115,7 +119,7 @@ export function SalesOrdersTable({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className="text-white font-bold">#{order.id}</span>
+                    <span className="text-white font-bold">{order.invoice_number || `#${order.id}`}</span>
                     {order.notes?.match(/^\[PQ-/) && (
                       <span className="mr-2 inline-block px-2 py-0.5 rounded-full bg-teal-600/20 border border-teal-500/30 text-teal-300 text-xs font-semibold align-middle">
                         Peachtree
@@ -126,7 +130,7 @@ export function SalesOrdersTable({
                     <DeliveryBadge order={order} />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2">
+                    <div className="flex justify-center gap-2 flex-wrap max-w-72">
                       <button
                         onClick={() => onOpenDetails(order)}
                         className="p-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/40 transition"
@@ -141,6 +145,15 @@ export function SalesOrdersTable({
                       >
                         <ClipboardList className="w-5 h-5" />
                       </button>
+                      {!cancelled && !delivered && (
+                        <button
+                          onClick={() => onEdit(order)}
+                          className="p-2 bg-cyan-600/20 text-cyan-300 rounded-lg hover:bg-cyan-600/40 transition"
+                          title="تعديل الطلب"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                      )}
                       {!cancelled && remaining > 0 && (
                         <button
                           onClick={() => onOpenPayment(order)}
@@ -150,12 +163,35 @@ export function SalesOrdersTable({
                           <DollarSign className="w-5 h-5" />
                         </button>
                       )}
+                      {!cancelled && (
+                        <button
+                          onClick={() => onReturn(order)}
+                          className="p-2 bg-orange-600/20 text-orange-300 rounded-lg hover:bg-orange-600/40 transition"
+                          title="مرتجع من الطلب"
+                        >
+                          <Undo2 className="w-5 h-5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onPrint(order)}
                         className="p-2 bg-slate-600/20 text-slate-400 rounded-lg hover:bg-slate-600/40 transition"
-                        title="طباعة"
+                        title="طباعة فاتورة A4"
                       >
                         <Printer className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => onReceipt(order)}
+                        className="p-2 bg-slate-600/20 text-slate-300 rounded-lg hover:bg-slate-600/40 transition"
+                        title="طباعة إيصال حراري"
+                      >
+                        <Receipt className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => onShare(order)}
+                        className="p-2 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/40 transition"
+                        title="مشاركة واتساب"
+                      >
+                        <MessageCircle className="w-5 h-5" />
                       </button>
                       {!cancelled && !delivered && (
                         <button

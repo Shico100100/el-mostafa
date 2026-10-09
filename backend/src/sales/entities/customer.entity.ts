@@ -29,6 +29,9 @@ export class Customer {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   balance: number;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  credit_limit: number | null;
+
   @CreateDateColumn()
   created_at: Date;
 

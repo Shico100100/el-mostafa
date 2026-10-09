@@ -64,6 +64,18 @@ export class SalesOrder {
   @Column({ type: 'timestamptz', nullable: true })
   delivered_at: Date;
 
+  @Column({ type: 'int', nullable: true })
+  created_by: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  updated_by: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  delivered_by: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  cancelled_by: number | null;
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 

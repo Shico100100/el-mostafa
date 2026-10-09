@@ -6,6 +6,8 @@ import { Customer } from './entities/customer.entity';
 import { SalesOrder } from './entities/sales-order.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
 import { CustomerPayment } from './entities/customer-payment.entity';
+import { ManualInvoiceSeq } from './entities/manual-invoice-seq.entity';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 import { InventoryModule } from '../inventory/inventory.module';
 import { AccountingModule } from '../accounting/accounting.module';
 
@@ -29,6 +31,8 @@ import { SalesCreditMemoService } from './credit-memos/sales-credit-memo.service
       SalesOrder,
       SalesOrderItem,
       CustomerPayment,
+      ManualInvoiceSeq,
+      UserEntity,
       SalesReturn,
       SalesReturnItem,
       Stock,

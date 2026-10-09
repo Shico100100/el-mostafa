@@ -5,6 +5,7 @@ export interface Customer {
   email?: string;
   address?: string;
   balance: number;
+  credit_limit?: number | null;
   createdAt?: string;
 }
 

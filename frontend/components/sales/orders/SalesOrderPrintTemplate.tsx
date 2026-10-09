@@ -8,7 +8,7 @@ export function SalesOrderPrintTemplate({ order, ref }: { order: Order | null; r
           <div><h1 className="text-3xl font-black mb-1">المصطفى للإنتاج</h1><p className="text-gray-600 font-bold">لصناعة الأجهزة الكهربائية</p></div>
           <div className="text-left font-bold">
             <h2 className="text-2xl font-black mb-2">فاتورة مبيعات</h2>
-            <p>رقم: <span className="font-mono">#{order?.id}</span></p>
+            <p>رقم: <span className="font-mono">{order?.invoice_number || `#${order?.id}`}</span></p>
             <p>تاريخ: {new Date(order?.order_date || order?.created_at || '').toLocaleDateString('ar-EG')}</p>
           </div>
         </div>

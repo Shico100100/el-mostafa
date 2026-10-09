@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SalesOrder } from '../entities/sales-order.entity';
 import { SalesOrderItem } from '../entities/sales-order-item.entity';
+import { UserEntity } from '../../users/infrastructure/persistence/relational/entities/user.entity';
 import { jsonToSheetBuffer } from '../../utils/excel-export';
 
 @Injectable()
@@ -12,6 +13,8 @@ export class SalesOrderService {
     private orderRepo: Repository<SalesOrder>,
     @InjectRepository(SalesOrderItem)
     private orderItemRepo: Repository<SalesOrderItem>,
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
   ) {}
 
   async getAllOrders(query?: {
@@ -86,14 +89,64 @@ export class SalesOrderService {
       .getManyAndCount();
 
     const paidMap = await this.getPaidMap(items.map((o) => o.id));
+    const withPay = items.map((o) =>
+      this.withPayment(o, paidMap.get(o.id) || 0),
+    );
 
     return {
-      items: items.map((o) => this.withPayment(o, paidMap.get(o.id) || 0)),
+      items: await this.attachAuditNames(withPay),
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  private async attachAuditNames<T extends SalesOrder>(
+    orders: T[],
+  ): Promise<T[]> {
+    const ids = new Set<number>();
+    for (const o of orders) {
+      for (const k of [
+        'created_by',
+        'updated_by',
+        'delivered_by',
+        'cancelled_by',
+      ] as const) {
+        const v = (o as Record<string, unknown>)[k];
+        if (typeof v === 'number') ids.add(v);
+      }
+    }
+    if (ids.size === 0) return orders;
+    const users = await this.userRepo
+      .createQueryBuilder('u')
+      .select(['u.id', 'u.firstName', 'u.lastName', 'u.email'])
+      .where('u.id IN (:...ids)', { ids: [...ids] })
+      .getMany();
+    const names = new Map<number, string>();
+    for (const u of users) {
+      const full = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+      names.set(u.id, full || u.email || `مستخدم #${u.id}`);
+    }
+    return orders.map((o) => ({
+      ...o,
+      created_by_name:
+        typeof o.created_by === 'number'
+          ? (names.get(o.created_by) ?? null)
+          : null,
+      updated_by_name:
+        typeof o.updated_by === 'number'
+          ? (names.get(o.updated_by) ?? null)
+          : null,
+      delivered_by_name:
+        typeof o.delivered_by === 'number'
+          ? (names.get(o.delivered_by) ?? null)
+          : null,
+      cancelled_by_name:
+        typeof o.cancelled_by === 'number'
+          ? (names.get(o.cancelled_by) ?? null)
+          : null,
+    }));
   }
 
   private async getPaidMap(orderIds: number[]): Promise<Map<number, number>> {
@@ -128,7 +181,10 @@ export class SalesOrderService {
     });
     if (!order) return order;
     const paidMap = await this.getPaidMap([order.id]);
-    return this.withPayment(order, paidMap.get(order.id) || 0);
+    const [withNames] = await this.attachAuditNames([
+      this.withPayment(order, paidMap.get(order.id) || 0),
+    ]);
+    return withNames;
   }
 
   async getOrderItems(orderId: number) {
