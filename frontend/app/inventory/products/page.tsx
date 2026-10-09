@@ -11,6 +11,7 @@ import StatCards from '@/components/inventory/StatCards';
 import FilterBar from '@/components/inventory/FilterBar';
 import { useProducts } from '@/hooks/inventory/useProducts';
 import AddEditProductModal from '@/components/inventory/modals/AddEditProductModal';
+import AssembleDialog from '@/components/inventory/modals/AssembleDialog';
 import ImportPreviewDialog from '@/components/inventory/modals/ImportPreviewDialog';
 import StockAdjustModal from '@/components/inventory/modals/StockAdjustModal';
 import { InventoryProductsHeader } from '@/components/inventory/products/InventoryProductsHeader';
@@ -35,6 +36,7 @@ function ProductsPageContent() {
   const h = useProducts();
   const [boms, setBoms] = useState<BOM[]>([]);
   const [bulkCategoryId, setBulkCategoryId] = useState('');
+  const [assemblingProduct, setAssemblingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     api.fetchWithAuth<{ items: BOM[] }>('/manufacturing/boms').then((d) => setBoms(d?.items || [])).catch(() => {});
@@ -123,6 +125,7 @@ function ProductsPageContent() {
           onStartInlineEdit={h.startInlineEdit} onSaveInlineEdit={h.saveInlineEdit}
           onOpenAdjustment={h.openAdjustment}
           onEditFull={(p) => { h.setEditingProduct(p); h.setShowModal(true); }}
+          onAssemble={(p) => setAssemblingProduct(p)}
           onDuplicate={(p) => { const dup = { ...p, id: 0 as any, name: `${p.name} (نسخة)`, stock_quantity: '0' }; h.setEditingProduct(dup as any); h.setShowModal(true); }}
           onMarkDormant={h.handleMarkDormant} onRestoreProduct={h.handleRestoreProduct}
           onDelete={h.handleDelete}           onRowClick={(id) => router.push(`/inventory/products/${id}`)}
@@ -132,6 +135,15 @@ function ProductsPageContent() {
       </div>
       <AddEditProductModal isOpen={h.showModal} product={h.editingProduct ? toProductData(h.editingProduct) : null}
         warehouses={h.warehouses} categories={h.categories} onClose={() => { h.setShowModal(false); h.setEditingProduct(null); }} onSave={h.handleSaveProduct} />
+      {assemblingProduct && (
+        <AssembleDialog
+          product={{ id: assemblingProduct.id, name: assemblingProduct.name }}
+          warehouses={h.warehouses}
+          defaultWarehouseId={assemblingProduct.warehouse_id}
+          onClose={() => setAssemblingProduct(null)}
+          onSaved={() => { setAssemblingProduct(null); h.loadData(); }}
+        />
+      )}
       <StockAdjustModal productId={h.adjustingId} onClose={() => h.setAdjustingId(null)} onSave={h.saveAdjustment} />
     </>
   );

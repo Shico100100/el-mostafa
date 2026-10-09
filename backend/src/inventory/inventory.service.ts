@@ -90,6 +90,30 @@ export class InventoryService {
   async bulkDeleteProducts(ids: number[]) {
     return this.productService.bulkDeleteProducts(ids);
   }
+
+  async getAssemblyPreview(
+    productId: number,
+    quantity: number,
+    warehouseId?: number,
+  ) {
+    return this.productService.getAssemblyPreview(
+      productId,
+      quantity,
+      warehouseId,
+    );
+  }
+
+  async assembleProduct(
+    productId: number,
+    quantity: number,
+    warehouseId?: number,
+  ) {
+    return this.productService.assembleProduct(
+      productId,
+      quantity,
+      warehouseId,
+    );
+  }
   async bulkAssignCategory(ids: number[], categoryId: number) {
     return this.productService.bulkAssignCategory(ids, categoryId);
   }

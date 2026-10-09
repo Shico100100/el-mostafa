@@ -5,11 +5,12 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Package, DollarSign, BarChart3, Warehouse, Tag, Pencil } from 'lucide-react';
+import { Package, DollarSign, BarChart3, Warehouse, Tag, Pencil, PackagePlus } from 'lucide-react';
 import PageShell from '@/components/inventory/PageShell';
 import InfoCard, { DetailRow } from '@/components/inventory/InfoCard';
 import { TypeBadge, StockBadge } from '@/components/inventory/Badge';
 import AddEditProductModal from '@/components/inventory/modals/AddEditProductModal';
+import AssembleDialog from '@/components/inventory/modals/AssembleDialog';
 import {
   toProductData,
   toProductPayload,
@@ -35,6 +36,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
+  const [showAssemble, setShowAssemble] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -51,7 +53,8 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [fetchProduct]);
 
-  const openEdit = async () => {
+  const ensureLookups = async () => {
+    if (warehouses.length > 0) return true;
     try {
       const [wh, cats] = await Promise.all([
         api.fetchWithAuth<Warehouse[]>('/inventory/warehouses'),
@@ -59,10 +62,19 @@ export default function ProductDetailPage() {
       ]);
       setWarehouses(wh || []);
       setCategories(cats || []);
-      setShowEdit(true);
+      return true;
     } catch {
-      toast.error('فشل تحميل بيانات التعديل');
+      toast.error('فشل تحميل بيانات المخازن');
+      return false;
     }
+  };
+
+  const openEdit = async () => {
+    if (await ensureLookups()) setShowEdit(true);
+  };
+
+  const openAssemble = async () => {
+    if (await ensureLookups()) setShowAssemble(true);
   };
 
   const saveEdit = async (data: ProductFormData) => {
@@ -115,6 +127,13 @@ export default function ProductDetailPage() {
             className="px-4 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/20 transition flex items-center gap-2 text-sm"
           >
             <Pencil className="w-4 h-4" /> تعديل
+          </button>
+          <button
+            onClick={openAssemble}
+            title="تجميع المنتج من مكوناته حسب الوصفة المسجلة"
+            className="px-4 py-2.5 bg-teal-600/10 hover:bg-teal-600/20 text-teal-300 rounded-xl border border-teal-500/20 transition flex items-center gap-2 text-sm"
+          >
+            <PackagePlus className="w-4 h-4" /> تجميع
           </button>
           <button
             onClick={() => router.push(`/inventory/products/${product.id}/movements`)}
@@ -175,6 +194,19 @@ export default function ProductDetailPage() {
           categories={categories}
           onClose={() => setShowEdit(false)}
           onSave={saveEdit}
+        />
+      )}
+      {showAssemble && (
+        <AssembleDialog
+          product={{ id: product.id, name: product.name }}
+          warehouses={warehouses}
+          defaultWarehouseId={product.warehouse_id}
+          onClose={() => setShowAssemble(false)}
+          onSaved={async () => {
+            setShowAssemble(false);
+            setLoading(true);
+            await fetchProduct();
+          }}
         />
       )}
     </>

@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Package, Box, Gauge, Check, Zap, Pencil, ClipboardList, Trash2, PowerOff, RotateCcw } from 'lucide-react';
+import { Package, Box, Gauge, Check, Zap, Pencil, ClipboardList, Trash2, PowerOff, RotateCcw, PackagePlus } from 'lucide-react';
 import { TypeBadge, StockBadge } from '@/components/inventory/Badge';
 import type { BOM, Product } from '@/components/inventory/types';
 
@@ -33,6 +33,7 @@ interface Props {
   onOpenAdjustment: (id: number) => void;
   onEditFull: (p: Product) => void;
   onDuplicate: (p: Product) => void;
+  onAssemble: (p: Product) => void;
   onDelete: (id: number) => void;
   onMarkDormant: (id: number) => void;
   onRestoreProduct: (id: number) => void;
@@ -52,7 +53,7 @@ interface Props {
 export function InventoryProductsTable({
   products, loading, sortField, sortDir, onToggleSort,
   inlineEditingId, editForm, onEditFormChange,
-  onStartInlineEdit, onSaveInlineEdit, onOpenAdjustment, onEditFull, onDuplicate, onDelete,
+  onStartInlineEdit, onSaveInlineEdit, onOpenAdjustment, onEditFull, onDuplicate, onAssemble, onDelete,
   onMarkDormant, onRestoreProduct,
   onRowClick, boms, latestPrices, margin,
   page, totalPages, totalItems, onPageChange,
@@ -176,6 +177,7 @@ export function InventoryProductsTable({
                           <button onClick={() => onOpenAdjustment(product.id)} className="p-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-200 rounded-lg transition" title="تسوية"><Gauge className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onEditFull(product)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-blue-200 rounded-lg transition" title="تعديل"><Pencil className="w-3.5 h-3.5" /></button>
                           <button onClick={() => onDuplicate(product)} className="p-1.5 bg-green-500/20 hover:bg-green-500/40 text-green-200 rounded-lg transition" title="نسخ المنتج"><ClipboardList className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => onAssemble(product)} className="p-1.5 bg-teal-500/20 hover:bg-teal-500/40 text-teal-200 rounded-lg transition" title="تجميع من المكونات"><PackagePlus className="w-3.5 h-3.5" /></button>
                           {product.type === 'DORMANT' ? (
                             <button onClick={() => onRestoreProduct(product.id)} className="p-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-200 rounded-lg transition" title="استرجاع"><RotateCcw className="w-3.5 h-3.5" /></button>
                           ) : (

@@ -6,3 +6,4 @@ export { CreateStockMovementDto } from './create-stock-movement.dto';
 export { TransferStockDto } from './transfer-stock.dto';
 export { AdjustStockDto } from './adjust-stock.dto';
 export { BulkDeleteDto, BulkAssignCategoryDto } from './bulk-operations.dto';
+export { AssembleProductDto } from './assemble-product.dto';

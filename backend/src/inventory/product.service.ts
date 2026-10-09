@@ -56,6 +56,30 @@ export class ProductService {
     return this.productCrudService.bulkDeleteProducts(ids);
   }
 
+  async getAssemblyPreview(
+    productId: number,
+    quantity: number,
+    warehouseId?: number,
+  ) {
+    return this.productCrudService.getAssemblyPreview(
+      productId,
+      quantity,
+      warehouseId,
+    );
+  }
+
+  async assembleProduct(
+    productId: number,
+    quantity: number,
+    warehouseId?: number,
+  ) {
+    return this.productCrudService.assembleProduct(
+      productId,
+      quantity,
+      warehouseId,
+    );
+  }
+
   async bulkAssignCategory(ids: number[], categoryId: number) {
     return this.productCrudService.bulkAssignCategory(ids, categoryId);
   }

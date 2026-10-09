@@ -34,6 +34,7 @@ import {
   AdjustStockDto,
   BulkDeleteDto,
   BulkAssignCategoryDto,
+  AssembleProductDto,
 } from './dto';
 
 @ApiTags('Inventory')
@@ -179,6 +180,35 @@ export class InventoryController {
   @ApiResponse({ status: 200, description: 'Update count returned' })
   bulkAssignCategory(@Body() data: BulkAssignCategoryDto) {
     return this.inventoryService.bulkAssignCategory(data.ids, data.category_id);
+  }
+
+  @Get('products/:id/assembly-preview')
+  @ApiOperation({ summary: 'Preview assembling a BOM product' })
+  @ApiResponse({ status: 200, description: 'Components, availability and cost' })
+  getAssemblyPreview(
+    @Param('id') id: string,
+    @Query('quantity') quantity?: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    return this.inventoryService.getAssemblyPreview(
+      +id,
+      quantity ? +quantity : 1,
+      warehouseId ? +warehouseId : undefined,
+    );
+  }
+
+  @Post('products/:id/assemble')
+  @ApiOperation({ summary: 'Assemble a BOM product in one warehouse' })
+  @ApiResponse({ status: 201, description: 'Assembly completed' })
+  assembleProduct(
+    @Param('id') id: string,
+    @Body() data: AssembleProductDto,
+  ) {
+    return this.inventoryService.assembleProduct(
+      +id,
+      data.quantity,
+      data.warehouse_id,
+    );
   }
 
   @Get('products/:id')
