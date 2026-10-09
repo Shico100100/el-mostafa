@@ -10,6 +10,7 @@
     "build:analyze": "cross-env ANALYZE=true next build",
     "build:capacitor": "npx cap sync",
     "start": "next start -H 0.0.0.0",
+    "start:standalone": "cross-env HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "prepare": "husky",

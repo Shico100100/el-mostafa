@@ -11,6 +11,7 @@ import StatCards from '@/components/inventory/StatCards';
 import FilterBar from '@/components/inventory/FilterBar';
 import { useProducts } from '@/hooks/inventory/useProducts';
 import AddEditProductModal from '@/components/inventory/modals/AddEditProductModal';
+import ImportPreviewDialog from '@/components/inventory/modals/ImportPreviewDialog';
 import StockAdjustModal from '@/components/inventory/modals/StockAdjustModal';
 import { InventoryProductsHeader } from '@/components/inventory/products/InventoryProductsHeader';
 import { InventoryProductsTable } from '@/components/inventory/products/InventoryProductsTable';
@@ -45,7 +46,8 @@ function ProductsPageContent() {
     { label: 'إجمالي المنتجات', value: h.summary?.totalProducts ?? h.totalItems, icon: <Package className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
     { label: 'المعروض', value: h.sortedProducts.length, icon: <Package className="w-6 h-6 text-emerald-400" />, color: 'bg-emerald-500/20' },
     { label: 'قيمة المخزون', value: h.summary ? Math.round(h.summary.totalValue).toLocaleString() : '...', icon: <TrendingUp className="w-6 h-6 text-green-400" />, color: 'bg-green-500/20' },
-    { label: 'نواقص', value: h.summary ? h.summary.lowStockCount : '...', icon: <AlertTriangle className="w-6 h-6 text-red-400" />, color: 'bg-red-500/20' },
+    { label: 'نواقص', value: h.summary ? h.summary.lowStockCount : '...', icon: <AlertTriangle className="w-6 h-6 text-red-400" />, color: 'bg-red-500/20',
+      onClick: () => { h.setShowLowStock(true); h.setPage(1); }, title: 'عرض المنتجات الناقصة فقط' },
   ];
 
   return (
@@ -66,7 +68,15 @@ function ProductsPageContent() {
           ]}
           toggles={[{ label: 'النواقص فقط', active: h.showLowStock, onClick: () => { h.setShowLowStock(!h.showLowStock); h.setPage(1); }, icon: <AlertTriangle className="w-4 h-4" /> }]}
         />
-        <input type="file" accept=".xlsx,.xls" onChange={h.handleImport} id="import-file" className="hidden" />
+        <input type="file" accept=".xlsx,.xls" onChange={h.previewImport} id="import-file" className="hidden" />
+        {(h.importPreviewing || h.importPreview) && (
+          <ImportPreviewDialog
+            preview={h.importPreview}
+            loading={h.importPreviewing}
+            onConfirm={h.confirmImport}
+            onClose={h.cancelImport}
+          />
+        )}
         {h.selectedIds.size > 0 && (
           <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 mb-4 flex flex-wrap items-center gap-3">
             <span className="text-white font-semibold text-sm">

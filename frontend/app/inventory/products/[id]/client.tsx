@@ -1,14 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Package, DollarSign, BarChart3, Warehouse, Tag } from 'lucide-react';
+import { Package, DollarSign, BarChart3, Warehouse, Tag, Pencil } from 'lucide-react';
 import PageShell from '@/components/inventory/PageShell';
 import InfoCard, { DetailRow } from '@/components/inventory/InfoCard';
 import { TypeBadge, StockBadge } from '@/components/inventory/Badge';
+import AddEditProductModal from '@/components/inventory/modals/AddEditProductModal';
+import {
+  toProductData,
+  toProductPayload,
+  type ProductFormData,
+} from '@/lib/inventory/productPayload';
 
 interface Category { id: number; name: string; }
 interface Warehouse { id: number; name: string; }
@@ -28,18 +34,52 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEdit, setShowEdit] = useState(false);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const fetchProduct = useCallback(async () => {
+    try {
+      const data = await api.fetchWithAuth<ProductDetail>(`/inventory/products/${productId}`);
+      setProduct(data);
+    } catch {
+      toast.error('فشل تحميل بيانات المنتج');
+    } finally { setLoading(false); }
+  }, [productId]);
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const data = await api.fetchWithAuth<ProductDetail>(`/inventory/products/${productId}`);
-        setProduct(data);
-      } catch {
-        toast.error('فشل تحميل بيانات المنتج');
-      } finally { setLoading(false); }
-    };
     fetchProduct();
-  }, [productId]);
+  }, [fetchProduct]);
+
+  const openEdit = async () => {
+    try {
+      const [wh, cats] = await Promise.all([
+        api.fetchWithAuth<Warehouse[]>('/inventory/warehouses'),
+        api.fetchWithAuth<Category[]>('/inventory/categories').catch(() => []),
+      ]);
+      setWarehouses(wh || []);
+      setCategories(cats || []);
+      setShowEdit(true);
+    } catch {
+      toast.error('فشل تحميل بيانات التعديل');
+    }
+  };
+
+  const saveEdit = async (data: ProductFormData) => {
+    if (!product) return;
+    try {
+      await api.fetchWithAuth(`/inventory/products/${product.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(toProductPayload(data)),
+      });
+      toast.success('تم التحديث');
+      setShowEdit(false);
+      setLoading(true);
+      await fetchProduct();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'فشل الحفظ');
+    }
+  };
 
   if (loading) return (
     <PageShell title="..." backHref="/inventory/products">
@@ -63,12 +103,19 @@ export default function ProductDetailPage() {
   const margin = cost > 0 ? { value: sell - cost, pct: ((sell - cost) / cost * 100) } : { value: 0, pct: 0 };
 
   return (
+    <>
     <PageShell
       title={product.name}
       subtitle={product.sku ? `SKU: ${product.sku}` : undefined}
       backHref="/inventory/products"
       actions={
         <>
+          <button
+            onClick={openEdit}
+            className="px-4 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 rounded-xl border border-emerald-500/20 transition flex items-center gap-2 text-sm"
+          >
+            <Pencil className="w-4 h-4" /> تعديل
+          </button>
           <button
             onClick={() => router.push(`/inventory/products/${product.id}/movements`)}
             className="px-4 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-xl border border-emerald-500/20 transition flex items-center gap-2 text-sm"
@@ -120,5 +167,16 @@ export default function ProductDetailPage() {
         )}
       </div>
     </PageShell>
+      {showEdit && (
+        <AddEditProductModal
+          isOpen
+          product={toProductData(product)}
+          warehouses={warehouses}
+          categories={categories}
+          onClose={() => setShowEdit(false)}
+          onSave={saveEdit}
+        />
+      )}
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { useAuthCheck } from '@/lib/useAuthCheck';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Product } from '@/components/inventory/types';
+import { PRODUCT_PAYLOAD_KEYS, toProductPayload } from '@/lib/inventory/productPayload';
 
 interface Warehouse { id: number; name: string; }
 interface ProductResponse { data: Product[]; total: number; totalPages: number; page: number; limit: number; }
@@ -15,6 +16,15 @@ interface ProductData {
   selling_price: number; stock_quantity: number;
   min_stock?: number | null; warehouse_id?: number; description?: string | null;
   weight_grams?: number | null; image_path?: string | null;
+}
+
+export interface ImportPreview {
+  total: number;
+  toCreate: number;
+  toUpdate: number;
+  skipped: number;
+  errors: { row: number; field: string; message: string }[];
+  rows: { row: number; name: string; action: string; note: string }[];
 }
 
 export function useProducts() {
@@ -157,10 +167,18 @@ export function useProducts() {
     });
   }, [products, sortField, sortDir]);
 
+  // Export honors the active list filters (search/type/warehouse/low-stock)
+  // so "export" means "export what I see", not the whole catalog.
   const handleExport = async () => {
     try {
+      const qs = new URLSearchParams();
+      if (debouncedSearch) qs.append('search', debouncedSearch);
+      if (selectedType) qs.append('type', selectedType);
+      if (showLowStock) qs.append('lowStock', 'true');
+      if (selectedWarehouse) qs.append('warehouseId', selectedWarehouse);
+      const suffix = qs.toString();
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/v1/inventory/products/export', {
+      const res = await fetch(`/api/v1/inventory/products/export${suffix ? `?${suffix}` : ''}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Export failed');
@@ -173,12 +191,40 @@ export function useProducts() {
     } catch { toast.error('فشل التصدير'); }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
+  const [importPreviewing, setImportPreviewing] = useState(false);
+
+  const previewImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    const fd = new FormData();
-    fd.append('file', e.target.files[0]);
+    const file = e.target.files[0];
+    e.target.value = '';
+    setImportFile(file);
+    setImportPreview(null);
+    setImportPreviewing(true);
     try {
       const token = localStorage.getItem('token');
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/v1/inventory/products/import/preview', {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
+      });
+      if (!res.ok) throw new Error('Preview failed');
+      setImportPreview(await res.json());
+    } catch {
+      toast.error('فشل قراءة الملف');
+      setImportFile(null);
+    } finally {
+      setImportPreviewing(false);
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!importFile) return;
+    try {
+      const token = localStorage.getItem('token');
+      const fd = new FormData();
+      fd.append('file', importFile);
       const res = await fetch('/api/v1/inventory/products/import', {
         method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
       });
@@ -188,39 +234,24 @@ export function useProducts() {
         loadData();
       } else toast.error('فشل الاستيراد');
     } catch { toast.error('خطأ في الاستيراد'); }
-    e.target.value = '';
+    finally {
+      setImportFile(null);
+      setImportPreview(null);
+    }
+  };
+
+  const cancelImport = () => {
+    setImportFile(null);
+    setImportPreview(null);
   };
 
   // Exactly the keys CreateProductDto accepts. The edit form is spread from
   // the full Product row (id, warehouse/category objects, timestamps...),
   // and the API rejects unknown props (forbidNonWhitelisted) with 422 — so
   // only known keys may leave the client.
-  // Mirrors CreateProductDto minus sku/barcode (removed from the API: the
-  // edit form spreads the full list row, which still carries them, and the
-  // API rejects unknown props with 422.
-  const PRODUCT_PAYLOAD_KEYS = [
-    'name',
-    'cost_price',
-    'selling_price',
-    'category_id',
-    'warehouse_id',
-    'unit',
-    'type',
-    'description',
-    'min_stock',
-    'weight_grams',
-    'image_path',
-    'raw_material_type',
-    'initial_stock',
-  ] as const;
-
   const handleSaveProduct = async (data: ProductData) => {
     try {
-      const source = data as unknown as Record<string, unknown>;
-      const payload: Record<string, unknown> = {};
-      for (const k of PRODUCT_PAYLOAD_KEYS) {
-        if (source[k] !== undefined) payload[k] = source[k];
-      }
+      const payload = toProductPayload(data);
       // Route by id like the modal does (product?.id): a duplicate carries
       // id 0 and must POST as new, not PUT over product 0.
       if (editingProduct?.id) {
@@ -416,7 +447,9 @@ export function useProducts() {
     setSearch, setSelectedType, setSelectedWarehouse, setShowLowStock,
     setPage, setShowModal, setEditingProduct,
     setEditForm, setInlineEditingId, setAdjustingId,
-    loadData, toggleSort, handleExport, handleImport, handleSaveProduct,
+    loadData, toggleSort, handleExport,
+    importFile, importPreview, importPreviewing,
+    previewImport, confirmImport, cancelImport, handleSaveProduct,
     handleDelete, startInlineEdit, saveInlineEdit, openAdjustment, saveAdjustment,
     handleSmartAssign, handleMarkDormant, handleRestoreProduct, margin,
     toggleSelect, toggleSelectPage, clearSelection, confirmBulkDelete, executeBulkDelete, handleBulkAssignCategory,

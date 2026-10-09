@@ -68,8 +68,18 @@ export class InventoryService {
   async recalculateProductStock(id: number) {
     return this.productService.recalculateProductStock(id);
   }
-  async exportProductsToExcel() {
-    return this.productService.exportProductsToExcel();
+  async exportProductsToExcel(filters?: {
+    search?: string;
+    type?: string;
+    categoryId?: number;
+    lowStock?: boolean;
+    warehouseId?: number;
+  }) {
+    return this.productService.exportProductsToExcel(filters);
+  }
+
+  async previewImportFromExcel(buffer: Buffer) {
+    return this.productService.previewImportFromExcel(buffer);
   }
   async importProductsFromExcel(buffer: Buffer) {
     return this.productService.importProductsFromExcel(buffer);

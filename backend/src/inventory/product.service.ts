@@ -66,8 +66,18 @@ export class ProductService {
 
   // ---- Excel Export / Import ----
 
-  async exportProductsToExcel() {
-    return this.productExcelService.exportProductsToExcel();
+  async exportProductsToExcel(filters?: {
+    search?: string;
+    type?: string;
+    categoryId?: number;
+    lowStock?: boolean;
+    warehouseId?: number;
+  }) {
+    return this.productExcelService.exportProductsToExcel(filters);
+  }
+
+  async previewImportFromExcel(buffer: Buffer) {
+    return this.productExcelService.previewImportFromExcel(buffer);
   }
 
   async importProductsFromExcel(buffer: Buffer) {

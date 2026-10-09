@@ -2,11 +2,25 @@
 
 import type { ReactNode } from 'react';
 
-interface StatCardDef { label: string; value: string | number; icon: ReactNode; color: string; }
+interface StatCardDef {
+  label: string;
+  value: string | number;
+  icon: ReactNode;
+  color: string;
+  onClick?: () => void;
+  title?: string;
+}
 
-function StatCard({ label, value, icon, color }: StatCardDef) {
+function StatCard({ label, value, icon, color, onClick, title }: StatCardDef) {
+  const clickable = !!onClick;
   return (
-    <div className="bg-white/5 backdrop-blur rounded-xl border border-white/10 p-4 flex items-center gap-4">
+    <div
+      onClick={onClick}
+      title={title}
+      className={`bg-white/5 backdrop-blur rounded-xl border border-white/10 p-4 flex items-center gap-4 ${
+        clickable ? 'cursor-pointer hover:border-white/25 transition' : ''
+      }`}
+    >
       <div className={`p-3 rounded-lg ${color}`}>{icon}</div>
       <div>
         <div className="stat-value">{value}</div>

@@ -25,9 +25,16 @@ export class ProductExcelService {
     private dataSource: DataSource,
   ) {}
 
-  async exportProductsToExcel() {
+  async exportProductsToExcel(filters?: {
+    search?: string;
+    type?: string;
+    categoryId?: number;
+    lowStock?: boolean;
+    warehouseId?: number;
+  }) {
     const result: any = await this.productCrudService.getAllProducts({
       limit: 10000,
+      ...filters,
     });
     const products = (result.data || result) as (Product & {
       stock_quantity: number;
@@ -122,6 +129,127 @@ export class ProductExcelService {
     });
     const buf = await wb.xlsx.writeBuffer();
     return Buffer.from(buf);
+  }
+
+  private static readonly KNOWN_TYPES = new Set([
+    'FINISHED',
+    'IMPORTED',
+    'PACKAGING',
+    'RAW',
+    'RAW_PLASTIC',
+    'SEMI',
+    'SEMI_FINISHED',
+    'DORMANT',
+  ]);
+
+  private static readonly NUMERIC_IMPORT_FIELDS = [
+    'Selling Price',
+    'selling_price',
+    'Cost Price',
+    'cost_price',
+    'Min Stock',
+    'min_stock',
+    'weight_grams',
+  ];
+
+  /**
+   * Dry-run of the import: parses the workbook and matches every row against
+   * existing products exactly like the real import does, but writes nothing.
+   * Rows that would fail the write (missing name, non-numeric numbers) are
+   * reported as errors instead of blowing up the whole transaction unseen.
+   */
+  async previewImportFromExcel(buffer: Buffer): Promise<{
+    total: number;
+    toCreate: number;
+    toUpdate: number;
+    skipped: number;
+    errors: { row: number; field: string; message: string }[];
+    rows: { row: number; name: string; action: string; note: string }[];
+  }> {
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(
+      buffer as unknown as Parameters<ExcelJS.Xlsx['load']>[0],
+    );
+    const ws = wb.worksheets[0];
+    if (!ws)
+      return { total: 0, toCreate: 0, toUpdate: 0, skipped: 0, errors: [], rows: [] };
+    const rows = ws.getSheetValues();
+    if (rows.length < 2)
+      return { total: 0, toCreate: 0, toUpdate: 0, skipped: 0, errors: [], rows: [] };
+
+    const headers = (rows[1] as unknown as Array<unknown>) || [];
+    const colMap: Record<string, number> = {};
+    headers.forEach((h: any, i: number) => {
+      if (h) {
+        const key = String(h).trim();
+        colMap[key] = i;
+        colMap[key.toLowerCase()] = i;
+        if (key === 'الاسم') colMap['name'] = i;
+        if (key === 'النوع') colMap['type'] = i;
+      }
+    });
+
+    let toCreate = 0;
+    let toUpdate = 0;
+    let skipped = 0;
+    const errors: { row: number; field: string; message: string }[] = [];
+    const preview: { row: number; name: string; action: string; note: string }[] = [];
+
+    for (let r = 2; r <= rows.length; r++) {
+      const row = (rows[r] as unknown as Array<unknown>) || [];
+      const name = (row[colMap['name']] || row[colMap['الاسم']]) as string;
+      if (!name) {
+        skipped++;
+        continue;
+      }
+      let broken = false;
+      for (const field of ProductExcelService.NUMERIC_IMPORT_FIELDS) {
+        const v = row[colMap[field]];
+        if (v !== undefined && v !== null && v !== '' && Number.isNaN(Number(v))) {
+          errors.push({ row: r, field, message: `قيمة غير رقمية: ${v}` });
+          broken = true;
+        }
+      }
+      if (broken) {
+        skipped++;
+        continue;
+      }
+      const sku = (row[colMap['SKU']] || row[colMap['sku']]) as
+        | string
+        | undefined;
+      const barcode = (row[colMap['Barcode']] || row[colMap['barcode']]) as
+        | string
+        | undefined;
+      let existing = null;
+      if (sku)
+        existing = await this.productRepo.findOne({
+          where: { sku: String(sku) },
+        });
+      if (!existing && barcode)
+        existing = await this.productRepo.findOne({
+          where: { barcode: String(barcode) },
+        });
+      if (!existing)
+        existing = await this.productRepo.findOne({ where: { name } });
+      if (existing) toUpdate++;
+      else toCreate++;
+      if (preview.length < 50) {
+        preview.push({
+          row: r,
+          name: String(name),
+          action: existing ? 'update' : 'create',
+          note: existing ? `موجود (id ${existing.id})` : 'جديد',
+        });
+      }
+    }
+    return {
+      total: rows.length - 1,
+      toCreate,
+      toUpdate,
+      skipped,
+      errors: errors.slice(0, 100),
+      rows: preview,
+    };
   }
 
   async importProductsFromExcel(buffer: Buffer) {

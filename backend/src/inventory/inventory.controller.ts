@@ -97,10 +97,23 @@ export class InventoryController {
   }
 
   @Get('products/export')
-  @ApiOperation({ summary: 'Export products to Excel' })
+  @ApiOperation({ summary: 'Export products to Excel (respects list filters)' })
   @ApiResponse({ status: 200, description: 'Excel file returned' })
-  async exportProducts(@Res() res: Response) {
-    const buffer = await this.inventoryService.exportProductsToExcel();
+  async exportProducts(
+    @Res() res: Response,
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('lowStock') lowStock?: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    const buffer = await this.inventoryService.exportProductsToExcel({
+      search: search || undefined,
+      type: type || undefined,
+      categoryId: categoryId ? +categoryId : undefined,
+      lowStock: lowStock === 'true',
+      warehouseId: warehouseId ? +warehouseId : undefined,
+    });
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -116,6 +129,14 @@ export class InventoryController {
   @ApiResponse({ status: 201, description: 'Products imported' })
   async importProducts(@UploadedFile() file: Express.Multer.File) {
     return this.inventoryService.importProductsFromExcel(file.buffer);
+  }
+
+  @Post('products/import/preview')
+  @UseInterceptors(FileInterceptor('file', { fileFilter: excelFileFilter }))
+  @ApiOperation({ summary: 'Dry-run of the Excel import without writing' })
+  @ApiResponse({ status: 201, description: 'Import preview returned' })
+  async previewImport(@UploadedFile() file: Express.Multer.File) {
+    return this.inventoryService.previewImportFromExcel(file.buffer);
   }
 
   @Post('products/upload-image')
