@@ -77,7 +77,32 @@ export function useSalesOrders() {
     }
   }, [orderToPrint, handlePrint]);
 
-  const loadData = useCallback(async () => {
+  // Static reference data: loaded once (customers refresh separately after quick-add).
+  const loadStatic = useCallback(async () => {
+    try {
+      const [customersData, productsData, warehousesData] = await Promise.all([
+        api.fetchWithAuth('/sales/customers'),
+        api.fetchWithAuth('/inventory/products'),
+        api.fetchWithAuth('/inventory/warehouses'),
+      ]);
+      setCustomers(sortAlphabetically(customersData || [], 'name'));
+      setProducts(sortAlphabetically((productsData || []).filter((p: Product) => p.type === 'FINISHED' || p.type === 'SEMI'), 'name'));
+      setWarehouses(warehousesData || []);
+    } catch (error) {
+      console.error('Error loading reference data:', error);
+    }
+  }, []);
+
+  const refreshProducts = useCallback(async () => {
+    try {
+      const productsData = await api.fetchWithAuth('/inventory/products');
+      setProducts(sortAlphabetically((productsData || []).filter((p: Product) => p.type === 'FINISHED' || p.type === 'SEMI'), 'name'));
+    } catch (error) {
+      console.error('Error refreshing products:', error);
+    }
+  }, []);
+
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
@@ -91,20 +116,11 @@ export function useSalesOrders() {
         ...(filters.payment && { payment: filters.payment }),
       });
 
-      const [ordersData, customersData, productsData, warehousesData] = await Promise.all([
-        api.fetchWithAuth(`/sales/orders?${queryParams}`),
-        api.fetchWithAuth('/sales/customers'),
-        api.fetchWithAuth('/inventory/products'),
-        api.fetchWithAuth('/inventory/warehouses'),
-      ]);
+      const ordersData = await api.fetchWithAuth(`/sales/orders?${queryParams}`);
 
       setOrders(ordersData.items || []);
       setTotalPages(ordersData.totalPages || 1);
       setTotalItems(ordersData.total || 0);
-
-      setCustomers(sortAlphabetically(customersData || [], 'name'));
-      setProducts(sortAlphabetically((productsData || []).filter((p: Product) => p.type === 'FINISHED' || p.type === 'SEMI'), 'name'));
-      setWarehouses(warehousesData || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('فشل تحميل أوامر البيع');
@@ -114,10 +130,20 @@ export function useSalesOrders() {
     }
   }, [filters.page, filters.limit, filters.fromDate, filters.toDate, filters.status, filters.delivered, filters.payment, debouncedSearch]);
 
+  // Full reload (orders + fresh availability): after mutations and Peachtree imports.
+  const loadData = useCallback(async () => {
+    await Promise.all([loadOrders(), refreshProducts()]);
+  }, [loadOrders, refreshProducts]);
+
   useEffect(() => {
     if (!ready) return;
-    loadData();
-  }, [ready, loadData]);
+    loadStatic();
+  }, [ready, loadStatic]);
+
+  useEffect(() => {
+    if (!ready) return;
+    loadOrders();
+  }, [ready, loadOrders]);
 
   const resetFilters = () => {
     setFilters({ ...EMPTY_FILTERS });

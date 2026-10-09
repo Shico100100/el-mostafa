@@ -66,11 +66,15 @@ export class SalesOrderService {
     }
 
     if (payment === 'unpaid' || payment === 'partial' || payment === 'paid') {
+      // NOTE: zero/negative-total rows (synced voids/adjustments) carry
+      // nothing to pay, so they only ever match the unfiltered list.
       const paidExpr = `(SELECT COALESCE(SUM(p.amount), 0) FROM customer_payments p WHERE p.order_id = order.id)`;
       if (payment === 'unpaid') {
-        qb.andWhere(`${paidExpr} <= 0`);
+        qb.andWhere(`order.total_amount > 0 AND ${paidExpr} <= 0`);
       } else if (payment === 'paid') {
-        qb.andWhere(`${paidExpr} >= order.total_amount`);
+        qb.andWhere(
+          `order.total_amount > 0 AND ${paidExpr} >= order.total_amount`,
+        );
       } else {
         qb.andWhere(`${paidExpr} > 0 AND ${paidExpr} < order.total_amount`);
       }
