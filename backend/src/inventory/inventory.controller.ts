@@ -184,7 +184,10 @@ export class InventoryController {
 
   @Get('products/:id/assembly-preview')
   @ApiOperation({ summary: 'Preview assembling a BOM product' })
-  @ApiResponse({ status: 200, description: 'Components, availability and cost' })
+  @ApiResponse({
+    status: 200,
+    description: 'Components, availability and cost',
+  })
   getAssemblyPreview(
     @Param('id') id: string,
     @Query('quantity') quantity?: string,
@@ -200,10 +203,7 @@ export class InventoryController {
   @Post('products/:id/assemble')
   @ApiOperation({ summary: 'Assemble a BOM product in one warehouse' })
   @ApiResponse({ status: 201, description: 'Assembly completed' })
-  assembleProduct(
-    @Param('id') id: string,
-    @Body() data: AssembleProductDto,
-  ) {
+  assembleProduct(@Param('id') id: string, @Body() data: AssembleProductDto) {
     return this.inventoryService.assembleProduct(
       +id,
       data.quantity,

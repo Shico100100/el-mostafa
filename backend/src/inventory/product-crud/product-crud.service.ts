@@ -9,10 +9,7 @@ import { Product } from '../entities/product.entity';
 import { Stock } from '../entities/stock.entity';
 import { Warehouse } from '../entities/warehouse.entity';
 import { Category } from '../entities/category.entity';
-import {
-  StockMovement,
-  MovementType,
-} from '../entities/stock-movement.entity';
+import { StockMovement, MovementType } from '../entities/stock-movement.entity';
 import { BOM } from '../../manufacturing/entities/bom.entity';
 
 @Injectable()
@@ -216,7 +213,9 @@ export class ProductCrudService {
       relations: ['items', 'items.product'],
     });
     if (!bom || !bom.items || bom.items.length === 0) {
-      throw new NotFoundException('المنتج ده ملهوش مكونات (BOM) — عرّف الوصفة الأول');
+      throw new NotFoundException(
+        'المنتج ده ملهوش مكونات (BOM) — عرّف الوصفة الأول',
+      );
     }
     return { product, bom };
   }
@@ -227,18 +226,12 @@ export class ProductCrudService {
     warehouseId?: number,
   ) {
     const { product, bom } = await this.loadAssemblyBom(productId);
-    const warehouse = await this.resolveAssemblyWarehouse(
-      product,
-      warehouseId,
-    );
+    const warehouse = await this.resolveAssemblyWarehouse(product, warehouseId);
     const items = [];
     let unitCost = 0;
     for (const item of bom.items) {
       const required = Number(item.quantity) * quantity;
-      const available = await this.movementStock(
-        item.product_id,
-        warehouse.id,
-      );
+      const available = await this.movementStock(item.product_id, warehouse.id);
       const itemUnitCost = Number(item.product?.cost_price) || 0;
       unitCost += itemUnitCost * Number(item.quantity);
       items.push({
@@ -288,7 +281,9 @@ export class ProductCrudService {
         relations: ['items', 'items.product'],
       });
       if (!bom || !bom.items || bom.items.length === 0) {
-        throw new NotFoundException('المنتج ده ملهوش مكونات (BOM) — عرّف الوصفة الأول');
+        throw new NotFoundException(
+          'المنتج ده ملهوش مكونات (BOM) — عرّف الوصفة الأول',
+        );
       }
       let warehouse: Warehouse | null = null;
       if (warehouseId) {
@@ -329,7 +324,8 @@ export class ProductCrudService {
             `المخزون لا يكفي: ${item.product?.name || `#${item.product_id}`} (المطلوب ${required}، المتاح ${available})`,
           );
         }
-        unitCost += (Number(item.product?.cost_price) || 0) * Number(item.quantity);
+        unitCost +=
+          (Number(item.product?.cost_price) || 0) * Number(item.quantity);
         needs.push({ item, required });
       }
       unitCost = Math.round(unitCost * 100) / 100;

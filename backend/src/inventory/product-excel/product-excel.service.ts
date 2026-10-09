@@ -172,10 +172,24 @@ export class ProductExcelService {
     );
     const ws = wb.worksheets[0];
     if (!ws)
-      return { total: 0, toCreate: 0, toUpdate: 0, skipped: 0, errors: [], rows: [] };
+      return {
+        total: 0,
+        toCreate: 0,
+        toUpdate: 0,
+        skipped: 0,
+        errors: [],
+        rows: [],
+      };
     const rows = ws.getSheetValues();
     if (rows.length < 2)
-      return { total: 0, toCreate: 0, toUpdate: 0, skipped: 0, errors: [], rows: [] };
+      return {
+        total: 0,
+        toCreate: 0,
+        toUpdate: 0,
+        skipped: 0,
+        errors: [],
+        rows: [],
+      };
 
     const headers = (rows[1] as unknown as Array<unknown>) || [];
     const colMap: Record<string, number> = {};
@@ -193,7 +207,12 @@ export class ProductExcelService {
     let toUpdate = 0;
     let skipped = 0;
     const errors: { row: number; field: string; message: string }[] = [];
-    const preview: { row: number; name: string; action: string; note: string }[] = [];
+    const preview: {
+      row: number;
+      name: string;
+      action: string;
+      note: string;
+    }[] = [];
 
     for (let r = 2; r <= rows.length; r++) {
       const row = (rows[r] as unknown as Array<unknown>) || [];
@@ -205,7 +224,12 @@ export class ProductExcelService {
       let broken = false;
       for (const field of ProductExcelService.NUMERIC_IMPORT_FIELDS) {
         const v = row[colMap[field]];
-        if (v !== undefined && v !== null && v !== '' && Number.isNaN(Number(v))) {
+        if (
+          v !== undefined &&
+          v !== null &&
+          v !== '' &&
+          Number.isNaN(Number(v))
+        ) {
           errors.push({ row: r, field, message: `قيمة غير رقمية: ${v}` });
           broken = true;
         }
