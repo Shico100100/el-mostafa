@@ -59,8 +59,10 @@ describe('Inventory Flow (Integration)', () => {
         .post('/api/v1/inventory/products')
         .set('Authorization', `Bearer ${token}`)
         .send({
+          // NOTE: do not send sku/barcode here — the products API no longer
+          // accepts them (global forbidNonWhitelisted) since the products
+          // overhaul; their columns stay in the table for sync/search only.
           name: 'Test Product Integration',
-          sku: `TEST-SKU-${Date.now()}`,
           selling_price: 100,
           cost_price: 50,
           type: 'FINISHED',
