@@ -15,18 +15,44 @@ export function PaymentModal({
 }) {
   if (!show || !order) return null;
 
+  const total = Number(order.total_amount);
+  const paid = Number(order.paid_amount ?? 0);
+  const remaining = Number(order.remaining ?? total);
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={onClose}>
       <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-md border border-white/20 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">تسجيل دفعة نقدية</h2>
+          <h2 className="text-2xl font-bold text-white">تسجيل دفعة للطلب #{order.id}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-6 text-center">
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p className="text-xs text-gray-400">الإجمالي</p>
+            <p className="text-white font-bold">{total.toLocaleString()}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p className="text-xs text-gray-400">مدفوع</p>
+            <p className="text-emerald-300 font-bold">{paid.toLocaleString()}</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p className="text-xs text-gray-400">المتبقي</p>
+            <p className="text-amber-300 font-bold">{remaining.toLocaleString()}</p>
+          </div>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div><label className="block text-sm text-gray-400 mb-1">العميل</label><div className="text-white font-bold p-3 bg-white/5 rounded-xl border border-white/10">{order.customer?.name}</div></div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">قيمة الدفعة</label>
-            <input type="number" required value={paymentData.amount} onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-lg font-bold focus:border-emerald-500 outline-none transition" />
+            <input type="number" required min="0.01" max={remaining} value={paymentData.amount} onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-lg font-bold focus:border-emerald-500 outline-none transition" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">طريقة الدفع</label>
+            <select value={paymentData.method} onChange={(e) => setPaymentData({ ...paymentData, method: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none transition">
+              <option value="cash">نقدي</option>
+              <option value="check">شيك</option>
+              <option value="transfer">تحويل بنكي</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">تاريخ التحصيل</label>

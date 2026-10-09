@@ -18,9 +18,16 @@ export function SalesOrderPrintTemplate({ order, ref }: { order: Order | null; r
         </div>
         <table className="w-full mb-8 border-collapse">
           <thead><tr className="bg-slate-900 text-white"><th className="p-4 border border-slate-900">م</th><th className="p-4 border border-slate-900">الصنف / المنتج</th><th className="p-4 border border-slate-900">الكمية</th><th className="p-4 border border-slate-900">السعر</th><th className="p-4 border border-slate-900">الإجمالي</th></tr></thead>
-          <tbody>{order?.items?.map((item: OrderItem, idx: number) => (<tr key={item.id}><td className="p-4 border border-slate-300 text-center">{idx + 1}</td><td className="p-4 border border-slate-300 font-bold">{item.product?.name}</td><td className="p-4 border border-slate-300 text-center">{item.quantity} {item.product?.unit || 'قطعة'}</td><td className="p-4 border border-slate-300 text-center">{Number(item.price).toLocaleString()}</td><td className="p-4 border border-slate-300 text-center font-bold">{(item.quantity * item.price).toLocaleString()}</td></tr>))}</tbody>
-        </table>
-        <div className="flex justify-end mt-12"><div className="w-80 space-y-4"><div className="flex justify-between items-center text-xl font-black bg-slate-900 text-white p-6 rounded-2xl"><span>الصافي المطلوب:</span><span>{Number(order?.total_amount).toLocaleString()} ج.م</span></div></div></div>
+        <tbody>{order?.items?.length ? order.items.map((item: OrderItem, idx: number) => (<tr key={item.id}><td className="p-4 border border-slate-300 text-center">{idx + 1}</td><td className="p-4 border border-slate-300 font-bold">{item.product?.name}</td><td className="p-4 border border-slate-300 text-center">{item.quantity} {item.product?.unit || 'قطعة'}</td><td className="p-4 border border-slate-300 text-center">{Number(item.price).toLocaleString()}</td><td className="p-4 border border-slate-300 text-center font-bold">{Number(item.total).toLocaleString()}</td></tr>)) : (<tr><td colSpan={5} className="p-4 border border-slate-300 text-center">لا توجد أصناف</td></tr>)}</tbody>
+      </table>
+      <div className="flex justify-end mt-12"><div className="w-80 space-y-4">
+        {order?.discount_type && order.discount_type !== 'none' && (
+          <div className="flex justify-between items-center text-lg font-bold text-slate-700"><span>خصم ({order.discount_type === 'percentage' ? `${order.discount_value}%` : `${Number(order.discount_value).toLocaleString()} ج.م`}):</span></div>
+        )}
+        <div className="flex justify-between items-center text-lg"><span>مدفوع:</span><span className="font-bold">{Number(order?.paid_amount ?? 0).toLocaleString()} ج.م</span></div>
+        <div className="flex justify-between items-center text-xl font-black bg-slate-900 text-white p-6 rounded-2xl"><span>الصافي المطلوب:</span><span>{Number(order?.total_amount).toLocaleString()} ج.م</span></div>
+        <div className="flex justify-between items-center text-lg"><span>المتبقي:</span><span className="font-bold">{Number(order?.remaining ?? order?.total_amount ?? 0).toLocaleString()} ج.م</span></div>
+      </div></div>
         {order?.notes && (<div className="mt-12 p-6 bg-[#ecfdf5] rounded-2xl border-r-4 border-emerald-500"><h4 className="font-black text-blue-900 mb-2">ملاحظات الفاتورة:</h4><p className="text-lg">{order.notes}</p></div>)}
         <div className="mt-24 grid grid-cols-2 text-center text-xl font-bold">
           <div><p className="mb-20 text-slate-400">إمضاء المسؤول</p><div className="w-48 mx-auto border-t-2 border-slate-900 pt-2">ختم الشركة</div></div>

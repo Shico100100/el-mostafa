@@ -17,7 +17,7 @@ export default function SalesOrdersPage() {
   useSetBackButton('/dashboard');
   const { syncInvoices, syncing } = usePeachtreeSync();
   const {
-    orders, loading, customers, products,
+    orders, loading, customers, products, warehouses,
     filters, setFilters, totalPages, totalItems,
     showModal, setShowModal,
     showPaymentModal, setShowPaymentModal,
@@ -26,7 +26,7 @@ export default function SalesOrdersPage() {
     quickCustomerData, setQuickCustomerData,
     newOrder, setNewOrder,
     paymentData, setPaymentData,
-    componentRef, orderToPrint, setOrderToPrint,
+    componentRef, orderToPrint,
 
     resetFilters, loadData,
     handleAddItem, handleRemoveItem, handleItemChange,
@@ -35,8 +35,9 @@ export default function SalesOrdersPage() {
     handlePaymentSubmit,
     handleSubmit,
     handleDuplicateOrder,
+    handleDeliver, handleCancel, handleDelete,
     handleExport,
-    openPayment, openDetails, closeDetails,
+    openPayment, openDetails, closeDetails, openPrint,
   } = useSalesOrders();
 
   return (
@@ -75,13 +76,16 @@ export default function SalesOrdersPage() {
           onOpenDetails={openDetails}
           onDuplicate={handleDuplicateOrder}
           onOpenPayment={openPayment}
-          onPrint={setOrderToPrint}
+          onPrint={openPrint}
+          onDeliver={handleDeliver}
+          onCancel={handleCancel}
+          onDelete={handleDelete}
         />
       </main>
 
       <CreateSalesOrderModal
         show={showModal} onClose={() => setShowModal(false)}
-        customers={customers} products={products}
+        customers={customers} products={products} warehouses={warehouses}
         newOrder={newOrder} setNewOrder={setNewOrder}
         onAddItem={handleAddItem} onRemoveItem={handleRemoveItem}
         onItemChange={handleItemChange} onSubmit={handleSubmit}

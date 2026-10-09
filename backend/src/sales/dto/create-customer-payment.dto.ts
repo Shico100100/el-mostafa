@@ -24,4 +24,17 @@ export class CreateCustomerPaymentDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({
+    example: 12,
+    description: 'Optional linked sales order id',
+  })
+  @IsOptional()
+  @IsNumber()
+  order_id?: number;
+
+  @ApiPropertyOptional({ example: 'cash', enum: ['cash', 'check', 'transfer'] })
+  @IsOptional()
+  @IsString()
+  method?: string;
 }

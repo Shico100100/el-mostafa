@@ -18,11 +18,12 @@ vi.mock('@/components/BackButton', () => ({
 
 vi.mock('@/hooks/sales/useSalesOrders', () => ({
   useSalesOrders: () => ({
-    orders: [], loading: false, customers: [], products: [],
+    orders: [], loading: false, customers: [], products: [], warehouses: [],
     filters: {}, setFilters: vi.fn(), totalPages: 1, totalItems: 0,
     showModal: false, setShowModal: vi.fn(),
     showPaymentModal: false, setShowPaymentModal: vi.fn(),
     selectedOrder: null, selectedOrderForPayment: null, setSelectedOrderForPayment: vi.fn(),
+    orderPayments: [],
     showQuickCustomerModal: false, setShowQuickCustomerModal: vi.fn(),
     quickCustomerData: null, setQuickCustomerData: vi.fn(),
     newOrder: null, setNewOrder: vi.fn(),
@@ -30,13 +31,14 @@ vi.mock('@/hooks/sales/useSalesOrders', () => ({
     componentRef: { current: null }, orderToPrint: null, setOrderToPrint: vi.fn(),
     resetFilters: vi.fn(), loadData: mocks.loadData,
     handleAddItem: vi.fn(), handleRemoveItem: vi.fn(), handleItemChange: vi.fn(),
-    calculateTotal: vi.fn(),
+    calculateTotal: vi.fn(), calculateSubtotal: vi.fn(),
     handleQuickCustomerSubmit: vi.fn(),
     handlePaymentSubmit: vi.fn(),
     handleSubmit: vi.fn(),
     handleDuplicateOrder: vi.fn(),
+    handleDeliver: vi.fn(), handleCancel: vi.fn(), handleDelete: vi.fn(),
     handleExport: vi.fn(),
-    openPayment: vi.fn(), openDetails: vi.fn(), closeDetails: vi.fn(),
+    openPayment: vi.fn(), openDetails: vi.fn(), closeDetails: vi.fn(), openPrint: vi.fn(),
   }),
 }));
 

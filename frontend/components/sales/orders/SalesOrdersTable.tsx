@@ -1,11 +1,45 @@
 'use client';
 
-import { Eye, DollarSign, Printer, ClipboardList } from 'lucide-react';
+import { useState } from 'react';
+import { Eye, DollarSign, Printer, ClipboardList, Truck, Ban, Trash2 } from 'lucide-react';
 import type { Order, Filters } from './types';
+
+function DeliveryBadge({ order }: { order: Order }) {
+  if (order.status === 'CANCELLED') {
+    return (
+      <span className="inline-block px-2.5 py-1 rounded-full bg-red-600/20 border border-red-500/30 text-red-300 text-xs font-semibold">
+        ملغي
+      </span>
+    );
+  }
+  if (order.delivered_at) {
+    return (
+      <span
+        className="inline-block px-2.5 py-1 rounded-full bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold"
+        title={`تاريخ التسليم: ${new Date(order.delivered_at).toLocaleDateString('ar-EG')}`}
+      >
+        مسلّم
+      </span>
+    );
+  }
+  if (order.status === 'COMPLETED') {
+    return (
+      <span className="inline-block px-2.5 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+        مكتمل
+      </span>
+    );
+  }
+  return (
+    <span className="inline-block px-2.5 py-1 rounded-full bg-slate-600/20 border border-slate-400/30 text-slate-300 text-xs font-semibold">
+      قيد التنفيذ
+    </span>
+  );
+}
 
 export function SalesOrdersTable({
   orders, loading, filters, totalPages, totalItems,
   onPageChange, onOpenDetails, onDuplicate, onOpenPayment, onPrint,
+  onDeliver, onCancel, onDelete,
 }: {
   orders: Order[];
   loading: boolean;
@@ -17,7 +51,24 @@ export function SalesOrdersTable({
   onDuplicate: (order: Order) => void;
   onOpenPayment: (order: Order) => void;
   onPrint: (order: Order) => void;
+  onDeliver: (order: Order) => void;
+  onCancel: (order: Order) => void;
+  onDelete: (order: Order) => void;
 }) {
+  // Two-step confirm for destructive actions: first click arms, second executes.
+  const [armed, setArmed] = useState<{ id: number; action: 'cancel' | 'delete' } | null>(null);
+
+  const armOrFire = (order: Order, action: 'cancel' | 'delete') => {
+    if (armed?.id === order.id && armed.action === action) {
+      setArmed(null);
+      if (action === 'cancel') onCancel(order);
+      else onDelete(order);
+    } else {
+      setArmed({ id: order.id, action });
+      setTimeout(() => setArmed((a) => (a?.id === order.id && a.action === action ? null : a)), 4000);
+    }
+  };
+
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
       <div className="overflow-x-auto">
@@ -27,6 +78,7 @@ export function SalesOrdersTable({
               <th className="px-6 py-4 font-semibold text-sm">التاريخ</th>
               <th className="px-6 py-4 font-semibold text-sm">العميل</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">المبلغ</th>
+              <th className="px-6 py-4 font-semibold text-sm text-center">مدفوع / متبقي</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">رقم الفاتورة</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">حالة التسليم</th>
               <th className="px-6 py-4 font-semibold text-sm text-center">الإجراءات</th>
@@ -34,21 +86,33 @@ export function SalesOrdersTable({
           </thead>
           <tbody className="divide-y divide-white/5">
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
+              <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400">جاري التحميل...</td></tr>
             ) : orders.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
+              <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400 font-medium">لا توجد أوامر بيع حالياً</td></tr>
             ) : (
-              orders.map((order) => (
-                <tr key={order.id} className="hover:bg-white/5 transition-colors group">
+              orders.map((order) => {
+                const cancelled = order.status === 'CANCELLED';
+                const delivered = !!order.delivered_at;
+                const paid = Number(order.paid_amount ?? 0);
+                const remaining = Number(order.remaining ?? order.total_amount);
+                return (
+                <tr key={order.id} className={`hover:bg-white/5 transition-colors group ${cancelled ? 'opacity-60' : ''}`}>
                   <td className="px-6 py-4 text-gray-300">
                     {new Date(order.order_date || order.created_at).toLocaleDateString('ar-EG')}
                   </td>
-                  <td className="px-6 py-4 text-white font-medium">{order.customer?.name}</td>
+                  <td className="px-6 py-4 text-white font-medium">{order.customer?.name || '—'}</td>
                   <td className="px-6 py-4 text-center">
                     <span className="text-lg font-bold text-blue-400">
                       {Number(order.total_amount).toLocaleString()}
                     </span>
-                    <span className="text-xs text-[#ecfdf5]0 mr-1">ج.م</span>
+                    <span className="text-xs text-emerald-100 mr-1">ج.م</span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-sm font-bold text-emerald-300">{paid.toLocaleString()}</span>
+                    <span className="text-gray-500 mx-1">/</span>
+                    <span className={`text-sm font-bold ${remaining > 0 ? 'text-amber-300' : 'text-gray-400'}`}>
+                      {remaining.toLocaleString()}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className="text-white font-bold">#{order.id}</span>
@@ -59,25 +123,10 @@ export function SalesOrdersTable({
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {order.delivered_at ? (
-                      <span
-                        className="inline-block px-2.5 py-1 rounded-full bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold"
-                        title={`تاريخ التسليم: ${new Date(order.delivered_at).toLocaleDateString('ar-EG')}`}
-                      >
-                        مسلّم
-                      </span>
-                    ) : order.status === 'COMPLETED' ? (
-                      <span className="inline-block px-2.5 py-1 rounded-full bg-blue-600/20 border border-emerald-500/30 text-blue-300 text-xs font-semibold">
-                        مكتمل
-                      </span>
-                    ) : (
-                      <span className="inline-block px-2.5 py-1 rounded-full bg-slate-600/20 border border-[#ecfdf5]0/30 text-slate-300 text-xs font-semibold">
-                        {order.status === 'CANCELLED' ? 'ملغي' : 'قيد التنفيذ'}
-                      </span>
-                    )}
+                    <DeliveryBadge order={order} />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => onOpenDetails(order)}
                         className="p-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/40 transition"
@@ -92,13 +141,15 @@ export function SalesOrdersTable({
                       >
                         <ClipboardList className="w-5 h-5" />
                       </button>
-                      <button
-                        onClick={() => onOpenPayment(order)}
-                        className="p-2 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600/40 transition"
-                        title="تسجيل دفعة"
-                      >
-                        <DollarSign className="w-5 h-5" />
-                      </button>
+                      {!cancelled && remaining > 0 && (
+                        <button
+                          onClick={() => onOpenPayment(order)}
+                          className="p-2 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600/40 transition"
+                          title="تسجيل دفعة"
+                        >
+                          <DollarSign className="w-5 h-5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onPrint(order)}
                         className="p-2 bg-slate-600/20 text-slate-400 rounded-lg hover:bg-slate-600/40 transition"
@@ -106,10 +157,38 @@ export function SalesOrdersTable({
                       >
                         <Printer className="w-5 h-5" />
                       </button>
+                      {!cancelled && !delivered && (
+                        <button
+                          onClick={() => onDeliver(order)}
+                          className="p-2 bg-teal-600/20 text-teal-300 rounded-lg hover:bg-teal-600/40 transition"
+                          title="تسليم الطلب"
+                        >
+                          <Truck className="w-5 h-5" />
+                        </button>
+                      )}
+                      {!cancelled && !delivered && (
+                        <button
+                          onClick={() => armOrFire(order, 'cancel')}
+                          className={`p-2 rounded-lg transition ${armed?.id === order.id && armed.action === 'cancel' ? 'bg-amber-600 text-white animate-pulse' : 'bg-amber-600/20 text-amber-400 hover:bg-amber-600/40'}`}
+                          title={armed?.id === order.id && armed.action === 'cancel' ? 'اضغط مجدداً للتأكيد' : 'إلغاء الطلب وإرجاع المخزون'}
+                        >
+                          <Ban className="w-5 h-5" />
+                        </button>
+                      )}
+                      {!delivered && (
+                        <button
+                          onClick={() => armOrFire(order, 'delete')}
+                          className={`p-2 rounded-lg transition ${armed?.id === order.id && armed.action === 'delete' ? 'bg-red-600 text-white animate-pulse' : 'bg-red-600/20 text-red-400 hover:bg-red-600/40'}`}
+                          title={armed?.id === order.id && armed.action === 'delete' ? 'اضغط مجدداً للتأكيد' : 'حذف الطلب نهائياً'}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

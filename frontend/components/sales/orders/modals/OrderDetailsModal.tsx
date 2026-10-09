@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import AttachmentSection from '@/components/ui/AttachmentSection';
 import { api } from '@/lib/api';
-import type { Order, OrderItem } from '../types';
+import type { Order, OrderItem, OrderPayment } from '../types';
+
+const METHOD_LABELS: Record<string, string> = { cash: 'نقدي', check: 'شيك', transfer: 'تحويل بنكي' };
 
 export function OrderDetailsModal({ order, onClose }: { order: Order | null; onClose: () => void }) {
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [payments, setPayments] = useState<OrderPayment[]>([]);
   const orderId = order?.id;
 
   useEffect(() => {
@@ -15,6 +18,9 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
     api.fetchWithAuth(`/sales/orders/${orderId}/items`)
       .then((data: OrderItem[] | { value?: OrderItem[] }) => setItems(Array.isArray(data) ? data : data.value ?? []))
       .catch(() => setItems([]));
+    api.fetchWithAuth(`/sales/orders/${orderId}/payments`)
+      .then((data: OrderPayment[]) => setPayments(Array.isArray(data) ? data : []))
+      .catch(() => setPayments([]));
   }, [orderId]);
   if (!order) return null;
 
@@ -32,26 +38,35 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">بيانات العميل</h3>
             <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
-              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">الاسم:</span> {order.customer?.name}</p>
-              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">الهاتف:</span> {order.customer?.phone || 'غير مسجل'}</p>
-              <p className="text-white"><span className="text-[#ecfdf5]0 ml-2">العنوان:</span> {order.customer?.address || 'غير مسجل'}</p>
+              <p className="text-white"><span className="text-emerald-100 ml-2">الاسم:</span> {order.customer?.name}</p>
+              <p className="text-white"><span className="text-emerald-100 ml-2">الهاتف:</span> {order.customer?.phone || 'غير مسجل'}</p>
+              <p className="text-white"><span className="text-emerald-100 ml-2">العنوان:</span> {order.customer?.address || 'غير مسجل'}</p>
             </div>
           </div>
           <div className="space-y-4 text-left">
             <h3 className="text-lg font-semibold text-white">القيم المالية</h3>
-            <div className="bg-blue-600/10 p-4 rounded-xl border border-emerald-500/20">
+            <div className="bg-blue-600/10 p-4 rounded-xl border border-blue-500/20 space-y-2">
               <p className="text-gray-400 text-sm">الإجمالي</p>
               <p className="text-3xl font-black text-blue-400">{Number(order.total_amount).toLocaleString()} <span className="text-sm">ج.م</span></p>
+              {order.discount_type && order.discount_type !== 'none' && (
+                <p className="text-xs text-gray-400">
+                  يشمل خصم {order.discount_type === 'percentage' ? `نسبة ${order.discount_value}%` : `مبلغ ${Number(order.discount_value).toLocaleString()} ج.م`}
+                </p>
+              )}
+              <div className="flex gap-4 pt-1 text-sm">
+                <span className="text-gray-400">مدفوع: <span className="text-emerald-300 font-bold">{Number(order.paid_amount ?? 0).toLocaleString()}</span></span>
+                <span className="text-gray-400">متبقي: <span className="text-amber-300 font-bold">{Number(order.remaining ?? order.total_amount).toLocaleString()}</span></span>
+              </div>
             </div>
             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
               <p className="text-gray-400 text-sm">حالة التسليم</p>
               {order.delivered_at ? (
                 <p className="text-emerald-300 font-bold mt-1">
                   مسلّم بتاريخ {new Date(order.delivered_at).toLocaleDateString('ar-EG')}
-                  <span className="block text-xs text-emerald-400/70 mt-0.5">تم خصم الكميات من المخزون تلقائياً</span>
+                  <span className="block text-xs text-emerald-400/70 mt-0.5">تم خصم الكميات من المخزون عند إنشاء الطلب</span>
                 </p>
               ) : (
-                <p className="text-slate-300 font-bold mt-1">لم يُسلَّم بعد</p>
+                <p className="text-slate-300 font-bold mt-1">لم يُسلَّم بعد — الكميات مخصومة من المخزون منذ إنشاء الطلب</p>
               )}
             </div>
           </div>
@@ -76,6 +91,28 @@ export function OrderDetailsModal({ order, onClose }: { order: Order | null; onC
             </table>
           </div>
         </div>
+        {payments.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">الدفعات المسجلة على الطلب</h3>
+            <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+              <table className="w-full text-right">
+                <thead className="bg-white/5 text-gray-400 text-xs">
+                  <tr><th className="px-4 py-3">التاريخ</th><th className="px-4 py-3 text-center">المبلغ</th><th className="px-4 py-3 text-center">الطريقة</th><th className="px-4 py-3">ملاحظات</th></tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {payments.map((pay) => (
+                    <tr key={pay.id} className="text-sm">
+                      <td className="px-4 py-3 text-gray-300">{new Date(pay.payment_date).toLocaleDateString('ar-EG')}</td>
+                      <td className="px-4 py-3 text-center text-emerald-300 font-bold">{Number(pay.amount).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-center text-gray-300">{pay.method ? (METHOD_LABELS[pay.method] || pay.method) : '—'}</td>
+                      <td className="px-4 py-3 text-gray-400">{pay.notes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         {order.notes && (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-400">ملاحظات</h3>

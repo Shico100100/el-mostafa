@@ -134,6 +134,34 @@ export class SalesController {
     return this.salesOrderService.getOrderItems(+id);
   }
 
+  @Get('orders/:id/payments')
+  @ApiOperation({ summary: 'Get payments linked to an order' })
+  @ApiResponse({ status: 200, description: 'Returns order payments' })
+  getOrderPayments(@Param('id') id: string) {
+    return this.salesService.getOrderPayments(+id);
+  }
+
+  @Get('orders/:id/payment-summary')
+  @ApiOperation({ summary: 'Get paid/remaining summary for an order' })
+  @ApiResponse({ status: 200, description: 'Returns payment summary' })
+  getOrderPaymentSummary(@Param('id') id: string) {
+    return this.salesService.getOrderPaymentSummary(+id);
+  }
+
+  @Post('orders/:id/deliver')
+  @ApiOperation({ summary: 'Mark a sales order as delivered' })
+  @ApiResponse({ status: 200, description: 'Order marked delivered' })
+  deliverOrder(@Param('id') id: string) {
+    return this.salesService.deliverOrder(+id);
+  }
+
+  @Post('orders/:id/cancel')
+  @ApiOperation({ summary: 'Cancel a sales order (restores stock)' })
+  @ApiResponse({ status: 200, description: 'Order cancelled' })
+  cancelOrder(@Param('id') id: string) {
+    return this.salesService.cancelOrder(+id);
+  }
+
   @Delete('orders/:id')
   @ApiOperation({ summary: 'Delete a sales order' })
   @ApiResponse({ status: 200, description: 'Order deleted' })

@@ -23,6 +23,8 @@ export function QuickCustomerModal({
         <form onSubmit={onSubmit} className="space-y-4">
           <input placeholder="اسم العميل *" required value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
           <input placeholder="رقم الهاتف" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
+          <input placeholder="البريد الإلكتروني" type="email" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
+          <input placeholder="العنوان" value={data.address} onChange={(e) => setData({ ...data, address: e.target.value })} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-emerald-500 transition" />
           <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-900/40">حفظ العميل</button>
         </form>
       </div>

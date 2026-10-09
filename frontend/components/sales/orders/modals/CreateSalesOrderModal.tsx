@@ -2,15 +2,16 @@
 
 import { Plus, Trash2, X } from 'lucide-react';
 import SearchableSelect from '@/components/ui/SearchableSelect';
-import type { Customer, Product, NewOrderData } from '../types';
+import type { Customer, Product, Warehouse, NewOrderData } from '../types';
 
 export function CreateSalesOrderModal({
-  show, onClose, customers, products, newOrder, setNewOrder, onAddItem, onRemoveItem, onItemChange, onSubmit, calculateTotal, onOpenQuickCustomer,
+  show, onClose, customers, products, warehouses, newOrder, setNewOrder, onAddItem, onRemoveItem, onItemChange, onSubmit, calculateTotal, onOpenQuickCustomer,
 }: {
   show: boolean;
   onClose: () => void;
   customers: Customer[];
   products: Product[];
+  warehouses: Warehouse[];
   newOrder: NewOrderData;
   setNewOrder: (order: NewOrderData) => void;
   onAddItem: () => void;
@@ -33,7 +34,7 @@ export function CreateSalesOrderModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-300">العميل</label>
+                <label className="text-sm font-medium text-gray-300">العميل *</label>
                 <button
                   type="button"
                   onClick={onOpenQuickCustomer}
@@ -77,7 +78,7 @@ export function CreateSalesOrderModal({
               <button
                 type="button"
                 onClick={onAddItem}
-                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-1.5 rounded-lg text-sm font-bold border border-emerald-500/30 transition flex items-center gap-2"
+                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-1.5 rounded-lg text-sm font-bold border border-blue-500/30 transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 إضافة صنف
@@ -85,11 +86,11 @@ export function CreateSalesOrderModal({
             </div>
             <div className="space-y-4">
               {newOrder.items.map((item, index) => (
-                <div key={index} className="flex gap-4 items-end">
+                <div key={index} className="flex gap-4 items-end flex-wrap">
                   <div className="flex-1 min-w-[200px] space-y-2">
-                    <label className="text-xs text-gray-400 mr-2">المنتج</label>
+                    <label className="text-xs text-gray-400 mr-2">المنتج *</label>
                     <SearchableSelect
-                      options={products.map(p => ({ value: p.id, label: `${p.name} (متاح: ${p.stock_quantity})` }))}
+                      options={products.map(p => ({ value: p.id, label: `${p.name} (متاح: ${p.stock_quantity ?? 0})` }))}
                       value={item.product_id}
                       onChange={(val) => onItemChange(index, 'product_id', val)}
                       placeholder="اختر المنتج..."
@@ -101,7 +102,7 @@ export function CreateSalesOrderModal({
                     <input
                       type="number"
                       value={item.quantity}
-                      onChange={(e) => onItemChange(index, 'quantity', parseFloat(e.target.value))}
+                      onChange={(e) => onItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
                       required
                       min="1"
                       className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-emerald-500 outline-none text-sm transition"
@@ -112,11 +113,27 @@ export function CreateSalesOrderModal({
                     <input
                       type="number"
                       value={item.unit_price}
-                      onChange={(e) => onItemChange(index, 'unit_price', parseFloat(e.target.value))}
+                      onChange={(e) => onItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       required
+                      min="0"
                       className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-emerald-500 outline-none text-sm transition"
                     />
                   </div>
+                  {warehouses.length > 1 && (
+                    <div className="w-36 space-y-2">
+                      <label className="text-xs text-gray-400 mr-2">المخزن</label>
+                      <select
+                        value={item.warehouse_id || ''}
+                        onChange={(e) => onItemChange(index, 'warehouse_id', e.target.value)}
+                        className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:border-emerald-500 outline-none text-sm transition"
+                      >
+                        <option value="">الافتراضي</option>
+                        {warehouses.map(w => (
+                          <option key={w.id} value={w.id}>{w.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="w-32 pb-2 text-left text-blue-300 font-bold text-sm">
                     {(Number(item.quantity) * Number(item.unit_price)).toLocaleString()}
                   </div>
@@ -130,17 +147,42 @@ export function CreateSalesOrderModal({
                 </div>
               ))}
               {newOrder.items.length === 0 && (
-                <div className="text-center py-8 text-[#ecfdf5]0 border-2 border-dashed border-white/5 rounded-2xl">
+                <div className="text-center py-8 text-emerald-100 border-2 border-dashed border-white/5 rounded-2xl">
                   لم يتم إضافة أي أصناف بعد
                 </div>
               )}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الخصم</label>
+              <div className="flex gap-3">
+                <select
+                  value={newOrder.discount_type}
+                  onChange={(e) => setNewOrder({ ...newOrder, discount_type: e.target.value as NewOrderData['discount_type'] })}
+                  className="bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition"
+                >
+                  <option value="none">بدون خصم</option>
+                  <option value="percentage">نسبة %</option>
+                  <option value="fixed">مبلغ ثابت</option>
+                </select>
+                {newOrder.discount_type !== 'none' && (
+                  <input
+                    type="number"
+                    value={newOrder.discount_value}
+                    onChange={(e) => setNewOrder({ ...newOrder, discount_value: parseFloat(e.target.value) || 0 })}
+                    min="0"
+                    className="w-32 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition"
+                  />
+                )}
+              </div>
             </div>
           </div>
           <div className="flex justify-between items-center py-6 border-t border-white/10">
             <div className="text-white">
               <span className="text-gray-400 ml-2">الإجمالي المستحق:</span>
               <span className="text-3xl font-bold text-blue-400">{calculateTotal().toLocaleString()}</span>
-              <span className="text-sm text-[#ecfdf5]0 mr-1">ج.م</span>
+              <span className="text-sm text-emerald-100 mr-1">ج.م</span>
             </div>
             <div className="flex gap-4">
               <button

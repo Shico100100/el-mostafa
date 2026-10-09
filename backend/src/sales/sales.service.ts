@@ -6,17 +6,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Customer } from './entities/customer.entity';
-import { SalesOrder } from './entities/sales-order.entity';
+import { SalesOrder, OrderStatus } from './entities/sales-order.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
 import { CustomerPayment } from './entities/customer-payment.entity';
 import { SalesReturn } from './entities/sales-return.entity';
 import { SalesReturnItem } from './entities/sales-return-item.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { AccountingService } from '../accounting/accounting.service';
-import {
-  StockMovement,
-  MovementType,
-} from '../inventory/entities/stock-movement.entity';
+import { MovementType } from '../inventory/entities/stock-movement.entity';
 import { Stock } from '../inventory/entities/stock.entity';
 import { Product } from '../inventory/entities/product.entity';
 import { CacheService } from '../cache/cache.service';
@@ -225,6 +222,8 @@ export class SalesService {
     total_amount: number;
     notes?: string;
     order_date?: string;
+    discount_type?: string;
+    discount_value?: number;
     items: Array<{
       product_id: number;
       quantity: number;
@@ -244,24 +243,41 @@ export class SalesService {
       if (item.price == null || item.price < 0)
         throw new BadRequestException('السعر غير صالح');
     }
+    const discountType = ['percentage', 'fixed'].includes(
+      data.discount_type || '',
+    )
+      ? (data.discount_type as string)
+      : 'none';
+    const discountValue = Math.max(0, Number(data.discount_value) || 0);
 
-    const calculatedTotal = data.items.reduce(
+    const subtotal = data.items.reduce(
       (sum, item) => sum + Number(item.quantity) * Number(item.price),
       0,
     );
-    const totalAmount = Math.round(calculatedTotal * 100) / 100;
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+      discountAmount = subtotal * (Math.min(discountValue, 100) / 100);
+    } else if (discountType === 'fixed') {
+      discountAmount = Math.min(discountValue, subtotal);
+    }
+    const totalAmount = Math.round((subtotal - discountAmount) * 100) / 100;
+    // NOTE: the client-computed total_amount is intentionally ignored — the
+    // server is the source of truth so stored totals can never diverge.
+
+    const defaultWhId = await this.inventoryService.getDefaultWarehouseId();
 
     const savedOrder = await this.dataSource.transaction(async (manager) => {
       const orderRepo = manager.getRepository(SalesOrder);
       const orderItemRepo = manager.getRepository(SalesOrderItem);
-      const stockRepo = manager.getRepository(Stock);
-      const stockMovementRepo = manager.getRepository(StockMovement);
       const customerRepo = manager.getRepository(Customer);
       const productRepo = manager.getRepository(Product);
 
       const order = orderRepo.create({
         customer_id: data.customer_id,
         total_amount: totalAmount,
+        discount_type: discountType,
+        discount_value:
+          discountType === 'none' ? 0 : Math.round(discountValue * 100) / 100,
         notes: data.notes,
         order_date: data.order_date ? new Date(data.order_date) : new Date(),
       });
@@ -285,36 +301,20 @@ export class SalesService {
         });
         cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
 
-        let itemStock = await stockRepo.findOne({
-          where: { product_id: item.product_id },
-        });
-        const whId = item.warehouse_id || itemStock?.warehouse_id || 1;
-
-        if (!itemStock) {
-          itemStock = stockRepo.create({
+        // Deduct from the explicitly chosen warehouse (never from an
+        // arbitrary stock row): addStockMovement guards sufficiency itself.
+        const whId = item.warehouse_id || defaultWhId;
+        await this.inventoryService.addStockMovement(
+          {
             product_id: item.product_id,
             warehouse_id: whId,
-            quantity: 0,
-          });
-        }
-
-        if (Number(itemStock.quantity) < Number(item.quantity)) {
-          throw new BadRequestException(
-            `رصيد غير كافٍ للمنتج: ${item.product_id} (المطلوب: ${item.quantity}, المتوفر: ${itemStock.quantity})`,
-          );
-        }
-
-        itemStock.quantity = Number(itemStock.quantity) - Number(item.quantity);
-        await stockRepo.save(itemStock);
-
-        await stockMovementRepo.save({
-          product_id: item.product_id,
-          warehouse_id: whId,
-          type: MovementType.OUT,
-          quantity: item.quantity,
-          date: data.order_date ? new Date(data.order_date) : new Date(),
-          notes: `بيع - فاتورة رقم ${saved.id}`,
-        });
+            type: MovementType.OUT,
+            quantity: item.quantity,
+            date: data.order_date ? new Date(data.order_date) : new Date(),
+            notes: `بيع - فاتورة رقم ${saved.id}`,
+          },
+          manager,
+        );
       }
 
       const customer = await customerRepo.findOne({
@@ -344,8 +344,17 @@ export class SalesService {
   async deleteOrder(id: number) {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('الفاتورة غير موجودة');
+    if (order.delivered_at)
+      throw new BadRequestException(
+        'لا يمكن حذف فاتورة تم تسليمها — استخدم المرتجع بدلاً من ذلك',
+      );
 
     let cogsTotal = 0;
+
+    // A cancelled order already had its stock/balance/accounting reversed
+    // at cancel time — deleting it must only remove the rows, never
+    // reverse twice.
+    const needsReversal = order.status !== OrderStatus.CANCELLED;
 
     await this.dataSource.transaction(async (manager) => {
       const items = await manager.find(SalesOrderItem, {
@@ -360,22 +369,107 @@ export class SalesService {
         cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
       }
 
-      const invService = this.inventoryService;
-      const stockRepo = manager.getRepository(Stock);
-      for (const item of items) {
-        const stock = await stockRepo.findOne({
-          where: { product_id: item.product_id },
+      if (needsReversal) {
+        const invService = this.inventoryService;
+        const stockRepo = manager.getRepository(Stock);
+        for (const item of items) {
+          const stock = await stockRepo.findOne({
+            where: { product_id: item.product_id },
+          });
+          const whId =
+            stock?.warehouse_id ||
+            (await this.inventoryService.getDefaultWarehouseId());
+          await invService.addStockMovement(
+            {
+              product_id: item.product_id,
+              warehouse_id: whId,
+              type: MovementType.IN,
+              quantity: item.quantity,
+              notes: `حذف فاتورة بيع - عكس رقم ${id}`,
+            },
+            manager,
+          );
+        }
+
+        const customer = await manager.findOne(Customer, {
+          where: { id: order.customer_id },
         });
-        const whId =
-          stock?.warehouse_id ||
-          (await this.inventoryService.getDefaultWarehouseId());
-        await invService.addStockMovement(
+        if (customer) {
+          customer.balance =
+            Number(customer.balance) - Number(order.total_amount);
+          await manager.save(Customer, customer);
+        }
+      }
+
+      await manager.delete(SalesOrderItem, { order_id: id });
+      await manager.delete(SalesOrder, id);
+    });
+
+    if (needsReversal) {
+      await this.accountingService.postAutomaticEntry({
+        type: 'SALE',
+        amount: -Number(order.total_amount),
+        cogsAmount: -Math.round(cogsTotal * 100) / 100,
+        reference: `DEL-ORD-${id}`,
+        description: `حذف فاتورة بيع رقم ${id}`,
+      });
+    }
+
+    await this.cache.delByPattern('reports:*');
+  }
+
+  // ---- Deliver: stock was already deducted at creation, so delivery only
+  // stamps delivered_at (mirrors the Peachtree sync semantics where a
+  // delivered order is COMPLETED).
+  async deliverOrder(id: number) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('الفاتورة غير موجودة');
+    if (order.status === OrderStatus.CANCELLED)
+      throw new BadRequestException('لا يمكن تسليم فاتورة ملغية');
+    if (order.delivered_at)
+      throw new BadRequestException('الفاتورة مسلّمة بالفعل');
+    order.delivered_at = new Date();
+    order.status = OrderStatus.COMPLETED;
+    await this.orderRepo.save(order);
+    await this.cache.delByPattern('reports:*');
+    return order;
+  }
+
+  // ---- Cancel: keeps the row for audit, restores stock, reverses the
+  // customer balance and posts a reversing accounting entry (same math as
+  // deleteOrder, without deleting history).
+  async cancelOrder(id: number) {
+    const order = await this.orderRepo.findOne({ where: { id } });
+    if (!order) throw new NotFoundException('الفاتورة غير موجودة');
+    if (order.status === OrderStatus.CANCELLED)
+      throw new BadRequestException('الفاتورة ملغية بالفعل');
+    if (order.delivered_at)
+      throw new BadRequestException(
+        'لا يمكن إلغاء فاتورة تم تسليمها — استخدم المرتجع بدلاً من ذلك',
+      );
+
+    let cogsTotal = 0;
+    await this.dataSource.transaction(async (manager) => {
+      const items = await manager.find(SalesOrderItem, {
+        where: { order: { id: id } },
+      });
+      const productRepo = manager.getRepository(Product);
+      for (const item of items) {
+        const product = await productRepo.findOne({
+          where: { id: item.product_id },
+        });
+        cogsTotal += Number(item.quantity) * Number(product?.cost_price || 0);
+      }
+
+      const defaultWhId = await this.inventoryService.getDefaultWarehouseId();
+      for (const item of items) {
+        await this.inventoryService.addStockMovement(
           {
             product_id: item.product_id,
-            warehouse_id: whId,
+            warehouse_id: defaultWhId,
             type: MovementType.IN,
             quantity: item.quantity,
-            notes: `حذف فاتورة بيع - عكس رقم ${id}`,
+            notes: `إلغاء فاتورة بيع - عكس رقم ${id}`,
           },
           manager,
         );
@@ -390,34 +484,83 @@ export class SalesService {
         await manager.save(Customer, customer);
       }
 
-      await manager.delete(SalesOrderItem, { order_id: id });
-      await manager.delete(SalesOrder, id);
+      order.status = OrderStatus.CANCELLED;
+      await manager.save(SalesOrder, order);
     });
 
     await this.accountingService.postAutomaticEntry({
       type: 'SALE',
       amount: -Number(order.total_amount),
       cogsAmount: -Math.round(cogsTotal * 100) / 100,
-      reference: `DEL-ORD-${id}`,
-      description: `حذف فاتورة بيع رقم ${id}`,
+      reference: `CANCEL-ORD-${id}`,
+      description: `إلغاء فاتورة بيع رقم ${id}`,
     });
 
     await this.cache.delByPattern('reports:*');
+    return this.orderRepo.findOne({ where: { id } });
   }
 
   // ---- Payment (requires AccountingService) ----
+
+  // Paid/remaining for one order (legacy customer-level payments with
+  // order_id NULL are intentionally excluded — they belong to the
+  // customer balance, not to a specific order).
+  async getOrderPaymentSummary(orderId: number) {
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('الفاتورة غير موجودة');
+    const raw = await this.paymentRepo
+      .createQueryBuilder('p')
+      .select('COALESCE(SUM(p.amount), 0)', 'paid')
+      .addSelect('COUNT(p.id)', 'count')
+      .where('p.order_id = :orderId', { orderId })
+      .getRawOne();
+    const paid = Math.round(Number(raw?.paid || 0) * 100) / 100;
+    const total = Number(order.total_amount);
+    return {
+      order_id: orderId,
+      total,
+      paid,
+      remaining: Math.round(Math.max(0, total - paid) * 100) / 100,
+      payments_count: Number(raw?.count || 0),
+    };
+  }
+
+  async getOrderPayments(orderId: number) {
+    return this.paymentRepo.find({
+      where: { order_id: orderId },
+      order: { payment_date: 'DESC', id: 'DESC' },
+    });
+  }
 
   async addPayment(data: {
     customer_id: number;
     amount: number;
     payment_date: string;
     notes?: string;
+    order_id?: number;
+    method?: string;
   }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      if (data.order_id) {
+        const linkedOrder = await queryRunner.manager.findOne(SalesOrder, {
+          where: { id: data.order_id },
+        });
+        if (!linkedOrder)
+          throw new BadRequestException('الفاتورة المرتبطة غير موجودة');
+        if (Number(linkedOrder.customer_id) !== Number(data.customer_id))
+          throw new BadRequestException('الفاتورة لا تخص هذا العميل');
+        if (linkedOrder.status === OrderStatus.CANCELLED)
+          throw new BadRequestException('لا يمكن التحصيل على فاتورة ملغية');
+        const summary = await this.getOrderPaymentSummary(data.order_id);
+        if (Number(data.amount) > summary.remaining + 1e-9)
+          throw new BadRequestException(
+            `المبلغ (${data.amount}) يتجاوز المتبقي على الفاتورة (${summary.remaining})`,
+          );
+      }
       const payment = queryRunner.manager.create(CustomerPayment, {
         ...data,
         payment_date: new Date(data.payment_date),
@@ -442,7 +585,7 @@ export class SalesService {
           type: 'PAYMENT',
           amount: data.amount,
           reference: `PAY-CUST-${savedPayment.id}`,
-          description: `تحصيل من عميل: ${customer.name}`,
+          description: `تحصيل من عميل: ${customer.name}${data.order_id ? ` - فاتورة ${data.order_id}` : ''}`,
           partnerId: customer.id,
         });
       }

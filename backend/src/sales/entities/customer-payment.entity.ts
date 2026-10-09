@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Customer } from './customer.entity';
 
@@ -28,6 +29,13 @@ export class CustomerPayment {
 
   @Column({ nullable: true })
   notes: string;
+
+  @Index()
+  @Column({ type: 'int', nullable: true })
+  order_id: number | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  method: string | null;
 
   @CreateDateColumn()
   created_at: Date;

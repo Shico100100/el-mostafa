@@ -36,6 +36,12 @@ export class SalesOrder {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;
 
+  @Column({ type: 'varchar', length: 20, default: 'none' })
+  discount_type: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discount_value: number;
+
   @Index()
   @Column({
     type: 'enum',

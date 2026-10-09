@@ -59,6 +59,20 @@ export class CreateOrderDto {
   @IsDateString()
   order_date?: string;
 
+  @ApiPropertyOptional({
+    example: 'percentage',
+    enum: ['none', 'percentage', 'fixed'],
+  })
+  @IsOptional()
+  @IsString()
+  discount_type?: string;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount_value?: number;
+
   @ApiProperty({ type: [CreateOrderItemDto] })
   @IsArray()
   @ValidateNested({ each: true })
